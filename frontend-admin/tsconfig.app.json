@@ -6,6 +6,13 @@
     "module": "esnext",
     "types": ["vite/client"],
     "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "noImplicitAny": false,
+    "allowJs": true,
+    "strictNullChecks": false,
 
     /* Bundler mode */
     "moduleResolution": "bundler",
