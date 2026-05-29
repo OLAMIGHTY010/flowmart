@@ -9,9 +9,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
 
-      devOptions: {
-        enabled: true
-      },
+      // devOptions: {
+      //   enabled: true
+      // },
 
       manifest: {
         name: 'Flowmart',
