@@ -1,5 +1,9 @@
 import React from "react";
 import { Link } from "react-router";
+import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 const Login = () => {
     return (
@@ -14,8 +18,8 @@ const Login = () => {
                 <CardContent>
                     <form>
                         <div className="space-y-2">
-                            <label   htmlFor="email">Email</label>
-                            <input id="email" type="email" />
+                            <Label htmlFor="email">Email</Label>
+                            <Input id="email" type="email" />
                         </div>
                         <div className="space-y-2">
                             <div className="flex items-center justify-between">
@@ -24,12 +28,16 @@ const Login = () => {
                                     Forgot password?
                                 </Link>
                             </div>
-                            <input
+                            <Input
                                 id="password"
                                 type="password"
                                 placeholder="••••••••"
                             />
                         </div>
+                        <Button type="submit" className="w-full" >
+                            {/* {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} */}
+                            Sign in
+                        </Button>
                     </form>
                 </CardContent>
             </Card>
