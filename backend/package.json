@@ -1,0 +1,42 @@
+{
+  "name": "flowmart-api",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest --detectOpenHandles --forceExit",
+    "test:watch": "jest --watch",
+    "db:gen": "npx drizzle-kit generate",
+    "db:mig": "npx drizzle-kit migrate",
+    "studio": "npx drizzle-kit studio",
+    "dev": "nodemon src/index.ts",
+    "start": "ts-node src/index.ts"
+  },
+  "dependencies": {
+    "axios": "^1.13.2",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "drizzle-orm": "^0.40.1",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "express-session": "^1.18.1",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.10.0",
+    "pg": "^8.14.1",
+    "redis": "^4.7.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.1",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/morgan": "^1.9.9",
+    "@types/node": "^22.13.10",
+    "@types/pg": "^8.11.11",
+    "drizzle-kit": "^0.31.1",
+    "nodemon": "^3.1.9",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.2"
+  }
+}
