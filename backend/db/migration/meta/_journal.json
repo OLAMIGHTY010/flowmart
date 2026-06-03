@@ -4,16 +4,9 @@
   "entries": [
     {
       "idx": 0,
-      "version": "5",
-      "when": 1769681433286,
-      "tag": "0000_yielding_silver_surfer",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
       "version": "7",
-      "when": 1780073679852,
-      "tag": "0001_smooth_malcolm_colcord",
+      "when": 1780429281247,
+      "tag": "0000_nice_krista_starr",
       "breakpoints": true
     }
   ]
