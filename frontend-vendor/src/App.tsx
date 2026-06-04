@@ -14,6 +14,11 @@ const App = () => {
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/register" element={<Register />} />
+        <Route path="/dashboard" element={<DashboardLayout />}>
+        <Route index element={<Dashboard />} />
+        
+        </ Route>
+
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

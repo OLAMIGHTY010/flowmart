@@ -19,13 +19,11 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(""); // ✅ Added missing state hook
+  const [error, setError] = useState("");
   const navigate = useNavigate()
-
   const { login, user } = useAuth();
   const isFormEmpty = email.trim() === '' || password.trim() === '';
 
-  // ✅ Safe Redirect: If user state exists, cleanly exit and bounce to layout
   if (user) {
     return navigate("/dashboard", { replace: true });
   }
@@ -38,9 +36,7 @@ const Login = () => {
       setError('Please enter your email and password');
       return;
     }
-
     setLoading(true);
-    // ✅ Matches return shape from your AuthProvider block
     const result = await login(email, password);
     setLoading(false);
 
@@ -88,8 +84,6 @@ const Login = () => {
 
         <form onSubmit={handleLogin}>
           <CardContent className="space-y-4">
-
-            {/* ✅ GLOBAL SERVER ERROR NOTIFICATION BLOCK */}
             {error && (
               <div className="p-3 text-sm font-medium text-destructive bg-destructive/10 rounded-lg text-center">
                 {error}
