@@ -1,4 +1,5 @@
 import { createContext } from "react";
+import type { AppUser } from "@/types/api";
 
 interface AuthContext {
     user: AppUser | null;
