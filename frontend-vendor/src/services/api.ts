@@ -16,7 +16,7 @@ class ApiClient {
   constructor() {
     this.axiosInstance = axios.create({
       baseURL: "localhost:3000/api",
-    //   withCredentials: false, 
+      //   withCredentials: false, 
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
@@ -30,11 +30,11 @@ class ApiClient {
     this.axiosInstance.interceptors.request.use(
       (config: InternalAxiosRequestConfig) => {
         const token = localStorage.getItem('accessToken');
-        
+
         if (token && config.headers) {
           config.headers.Authorization = `Bearer ${token}`;
         }
-        
+
         return config;
       },
       (error: AxiosError) => Promise.reject(error)
@@ -47,7 +47,7 @@ class ApiClient {
 
         if (status === 401) {
           console.warn('Unauthorized: Token expired or invalid.');
-          
+
           localStorage.removeItem('accessToken');
           window.dispatchEvent(new Event('auth:logout'));
         }
