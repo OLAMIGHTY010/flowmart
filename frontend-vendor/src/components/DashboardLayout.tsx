@@ -7,7 +7,7 @@ import { Loader2 } from 'lucide-react';
 
 const DashboardLayout = () => {
     const [loading, setLoading] = useState(false);
-  const { user } = useAuth();
+//   const { user } = useState(true);
   const isMobile = useIsMobile();
 
   if (loading) {
@@ -18,7 +18,7 @@ const DashboardLayout = () => {
     );
   }
 
-  if (!user) return <Navigate to="/" replace />;
+//   if (!user) return <Navigate to="/" replace />;
 
   return (
     <div className="flex min-h-screen w-full">
