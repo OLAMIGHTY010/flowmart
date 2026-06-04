@@ -10,31 +10,49 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-
-interface LoginRequest {
-  email: string;
-  password: string;
-}
+import { Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { Navigate } from "react-router-dom"; // Use Navigate for safe top-level conditional redirects
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(""); // ✅ Added missing state hook
+  
+  const { login, user } = useAuth();
+  const isFormEmpty = email.trim() === '' || password.trim() === '';
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // ✅ Safe Redirect: If user state exists, cleanly exit and bounce to layout
+  if (user) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const payload: LoginRequest = {
-      email,
-      password,
-    };
-    console.log("Login Payload:", payload);
+    setError('');
+
+    if (!email.trim() || !password.trim()) {
+      setError('Please enter your email and password');
+      return;
+    }
+
+    setLoading(true);
+    // ✅ Matches return shape from your AuthProvider block
+    const result = await login(email, password); 
+    setLoading(false);
+
+    if (!result.success) {
+      setError(result.error || 'Invalid credentials. Please try again.');
+    }
   };
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-background px-4">
       <Card className="w-full max-w-sm shadow-none border-none">
         
-        {/* LOGO (CENTERED BLOCK) */}
+        {/* LOGO */}
         <div className="flex flex-row justify-center items-center text-center gap-3 pt-6 px-6">
           <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
             <svg
@@ -67,22 +85,39 @@ const Login = () => {
           <CardDescription>Login to your account</CardDescription>
         </CardHeader>
 
-        <form onSubmit={handleSubmit}>
-          {/* FORM CONTENT */}
+        <form onSubmit={handleLogin}>
           <CardContent className="space-y-4">
+            
+            {/* ✅ GLOBAL SERVER ERROR NOTIFICATION BLOCK */}
+            {error && (
+              <div className="p-3 text-sm font-medium text-destructive bg-destructive/10 rounded-lg text-center">
+                {error}
+              </div>
+            )}
+
             {/* EMAIL */}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
+                value={email}
                 placeholder="martha@email.com"
                 className="bg-background"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
                 required
+                onChange={e => setEmail(e.target.value)}
               />
             </div>
+          </CardContent>
+
+          {/* FOOTER */}
+          <CardFooter className="flex flex-col gap-3 pt-2">
+            <Button
+              type="submit"
+              className="w-full bg-primary py-3.5 rounded-xl font-semibold"
+            >
+              Login
+            </Button>
 
             {/* PASSWORD */}
             <div className="space-y-2">
@@ -91,10 +126,10 @@ const Login = () => {
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  className="bg-background pr-10"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  className="bg-background pr-10"
                   required
+                  onChange={e => setPassword(e.target.value)}
                 />
 
                 {/* EYE TOGGLE */}
@@ -121,12 +156,9 @@ const Login = () => {
                 </button>
               </div>
 
-              {/* FORGOT PASSWORD */}
+              {/* FORGOT PASSWORD LINK */}
               <div className="flex justify-end">
-                <a
-                  href="#"
-                  className="text-sm text-primary font-medium hover:underline"
-                >
+                <a href="#" className="text-sm text-primary font-medium hover:underline">
                   Forgot password?
                 </a>
               </div>
@@ -135,19 +167,18 @@ const Login = () => {
 
           {/* FOOTER */}
           <CardFooter className="flex flex-col gap-3 pt-2">
-            <Button
-              type="submit"
-              className="w-full bg-primary py-3.5 rounded-xl font-semibold"
+            <Button 
+              type="submit" 
+              disabled={isFormEmpty || loading} 
+              className="w-full bg-primary py-3.5 rounded-xl font-semibold flex items-center justify-center"
             >
-              Login
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {loading ? "Signing in..." : "Login"}
             </Button>
 
             <p className="text-sm text-muted-foreground text-center">
               Don’t have an account?{" "}
-              <a
-                href="/register"
-                className="text-primary font-semibold hover:underline"
-              >
+              <a href="/sign-up" className="text-primary font-semibold hover:underline">
                 Sign up
               </a>
             </p>
