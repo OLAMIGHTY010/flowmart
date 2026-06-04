@@ -11,8 +11,27 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
+interface LoginRequest {
+  email: string;
+  password: string;
+  showPassword: boolean;
+}
+
 const Login = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent)=>{
+    e.preventDefault();
+    const payload: LoginRequest ={
+      email,
+      password,
+      showPassword,
+    }
+    console.log(payload);
+    
+  }
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-background px-4">
@@ -57,7 +76,8 @@ const Login = () => {
           </CardDescription>
         </CardHeader>
 
-        {/* FORM */}
+        <form onSubmit={handleSubmit}>
+          {/* FORM */}
         <CardContent className="space-y-4">
 
           {/* EMAIL */}
@@ -69,6 +89,7 @@ const Login = () => {
               placeholder="martha@email.com"
               className="bg-background"
               required
+              onChange={(e)=>setEmail(e.target.value)}
             />
           </div>
 
@@ -135,6 +156,7 @@ const Login = () => {
             </a>
           </p>
         </CardFooter>
+        </form>
       </Card>
     </div>
   );
