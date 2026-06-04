@@ -1,7 +1,13 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-function Input({ className, type, ...props }) {
+// Define the interface extending the native HTML input element attributes
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  // Adding the ? makes className optional so your forms don't crash without it
+  className?: string; 
+}
+
+function Input({ className, type, ...props }: InputProps) {
   return (
     <input
       type={type}
@@ -12,7 +18,7 @@ function Input({ className, type, ...props }) {
       )}
       {...props}
     />
-  )
+  );
 }
 
 export { Input };
