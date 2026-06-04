@@ -15,7 +15,7 @@ class ApiClient {
 
   constructor() {
     this.axiosInstance = axios.create({
-      baseURL: "localhost:3000/api",
+      baseURL: "http://localhost:3000/api",
       //   withCredentials: false, 
       headers: {
         'Accept': 'application/json',
