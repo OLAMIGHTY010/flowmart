@@ -11,8 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
-import { Navigate } from "react-router-dom"; // Use Navigate for safe top-level conditional redirects
+import { useNavigate } from "react-router";
+import { useAuth } from "@/hooks/useAuth"
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -20,13 +20,14 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(""); // ✅ Added missing state hook
-  
+  const navigate = useNavigate()
+
   const { login, user } = useAuth();
   const isFormEmpty = email.trim() === '' || password.trim() === '';
 
   // ✅ Safe Redirect: If user state exists, cleanly exit and bounce to layout
   if (user) {
-    return <Navigate to="/dashboard" replace />;
+    return navigate("/dashboard", { replace: true });
   }
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -40,7 +41,7 @@ const Login = () => {
 
     setLoading(true);
     // ✅ Matches return shape from your AuthProvider block
-    const result = await login(email, password); 
+    const result = await login(email, password);
     setLoading(false);
 
     if (!result.success) {
@@ -51,7 +52,7 @@ const Login = () => {
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-background px-4">
       <Card className="w-full max-w-sm shadow-none border-none">
-        
+
         {/* LOGO */}
         <div className="flex flex-row justify-center items-center text-center gap-3 pt-6 px-6">
           <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
@@ -87,7 +88,7 @@ const Login = () => {
 
         <form onSubmit={handleLogin}>
           <CardContent className="space-y-4">
-            
+
             {/* ✅ GLOBAL SERVER ERROR NOTIFICATION BLOCK */}
             {error && (
               <div className="p-3 text-sm font-medium text-destructive bg-destructive/10 rounded-lg text-center">
@@ -108,16 +109,6 @@ const Login = () => {
                 onChange={e => setEmail(e.target.value)}
               />
             </div>
-          </CardContent>
-
-          {/* FOOTER */}
-          <CardFooter className="flex flex-col gap-3 pt-2">
-            <Button
-              type="submit"
-              className="w-full bg-primary py-3.5 rounded-xl font-semibold"
-            >
-              Login
-            </Button>
 
             {/* PASSWORD */}
             <div className="space-y-2">
@@ -139,19 +130,13 @@ const Login = () => {
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                 >
                   {showPassword ? (
-                    <svg width="18" height="18" viewBox="0 0 24 24">
-                      <path
-                        fill="currentColor"
-                        d="M12 5c5 0 9 4 10 7-1 3-5 7-10 7S3 15 2 12c1-3 5-7 10-7zm0 3a4 4 0 1 0 0 8a4 4 0 0 0 0-8z"
-                      />
-                    </svg>
+                    <span className="material-symbols-outlined">
+                      visibility
+                    </span>
                   ) : (
-                    <svg width="18" height="18" viewBox="0 0 24 24">
-                      <path
-                        fill="currentColor"
-                        d="M3 3l18 18l-1.5 1.5l-3.1-3.1A11 11 0 0 1 12 21C7 21 3 17 2 12c.9-2.2 2.5-4.3 4.8-5.8L1.5 4.5L3 3zm9 4a4 4 0 0 1 4 4c0 .6-.1 1.2-.4 1.7l-5.3-5.3c.5-.2 1.1-.4 1.7-.4zm0 8a4 4 0 0 1-4-4c0-.6.1-1.2.4-1.7l5.3 5.3c-.5.2-1.1.4-1.7.4z"
-                      />
-                    </svg>
+                    <span className="material-symbols-outlined">
+                      visibility_off
+                    </span>
                   )}
                 </button>
               </div>
@@ -167,9 +152,9 @@ const Login = () => {
 
           {/* FOOTER */}
           <CardFooter className="flex flex-col gap-3 pt-2">
-            <Button 
-              type="submit" 
-              disabled={isFormEmpty || loading} 
+            <Button
+              type="submit"
+              disabled={isFormEmpty || loading}
               className="w-full bg-primary py-3.5 rounded-xl font-semibold flex items-center justify-center"
             >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -178,7 +163,7 @@ const Login = () => {
 
             <p className="text-sm text-muted-foreground text-center">
               Don’t have an account?{" "}
-              <a href="/sign-up" className="text-primary font-semibold hover:underline">
+              <a href="/register" className="text-primary font-semibold hover:underline">
                 Sign up
               </a>
             </p>
