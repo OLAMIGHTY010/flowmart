@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import react from '@vitejs/plugin-react'
+import path from 'path'
 
 export default defineConfig({
   plugins: [
@@ -9,14 +10,14 @@ export default defineConfig({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
 
-      devOptions: {
-        enabled: true
-      },
+      // devOptions: {
+      //   enabled: true
+      // },
 
       manifest: {
         name: 'Flowmart',
-        short_name: 'Flowmart',
-        description: 'Flowmart - Your One-Stop Shop',
+        short_name: 'Flowmart Admindashboard',
+        description: 'Admin dashboard - Your One-Stop Shop',
         theme_color: '#ffffff',
         background_color: '#ffffff',
         start_url: '/',
@@ -37,5 +38,10 @@ export default defineConfig({
         ]
       }
     })
-  ]
+  ],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
 })
