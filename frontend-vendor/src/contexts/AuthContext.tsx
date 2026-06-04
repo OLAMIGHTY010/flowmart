@@ -1,7 +1,7 @@
 import { createContext } from "react";
 import type { AppUser } from "@/types/api";
 
-interface AuthContext {
+interface AuthContextType {
     user: AppUser | null;
     login: (username: string, password: string) => Promise<{
         success: boolean, error: string
@@ -9,4 +9,4 @@ interface AuthContext {
     logout: () => Promise<void>;
 }
 
-export const AuthContext = createContext<AuthContext | null>(null)
+export const AuthContext = createContext<AuthContextType | null>(null)
