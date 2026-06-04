@@ -108,6 +108,16 @@ const Login = () => {
                 onChange={e => setEmail(e.target.value)}
               />
             </div>
+          </CardContent>
+
+          {/* FOOTER */}
+          <CardFooter className="flex flex-col gap-3 pt-2">
+            <Button
+              type="submit"
+              className="w-full bg-primary py-3.5 rounded-xl font-semibold"
+            >
+              Login
+            </Button>
 
             {/* PASSWORD */}
             <div className="space-y-2">
