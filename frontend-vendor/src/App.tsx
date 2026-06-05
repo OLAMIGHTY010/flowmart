@@ -13,18 +13,18 @@ import KYCVerification from "@/pages/KYCVerification";
 const queryClient = new QueryClient();
 
 const App = () => {
-  return(
+  return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/register" element={<Register />} />
-           <Route path="/profile-setup" element={<ProfileSetup />} />
-           <Route path="/kyc-verification" element={<KYCVerification />} />
+          <Route path="/profile-setup" element={<ProfileSetup />} />
           <Route path="/kyc" element={<KYCInfo />} />
           <Route path="/kyc/review" element={<KYCReview />} />
           <Route path="/kyc/submit" element={<KYCSubmit />} />
-          <Route path="/profile-setup" element={<ProfileSetup />} />
+          <Route path="/kyc/verification" element={<KYCVerification />} />
+
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

@@ -5,7 +5,6 @@ import { VendorButton } from '@/components/ui/button';
 import { VendorInput } from '@/components/ui/input';
 import VendorProgressBar from '@/components/VendorProgressBar';
 import Icon from '@/components/Icon';
-import { Card, CardContent } from '@/components/ui/card';
 import SideBanner from '@/components/SideBanner';
 
 export default function Register() {
