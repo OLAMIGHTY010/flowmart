@@ -59,7 +59,7 @@ export default function KYCInfo() {
     setShowToast(true);
     setTimeout(() => {
       setShowToast(false);
-      navigate('/kyc/review'); // Redirect to review step
+      navigate('/kyc/submit'); // Redirect to document upload step
     }, 1500);
   };
 
