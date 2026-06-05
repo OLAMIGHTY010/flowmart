@@ -8,6 +8,7 @@ import KYCReview from "@/pages/KYCReview";
 import KYCSubmit from "@/pages/KYCSubmit";
 import Login from './pages/Login';
 import ProfileSetup from "@/pages/ProfileSetup";
+import KYCVerification from "@/pages/KYCVerification";
 
 const queryClient = new QueryClient();
 
@@ -18,6 +19,8 @@ const App = () => {
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/register" element={<Register />} />
+           <Route path="/profile-setup" element={<ProfileSetup />} />
+           <Route path="/kyc-verification" element={<KYCVerification />} />
           <Route path="/kyc" element={<KYCInfo />} />
           <Route path="/kyc/review" element={<KYCReview />} />
           <Route path="/kyc/submit" element={<KYCSubmit />} />
