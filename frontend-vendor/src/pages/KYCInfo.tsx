@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import VendorButton from '@/components/VendorButton';
-import VendorInput from '@/components/VendorInput';
+import { VendorButton, Button } from '@/components/ui/button';
+import { VendorInput } from '@/components/ui/input';
 import VendorProgressBar from '@/components/VendorProgressBar';
 import Icon from '@/components/Icon';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import SideBanner from '@/components/SideBanner';
 
 const NIGERIAN_BANKS = [
@@ -60,7 +59,7 @@ export default function KYCInfo() {
     setShowToast(true);
     setTimeout(() => {
       setShowToast(false);
-      navigate('/kyc/review'); // Redirect to review step
+      navigate('/kyc/submit'); // Redirect to document upload step
     }, 1500);
   };
 

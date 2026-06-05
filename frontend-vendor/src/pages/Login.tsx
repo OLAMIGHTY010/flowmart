@@ -2,9 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import VendorButton from '@/components/VendorButton';
-import VendorInput from '@/components/VendorInput';
-import Icon from '@/components/Icon';
+import { VendorButton } from '@/components/ui/button';
+import { VendorInput } from '@/components/ui/input';
 import SideBanner from '@/components/SideBanner';
 
 export default function Login() {
