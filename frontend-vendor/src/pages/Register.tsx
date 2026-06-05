@@ -1,174 +1,235 @@
-import * as React from "react"
-import { useState } from "react"
-import { Eye, EyeOff } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router';
+import { Eye, EyeOff } from 'lucide-react';
+import { VendorButton } from '@/components/ui/button';
+import { VendorInput } from '@/components/ui/input';
+import VendorProgressBar from '@/components/VendorProgressBar';
+import Icon from '@/components/Icon';
+import { Card, CardContent } from '@/components/ui/card';
+import SideBanner from '@/components/SideBanner';
 
-const Register = () => {
+export default function Register() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
-    phoneNumber: "",
-    password: "",
-    confirmPassword: "",
-  })
+    firstName: '',
+    lastName: '',
+    email: '',
+    phoneNumber: '',
+    password: '',
+    confirmPassword: '',
+  });
 
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [validationError, setValidationError] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Optional: Add password === confirmPassword matching validation check here
-    console.log("Form Submitted Successfully:", formData)
-  }
+    e.preventDefault();
+    setValidationError('');
+
+    if (formData.password !== formData.confirmPassword) {
+      setValidationError('Passwords do not match');
+      return;
+    }
+
+    if (!termsAccepted) {
+      setValidationError('You must accept the Terms and Conditions to proceed');
+      return;
+    }
+
+    console.log('Account Created Successfully:', formData);
+    navigate('/profile-setup'); // Redirect to Step 2: Profile Setup
+  };
 
   return (
-    <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
-      <Card className="w-full max-w-sm rounded-3xl p-2 min-h-[740px] flex flex-col justify-between">
-        
-        {/* Header / Logo Section */}
-        <CardHeader className="text-center pb-2">
-          <div className="flex items-center justify-center gap-2 mb-2" data-slot="logo-container">
-            <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-xs font-bold">
-              🌿
-            </div>
-            <span className="text-xl font-bold text-foreground tracking-tight">FlowMart</span>
-          </div>
-          <CardTitle className="text-2xl font-bold text-foreground">Create account</CardTitle>
-          <CardDescription>Sign up to get started</CardDescription>
-        </CardHeader>
+    <div className="min-h-screen bg-muted/20 flex flex-col lg:flex-row">
+      <SideBanner />
 
-        {/* Interactive Form Fields */}
-        <CardContent className="flex-grow flex flex-col justify-between">
-          <form onSubmit={handleSubmit} className="space-y-4 flex-grow flex flex-col justify-between gap-5">
-            
-            <div className="space-y-4">
-              {/* Full Name */}
-              <div className="space-y-1.5">
-                <Label htmlFor="fullName">Full Name</Label>
-                <Input
-                  id="fullName"
-                  name="fullName"
-                  type="text"
-                  placeholder="Martha Johnson"
-                  value={formData.fullName}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
+      {/* Main Registration Panel */}
+      <div className="flex-1 p-6 lg:p-12 overflow-y-auto max-w-4xl mx-auto w-full">
+        {/* Progress Bar (Desktop native, step 0: Account) */}
+        <div className="mb-8 border-b border-border/80 pb-4">
+          <VendorProgressBar
+            steps={['Account', 'Profile', 'KYC', 'Store']}
+            current={0}
+          />
+        </div>
 
-              {/* Email */}
-              <div className="space-y-1.5">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="martha@email.com"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-
-              {/* Phone Number */}
-              <div className="space-y-1.5">
-                <Label htmlFor="phoneNumber">Phone Number</Label>
-                <Input
-                  id="phoneNumber"
-                  name="phoneNumber"
-                  type="tel"
-                  placeholder="+234 800 000 0000"
-                  value={formData.phoneNumber}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-
-              {/* Password */}
-              <div className="space-y-1.5">
-                <Label htmlFor="password">Password</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    name="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
-                    value={formData.password}
-                    onChange={handleChange}
-                    className="pr-10"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center text-muted-foreground hover:text-foreground transition"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Confirm Password */}
-              <div className="space-y-1.5">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <div className="relative">
-                  <Input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type={showConfirmPassword ? "text" : "password"}
-                    placeholder="••••••••"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    className="pr-10"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center text-muted-foreground hover:text-foreground transition"
-                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                  >
-                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-              </div>
-            </div>
-
+        {/* Header Title with Back button pointing strictly to Login */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate('/')}
+              className="w-9 h-9 rounded-full bg-input flex items-center justify-center hover:bg-border/60 transition-colors cursor-pointer"
+              aria-label="Go to login"
+            >
+              <Icon i="arrow-left" size={16} />
+            </button>
             <div>
-              <Button type="submit" className="w-full rounded-full font-medium">
+              <h2 className="text-2xl font-bold font-headings text-foreground leading-tight">
                 Create Account
-              </Button>
+              </h2>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                Register as a vendor to start selling
+              </p>
+            </div>
+          </div>
+        </div>
 
-              {/* Clean Redirection Links */}
-              <div className="text-center text-xs text-muted-foreground font-medium pt-4">
-                Already have an account?{" "}
-                <a href="/" className="text-primary hover:underline font-semibold transition">
-                  Login
-                </a>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+          {validationError && (
+            <div className="bg-destructive/10 border border-destructive/20 text-destructive text-sm px-4 py-3 rounded-xl font-medium">
+              {validationError}
+            </div>
+          )}
+
+          <div className="bg-surface p-6 rounded-2xl border border-border/70 shadow-xs flex flex-col gap-5">
+            {/* First Name & Last Name */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <VendorInput
+                label="First Name"
+                name="firstName"
+                type="text"
+                placeholder="Martha"
+                value={formData.firstName}
+                onChange={handleChange}
+                required
+              />
+
+              <VendorInput
+                label="Last Name"
+                name="lastName"
+                type="text"
+                placeholder="Johnson"
+                value={formData.lastName}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            {/* Email & Phone Number */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <VendorInput
+                label="Email Address"
+                name="email"
+                type="email"
+                placeholder="martha@email.com"
+                value={formData.email}
+                onChange={handleChange}
+                required
+              />
+
+              <VendorInput
+                label="Phone Number"
+                name="phoneNumber"
+                type="tel"
+                placeholder="+234 800 000 0000"
+                value={formData.phoneNumber}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            {/* Passwords */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="relative w-full">
+                <VendorInput
+                  label="Password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-[44px] text-muted-foreground hover:text-foreground transition cursor-pointer"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+
+              <div className="relative w-full">
+                <VendorInput
+                  label="Confirm Password"
+                  name="confirmPassword"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3.5 top-[44px] text-muted-foreground hover:text-foreground transition cursor-pointer"
+                  aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
             </div>
 
-          </form>
-        </CardContent>
+            {/* Terms and Conditions Checkbox */}
+            <div
+              onClick={() => setTermsAccepted(!termsAccepted)}
+              className="flex items-start gap-3 mt-2 cursor-pointer select-none"
+            >
+              <div
+                className={`w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 mt-0.5 transition-all ${
+                  termsAccepted
+                    ? 'border-primary bg-primary text-white'
+                    : 'border-border bg-input'
+                }`}
+              >
+                {termsAccepted && <Icon i="check" size={12} />}
+              </div>
+              <span className="text-xs text-muted-foreground leading-relaxed font-medium">
+                I agree to the{' '}
+                <a
+                  href="/terms"
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-primary font-bold hover:underline"
+                >
+                  Terms of Service
+                </a>{' '}
+                and{' '}
+                <a
+                  href="/privacy"
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-primary font-bold hover:underline"
+                >
+                  Privacy Policy
+                </a>
+              </span>
+            </div>
+          </div>
 
-      </Card>
+          <VendorButton type="submit" className="mt-2" disabled={!termsAccepted}>
+            Create Account
+          </VendorButton>
+
+          <p className="text-sm text-muted-foreground text-center">
+            Already have an account?{' '}
+            <button
+              type="button"
+              onClick={() => navigate('/')}
+              className="text-primary font-bold hover:underline cursor-pointer bg-transparent border-none outline-none font-body"
+            >
+              Login
+            </button>
+          </p>
+        </form>
+      </div>
     </div>
-  )
+  );
 }
-
-export default Register
