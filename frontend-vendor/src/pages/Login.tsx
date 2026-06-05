@@ -14,7 +14,7 @@ import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router";
 import { useAuth } from "@/hooks/useAuth"
 
-const Login = () => {
+export default function Login () {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -173,5 +173,3 @@ const Login = () => {
     </div>
   );
 };
-
-export default Login;

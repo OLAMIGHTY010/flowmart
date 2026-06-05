@@ -1,6 +1,7 @@
 import * as React from "react"
 import { useState } from "react"
 import { Eye, EyeOff } from "lucide-react"
+import { useNavigate } from "react-router"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -13,6 +14,7 @@ import {
 } from "@/components/ui/card"
 
 const Register = () => {
+  const navigate = useNavigate()
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -31,8 +33,8 @@ const Register = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    // Optional: Add password === confirmPassword matching validation check here
     console.log("Form Submitted Successfully:", formData)
+    navigate("/kyc")
   }
 
   return (
