@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route } from "react-router";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import ProfileSetup from "@/pages/ProfileSetup";
+import KYCVerification from "@/pages/KYCVerification";
 
 const queryClient = new QueryClient();
 
@@ -16,6 +17,7 @@ const App = () => {
           <Route path="/" element={<Login />} />
           <Route path="/register" element={<Register />} />
            <Route path="/profile-setup" element={<ProfileSetup />} />
+           <Route path="/kyc-verification" element={<KYCVerification />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>
