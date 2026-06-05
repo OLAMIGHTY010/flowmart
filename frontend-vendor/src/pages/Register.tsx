@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Eye, EyeOff } from 'lucide-react';
-import VendorButton from '@/components/VendorButton';
-import VendorInput from '@/components/VendorInput';
+import { VendorButton } from '@/components/ui/button';
+import { VendorInput } from '@/components/ui/input';
 import VendorProgressBar from '@/components/VendorProgressBar';
 import Icon from '@/components/Icon';
 import { Card, CardContent } from '@/components/ui/card';

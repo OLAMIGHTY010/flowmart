@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import VendorButton from '@/components/VendorButton';
+import { VendorButton } from '@/components/ui/button';
 import VendorProgressBar from '@/components/VendorProgressBar';
 import Icon from '@/components/Icon';
 import SideBanner from '@/components/SideBanner';
