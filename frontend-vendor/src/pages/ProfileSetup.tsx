@@ -4,6 +4,8 @@ import VendorButton from '@/components/VendorButton';
 import VendorInput from '@/components/VendorInput';
 import VendorProgressBar from '@/components/VendorProgressBar';
 import Icon from '@/components/Icon';
+import { Card, CardContent } from '@/components/ui/card';
+import SideBanner from '@/components/SideBanner';
 
 interface ProfileSetupProps {
   onNext?: () => void;
@@ -58,46 +60,7 @@ export default function ProfileSetup({ onNext }: ProfileSetupProps) {
         </div>
       )}
 
-      {/* Side Banner: RCCG Holy Ghost Conference 2025 */}
-      <div className="relative hidden lg:flex lg:w-2/5 xl:w-1/3 bg-dark-header text-white p-8 flex-col justify-between overflow-hidden">
-        {/* Background Decorative Overlay */}
-        <div className="absolute inset-0 opacity-25 mix-blend-overlay">
-          <img
-            src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80&w=1200"
-            alt="Worship scene background"
-            className="w-full h-full object-cover"
-          />
-        </div>
-
-        {/* Top Branding */}
-        <div className="relative z-10 flex items-center gap-2">
-          <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-lg">
-            🌿
-          </div>
-          <span className="text-lg font-bold tracking-tight text-white">FlowMart Portal</span>
-        </div>
-
-        {/* Event Center Display */}
-        <div className="relative z-10 my-auto py-12 flex flex-col gap-4">
-          <div className="bg-white/10 backdrop-blur-md px-3.5 py-1.5 rounded-full text-[10px] font-bold tracking-widest uppercase text-primary bg-secondary/90 w-fit">
-            Partner Event 2025
-          </div>
-          <h1 className="text-3xl font-extrabold tracking-tight leading-tight">
-            RCCG Holy Ghost Congress 2025
-          </h1>
-          <p className="text-sm text-white/80 leading-relaxed font-light">
-            Theme: <strong className="font-bold text-white">"The God of All Flesh"</strong>
-          </p>
-          <p className="text-xs text-white/60 leading-relaxed">
-            December 8 – 14, 2025 • Redemption City, Nigeria
-          </p>
-        </div>
-
-        {/* Footer info */}
-        <div className="relative z-10 text-xs text-white/50">
-          © 2026 FlowMart. All rights reserved.
-        </div>
-      </div>
+      <SideBanner />
 
       {/* Main Form Content Panel */}
       <div className="flex-1 p-6 lg:p-12 overflow-y-auto max-w-4xl mx-auto w-full">
@@ -132,97 +95,101 @@ export default function ProfileSetup({ onNext }: ProfileSetupProps) {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-8">
           {/* Avatar Upload */}
-          <div className="bg-surface p-6 rounded-2xl border border-border/70 shadow-xs flex flex-col items-center justify-center gap-3">
-            <div
-              onClick={() => fileInputRef.current?.click()}
-              className="relative w-24 h-24 bg-muted rounded-full cursor-pointer group border-2 border-background shadow-inner flex items-center justify-center overflow-hidden transition-all hover:ring-4 hover:ring-primary/20"
-            >
-              {profileImage ? (
-                <img src={profileImage} alt="Avatar" className="w-full h-full object-cover" />
-              ) : (
-                <div className="text-muted-foreground flex items-center justify-center">
-                  <Icon i="user" size={40} className="text-muted-foreground" />
+          <Card className="bg-surface p-6 rounded-2xl border border-border/70 shadow-xs">
+            <CardContent className="p-0 flex flex-col items-center justify-center gap-3">
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="relative w-24 h-24 bg-muted rounded-full cursor-pointer group border-2 border-background shadow-inner flex items-center justify-center overflow-hidden transition-all hover:ring-4 hover:ring-primary/20"
+              >
+                {profileImage ? (
+                  <img src={profileImage} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="text-muted-foreground flex items-center justify-center">
+                    <Icon i="user" size={40} className="text-muted-foreground" />
+                  </div>
+                )}
+                {/* Camera overlay */}
+                <div className="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full border-2 border-surface flex items-center justify-center shadow-md">
+                  <Icon i="camera" size={14} className="text-primary-foreground" />
                 </div>
-              )}
-              {/* Camera overlay */}
-              <div className="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full border-2 border-surface flex items-center justify-center shadow-md">
-                <Icon i="camera" size={14} className="text-primary-foreground" />
               </div>
-            </div>
 
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleImageChange}
-              accept="image/*"
-              className="hidden"
-            />
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleImageChange}
+                accept="image/*"
+                className="hidden"
+              />
 
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="text-xs font-semibold text-primary hover:underline transition-all"
-            >
-              Tap to upload profile photo
-            </button>
-          </div>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="text-xs font-semibold text-primary hover:underline transition-all"
+              >
+                Tap to upload profile photo
+              </button>
+            </CardContent>
+          </Card>
 
           {/* Form Fields Section */}
-          <div className="bg-surface p-6 rounded-2xl border border-border/70 shadow-xs flex flex-col gap-5">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <VendorInput
-                label="Display Name"
-                placeholder="How you appear to customers"
-                icon="user"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                required
-              />
+          <Card className="bg-surface p-6 rounded-2xl border border-border/70 shadow-xs">
+            <CardContent className="p-0 flex flex-col gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <VendorInput
+                  label="Display Name"
+                  placeholder="How you appear to customers"
+                  icon="user"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  required
+                />
 
-              <VendorInput
-                label="Business Phone"
-                placeholder="+234 800 000 0000"
-                icon="phone"
-                value={businessPhone}
-                onChange={(e) => setBusinessPhone(e.target.value)}
-                required
-              />
-            </div>
+                <VendorInput
+                  label="Business Phone"
+                  placeholder="+234 800 000 0000"
+                  icon="phone"
+                  value={businessPhone}
+                  onChange={(e) => setBusinessPhone(e.target.value)}
+                  required
+                />
+              </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <VendorInput
-                label="State / Region"
-                placeholder="Select your state"
-                icon="map-pin"
-                value={stateRegion}
-                onChange={(e) => setStateRegion(e.target.value)}
-                required
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <VendorInput
+                  label="State / Region"
+                  placeholder="Select your state"
+                  icon="map-pin"
+                  value={stateRegion}
+                  onChange={(e) => setStateRegion(e.target.value)}
+                  required
+                />
 
-              <VendorInput
-                label="City"
-                placeholder="Enter your city"
-                icon="building"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                required
-              />
-            </div>
+                <VendorInput
+                  label="City"
+                  placeholder="Enter your city"
+                  icon="building"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  required
+                />
+              </div>
 
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-semibold text-foreground" htmlFor="bio">
-                Bio
-              </label>
-              <textarea
-                id="bio"
-                placeholder="Short description about your business..."
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                rows={4}
-                className="w-full rounded-xl border border-border bg-input px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none transition focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
-              />
-            </div>
-          </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-semibold text-foreground" htmlFor="bio">
+                  Bio
+                </label>
+                <textarea
+                  id="bio"
+                  placeholder="Short description about your business..."
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  rows={4}
+                  className="w-full rounded-xl border border-border bg-input px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none transition focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
+                />
+              </div>
+            </CardContent>
+          </Card>
 
           <VendorButton type="submit" className="mt-2">
             Save & Continue
