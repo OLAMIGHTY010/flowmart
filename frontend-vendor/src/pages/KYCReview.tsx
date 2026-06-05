@@ -27,7 +27,7 @@ const reviewSections = [
     heading: 'Bank Details',
     icon: 'landmark',
     items: [
-      { label: 'Bank', value: 'First Bank Nigeria' },
+      { label: 'Bank', value: 'First Bank of Nigeria (FirstBank)' },
       { label: 'Account No.', value: '0123456789' },
       { label: 'Account Name', value: 'Chukwuemeka Adaeze' },
     ],
@@ -123,7 +123,7 @@ export default function KYCReview() {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => navigate(-1)}
+              onClick={() => navigate('/kyc')}
               className="w-9 h-9 rounded-full bg-input flex items-center justify-center hover:bg-border/60 transition-colors"
               aria-label="Go back"
             >

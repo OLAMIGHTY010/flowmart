@@ -5,6 +5,35 @@ import VendorInput from '@/components/VendorInput';
 import VendorProgressBar from '@/components/VendorProgressBar';
 import Icon from '@/components/Icon';
 
+const NIGERIAN_BANKS = [
+  'Access Bank',
+  'Zenith Bank',
+  'Guaranty Trust Bank (GTBank)',
+  'United Bank for Africa (UBA)',
+  'First Bank of Nigeria (FirstBank)',
+  'Ecobank Nigeria',
+  'Fidelity Bank',
+  'Union Bank of Nigeria',
+  'Stanbic IBTC Bank',
+  'Sterling Bank',
+  'Wema Bank',
+  'Keystone Bank',
+  'Polaris Bank',
+  'Unity Bank',
+  'Providus Bank',
+  'Jaiz Bank',
+  'Taj Bank',
+  'Lotus Bank',
+  'Globus Bank',
+  'Titan Trust Bank',
+  'OPay',
+  'Moniepoint MFB',
+  'Kuda Bank',
+  'PalmPay',
+  'VFD Microfinance Bank',
+  'Rubies Bank'
+].sort();
+
 export default function KYCInfo() {
   const navigate = useNavigate();
   const [showToast, setShowToast] = useState(false);
@@ -19,7 +48,7 @@ export default function KYCInfo() {
   const [cacNo, setCacNo] = useState('');
   const [tin, setTin] = useState('');
 
-  const [bankName, setBankName] = useState('First Bank Nigeria');
+  const [bankName, setBankName] = useState('First Bank of Nigeria (FirstBank)');
   const [accountNumber, setAccountNumber] = useState('0123456789');
   const [accountName, setAccountName] = useState('Chukwuemeka Adaeze');
 
@@ -99,7 +128,7 @@ export default function KYCInfo() {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => navigate(-1)}
+              onClick={() => navigate('/profile-setup')}
               className="w-9 h-9 rounded-full bg-input flex items-center justify-center hover:bg-border/60 transition-colors"
               aria-label="Go back"
             >
@@ -241,14 +270,25 @@ export default function KYCInfo() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <VendorInput
-                label="Bank Name"
-                placeholder="Select bank"
-                icon="chevron-down"
-                value={bankName}
-                onChange={(e) => setBankName(e.target.value)}
-                required
-              />
+              <div className="flex flex-col gap-1.5 w-full">
+                <label className="text-sm font-body text-foreground font-semibold">Bank Name</label>
+                <div className="flex items-center gap-2 bg-input border border-border rounded-xl px-3.5 py-3 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all">
+                  <Icon i="landmark" size={16} className="text-muted-foreground" />
+                  <select
+                    value={bankName}
+                    onChange={(e) => setBankName(e.target.value)}
+                    className="w-full bg-transparent border-none outline-none text-sm font-body p-0 focus:ring-0 focus:outline-none text-foreground font-semibold cursor-pointer"
+                    required
+                  >
+                    <option value="" disabled>Select bank</option>
+                    {NIGERIAN_BANKS.map((bank) => (
+                      <option key={bank} value={bank} className="text-foreground font-medium">
+                        {bank}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
 
               <VendorInput
                 label="Account Number"

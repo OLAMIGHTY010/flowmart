@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-import { useNavigate } from "react-router";
+import { Navigate } from "react-router";
 import { useAuth } from "@/hooks/useAuth"
 
 export default function Login () {
@@ -20,14 +20,12 @@ export default function Login () {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(""); // ✅ Added missing state hook
-  const navigate = useNavigate()
-
   const { login, user } = useAuth();
   const isFormEmpty = email.trim() === '' || password.trim() === '';
 
   // ✅ Safe Redirect: If user state exists, cleanly exit and bounce to layout
   if (user) {
-    return navigate("/dashboard", { replace: true });
+    return <Navigate to="/dashboard" replace />;
   }
 
   const handleLogin = async (e: React.FormEvent) => {
