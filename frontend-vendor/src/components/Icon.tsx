@@ -15,6 +15,10 @@ import {
   Battery,
   FileCheck,
   CheckCircle,
+  Camera,
+  Phone,
+  MapPin,
+  Building,
 } from 'lucide-react';
 
 interface IconProps {
@@ -39,6 +43,10 @@ const iconMap: Record<string, React.ComponentType<any>> = {
   'battery': Battery,
   'file-check': FileCheck,
   'check-circle': CheckCircle,
+  'camera': Camera,
+  'phone': Phone,
+  'map-pin': MapPin,
+  'building': Building,
 };
 
 export default function Icon({ i, size = 16, className = '' }: IconProps) {
