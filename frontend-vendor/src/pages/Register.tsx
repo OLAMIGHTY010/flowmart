@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 import { VendorButton } from '@/components/ui/button';
 import { VendorInput } from '@/components/ui/input';
 import VendorProgressBar from '@/components/VendorProgressBar';
@@ -9,6 +10,8 @@ import SideBanner from '@/components/SideBanner';
 
 export default function Register() {
   const navigate = useNavigate();
+  const { register } = useAuth();
+  
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -21,6 +24,7 @@ export default function Register() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [validationError, setValidationError] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -28,7 +32,7 @@ export default function Register() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setValidationError('');
 
@@ -42,8 +46,21 @@ export default function Register() {
       return;
     }
 
-    console.log('Account Created Successfully:', formData);
-    navigate('/profile-setup'); // Redirect to Step 2: Profile Setup
+    setLoading(true);
+    const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`;
+    const result = await register({
+      fullName,
+      email: formData.email,
+      password: formData.password,
+      role: 'vendor',
+    });
+    setLoading(false);
+
+    if (result.success) {
+      navigate('/profile-setup'); // Redirect to Step 2: Profile Setup
+    } else {
+      setValidationError(result.error || 'Failed to create account. Please try again.');
+    }
   };
 
   return (
@@ -213,7 +230,8 @@ export default function Register() {
             </div>
           </div>
 
-          <VendorButton type="submit" className="mt-2" disabled={!termsAccepted}>
+          <VendorButton type="submit" className="mt-2" disabled={!termsAccepted || loading}>
+            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin inline" />}
             Create Account
           </VendorButton>
 

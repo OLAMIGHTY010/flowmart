@@ -1,5 +1,7 @@
 import * as React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router";
+import { useKYCStatus } from "@/hooks/useVendorQueries";
 import {
   ShieldCheck,
   CheckCircle2,
@@ -14,18 +16,57 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
-export default function KYCVerification({ onDone }: { onDone?: () => void }) {
+export default function KYCVerification() {
+  const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
-  const referenceId = "KYC-2024-00391";
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(referenceId).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  };
+  // Poll KYC status from TanStack query (refetch every 3 seconds)
+  const { data: kycData } = useKYCStatus({ refetchInterval: 3000 });
 
-  const steps = [
+  // Mock Admin approval simulation: automatically approve after 8 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const currentStatus = localStorage.getItem("vendor_kyc_status");
+      if (currentStatus) {
+        try {
+          const parsed = JSON.parse(currentStatus);
+          if (parsed.status !== "approved") {
+            parsed.status = "approved";
+            parsed.steps = [
+              { label: "Application Submitted", time: "Today, 10:23 AM", status: "done" },
+              { label: "Document Review", time: "Today, 10:25 AM", status: "done" },
+              { label: "Admin Verification", time: "Today, 10:30 AM", status: "done" },
+              { label: "Account Activated", time: "Just now", status: "done" }
+            ];
+            localStorage.setItem("vendor_kyc_status", JSON.stringify(parsed));
+          }
+        } catch {
+          // ignore
+        }
+      } else {
+        // Create an approved status if none exists
+        localStorage.setItem("vendor_kyc_status", JSON.stringify({
+          status: "approved",
+          referenceId: "KYC-2024-00391",
+          steps: [
+            { label: "Application Submitted", time: "Today, 10:23 AM", status: "done" },
+            { label: "Document Review", time: "Today, 10:25 AM", status: "done" },
+            { label: "Admin Verification", time: "Today, 10:30 AM", status: "done" },
+            { label: "Account Activated", time: "Just now", status: "done" }
+          ]
+        }));
+      }
+    }, 8000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  const referenceId = kycData?.referenceId || "KYC-2024-00391";
+  const status = kycData?.status || "under_review";
+  const isApproved = status === "approved";
+
+  // Use dynamic steps from API or fallback
+  const steps = kycData?.steps || [
     {
       label: "Application Submitted",
       time: "Today, 10:23 AM",
@@ -47,6 +88,13 @@ export default function KYCVerification({ onDone }: { onDone?: () => void }) {
       status: "pending",
     },
   ];
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(referenceId).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
 
   return (
     <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
@@ -72,15 +120,19 @@ export default function KYCVerification({ onDone }: { onDone?: () => void }) {
 
             {/* Step 3 — Active */}
             <div className="flex flex-col items-center gap-1 flex-1">
-              <div className="w-6 h-6 rounded-full bg-white text-[#155331] flex items-center justify-center font-bold text-[11px]">3</div>
-              <span className="text-white text-[11px] font-semibold">KYC</span>
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold ${isApproved ? 'bg-[#22c55e] text-white' : 'bg-white text-[#155331]'}`}>
+                {isApproved ? "✓" : "3"}
+              </div>
+              <span className={`${isApproved ? 'text-[#22c55e]' : 'text-white'} text-[11px] font-semibold`}>KYC</span>
             </div>
-            <div className="h-[2px] bg-muted/30 flex-grow -mt-4 mx-1" />
+            <div className={`h-[2px] flex-grow -mt-4 mx-1 ${isApproved ? 'bg-[#22c55e]' : 'bg-muted/30'}`} />
 
             {/* Step 4 */}
             <div className="flex flex-col items-center gap-1 flex-1">
-              <div className="w-6 h-6 rounded-full bg-[#1e293b]/40 border border-white/20 text-white/60 flex items-center justify-center text-[11px]">4</div>
-              <span className="text-white/60 text-[11px]">Store</span>
+              <div className={`w-6 h-6 rounded-full border flex items-center justify-center text-[11px] ${isApproved ? 'bg-white text-[#155331] font-bold border-white' : 'bg-[#1e293b]/40 border-white/20 text-white/60'}`}>
+                4
+              </div>
+              <span className={`${isApproved ? 'text-white font-semibold' : 'text-white/60'} text-[11px]`}>Store</span>
             </div>
           </div>
 
@@ -89,21 +141,32 @@ export default function KYCVerification({ onDone }: { onDone?: () => void }) {
             <ShieldCheck className="w-8 h-8 text-[#22c55e]" strokeWidth={2} />
           </div>
 
-          <h1 className="text-xl font-bold mb-2">Verification Submitted!</h1>
+          <h1 className="text-xl font-bold mb-2">
+            {isApproved ? "Account Activated!" : "Verification Submitted!"}
+          </h1>
           <p className="text-sm text-white/70 max-w-[240px] leading-relaxed">
-            Our admin team is reviewing your documents. This usually takes 1–2 business days.
+            {isApproved 
+              ? "Your account has been fully verified and activated. Welcome aboard!" 
+              : "Our admin team is reviewing your documents. This usually takes 1–2 business days."}
           </p>
         </div>
 
         {/* BODY */}
         <CardContent className="pt-5 pb-6 flex flex-col gap-5 flex-grow">
 
-          {/* Under Review Badge */}
+          {/* Status Badge */}
           <div className="flex justify-center">
-            <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-amber-300 bg-amber-50 text-amber-600 text-xs font-semibold">
-              <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />
-              Under Review
-            </span>
+            {isApproved ? (
+              <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-green-300 bg-green-50 text-green-600 text-xs font-semibold">
+                <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
+                Active
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-amber-300 bg-amber-50 text-amber-600 text-xs font-semibold">
+                <span className="w-2 h-2 rounded-full bg-amber-400 inline-block animate-pulse" />
+                Under Review
+              </span>
+            )}
           </div>
 
           {/* Timeline Steps */}
@@ -159,7 +222,7 @@ export default function KYCVerification({ onDone }: { onDone?: () => void }) {
             </div>
             <button
               onClick={handleCopy}
-              className="flex items-center gap-1.5 text-xs text-[#10a34c] font-semibold hover:opacity-80 transition"
+              className="flex items-center gap-1.5 text-xs text-[#10a34c] font-semibold hover:opacity-80 transition cursor-pointer"
             >
               <Copy className="w-3.5 h-3.5" />
               {copied ? "Copied!" : "Copy"}
@@ -184,11 +247,16 @@ export default function KYCVerification({ onDone }: { onDone?: () => void }) {
             </div>
           </div>
 
-          {/* Go to Dashboard Button */}
+          {/* Go to Dashboard Button (Enabled only when approved) */}
           <Button
-            onClick={onDone}
-            className="w-full bg-transparent hover:bg-muted/50 border border-border text-foreground font-semibold py-3.5 rounded-full mt-1"
-            variant="outline"
+            onClick={() => isApproved && navigate('/dashboard')}
+            disabled={!isApproved}
+            className={`w-full font-bold py-3.5 rounded-full mt-1 transition-all ${
+              isApproved 
+                ? "bg-primary hover:bg-primary/90 text-primary-foreground border-none shadow-md cursor-pointer active:scale-95" 
+                : "bg-muted text-muted-foreground border border-border cursor-not-allowed opacity-60"
+            }`}
+            variant={isApproved ? "default" : "outline"}
           >
             <LayoutDashboard className="w-4 h-4 mr-2" />
             Go to Dashboard
@@ -196,7 +264,7 @@ export default function KYCVerification({ onDone }: { onDone?: () => void }) {
 
           {/* Help Link */}
           <div className="flex justify-center">
-            <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition">
+            <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition cursor-pointer bg-transparent border-none">
               <HelpCircle className="w-3.5 h-3.5" />
               Need help? Contact support
             </button>

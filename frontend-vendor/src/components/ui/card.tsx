@@ -8,35 +8,44 @@ interface CustomCardProps extends React.ComponentProps<"div"> {
 }
 
 function Card({ className, title, subtitle, status, children, ...props }: CustomCardProps) {
+  const isRowLayout = title || subtitle || status;
+
   return (
     <div
       data-slot="card"
       className={cn(
-        "flex items-center justify-between p-4 rounded-xl bg-card border border-border shadow-sm gap-4",
+        "rounded-xl bg-card border border-border shadow-sm",
+        isRowLayout ? "flex items-center justify-between p-4 gap-4" : "",
         className
       )}
       {...props}
     >
-      {/* Left side: Text details */}
-      <div className="flex flex-col gap-0.5">
-        {title && <h4 className="text-sm font-semibold text-foreground">{title}</h4>}
-        {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
-      </div>
+      {isRowLayout ? (
+        <>
+          {/* Left side: Text details */}
+          <div className="flex flex-col gap-0.5">
+            {title && <h4 className="text-sm font-semibold text-foreground">{title}</h4>}
+            {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
+          </div>
 
-      {/* Right side: Status indicator / Action slot */}
-      <div className="flex items-center gap-2">
-        {status && (
-          <span className={cn(
-            "text-xs font-medium px-2.5 py-1 rounded-full uppercase tracking-wider text-[10px]",
-            status === "approved" && "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-            status === "pending" && "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-            status === "upload" && "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-          )}>
-            {status}
-          </span>
-        )}
-        {children}
-      </div>
+          {/* Right side: Status indicator / Action slot */}
+          <div className="flex items-center gap-2">
+            {status && (
+              <span className={cn(
+                "text-xs font-medium px-2.5 py-1 rounded-full uppercase tracking-wider text-[10px]",
+                status === "approved" && "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+                status === "pending" && " text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+                status === "upload" && "bg-blue-100  text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+              )}>
+                {status}
+              </span>
+            )}
+            {children}
+          </div>
+        </>
+      ) : (
+        children
+      )}
     </div>
   );
 }
