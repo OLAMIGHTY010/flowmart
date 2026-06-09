@@ -9,7 +9,16 @@ export interface AppUser {
   gender?: string;
   avatar?: string;
   status?: string;
+  isVerified?: boolean;
+  profileCompleted?: boolean;
 }
+
+export type GuardOptions = {
+  requireAuth?: boolean;
+  redirectTo?: string;
+  requireProfile?: boolean;
+  requireKYC?: boolean;
+};
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -106,4 +115,17 @@ export interface Order {
   deliveryPin?: string;
   createdAt: string;
   items?: OrderItem[];
+}
+
+export type ToastType = "success" | "error";
+
+export type ToastState = {
+  message: string;
+  type: ToastType;
+}
+
+export type ToastContextType = {
+  toast: ToastState | null;
+  showToast: (message: string, type?: ToastType) => void;
+  clearToast: () => void;
 }

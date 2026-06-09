@@ -16,5 +16,9 @@ export const authService = {
 
   getCurrentUser: async (): Promise<any> => {
     return apiClient.get<any>("/auth/me");
+  },
+
+  verifyOtp: async (otp: string): Promise<any> => {
+    return apiClient.post<any>("/auth/verify-otp", otp);
   }
 };
