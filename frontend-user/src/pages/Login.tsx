@@ -1,20 +1,31 @@
 import React, { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
-// import { useAuth } from '@/hooks/useAuth';
 import { VendorButton } from '@/components/ui/button';
 import { VendorInput } from '@/components/ui/input';
 // import SideBanner from '@/components/SideBanner';
+
+// --- MOCK OR TEMPORARY AUTH HOOK TYPE DEFINITION TO STOP COMPILER ERRORS ---
+// Un-comment and remove this block once your actual '@/hooks/useAuth' is ready.
+const useAuth = () => {
+  return {
+    user: null as any, // Change to user object if logged in (e.g., { name: 'Martha' })
+    login: async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+      // Mock API call
+      return new Promise((resolve) => setTimeout(() => resolve({ success: true }), 1000));
+    }
+  };
+};
 
 export default function Login() {
   const navigate = useNavigate();
   const { login, user } = useAuth();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>('');
 
   if (user) {
     return <Navigate to="/dashboard" replace />;
@@ -22,7 +33,7 @@ export default function Login() {
 
   const isFormEmpty = email.trim() === '' || password.trim() === '';
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
 
@@ -77,7 +88,7 @@ export default function Login() {
                 type="email"
                 placeholder="martha@email.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                 required
               />
 
@@ -88,7 +99,7 @@ export default function Login() {
                   type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                   required
                 />
                 <button
