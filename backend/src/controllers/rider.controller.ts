@@ -90,3 +90,40 @@ export const confirmDelivery = async (req: AuthenticatedRequest, res: Response) 
     return res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 };
+
+// 4. Confirm Delivery via QR Scan
+export const confirmDeliveryViaQR = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { scannedPayload } = req.body; 
+    const riderId = req.user?.id;
+
+    if (!scannedPayload) return res.status(400).json({ success: false, message: 'Missing QR payload' });
+
+    let parsedData;
+    try {
+      parsedData = JSON.parse(scannedPayload);
+    } catch (e) {
+      return res.status(400).json({ success: false, message: 'Invalid QR code format' });
+    }
+
+    const { orderId, pin } = parsedData;
+
+    const [activeOrder] = await db.select().from(orders)
+      .where(and(eq(orders.id, orderId), eq(orders.riderId, riderId!)))
+      .limit(1);
+
+    if (!activeOrder || activeOrder.deliveryPin !== pin) {
+      return res.status(400).json({ success: false, message: 'Invalid QR Code or Order not assigned to you' });
+    }
+
+    const [deliveredOrder] = await db.update(orders)
+      .set({ status: 'delivered', updatedAt: new Date() })
+      .where(eq(orders.id, orderId))
+      .returning();
+
+    return res.status(200).json({ success: true, message: 'QR Delivery confirmed', order: deliveredOrder });
+  } catch (error) {
+    console.error('QR Confirm Error:', error);
+    return res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+};
