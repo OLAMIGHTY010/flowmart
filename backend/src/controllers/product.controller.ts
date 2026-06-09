@@ -52,7 +52,7 @@ export const updateProduct = async (req: AuthenticatedRequest, res: Response) =>
 
     // Verify the product belongs to the vendor requesting the update
     const [existingProduct] = await db.select().from(products)
-      .where(and(eq(products.id, productId), eq(products.vendorId, vendorId!)))
+      .where(and(eq(products.id, productId as string), eq(products.vendorId, vendorId!)))
       .limit(1);
 
     if (!existingProduct) {
@@ -68,7 +68,7 @@ export const updateProduct = async (req: AuthenticatedRequest, res: Response) =>
         imageUrl: imageUrl || existingProduct.imageUrl,
         updatedAt: new Date(),
       })
-      .where(eq(products.id, productId))
+      .where(eq(products.id, productId as string))
       .returning();
 
     return res.status(200).json({ success: true, message: 'Product updated', product: updatedProduct });
@@ -85,7 +85,7 @@ export const deleteProduct = async (req: AuthenticatedRequest, res: Response) =>
     const vendorId = req.user?.id;
 
     const [deletedProduct] = await db.delete(products)
-      .where(and(eq(products.id, productId), eq(products.vendorId, vendorId!)))
+      .where(and(eq(products.id, productId as string), eq(products.vendorId, vendorId!)))
       .returning();
 
     if (!deletedProduct) {
