@@ -1,14 +1,24 @@
-import type { ApiResponse, LoginRequest, LoginResponse } from "@/types/api";
+import type { ApiResponse, LoginRequest, LoginResponse, RegisterRequest, RegisterResponse } from "@/types/api";
 import { apiClient } from "./api";
 
 export const authService = {
-  // 1. Defined on authService using a comma (,) at the end instead of a semicolon (;)
-  initSession: (): Promise<void> => apiClient.post("/auth/init"),
-
-  login: async (data: LoginRequest): Promise<ApiResponse<LoginResponse>> => {
-    await authService.initSession(); // Or use: await this.initSession();
-    return apiClient.post<ApiResponse<LoginResponse>>("/login", data);
+  register: async (data: RegisterRequest): Promise<RegisterResponse> => {
+    return apiClient.post<RegisterResponse>("/auth/register", data);
   },
 
-  logout: () => apiClient.post<ApiResponse<null>>("/logout")
+  login: async (data: LoginRequest): Promise<LoginResponse> => {
+    return apiClient.post<LoginResponse>("/auth/login", data);
+  },
+
+  logout: (): Promise<ApiResponse<null>> => {
+    return apiClient.post<ApiResponse<null>>("/auth/logout");
+  },
+
+  getCurrentUser: async (): Promise<any> => {
+    return apiClient.get<any>("/auth/me");
+  },
+
+  verifyOtp: async (otp: string): Promise<any> => {
+    return apiClient.post<any>("/auth/verify-otp", otp);
+  }
 };

@@ -1,22 +1,12 @@
 import axios from "axios";
 import type { AxiosRequestConfig, AxiosError, AxiosInstance, InternalAxiosRequestConfig } from "axios";
 
-// import { API_BASE_URL } from '';
-
-/**
- * Setup Axios interceptors for JWT,
- * Response Interceptor: Handles expired tokens globally
- * If 401, the token is likely expired or invalid
- * Clear local storage and trigger global logout
- */
-
 class ApiClient {
   private axiosInstance: AxiosInstance;
 
   constructor() {
     this.axiosInstance = axios.create({
-      baseURL: "http://localhost:3000/api",
-      //   withCredentials: false, 
+      baseURL: "http://localhost:5000/api/v1",
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
@@ -67,6 +57,10 @@ class ApiClient {
 
   put<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
     return this.axiosInstance.put<T>(url, data, config).then(res => res.data);
+  }
+
+  patch<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
+    return this.axiosInstance.patch<T>(url, data, config).then(res => res.data);
   }
 
   delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {

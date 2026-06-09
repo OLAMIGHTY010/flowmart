@@ -1,12 +1,18 @@
 import { createContext } from "react";
-import type { AppUser } from "@/types/api";
+import type { AppUser, RegisterRequest } from "@/types/api";
 
-interface AuthContextType {
-    user: AppUser | null;
-    login: (username: string, password: string) => Promise<{
-        success: boolean, error: string
-    }>;
-    logout: () => Promise<void>;
+export interface AuthContextType {
+  user: AppUser | null;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<{
+    success: boolean;
+    error: string;
+  }>;
+  register: (data: RegisterRequest) => Promise<{
+    success: boolean;
+    error: string;
+  }>;
+  logout: () => Promise<void>;
 }
 
-export const AuthContext = createContext<AuthContextType | null>(null)
+export const AuthContext = createContext<AuthContextType | null>(null);
