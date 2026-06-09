@@ -15,7 +15,7 @@ export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
     }
 
     // Check product availability and stock
-    const [product] = await db.select().from(products).where(eq(products.id, productId)).limit(1);
+    const [product] = await db.select().from(products).where(eq(products.id, productId as string)).limit(1);
     
     if (!product || product.stockQuantity < quantity) {
       return res.status(400).json({ success: false, message: 'Product is unavailable or out of stock' });
@@ -45,7 +45,7 @@ export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
     // Deduct from inventory
     await db.update(products)
       .set({ stockQuantity: product.stockQuantity - quantity })
-      .where(eq(products.id, product.id));
+      .where(eq(products.id, product.id as string));
 
     return res.status(201).json({ success: true, message: 'Order placed successfully', order: newOrder });
   } catch (error) {
@@ -88,7 +88,7 @@ export const updateOrderStatus = async (req: AuthenticatedRequest, res: Response
 
     // Verify order belongs to this vendor
     const [existingOrder] = await db.select().from(orders)
-      .where(and(eq(orders.id, orderId), eq(orders.vendorId, vendorId!)))
+      .where(and(eq(orders.id, orderId as string), eq(orders.vendorId, vendorId!)))
       .limit(1);
 
     if (!existingOrder) {
@@ -100,7 +100,7 @@ export const updateOrderStatus = async (req: AuthenticatedRequest, res: Response
         status,
         updatedAt: new Date()
       })
-      .where(eq(orders.id, orderId))
+      .where(eq(orders.id, orderId as string))
       .returning();
 
     return res.status(200).json({ success: true, message: `Order marked as ${status}`, order: updatedOrder });

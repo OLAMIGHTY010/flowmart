@@ -26,7 +26,7 @@ export const acceptDelivery = async (req: AuthenticatedRequest, res: Response) =
 
     // Ensure the order is still available
     const [existingOrder] = await db.select().from(orders)
-      .where(and(eq(orders.id, orderId), isNull(orders.riderId)))
+      .where(and(eq(orders.id, orderId as string), isNull(orders.riderId)))
       .limit(1);
 
     if (!existingOrder) {
@@ -40,7 +40,7 @@ export const acceptDelivery = async (req: AuthenticatedRequest, res: Response) =
         status: 'assigned',
         updatedAt: new Date()
       })
-      .where(eq(orders.id, orderId))
+      .where(eq(orders.id, orderId as string))
       .returning();
 
     return res.status(200).json({ success: true, message: 'Delivery accepted', order: assignedOrder });
@@ -63,7 +63,7 @@ export const confirmDelivery = async (req: AuthenticatedRequest, res: Response) 
 
     // Find the order assigned to this specific rider
     const [activeOrder] = await db.select().from(orders)
-      .where(and(eq(orders.id, orderId), eq(orders.riderId, riderId!)))
+      .where(and(eq(orders.id, orderId as string), eq(orders.riderId, riderId!)))
       .limit(1);
 
     if (!activeOrder) {
@@ -81,7 +81,7 @@ export const confirmDelivery = async (req: AuthenticatedRequest, res: Response) 
         status: 'delivered',
         updatedAt: new Date()
       })
-      .where(eq(orders.id, orderId))
+      .where(eq(orders.id, orderId as string))
       .returning();
 
     return res.status(200).json({ success: true, message: 'Delivery confirmed successfully', order: deliveredOrder });
