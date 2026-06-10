@@ -2,7 +2,8 @@ import "./App.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-import Login from "@/pages/Login";
+// import Login from "@/pages/Login";
+import Homepage from "./pages/Homepage";
 // import Register from "@/pages/Register";
 // import VerifyOtpPage from "@/pages/VerifyOtpPage";
 // import ProfileSetup from "@/pages/ProfileSetup";
@@ -40,7 +41,7 @@ function App() {
         <Routes>
 
           {/* PUBLIC */}
-          <Route path="/" element={<Login />} />
+          <Route path="/" element={<Homepage />} />
           {/* <Route path="/register" element={<Register />} />
           <Route path="/otp" element={<VerifyOtpPage />} /> */}
 
