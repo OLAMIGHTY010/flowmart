@@ -24,9 +24,9 @@ function Input({ className, type, ...props }: InputProps) {
 }
 
 // ------------------------------------------------------------
-// VendorInput (Design System aligned)
+// UserInput (Design System aligned)
 // ------------------------------------------------------------
-interface VendorInputProps
+interface UserInputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   placeholder?: string;
@@ -35,7 +35,7 @@ interface VendorInputProps
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-function VendorInput({
+function UserInput({
   label = "Label",
   placeholder = "Enter value",
   icon = "",
@@ -43,7 +43,7 @@ function VendorInput({
   onChange,
   className = "",
   ...props
-}: VendorInputProps) {
+}: UserInputProps) {
   return (
     <div className="flex flex-col gap-[10px] w-full">
       
@@ -56,7 +56,7 @@ function VendorInput({
       <div
         className={cn(
           "flex items-center w-full gap-[10px]",
-          "border border-gray-300 rounded-sm",
+          "border border-gray-300 rounded-md",
           "px-3 py-[14px]",
           "bg-background",
           "transition",
@@ -84,4 +84,4 @@ function VendorInput({
   );
 }
 
-export { Input, VendorInput };
+export { Input, UserInput };
