@@ -127,7 +127,7 @@ export default function Homepage() {
                   {product.name}
                 </h3>
 
-                <p className="mt-2 text-lg font-bold text-primary">
+                <p className="mt-2 text-sm font-bold text-primary-40">
                   ₦{product.price.toLocaleString()}
                 </p>
 
