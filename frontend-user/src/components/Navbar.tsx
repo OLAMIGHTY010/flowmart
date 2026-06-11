@@ -151,21 +151,21 @@ export default function Navbar({
       </div>
 
       {/* DESKTOP */}
-      <div className="hidden border-b border-border bg-background lg:block">
+      <div className="hidden border-b border-border bg-background sticky top-0 z-50 lg:block">
         {/* Main Header */}
-        <div className="mx-auto flex h-20 max-w-7xl items-center gap-6 px-6">
+        <div className=" mx-auto flex h-20 max-w-full items-center gap-6 px-4">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3">
             <img
               src={logo}
               alt="Flowmart"
-              className="h-12 w-60 rounded-lg object-cover"
+              className="h-16 w-60 rounded-non object-cover"
             />
           </Link>
 
           {/* Search */}
           <div className="flex flex-1 gap-3">
-            <div className="flex flex-1 items-center rounded-lg border border-border px-4">
+            <div className="flex flex-1 items-center rounded-lg border border-border px-4 bg-white">
               <Search className="h-5 w-5 text-muted-foreground" />
 
               <input
