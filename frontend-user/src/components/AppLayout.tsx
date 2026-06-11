@@ -1,9 +1,9 @@
 import {
-  type ReactNode,
   useEffect,
   useRef,
   useState,
 } from "react";
+import { Outlet } from "react-router-dom";
 
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -13,12 +13,9 @@ type SortKey =
   | "price-asc"
   | "price-desc"
   | "stock";
+  
 
-const AppLayout = ({
-  children,
-}: {
-  children: ReactNode;
-}) => {
+const AppLayout = () => {
   const [query, setQuery] = useState("");
   const [showFilters, setShowFilters] =
     useState(false);
@@ -28,32 +25,38 @@ const AppLayout = ({
   const [showFooter, setShowFooter] =
     useState(true);
 
+  const scrollContainerRef =
+    useRef<HTMLDivElement>(null);
+
   const scrollTimeout = useRef<
     ReturnType<typeof setTimeout> | undefined
   >(undefined);
 
   useEffect(() => {
-    let lastScrollY = window.scrollY;
+    const container =
+      scrollContainerRef.current;
+
+    if (!container) return;
+
+    let lastScrollTop = 0;
 
     const handleScroll = () => {
-      const currentScrollY =
-        window.scrollY;
+      const currentScrollTop =
+        container.scrollTop;
 
-      // Hide footer while scrolling
+      // Hide footer while scrolling down
       if (
-        currentScrollY > lastScrollY &&
-        currentScrollY > 50
+        currentScrollTop > lastScrollTop &&
+        currentScrollTop > 50
       ) {
         setShowFooter(false);
       }
 
-      lastScrollY = currentScrollY;
+      lastScrollTop = currentScrollTop;
 
       // Show footer when scrolling stops
       if (scrollTimeout.current) {
-        clearTimeout(
-          scrollTimeout.current
-        );
+        clearTimeout(scrollTimeout.current);
       }
 
       scrollTimeout.current =
@@ -62,28 +65,25 @@ const AppLayout = ({
         }, 200);
     };
 
-    window.addEventListener(
+    container.addEventListener(
       "scroll",
       handleScroll
     );
 
     return () => {
-      window.removeEventListener(
+      container.removeEventListener(
         "scroll",
         handleScroll
       );
 
       if (scrollTimeout.current) {
-        clearTimeout(
-          scrollTimeout.current
-        );
+        clearTimeout(scrollTimeout.current);
       }
     };
   }, []);
 
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Fixed Navbar */}
+    return (
+    <div className="flex h-screen flex-col bg-background">
       <Navbar
         query={query}
         setQuery={setQuery}
@@ -93,33 +93,19 @@ const AppLayout = ({
         setSort={setSort}
       />
 
-      {/* Scrollable Content */}
       <main
-        className="
-          pb-24
-        "
+        ref={scrollContainerRef}
+        className="flex-1 overflow-y-auto pb-24"
       >
-        <div
-          className="
-            mx-auto
-            w-full
-            max-w-7xl
-            px-4
-            sm:px-6
-            lg:px-8
-          "
-        >
-          {children}
+        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+          <Outlet /> {/* Replace {children} with this */}
         </div>
       </main>
 
-      {/* Animated Footer */}
       <div
-        className={`fixed bottom-0 left-0 right-0 z-50 transition-transform duration-300 ${showFooter
-            ? "translate-y-0"
-            : "translate-y-full"
-          }
-        `}
+        className={`fixed bottom-0 left-0 right-0 z-50 transition-transform duration-300 ${
+          showFooter ? "translate-y-0" : "translate-y-full"
+        }`}
       >
         <Footer />
       </div>

@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import logo from "@/assets/flowmart.png";
+import { useCartStore } from "@/stores/cartStore";
 
 type SortKey = "default" | "price-asc" | "price-desc" | "stock";
 
@@ -21,7 +22,6 @@ interface NavbarProps {
   setShowFilters: (value: boolean) => void;
   sort: SortKey;
   setSort: (value: SortKey) => void;
-  cartCount?: number;
 }
 
 const categories = [
@@ -39,9 +39,9 @@ export default function Navbar({
   setShowFilters,
   sort,
   setSort,
-  cartCount = 0,
 }: NavbarProps) {
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const cartCount = useCartStore((state) => state.getCartCount());
 
   const sortOptions: [SortKey, string][] = [
     ["default", "Default"],
@@ -53,22 +53,22 @@ export default function Navbar({
   return (
     <>
       {/* MOBILE + TABLET */}
-      <div className="sticky top-0 z-50 bg-primary lg:hidden">
+      <div className="sticky top-0 z-50 bg-primary-secondary lg:hidden">
         {/* Top Row */}
-        <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center justify-between px-4 py-3 bg-primary-600">
           <Link to="/" className="flex items-center gap-3">
             <img
               src={logo}
               alt="Flowmart"
-              className="h-10 w-40 rounded-lg object-cover"
+              className="h-10 w-30 rounded-lg object-cover"
             />
           </Link>
 
           <Link to="/cart" className="relative">
-            <ShoppingCart className="h-6 w-6 text-secondary-foreground" />
+            <ShoppingCart className="h-6 w-6 text-white" />
 
             {cartCount > 0 && (
-              <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">
+              <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary-40 text-[10px] font-semibold text-white">
                 {cartCount}
               </span>
             )}
@@ -76,9 +76,9 @@ export default function Navbar({
         </div>
 
         {/* Search */}
-        <div className="border-t border-border px-4 py-3">
+        <div className="border-t z-50 border-border px-4 py-3 bg-white">
           <div className="flex items-center gap-2">
-            <div className="flex flex-1 items-center gap-2 rounded-xl border border-border bg-background px-3 py-2.5">
+            <div className="flex flex-1 items-center gap-2 rounded-full border border-border bg-background px-3 py-2.5">
               <Search className="h-4 w-4 text-muted-foreground" />
 
               <input
@@ -98,56 +98,53 @@ export default function Navbar({
 
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`rounded-xl border p-2.5 transition-colors ${
-                showFilters
+              className={`rounded-xl border p-2.5 transition-colors ${showFilters
                   ? "border-primary bg-primary/10 text-primary"
                   : "border-border"
-              }`}
+                }`}
             >
               <SlidersHorizontal className="h-5 w-5" />
             </button>
           </div>
+
+          {/* Mobile Filters */}
+          {showFilters && (
+            <div className="pt-1 border-border px-2 py-3">
+              <div className="flex flex-wrap gap-2">
+                {sortOptions.map(([key, label]) => (
+                  <button
+                    key={key}
+                    onClick={() => setSort(key)}
+                    className={`rounded-lg px-3 py-2 text-xs font-medium ${sort === key
+                        ? "bg-white text-primary-foreground"
+                        : "border border-border"
+                      }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Categories */}
-        <div className="overflow-x-auto border-t border-border">
+        <div className="overflow-x-auto border-t border-border z-50 bg-white">
           <div className="flex min-w-max gap-2 px-4 py-3">
             {categories.map((category) => (
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
-                className={`whitespace-nowrap rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors ${
-                  selectedCategory === category
-                    ? "bg-primary text-primary-foreground"
-                    : "border border-border bg-background hover:bg-muted"
-                }`}
+                className={`whitespace-nowrap border rounded-full px-3.5 py-2 text-xs font-semibold transition-colors ${selectedCategory === category
+                  ? "bg-primary-400 text-white"
+                  : "border border-border text-secondary-foreground hover:bg-muted"
+                  }`}
               >
                 {category}
               </button>
             ))}
           </div>
         </div>
-
-        {/* Mobile Filters */}
-        {showFilters && (
-          <div className="border-t border-border px-4 py-3">
-            <div className="flex flex-wrap gap-2">
-              {sortOptions.map(([key, label]) => (
-                <button
-                  key={key}
-                  onClick={() => setSort(key)}
-                  className={`rounded-lg px-3 py-2 text-xs font-medium ${
-                    sort === key
-                      ? "bg-primary text-primary-foreground"
-                      : "border border-border"
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* DESKTOP */}
@@ -227,11 +224,10 @@ export default function Navbar({
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
-                className={`text-sm transition-colors ${
-                  selectedCategory === category
+                className={`text-sm transition-colors ${selectedCategory === category
                     ? "font-semibold text-primary"
                     : "hover:text-primary"
-                }`}
+                  }`}
               >
                 {category}
               </button>
@@ -255,11 +251,10 @@ export default function Navbar({
                   <button
                     key={key}
                     onClick={() => setSort(key)}
-                    className={`rounded-lg px-4 py-2 text-sm ${
-                      sort === key
+                    className={`rounded-lg px-4 py-2 text-sm ${sort === key
                         ? "bg-primary text-primary-foreground"
                         : "border border-border"
-                    }`}
+                      }`}
                   >
                     {label}
                   </button>
