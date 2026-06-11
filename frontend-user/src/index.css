@@ -15,11 +15,20 @@
     /* =========================
        PRIMARY (GREEN)
     ========================== */
-    --primary-700: 143 61% 20%;  /* #14532D */
-    --primary-600: 142 63% 24%;  /* #166534 */
-    --primary-500: 142 72% 36%;  /* #16A34A */
-    --primary-400: 142 71% 45%;  /* #22C55E */
-    --primary-100: 138 76% 93%;  /* #DCFCE7 */
+    /* =========================
+   PRIMARY (GREEN)
+========================= */
+--primary-700: 143 61% 20%; /* #14532D */
+--primary-600: 142 63% 24%; /* #166534 */
+--primary-500: 142 72% 36%; /* #16A34A */
+--primary-400: 142 71% 45%; /* #22C55E */
+--primary-100: 138 76% 93%; /* #DCFCE7 */
+
+/* Optional intermediate shades */
+--primary-300: 141 84% 67%; /* #4ADE80 */
+--primary-200: 141 79% 85%; /* #A7F3D0 */
+--primary-50: 138 76% 97%;  /* #F0FDF4 */
+--primary-40: 143 100% 37%; /* #00C950 */
 
     /* =========================
        ACCENT (AMBER)
@@ -118,6 +127,9 @@
   --color-primary-500: hsl(var(--primary-500));
   --color-primary-600: hsl(var(--primary-600));
   --color-primary-700: hsl(var(--primary-700));
+  --color-primary-40: hsl(var(--primary-40));
+  --color-primary-200: hsl(var(--primary-200));
+  --color-primary-50: hsl(var(--primary-50));
 
   --color-accent: hsl(var(--accent-500));
   --color-accent-100: hsl(var(--accent-100));
