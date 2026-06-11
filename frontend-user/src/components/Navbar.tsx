@@ -1,4 +1,5 @@
-import { Link } from "react-router";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Search,
   SlidersHorizontal,
@@ -8,11 +9,12 @@ import {
   Package,
   Menu,
 } from "lucide-react";
-import { Input } from "./ui/input";
+
+import logo from "@/assets/flowmart.png";
 
 type SortKey = "default" | "price-asc" | "price-desc" | "stock";
 
-interface MarketplaceNavbarProps {
+interface NavbarProps {
   query: string;
   setQuery: (value: string) => void;
   showFilters: boolean;
@@ -22,7 +24,15 @@ interface MarketplaceNavbarProps {
   cartCount?: number;
 }
 
-export default function MarketplaceNavbar({
+const categories = [
+  "All",
+  "Food",
+  "Drinks",
+  "Welfare",
+  "Health",
+];
+
+export default function Navbar({
   query,
   setQuery,
   showFilters,
@@ -30,88 +40,132 @@ export default function MarketplaceNavbar({
   sort,
   setSort,
   cartCount = 0,
-}: MarketplaceNavbarProps) {
+}: NavbarProps) {
+  const [selectedCategory, setSelectedCategory] = useState("All");
+
+  const sortOptions: [SortKey, string][] = [
+    ["default", "Default"],
+    ["price-asc", "Price ↑"],
+    ["price-desc", "Price ↓"],
+    ["stock", "Most Stock"],
+  ];
+
   return (
     <>
       {/* MOBILE + TABLET */}
-      <div className="border-b border-border bg-background px-4 py-3 md:px-8 lg:hidden">
-        <div className="flex items-center gap-2">
-          <div className="flex flex-1 items-center gap-2 rounded-xl border border-border bg-input px-3 py-2.5">
-            <Search className="h-4 w-4 text-muted-foreground" />
-
-            <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              type="text"
-              placeholder="Search products..."
-              className="w-full bg-transparent text-sm outline-none"
+      <div className="sticky top-0 z-50 bg-primary lg:hidden">
+        {/* Top Row */}
+        <div className="flex items-center justify-between px-4 py-3">
+          <Link to="/" className="flex items-center gap-3">
+            <img
+              src={logo}
+              alt="Flowmart"
+              className="h-10 w-40 rounded-lg object-cover"
             />
+          </Link>
 
-            {query && (
-              <button onClick={() => setQuery("")}>
-                <X className="h-4 w-4 text-muted-foreground" />
-              </button>
+          <Link to="/cart" className="relative">
+            <ShoppingCart className="h-6 w-6 text-secondary-foreground" />
+
+            {cartCount > 0 && (
+              <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">
+                {cartCount}
+              </span>
             )}
-          </div>
-
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className={`rounded-xl border p-2.5 ${
-              showFilters
-                ? "border-primary bg-primary/10 text-primary"
-                : "border-border bg-background"
-            }`}
-          >
-            <SlidersHorizontal className="h-5 w-5" />
-          </button>
-
-          <Link
-            to="/orders"
-            className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
-          >
-            Cart
           </Link>
         </div>
 
-        {showFilters && (
-          <div className="mt-3 flex flex-wrap gap-2">
-            {[
-              ["default", "Default"],
-              ["price-asc", "Price ↑"],
-              ["price-desc", "Price ↓"],
-              ["stock", "Most Stock"],
-            ].map(([key, label]) => (
+        {/* Search */}
+        <div className="border-t border-border px-4 py-3">
+          <div className="flex items-center gap-2">
+            <div className="flex flex-1 items-center gap-2 rounded-xl border border-border bg-background px-3 py-2.5">
+              <Search className="h-4 w-4 text-muted-foreground" />
+
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                type="text"
+                placeholder="Search products..."
+                className="w-full bg-transparent text-sm outline-none"
+              />
+
+              {query && (
+                <button onClick={() => setQuery("")}>
+                  <X className="h-4 w-4 text-muted-foreground" />
+                </button>
+              )}
+            </div>
+
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`rounded-xl border p-2.5 transition-colors ${
+                showFilters
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border"
+              }`}
+            >
+              <SlidersHorizontal className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Categories */}
+        <div className="overflow-x-auto border-t border-border">
+          <div className="flex min-w-max gap-2 px-4 py-3">
+            {categories.map((category) => (
               <button
-                key={key}
-                onClick={() => setSort(key as SortKey)}
-                className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
-                  sort === key
+                key={category}
+                onClick={() => setSelectedCategory(category)}
+                className={`whitespace-nowrap rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  selectedCategory === category
                     ? "bg-primary text-primary-foreground"
-                    : "border border-border"
+                    : "border border-border bg-background hover:bg-muted"
                 }`}
               >
-                {label}
+                {category}
               </button>
             ))}
+          </div>
+        </div>
+
+        {/* Mobile Filters */}
+        {showFilters && (
+          <div className="border-t border-border px-4 py-3">
+            <div className="flex flex-wrap gap-2">
+              {sortOptions.map(([key, label]) => (
+                <button
+                  key={key}
+                  onClick={() => setSort(key)}
+                  className={`rounded-lg px-3 py-2 text-xs font-medium ${
+                    sort === key
+                      ? "bg-primary text-primary-foreground"
+                      : "border border-border"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
         )}
       </div>
 
-      {/* DESKTOP - JUMIA STYLE */}
-      <div className="hidden lg:block border-b border-border bg-background">
+      {/* DESKTOP */}
+      <div className="hidden border-b border-border bg-background lg:block">
         {/* Main Header */}
         <div className="mx-auto flex h-20 max-w-7xl items-center gap-6 px-6">
           {/* Logo */}
-          <Link
-            to="/"
-            className="text-3xl font-extrabold text-primary"
-          >
-            Flowmart
+          <Link to="/" className="flex items-center gap-3">
+            <img
+              src={logo}
+              alt="Flowmart"
+              className="h-12 w-60 rounded-lg object-cover"
+            />
           </Link>
 
           {/* Search */}
           <div className="flex flex-1 gap-3">
-            <div className="flex flex-1 items-center rounded-md border border-border px-4">
+            <div className="flex flex-1 items-center rounded-lg border border-border px-4">
               <Search className="h-5 w-5 text-muted-foreground" />
 
               <input
@@ -122,12 +176,12 @@ export default function MarketplaceNavbar({
               />
             </div>
 
-            <button className="rounded-md bg-primary px-8 font-semibold text-primary-foreground">
+            <button className="rounded-lg bg-primary px-8 font-semibold text-primary-foreground transition-opacity hover:opacity-90">
               SEARCH
             </button>
           </div>
 
-          {/* Right Side */}
+          {/* Right Actions */}
           <div className="flex items-center gap-6">
             <Link
               to="/account"
@@ -150,11 +204,10 @@ export default function MarketplaceNavbar({
               className="relative flex items-center gap-2 text-sm font-medium"
             >
               <ShoppingCart className="h-5 w-5" />
-
               Cart
 
               {cartCount > 0 && (
-                <span className="absolute -right-3 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+                <span className="absolute -right-3 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
                   {cartCount}
                 </span>
               )}
@@ -170,10 +223,19 @@ export default function MarketplaceNavbar({
               Categories
             </button>
 
-            <Link to="/food">Food</Link>
-            <Link to="/drinks">Drinks</Link>
-            <Link to="/welfare">Welfare</Link>
-            <Link to="/health">Health</Link>
+            {categories.map((category) => (
+              <button
+                key={category}
+                onClick={() => setSelectedCategory(category)}
+                className={`text-sm transition-colors ${
+                  selectedCategory === category
+                    ? "font-semibold text-primary"
+                    : "hover:text-primary"
+                }`}
+              >
+                {category}
+              </button>
+            ))}
 
             <div className="ml-auto">
               <button
@@ -189,15 +251,10 @@ export default function MarketplaceNavbar({
           {showFilters && (
             <div className="border-t border-border px-6 py-3">
               <div className="mx-auto flex max-w-7xl gap-2">
-                {[
-                  ["default", "Default"],
-                  ["price-asc", "Price ↑"],
-                  ["price-desc", "Price ↓"],
-                  ["stock", "Most Stock"],
-                ].map(([key, label]) => (
+                {sortOptions.map(([key, label]) => (
                   <button
                     key={key}
-                    onClick={() => setSort(key as SortKey)}
+                    onClick={() => setSort(key)}
                     className={`rounded-lg px-4 py-2 text-sm ${
                       sort === key
                         ? "bg-primary text-primary-foreground"
