@@ -1,5 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router';
+import { Loader2 } from 'lucide-react';
+import { useKYCDocUpload } from '@/hooks/useVendorMutations';
 import MobileStatusBar from '@/components/MobileStatusBar';
 import { VendorButton } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -21,6 +23,9 @@ export default function KYCSubmitScreen() {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeDocId, setActiveDocId] = useState<string | null>(null);
+  const { mutateAsync: uploadDoc } = useKYCDocUpload();
+  const [uploadingId, setUploadingId] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const [documents, setDocuments] = useState<KYCDoc[]>([
     { id: 'national_id', title: 'National ID / Passport', subtitle: 'Government-issued photo ID', status: 'upload' },
@@ -36,17 +41,28 @@ export default function KYCSubmitScreen() {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && activeDocId) {
-      // Update the document to show it's now pending (uploaded)
-      setDocuments(docs => 
-        docs.map(doc => 
-          doc.id === activeDocId 
-            ? { ...doc, status: 'pending', fileName: file.name } 
-            : doc
-        )
-      );
+      setUploadingId(activeDocId);
+      setErrorMsg('');
+
+      try {
+        await uploadDoc({ docType: activeDocId, file });
+        
+        // Update the document to show it's now pending (uploaded)
+        setDocuments(docs => 
+          docs.map(doc => 
+            doc.id === activeDocId 
+              ? { ...doc, status: 'pending', fileName: file.name } 
+              : doc
+          )
+        );
+      } catch (err: any) {
+        setErrorMsg(`Failed to upload ${file.name}. Please try again.`);
+      } finally {
+        setUploadingId(null);
+      }
     }
     // Reset input
     if (fileInputRef.current) {
@@ -69,11 +85,11 @@ export default function KYCSubmitScreen() {
         <div className="mt-8 space-y-6">
           {/* Heading */}
           <div className="flex items-center gap-2">
-            <button onClick={() => navigate('/kyc')} className="w-8 h-8 rounded-full bg-input flex items-center justify-center">
+            <button onClick={() => navigate('/kyc')} className="w-8 h-8 rounded-full bg-input flex items-center justify-center cursor-pointer">
               <Icon i="arrow-left" size={16} />
             </button>
             <div>
-              <h2 className="text-xl font-headings text-foreground" style={{ fontWeight: 800 }}>
+              <h2 className="text-xl font-headings text-foreground font-extrabold" style={{ fontWeight: 800 }}>
                 KYC Verification
               </h2>
               <p className="text-xs text-muted-foreground">Upload required documents</p>
@@ -88,23 +104,38 @@ export default function KYCSubmitScreen() {
             </p>
           </div>
 
+          {errorMsg && (
+            <div className="bg-destructive/10 border border-destructive/20 text-destructive text-sm px-4 py-3 rounded-xl font-medium">
+              {errorMsg}
+            </div>
+          )}
+
           {/* Required Documents */}
-          <p className="text-sm font-body text-foreground" style={{ fontWeight: 700 }}>Required Documents</p>
+          <p className="text-sm font-body text-foreground font-bold" style={{ fontWeight: 700 }}>Required Documents</p>
           <div className="flex flex-col gap-3">
-            {documents.map((doc) => (
-              <Card 
-                key={doc.id}
-                title={doc.title} 
-                status={doc.status} 
-                subtitle={doc.fileName || doc.subtitle}
-                className={doc.status === 'upload' ? 'cursor-pointer hover:bg-muted/50 transition-colors' : ''}
-                onClick={() => handleCardClick(doc.id, doc.status)}
-              >
-                {doc.status === 'approved' && <Icon i="check-circle" size={18} className="text-green-600 dark:text-green-400" />}
-                {doc.status === 'pending' && <Icon i="clock" size={18} className="text-amber-600 dark:text-amber-400" />}
-                {doc.status === 'upload' && <Icon i="upload" size={18} className="text-blue-600 dark:text-blue-400" />}
-              </Card>
-            ))}
+            {documents.map((doc) => {
+              const isUploading = uploadingId === doc.id;
+              return (
+                <Card 
+                  key={doc.id}
+                  title={doc.title} 
+                  status={isUploading ? "uploading..." : doc.status} 
+                  subtitle={doc.fileName || doc.subtitle}
+                  className={doc.status === 'upload' ? 'cursor-pointer hover:bg-muted/50 transition-colors' : ''}
+                  onClick={() => !isUploading && handleCardClick(doc.id, doc.status)}
+                >
+                  {isUploading ? (
+                    <Loader2 className="h-5.5 w-5.5 text-blue-600 animate-spin" />
+                  ) : (
+                    <>
+                      {doc.status === 'approved' && <Icon i="check-circle" size={18} className="text-green-600 dark:text-green-400" />}
+                      {doc.status === 'pending' && <Icon i="clock" size={18} className="text-amber-600 dark:text-amber-400" />}
+                      {doc.status === 'upload' && <Icon i="upload" size={18} className="text-blue-600 dark:text-blue-400" />}
+                    </>
+                  )}
+                </Card>
+              );
+            })}
           </div>
 
           {/* Hidden File Input */}

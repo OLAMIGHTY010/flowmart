@@ -11,28 +11,24 @@ export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
 		const { productId, quantity, deliveryZone } = req.body;
 
 		if (!productId || !quantity || !deliveryZone) {
-			return res
-				.status(400)
-				.json({
-					success: false,
-					message: "Missing required order details",
-				});
+			return res.status(400).json({
+				success: false,
+				message: "Missing required order details",
+			});
 		}
 
-		// Check product availability and stock
+		// Check product availability and stock (Using type-cast to satisfy Drizzle compiler)
 		const [product] = await db
 			.select()
 			.from(products)
-			.where(eq(products.id, productId))
+			.where(eq(products.id, productId as string))
 			.limit(1);
 
 		if (!product || product.stockQuantity < quantity) {
-			return res
-				.status(400)
-				.json({
-					success: false,
-					message: "Product is unavailable or out of stock",
-				});
+			return res.status(400).json({
+				success: false,
+				message: "Product is unavailable or out of stock",
+			});
 		}
 
 		const totalAmount = (Number(product.price) * quantity).toString();
@@ -53,7 +49,7 @@ export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
 			})
 			.returning();
 
-		// Create the order item record
+		// Create the order item record (Preserved from HEAD branch)
 		await db.insert(orderItems).values({
 			orderId: newOrder.id,
 			productId: product.id,
@@ -65,15 +61,13 @@ export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
 		await db
 			.update(products)
 			.set({ stockQuantity: product.stockQuantity - quantity })
-			.where(eq(products.id, product.id));
+			.where(eq(products.id, product.id as string));
 
-		return res
-			.status(201)
-			.json({
-				success: true,
-				message: "Order placed successfully",
-				order: newOrder,
-			});
+		return res.status(201).json({
+			success: true,
+			message: "Order placed successfully",
+			order: newOrder,
+		});
 	} catch (error) {
 		console.error("Place Order Error:", error);
 		return res
@@ -131,16 +125,19 @@ export const updateOrderStatus = async (
 		const [existingOrder] = await db
 			.select()
 			.from(orders)
-			.where(and(eq(orders.id, orderId), eq(orders.vendorId, vendorId!)))
+			.where(
+				and(
+					eq(orders.id, orderId as string),
+					eq(orders.vendorId, vendorId!)
+				)
+			)
 			.limit(1);
 
 		if (!existingOrder) {
-			return res
-				.status(404)
-				.json({
-					success: false,
-					message: "Order not found or unauthorized",
-				});
+			return res.status(404).json({
+				success: false,
+				message: "Order not found or unauthorized",
+			});
 		}
 
 		const [updatedOrder] = await db
@@ -149,16 +146,14 @@ export const updateOrderStatus = async (
 				status,
 				updatedAt: new Date(),
 			})
-			.where(eq(orders.id, orderId))
+			.where(eq(orders.id, orderId as string))
 			.returning();
 
-		return res
-			.status(200)
-			.json({
-				success: true,
-				message: `Order marked as ${status}`,
-				order: updatedOrder,
-			});
+		return res.status(200).json({
+			success: true,
+			message: `Order marked as ${status}`,
+			order: updatedOrder,
+		});
 	} catch (error) {
 		console.error("Update Status Error:", error);
 		return res

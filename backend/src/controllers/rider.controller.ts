@@ -36,11 +36,13 @@ export const acceptDelivery = async (
 		const orderId = req.params.id as string; // ✨ Explicitly cast to string to satisfy Drizzle type constraints
 		const riderId = req.user?.id;
 
-		// Ensure the order is still available
+		// Ensure the order is still available (Preserved formatting and typeassertion)
 		const [existingOrder] = await db
 			.select()
 			.from(orders)
-			.where(and(eq(orders.id, orderId), isNull(orders.riderId)))
+			.where(
+				and(eq(orders.id, orderId as string), isNull(orders.riderId))
+			)
 			.limit(1);
 
 		if (!existingOrder) {
@@ -58,7 +60,7 @@ export const acceptDelivery = async (
 				status: "assigned",
 				updatedAt: new Date(),
 			})
-			.where(eq(orders.id, orderId))
+			.where(eq(orders.id, orderId as string))
 			.returning();
 
 		return res.status(200).json({
@@ -94,7 +96,12 @@ export const confirmDelivery = async (
 		const [activeOrder] = await db
 			.select()
 			.from(orders)
-			.where(and(eq(orders.id, orderId), eq(orders.riderId, riderId!)))
+			.where(
+				and(
+					eq(orders.id, orderId as string),
+					eq(orders.riderId, riderId!)
+				)
+			)
 			.limit(1);
 
 		if (!activeOrder) {
@@ -118,7 +125,7 @@ export const confirmDelivery = async (
 				status: "delivered",
 				updatedAt: new Date(),
 			})
-			.where(eq(orders.id, orderId))
+			.where(eq(orders.id, orderId as string))
 			.returning();
 
 		return res.status(200).json({

@@ -14,12 +14,10 @@ export const createProduct = async (
 		const vendorId = req.user?.id;
 
 		if (!name || !price) {
-			return res
-				.status(400)
-				.json({
-					success: false,
-					message: "Name and price are required",
-				});
+			return res.status(400).json({
+				success: false,
+				message: "Name and price are required",
+			});
 		}
 
 		const [newProduct] = await db
@@ -34,13 +32,11 @@ export const createProduct = async (
 			})
 			.returning();
 
-		return res
-			.status(201)
-			.json({
-				success: true,
-				message: "Product created",
-				product: newProduct,
-			});
+		return res.status(201).json({
+			success: true,
+			message: "Product created",
+			product: newProduct,
+		});
 	} catch (error) {
 		console.error("Create Product Error:", error);
 		return res
@@ -79,25 +75,23 @@ export const updateProduct = async (
 		const vendorId = req.user?.id;
 		const { name, description, price, stockQuantity, imageUrl } = req.body;
 
-		// Verify the product belongs to the vendor requesting the update
+		// Verify the product belongs to the vendor requesting the update (Keeping type assertion)
 		const [existingProduct] = await db
 			.select()
 			.from(products)
 			.where(
 				and(
-					eq(products.id, productId),
+					eq(products.id, productId as string),
 					eq(products.vendorId, vendorId!)
 				)
 			)
 			.limit(1);
 
 		if (!existingProduct) {
-			return res
-				.status(404)
-				.json({
-					success: false,
-					message: "Product not found or unauthorized",
-				});
+			return res.status(404).json({
+				success: false,
+				message: "Product not found or unauthorized",
+			});
 		}
 
 		const [updatedProduct] = await db
@@ -116,16 +110,14 @@ export const updateProduct = async (
 				imageUrl: imageUrl || existingProduct.imageUrl,
 				updatedAt: new Date(),
 			})
-			.where(eq(products.id, productId))
+			.where(eq(products.id, productId as string))
 			.returning();
 
-		return res
-			.status(200)
-			.json({
-				success: true,
-				message: "Product updated",
-				product: updatedProduct,
-			});
+		return res.status(200).json({
+			success: true,
+			message: "Product updated",
+			product: updatedProduct,
+		});
 	} catch (error) {
 		console.error("Update Product Error:", error);
 		return res
@@ -143,23 +135,22 @@ export const deleteProduct = async (
 		const productId = req.params.id as string;
 		const vendorId = req.user?.id;
 
+		// Verify and drop the record safely
 		const [deletedProduct] = await db
 			.delete(products)
 			.where(
 				and(
-					eq(products.id, productId),
+					eq(products.id, productId as string),
 					eq(products.vendorId, vendorId!)
 				)
 			)
 			.returning();
 
 		if (!deletedProduct) {
-			return res
-				.status(404)
-				.json({
-					success: false,
-					message: "Product not found or unauthorized",
-				});
+			return res.status(404).json({
+				success: false,
+				message: "Product not found or unauthorized",
+			});
 		}
 
 		return res

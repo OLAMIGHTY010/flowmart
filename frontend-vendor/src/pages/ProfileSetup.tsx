@@ -1,5 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router';
+import { Loader2 } from 'lucide-react';
+import { useProfileSetup } from '@/hooks/useVendorMutations';
 import { VendorButton } from '@/components/ui/button';
 import { VendorInput } from '@/components/ui/input';
 import VendorProgressBar from '@/components/VendorProgressBar';
@@ -24,6 +26,9 @@ export default function ProfileSetup({ onNext }: ProfileSetupProps) {
   const [city, setCity] = useState('Ikeja');
   const [bio, setBio] = useState('');
 
+  const { mutateAsync: updateProfile, isPending } = useProfileSetup();
+  const [errorMsg, setErrorMsg] = useState('');
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -35,17 +40,32 @@ export default function ProfileSetup({ onNext }: ProfileSetupProps) {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setShowToast(true);
-    setTimeout(() => {
-      setShowToast(false);
-      if (onNext) {
-        onNext();
-      } else {
-        navigate('/kyc');
-      }
-    }, 1500);
+    setErrorMsg('');
+
+    try {
+      await updateProfile({
+        displayName,
+        businessPhone,
+        stateRegion,
+        city,
+        bio,
+        avatar: profileImage || undefined,
+      });
+
+      setShowToast(true);
+      setTimeout(() => {
+        setShowToast(false);
+        if (onNext) {
+          onNext();
+        } else {
+          navigate('/kyc');
+        }
+      }, 1500);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Failed to save profile. Please try again.');
+    }
   };
 
   return (
@@ -77,7 +97,7 @@ export default function ProfileSetup({ onNext }: ProfileSetupProps) {
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate('/register')}
-              className="w-9 h-9 rounded-full bg-input flex items-center justify-center hover:bg-border/60 transition-colors"
+              className="w-9 h-9 rounded-full bg-input flex items-center justify-center hover:bg-border/60 transition-colors cursor-pointer"
               aria-label="Go back"
             >
               <Icon i="arrow-left" size={16} />
@@ -94,6 +114,12 @@ export default function ProfileSetup({ onNext }: ProfileSetupProps) {
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+          {errorMsg && (
+            <div className="bg-destructive/10 border border-destructive/20 text-destructive text-sm px-4 py-3 rounded-xl font-medium">
+              {errorMsg}
+            </div>
+          )}
+
           {/* Avatar Upload */}
           <Card className="bg-surface p-6 rounded-2xl border border-border/70 shadow-xs">
             <CardContent className="p-0 flex flex-col items-center justify-center gap-3">
@@ -125,7 +151,7 @@ export default function ProfileSetup({ onNext }: ProfileSetupProps) {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="text-xs font-semibold text-primary hover:underline transition-all"
+                className="text-xs font-semibold text-primary hover:underline transition-all cursor-pointer"
               >
                 Tap to upload profile photo
               </button>
@@ -191,7 +217,8 @@ export default function ProfileSetup({ onNext }: ProfileSetupProps) {
             </CardContent>
           </Card>
 
-          <VendorButton type="submit" className="mt-2">
+          <VendorButton type="submit" className="mt-2" disabled={isPending}>
+            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin inline" />}
             Save & Continue
           </VendorButton>
         </form>

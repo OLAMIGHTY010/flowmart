@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
+import { Loader2 } from 'lucide-react';
+import { useKYCSubmit } from '@/hooks/useVendorMutations';
 import { VendorButton } from '@/components/ui/button';
 import VendorProgressBar from '@/components/VendorProgressBar';
 import Icon from '@/components/Icon';
@@ -47,14 +49,24 @@ export default function KYCReview() {
   const [showToast, setShowToast] = useState(false);
   const [isDeclarationChecked, setIsDeclarationChecked] = useState(true);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const { mutateAsync: submitKYC, isPending } = useKYCSubmit();
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isDeclarationChecked) return;
-    setShowToast(true);
-    setTimeout(() => {
-      setShowToast(false);
-      navigate('/'); // Redirect to login or next screen
-    }, 3000);
+    setErrorMsg('');
+
+    try {
+      await submitKYC();
+      setShowToast(true);
+      setTimeout(() => {
+        setShowToast(false);
+        navigate('/kyc/verification'); // Correctly redirect to verification step
+      }, 1500);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Failed to submit KYC. Please try again.');
+    }
   };
 
   return (
@@ -85,8 +97,9 @@ export default function KYCReview() {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => navigate('/kyc')}
-              className="w-9 h-9 rounded-full bg-input flex items-center justify-center hover:bg-border/60 transition-colors"
+              type="button"
+              onClick={() => navigate('/kyc/submit')}
+              className="w-9 h-9 rounded-full bg-input flex items-center justify-center hover:bg-border/60 transition-colors cursor-pointer"
               aria-label="Go back"
             >
               <Icon i="arrow-left" size={16} />
@@ -101,6 +114,12 @@ export default function KYCReview() {
             </div>
           </div>
         </div>
+
+        {errorMsg && (
+          <div className="bg-destructive/10 border border-destructive/20 text-destructive text-sm px-4 py-3 rounded-xl font-medium mb-6">
+            {errorMsg}
+          </div>
+        )}
 
         {/* Completion Bar */}
         <div className="bg-secondary rounded-2xl px-6 py-4 flex items-center gap-4 mb-8">
@@ -155,7 +174,7 @@ export default function KYCReview() {
                           <button
                             type="button"
                             onClick={() => navigate('/kyc')}
-                            className="text-xs text-primary font-bold hover:underline"
+                            className="text-xs text-primary font-bold hover:underline cursor-pointer"
                           >
                             Edit
                           </button>
@@ -182,7 +201,7 @@ export default function KYCReview() {
                   <button
                     type="button"
                     onClick={() => navigate('/kyc')}
-                    className="text-xs text-primary font-bold hover:underline"
+                    className="text-xs text-primary font-bold hover:underline cursor-pointer"
                   >
                     Edit
                   </button>
@@ -271,7 +290,8 @@ export default function KYCReview() {
           </p>
         </div>
 
-        <VendorButton onClick={handleSubmit} disabled={!isDeclarationChecked}>
+        <VendorButton onClick={handleSubmit} disabled={!isDeclarationChecked || isPending}>
+          {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin inline" />}
           Submit for Verification
         </VendorButton>
       </div>
