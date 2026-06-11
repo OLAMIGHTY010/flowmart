@@ -63,7 +63,7 @@ const products = [
     price: 1200,
     image:
       "https://images.unsplash.com/photo-1617093727343-374698b1b08d?w=500",
-    stock: "In Stock",
+    stock: "Out of Stock",
   },
 ];
 
@@ -71,7 +71,7 @@ export default function Homepage() {
   return (
     <div className="mx-auto w-full max-w-7xl">
       {/* Offer Banner */}
-      <section className="px-4 pt-4 md:px-6 lg:px-5">
+      {/* <section className="px-4 pt-4 md:px-6 lg:px-5">
         <div className="flex flex-col gap-4 rounded-3xl bg-gradient-to-r from-primary-500 to-primary-700 p-5 text-white sm:flex-row sm:items-center sm:justify-between lg:p-6">
           <div>
             <div className="flex items-center gap-2">
@@ -90,31 +90,36 @@ export default function Homepage() {
             <ArrowRight size={20} />
           </button>
         </div>
-      </section>
+      </section> */}
 
       {/* Products */}
       <section className="p-4 md:p-6 lg:p-8">
         <div
-          className="grid grid-cols-3 gap-4 md:grid-cols-4 md:gap-6 lg:grid-cols-6 lg:gap-6 xl:grid-cols-5"
+          className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6 lg:grid-cols-6 lg:gap-6 xl:grid-cols-5"
         >
           {products.map((product) => (
             <div
               key={product.id}
               className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm transition-all hover:-translate-y-1 hover:shadow-md"
             >
-              <div className="overflow-hidden">
+              <div className="relative overflow-hidden">
                 <img
                   src={product.image}
                   alt={product.name}
-                  className="
-                    h-20
-                    w-full
-                    object-cover
-
-                    md:h-48
-                    lg:h-56
-                  "
+                  className="h-30 w-full object-cover md:h-48 lg:h-56"
                 />
+
+                <span
+                  className={`absolute left-2 top-2 rounded-full px-2.5 py-1 text-[10px] font-semibold text-white shadow-sm backdrop-blur-sm ${product.stock === "Out of Stock"
+                      ? "bg-error"
+                      : product.stock === "Low Stock"
+                        ? "bg-accent"
+                        : "bg-primary"
+                    }
+                  `}
+                >
+                  {product.stock}
+                </span>
               </div>
 
               <div className="p-3 md:p-4">
@@ -126,31 +131,12 @@ export default function Homepage() {
                   ₦{product.price.toLocaleString()}
                 </p>
 
-                <div className="mt-4 flex items-center justify-between">
-                  <span
-                    className={`rounded-lg px-2.5 py-1 text-xs font-medium ${product.stock === "Low Stock"
-                        ? "bg-accent-100 text-accent"
-                        : "bg-primary text-white"
-                      }`}
-                  >
-                    {product.stock}
-                  </span>
+                <div className="mt-2 flex items-center justify-between">
 
                   <button
-                    className="
-                      flex
-                      h-9
-                      w-9
-                      items-center
-                      justify-center
-                      rounded-full
-                      bg-primary
-                      text-white
-                      transition
-                      hover:scale-110
-                    "
+                    className="flex h-10 w-full items-center justify-center rounded-lg bg-primary text-white transition hover:scale-110"
                   >
-                    <Plus size={18} />
+                    Add to cart
                   </button>
                 </div>
               </div>
