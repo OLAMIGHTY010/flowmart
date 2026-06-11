@@ -6,7 +6,7 @@ import { VendorInput } from '@/components/ui/input';
 // import SideBanner from '@/components/SideBanner';
 
 // --- MOCK OR TEMPORARY AUTH HOOK TYPE DEFINITION TO STOP COMPILER ERRORS ---
-// Un-comment and remove this block once your actual '@/hooks/useAuth' is ready.
+// Un-comment and remove this block once your actual '@/hooks/useAuth' is read
 const useAuth = () => {
   return {
     user: null as any, // Change to user object if logged in (e.g., { name: 'Martha' })
