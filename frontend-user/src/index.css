@@ -51,6 +51,13 @@
     --background: var(--white);
     --foreground: var(--black);
 
+    --text-primary-foreground: var(--black);
+    --text-secondary-foreground: var(--white);
+    --text-accent-foreground: var(--accent-500);
+    --text-error-foreground: var(--error-500);
+    --text-success-foreground: var(--primary-500);
+    --text-warning-foreground: var(--accent-500);
+
     --primary: var(--primary-500);
     --primary-foreground: var(--white);
 
