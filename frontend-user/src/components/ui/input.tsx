@@ -32,14 +32,16 @@ interface UserInputProps
   placeholder?: string;
   icon?: string;
   value?: string;
+  ref?: React.RefObject<HTMLInputElement>;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 function UserInput({
   label = "Label",
   placeholder = "Enter value",
-  icon = "",
+  icon,
   value = "",
+  ref,
   onChange,
   className = "",
   ...props
