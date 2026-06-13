@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, type ReactNode } from "react";
 import { AuthContext } from "./AuthContext";
 import type { AppUser, UserRole, RegisterRequest } from "@/types/api";
 import { authService } from "@/services/AuthServices";
-import { apiClient } from "@/services/api"; 
+// import { apiClient } from "@/services/api"; 
 
 const mapApiUser = (data: any): AppUser => ({
   id: data.id || "",
