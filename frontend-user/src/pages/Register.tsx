@@ -1,38 +1,35 @@
 import React, { useRef, useState } from "react";
-import { Navigate, useNavigate } from "react-router";
-import {
-  ArrowLeft,
-  Camera,
-  Calendar,
-  Mail,
-  Phone,
-} from "lucide-react";
-
+import { Navigate, useNavigate, useLocation } from "react-router-dom";
+import { Eye, EyeOff, Loader2, Camera, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { VendorButton } from "@/components/ui/button";
 import { UserInput } from "@/components/ui/input";
+import logo from "@/assets/flowmart.png";
 import SideBanner from "@/components/SideBanner";
 
 export default function Register() {
   const navigate = useNavigate();
+  const location = useLocation();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { register, user } = useAuth();
+  const from = (location.state as any)?.from || "/";
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [dob, setDob] = useState("");
   const [gender, setGender] = useState("Male");
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const dateInputRef = useRef<HTMLInputElement>(null);
 
   if (user) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to={from} replace />;
   }
 
   const isFormEmpty =
@@ -40,102 +37,82 @@ export default function Register() {
     !lastName.trim() ||
     !phoneNumber.trim() ||
     !email.trim() ||
-    !dob.trim();
+    !password.trim();
 
-  const handleImageUpload = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-
     if (file) {
       setProfileImage(URL.createObjectURL(file));
     }
   };
 
-  const handleRegister = async (
-    e: React.FormEvent<HTMLFormElement>
-  ) => {
+  const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     setError("");
 
     if (isFormEmpty) {
-      setError(
-        "Please fill out all required personal information fields"
-      );
+      setError("Please fill out all required fields");
       return;
     }
 
     setLoading(true);
 
+    const name = `${firstName.trim()} ${lastName.trim()}`.trim();
+
     const result = await register({
-      firstName,
-      lastName,
+      fullName: name,
       phoneNumber,
       email,
-      dob,
+      password,
+      dateOfBirth:dob,
       gender,
       profileImage,
+      role:"attendee",
     });
 
     setLoading(false);
 
     if (!result.success) {
-      setError(
-        result.error ||
-        "Failed to create account. Please try again."
-      );
+      setError(result.error || "Failed to create account. Please try again.");
     }
   };
 
   return (
-    <div className="min-h-screen bg-muted/20 lg:flex">
+    <div className="min-h-screen bg-muted/20 flex flex-col lg:flex-row">
       <SideBanner />
 
-      <main className="flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-2xl px-4 py-6 md:px-6 lg:px-8">
-          {/* Header */}
-          <div className="relative mb-4 flex items-center">
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="text-primary transition hover:opacity-80"
-            >
-              <ArrowLeft size={22} />
-            </button>
-
-            <h1 className="absolute left-1/2 -translate-x-1/2 text-xl font-bold">
+      {/* Main Register Panel */}
+      <div className="flex-grow flex flex-col p-6 lg:p-12 relative w-full">
+        <button 
+          onClick={() => navigate('/')} 
+          className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition absolute top-6 left-6 lg:top-12 lg:left-12 cursor-pointer z-10"
+        >
+          <ArrowLeft size={16} /> Back to Home
+        </button>
+        <div className="flex-grow flex items-center justify-center w-full">
+        <div className="w-full max-w-lg flex flex-col gap-6">
+          {/* Logo / Title */}
+          <div className="text-center lg:text-left mt-8 lg:mt-0">
+            <div className="flex items-center gap-2 h-20 mb-3 justify-center lg:justify-start">
+              <img src={logo} alt="FlowMart Logo" className="h-full object-contain" />
+            </div>
+            <h2 className="text-3xl font-bold font-headings text-foreground leading-tight">
               Create Account
-            </h1>
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Join FlowMart and start shopping today
+            </p>
           </div>
 
-          {/* Progress */}
-          <div className="mb-3 flex items-center gap-1.5">
-            <div className="h-1.5 w-6 rounded-full bg-primary" />
-            <div className="h-1.5 w-1.5 rounded-full bg-muted" />
-            <div className="h-1.5 w-1.5 rounded-full bg-muted" />
+          <form onSubmit={handleRegister} className="flex flex-col gap-5">
+            {error && (
+              <div className="bg-destructive/10 border border-destructive/20 text-destructive text-sm px-4 py-3 rounded-xl font-medium text-center">
+                {error}
+              </div>
+            )}
 
-            <span className="ml-1 text-xs font-semibold text-primary">
-              Personal Info
-            </span>
-          </div>
-
-          <p className="mb-6 text-sm text-muted-foreground">
-            Let's get you started as a FlowMart rider
-          </p>
-
-          <form
-            onSubmit={handleRegister}
-            className="rounded-2xl border bg-card p-5 shadow-sm"
-          >
-            <div className="space-y-5">
-              {error && (
-                <div className="rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-center text-sm text-destructive">
-                  {error}
-                </div>
-              )}
-
-              {/* Avatar */}
+            <div className="bg-surface p-6 rounded-2xl border border-border/70 shadow-xs flex flex-col gap-4">
+              {/* Avatar Upload */}
               <div className="flex flex-col items-center">
                 <input
                   ref={fileInputRef}
@@ -144,34 +121,27 @@ export default function Register() {
                   className="hidden"
                   onChange={handleImageUpload}
                 />
-
                 <div
                   onClick={() => fileInputRef.current?.click()}
-                  className="group relative flex h-24 w-24 cursor-pointer items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-primary bg-muted"
+                  className="group relative flex h-20 w-20 cursor-pointer items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-primary bg-muted transition hover:border-primary/80"
                 >
                   {profileImage ? (
-                    <img
-                      src={profileImage}
-                      alt="Profile"
-                      className="h-full w-full object-cover"
-                    />
+                    <img src={profileImage} alt="Profile" className="h-full w-full object-cover" />
                   ) : (
-                    <Camera size={24} className="text-primary" />
+                    <Camera size={22} className="text-primary" />
                   )}
                 </div>
-
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="mt-2 text-xs font-semibold text-primary hover:underline"
+                  className="mt-1.5 text-xs font-semibold text-primary hover:underline cursor-pointer"
                 >
                   Upload Photo
                 </button>
               </div>
 
-              {/* Form Fields */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* First Name */}
+              {/* Name row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <UserInput
                   label="First Name"
                   name="firstName"
@@ -181,8 +151,6 @@ export default function Register() {
                   onChange={(e) => setFirstName(e.target.value)}
                   required
                 />
-
-                {/* Last Name */}
                 <UserInput
                   label="Last Name"
                   name="lastName"
@@ -192,57 +160,59 @@ export default function Register() {
                   onChange={(e) => setLastName(e.target.value)}
                   required
                 />
+              </div>
 
-                {/* Phone Number */}
-                <UserInput
-                  ref={dateInputRef}
-                  label="Date of Birth"
-                  type="date"
-                  rightIcon={
-                    <Calendar
-                      size={18}
-                      onClick={() => dateInputRef.current?.showPicker()}
-                    />
-                  }
-                  value={dob}
-                  onChange={(e) => setDob(e.target.value)}
-                />
+              {/* Email */}
+              <UserInput
+                label="Email Address"
+                name="email"
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
 
-                {/* Email */}
+              {/* Phone */}
+              <UserInput
+                label="Phone Number"
+                name="phoneNumber"
+                type="tel"
+                placeholder="08012345678"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                required
+              />
+
+              {/* Password with toggle */}
+              <div className="relative w-full">
                 <UserInput
-                  label="Email Address"
-                  name="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  icon={<Mail size={18} />}
+                  label="Password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required
                 />
-          
-                {/* Gender */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-sm font-medium text-foreground">
-                    Gender
-                  </label>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-[44px] text-muted-foreground hover:text-foreground transition cursor-pointer"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
 
+              {/* Gender + DOB row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-[10px] w-full">
+                  <label className="text-sm font-medium text-foreground">Gender</label>
                   <select
                     value={gender}
                     onChange={(e) => setGender(e.target.value)}
-                    className="h-12
-        w-full
-        rounded-lg
-        border
-        border-gray-300
-        bg-background
-        px-3
-        text-sm
-        text-foreground
-        focus:border-primary
-        focus:outline-none
-        focus:ring-2
-        focus:ring-primary/20
-      "
+                    className="flex items-center w-full border border-gray-300 rounded-md px-3 py-[14px] bg-background text-sm text-foreground transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
                   >
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
@@ -250,39 +220,35 @@ export default function Register() {
                   </select>
                 </div>
 
-                {/* Date of Birth */}
                 <UserInput
                   label="Date of Birth"
                   name="dob"
                   type="date"
                   value={dob}
                   onChange={(e) => setDob(e.target.value)}
-                  required
                 />
               </div>
-
-              <VendorButton
-                type="submit"
-                disabled={loading || isFormEmpty}
-                className="w-full"
-              >
-                {loading ? "Processing..." : "Continue"}
-              </VendorButton>
-
-              <p className="text-center text-sm text-muted-foreground">
-                Already have an account?{" "}
-                <button
-                  type="button"
-                  onClick={() => navigate("/login")}
-                  className="font-semibold text-primary hover:underline"
-                >
-                  Sign In
-                </button>
-              </p>
             </div>
+
+            <VendorButton type="submit" disabled={isFormEmpty || loading} className="mt-2">
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin inline" />}
+              {loading ? "Creating account..." : "Create Account"}
+            </VendorButton>
+
+            <p className="text-sm text-muted-foreground text-center">
+              Already have an account?{" "}
+              <button
+                type="button"
+                onClick={() => navigate("/login")}
+                className="text-primary font-bold hover:underline cursor-pointer bg-transparent border-none outline-none font-body"
+              >
+                Sign In
+              </button>
+            </p>
           </form>
         </div>
-      </main>
+        </div>
+      </div>
     </div>
   );
 }
