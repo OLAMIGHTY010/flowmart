@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { Product } from "@/types/api";
+import type { Product } from "@/types/product";
 
 export interface CartItem extends Product {
   qty: number;
@@ -11,7 +11,7 @@ interface CartStore {
   cart: CartItem[];
   
 
-  addToCart: (product: Product) => void;
+  addToCart: (product: Product, quantity?: number) => void;
   increaseQty: (id: string) => void;
   decreaseQty: (id: string) => void;
   removeFromCart: (id: string) => void;
@@ -44,7 +44,7 @@ export const useCartStore = create<CartStore>()(
     (set, get) => ({
       cart: [],
 
-      addToCart: (product) =>
+      addToCart: (product, qty = 1) =>
         set((state) => {
           const exists = state.cart.find(
             (item) => item.id === product.id
@@ -53,10 +53,10 @@ export const useCartStore = create<CartStore>()(
           const cart = exists
             ? state.cart.map((item) =>
                 item.id === product.id
-                  ? { ...item, qty: item.qty + 1 }
+                  ? { ...item, qty: item.qty + qty }
                   : item
               )
-            : [...state.cart, { ...product, qty: 1 }];
+            : [...state.cart, { ...product, qty }];
 
           return { cart };
         }),
