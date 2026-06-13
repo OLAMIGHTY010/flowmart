@@ -5,7 +5,10 @@ interface OtpInputProps {
   onComplete: (code: string) => void;
 }
 
-export default function OtpInput({ length = 6, onComplete }: OtpInputProps) {
+export default function OtpInput({
+  length = 6,
+  onComplete,
+}: OtpInputProps) {
   const [otp, setOtp] = useState<string[]>(Array(length).fill(""));
   const inputRefs = useRef<HTMLInputElement[]>([]);
 
@@ -78,22 +81,43 @@ export default function OtpInput({ length = 6, onComplete }: OtpInputProps) {
   };
 
   return (
-    <div className="flex gap-2">
-      {otp.map((digit, i) => (
-        <input
-          key={i}
-          ref={(el) => {
-            if (el) inputRefs.current[i] = el;
-          }}
-          value={digit}
-          onChange={(e) => handleChange(e.target.value, i)}
-          onKeyDown={(e) => handleKeyDown(e, i)}
-          onPaste={handlePaste}
-          maxLength={1}
-          inputMode="numeric"
-          className="w-12 h-14 text-center text-xl border rounded-lg"
-        />
-      ))}
+    <div className="w-full flex justify-center">
+      <div className="flex items-center justify-center gap-2 sm:gap-3">
+        {otp.map((digit, i) => (
+          <input
+            key={i}
+            ref={(el) => {
+              if (el) inputRefs.current[i] = el;
+            }}
+            value={digit}
+            onChange={(e) => handleChange(e.target.value, i)}
+            onKeyDown={(e) => handleKeyDown(e, i)}
+            onPaste={handlePaste}
+            maxLength={1}
+            inputMode="numeric"
+            className="
+              h-14
+              w-12
+              sm:h-16
+              sm:w-14
+              rounded-xl
+              border
+              border-border
+              bg-background
+              text-center
+              text-xl
+              font-bold
+              text-foreground
+              shadow-sm
+              transition-all
+              outline-none
+              focus:border-primary
+              focus:ring-4
+              focus:ring-primary/10
+            "
+          />
+        ))}
+      </div>
     </div>
   );
 }
