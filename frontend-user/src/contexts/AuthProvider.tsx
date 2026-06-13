@@ -39,8 +39,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         }
         
         try {
-          const response = await apiClient.get<any>("/auth/me");
-          const fetchedUser = mapApiUser(response.data || response);
+          const fetchedUser = await authService.getCurrentUser();
           setUser(fetchedUser);
           localStorage.setItem("currentUser", JSON.stringify(fetchedUser));
         } catch (error) {
