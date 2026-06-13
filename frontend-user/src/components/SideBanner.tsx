@@ -1,8 +1,9 @@
 import React from "react";
+import logo from "@/assets/flowmart-logo.png";
 
 export default function SideBanner() {
   return (
-    <aside className="relative hidden lg:flex lg:w-2/5 xl:w-1/3 shrink-0 overflow-hidden bg-brand-700 text-white">
+    <aside className="relative hidden lg:flex lg:w-2/5 xl:w-1/3 shrink-0 overflow-hidden bg-secondary-100 text-white">
       {/* Background Image */}
       <img
         src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80&w=1200"
@@ -14,13 +15,14 @@ export default function SideBanner() {
       <div className="absolute inset-0 bg-black/60" />
 
       <div className="relative z-10 flex h-full flex-col justify-between p-8">
-        {/* Logo */}
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
-            🌿
+        <div className="flex items-center">
+          <div className="rounded-2xl bg-white px-8 py-5 shadow-xl">
+            <img
+              src={logo}
+              alt="FlowMart Logo"
+              className="max-w-[100px] h-15 object-contain"
+            />
           </div>
-
-          <h2 className="text-xl font-bold">FlowMart Portal</h2>
         </div>
 
         {/* Content */}

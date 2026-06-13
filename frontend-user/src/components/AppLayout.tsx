@@ -3,24 +3,54 @@ import {
   useRef,
   useState,
 } from "react";
-import { Outlet } from "react-router-dom";
+import {
+  Outlet,
+  useLocation,
+} from "react-router-dom";
 
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import FilterSidebar from "@/components/FilterSidebar";
 
 type SortKey =
   | "default"
   | "price-asc"
   | "price-desc"
   | "stock";
-  
+
+const allCategories = [
+  "All",
+  "Food",
+  "Meals",
+  "Drinks",
+  "Fast Food",
+  "Snacks",
+  "Combos",
+  "Groceries",
+  "Dairy",
+  "Beverages",
+  "Welfare",
+  "Health",
+];
 
 const AppLayout = () => {
+  const location = useLocation();
+
   const [query, setQuery] = useState("");
   const [showFilters, setShowFilters] =
-    useState(false);
+    useState(true);
   const [sort, setSort] =
     useState<SortKey>("default");
+  const [selectedCategory, setSelectedCategory] =
+    useState("All");
+  const [selectedTab, setSelectedTab] =
+    useState("all");
+  const [quickFilters, setQuickFilters] = useState<
+    string[]
+  >([]);
+  const [offers, setOffers] = useState<string[]>(
+    []
+  );
 
   const [showFooter, setShowFooter] =
     useState(true);
@@ -31,6 +61,36 @@ const AppLayout = () => {
   const scrollTimeout = useRef<
     ReturnType<typeof setTimeout> | undefined
   >(undefined);
+
+  /**
+   * Routes where sidebar should be hidden
+   */
+  const shouldShowSidebar =
+    ![
+      "/login",
+      "/register",
+      "/verify-otp",
+      "/profile",
+      "/profile-setup",
+      "/settings",
+      "/wishlist",
+      "/cart",
+      "/checkout",
+      "/orders",
+      "/edit-profile",
+      "/support",
+      "/alerts",
+      "/privacy-security",
+      "/change-password",
+      "/two-factor-auth",
+      "/active-sessions",
+      "/terms",
+      "/help-support",
+    ].some((route) =>
+      location.pathname.startsWith(route)
+    ) &&
+    !location.pathname.startsWith("/products/") &&
+    !location.pathname.startsWith("/vendor/");
 
   useEffect(() => {
     const container =
@@ -44,7 +104,7 @@ const AppLayout = () => {
       const currentScrollTop =
         container.scrollTop;
 
-      // Hide footer while scrolling down
+      // Hide footer when scrolling down
       if (
         currentScrollTop > lastScrollTop &&
         currentScrollTop > 50
@@ -82,7 +142,7 @@ const AppLayout = () => {
     };
   }, []);
 
-    return (
+  return (
     <div className="flex h-screen flex-col bg-background">
       <Navbar
         query={query}
@@ -91,21 +151,64 @@ const AppLayout = () => {
         setShowFilters={setShowFilters}
         sort={sort}
         setSort={setSort}
+        selectedTab={selectedTab}
+        setSelectedTab={setSelectedTab}
       />
 
-      <main
-        ref={scrollContainerRef}
-        className="flex-1 overflow-y-auto pb-24"
-      >
-        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-          <Outlet /> {/* Replace {children} with this */}
-        </div>
-      </main>
+      <div className="flex flex-1 overflow-hidden">
+        {/* Desktop Sidebar */}
+        {shouldShowSidebar && (
+          <FilterSidebar
+            sort={sort}
+            setSort={setSort}
+            selectedCategory={selectedCategory}
+            setSelectedCategory={setSelectedCategory}
+            quickFilters={quickFilters}
+            setQuickFilters={setQuickFilters}
+            offers={offers}
+            setOffers={setOffers}
+            categories={allCategories}
+            showFilters={showFilters}
+            setShowFilters={setShowFilters}
+          />
+        )}
+
+        {/* Main Content */}
+        <main
+          ref={scrollContainerRef}
+          className="flex-1 overflow-y-auto pb-24"
+        >
+          <div
+            className={`mx-auto w-full px-4 sm:px-6 lg:px-7 ${shouldShowSidebar
+                ? "max-w-7xl"
+                : "max-w-6xl"
+              }`}
+          >
+            <Outlet
+              context={{
+                query,
+                setQuery,
+                sort,
+                setSort,
+                selectedCategory,
+                setSelectedCategory,
+                selectedTab,
+                setSelectedTab,
+                quickFilters,
+                setQuickFilters,
+                offers,
+                setOffers,
+              }}
+            />
+          </div>
+        </main>
+      </div>
 
       <div
-        className={`fixed bottom-0 left-0 right-0 z-50 transition-transform duration-300 ${
-          showFooter ? "translate-y-0" : "translate-y-full"
-        }`}
+        className={`fixed bottom-0 left-0 right-0 z-50 transition-transform duration-300 ${showFooter
+            ? "translate-y-0"
+            : "translate-y-full"
+          }`}
       >
         <Footer />
       </div>
