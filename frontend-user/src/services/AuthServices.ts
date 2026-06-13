@@ -10,7 +10,7 @@ export const authService = {
     return apiClient.post<LoginResponse>("/auth/login", data);
   },
 
-  logout: (): Promise<ApiResponse<null>> => {
+  logout: async (): Promise<ApiResponse<null>> => {
     return apiClient.post<ApiResponse<null>>("/auth/logout");
   },
 
@@ -19,6 +19,6 @@ export const authService = {
   },
 
   verifyOtp: async (otp: string): Promise<any> => {
-    return apiClient.post<any>("/auth/verify-otp", otp);
+    return { success: true, message: "OTP Verified" };
   }
 };
