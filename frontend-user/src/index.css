@@ -174,3 +174,41 @@
   --radius-lg: 16px;
   --radius-full: 999px;
 }
+
+/* =========================================================
+   ANIMATIONS
+   ========================================================= */
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* =========================================================
+   FILTER SIDEBAR SCROLLBAR
+   ========================================================= */
+
+aside::-webkit-scrollbar {
+  width: 4px;
+}
+
+aside::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+aside::-webkit-scrollbar-thumb {
+  background: hsl(var(--gray-300));
+  border-radius: 999px;
+}
+
+aside::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--gray-500));
+}

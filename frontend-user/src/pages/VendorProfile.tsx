@@ -1,4 +1,4 @@
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, MapPin, ShieldCheck, Star, Users, CheckCircle2 } from "lucide-react";
 import { useVendorProducts } from "@/hooks/useVendorProducts";
 import ProductCard from "@/components/product/PurchaseCard";

@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Star, CheckCircle2, Loader2 } from "lucide-react";
 import { UserInput } from "@/components/ui/input";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { mockService } from "@/services/MockServices";
+import { productServices } from "@/services/ProductServices";
 
 interface ProductReviewsProps {
   productId: string;
@@ -18,11 +18,11 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
 
   const { data: reviews, isLoading } = useQuery({
     queryKey: ["reviews", productId],
-    queryFn: () => mockService.getReviews(productId),
+    queryFn: () => productServices.getReviews(productId),
   });
 
   const postReviewMutation = useMutation({
-    mutationFn: (reviewData: any) => mockService.postReview(reviewData),
+    mutationFn: (reviewData: any) => productServices.postReview(reviewData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["reviews", productId] });
       setReviewText("");

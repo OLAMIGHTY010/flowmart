@@ -11,10 +11,20 @@ export interface AppUser {
   status?: string;
   isVerified?: boolean;
   profileCompleted?: boolean;
+  twoFactorEnabled?: boolean;
+  privacySettings?: {
+    profileVisibility: boolean;
+    showOnlineStatus: boolean;
+    locationTracking: boolean;
+  };
 }
 
 export interface RegisterRequest {
   fullName: string;
+  phoneNumber: string;
+  dateOfBirth: string;
+  gender: string;
+  profileImage: string;
   email: string;
   password: string;
   role: UserRole;
@@ -37,22 +47,6 @@ export interface LoginResponse {
   message: string;
   token: string;
   user: AppUser;
-}
-
-export interface Product {
-  id: string;
-  vendorId: string;
-  sku: string;
-  name: string;
-  description: string;
-  price: any;
-  stockQuantity: number;
-  imageUrl: string;
-  category?: string;
-  brand?: string;
-  weight?: number;
-  createdAt?: string;
-  updatedAt?: string;
 }
 
 export interface ApiResponse<T> {
