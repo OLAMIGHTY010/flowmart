@@ -13,37 +13,37 @@ type ProductResponse = {
 
 export const productServices = {
   getProducts: async (): Promise<Product[]> => {
-    const response = await apiClient.get<any>("/products");
+    const response = await apiClient.get<ProductsResponse | Product[]>("/products");
     if (Array.isArray(response)) {
       return response;
     }
-    return response?.products ?? response?.data ?? [];
+    return response?.products ?? [];
   },
 
   getProductById: async (id: string): Promise<Product> => {
-    const response = await apiClient.get<any>(`/products/${id}`);
-    const product = response.product ? response.product : response;
+    const response = await apiClient.get<ProductResponse | Product>(`/products/${id}`);
+    const product = "product" in response && response.product ? response.product : (response as Product);
     
     return product;
   },
 
   getVendorProducts: async (vendorId: string): Promise<Product[]> => {
     try {
-      const response = await apiClient.get<any>(
+      const response = await apiClient.get<ProductsResponse | Product[]>(
         `/vendors/${vendorId}/products`
       );
       if (Array.isArray(response)) {
         return response;
       }
-      return response?.products ?? response?.data ?? [];
+      return response?.products ?? [];
     } catch {
-      const response = await apiClient.get<any>(
+      const response = await apiClient.get<ProductsResponse | Product[]>(
         `/products?vendorId=${vendorId}`
       );
       if (Array.isArray(response)) {
         return response;
       }
-      return response?.products ?? response?.data ?? [];
+      return response?.products ?? [];
     }
   },
 

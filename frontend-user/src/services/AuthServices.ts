@@ -19,6 +19,6 @@ export const authService = {
   },
 
   verifyOtp: async (otp: string): Promise<any> => {
-    return { success: true, message: "OTP Verified" };
+    return apiClient.post<any>("/auth/verify-otp", { otp });
   }
 };
