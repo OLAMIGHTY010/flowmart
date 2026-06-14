@@ -1,43 +1,57 @@
+import React from "react";
+import logo from "@/assets/flowmart-logo.png";
+
 export default function SideBanner() {
   return (
-    <div className="relative hidden lg:flex lg:w-2/5 xl:w-1/3 bg-dark-header text-white p-8 flex-col justify-between overflow-hidden sticky top-0 h-screen">
-      {/* Background Decorative Overlay */}
-      <div className="absolute inset-0 opacity-25 mix-blend-overlay">
-        <img
-          src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80&w=1200"
-          alt="Worship scene background"
-          className="w-full h-full object-cover"
-        />
-      </div>
+    <aside className="relative hidden lg:flex lg:w-2/5 xl:w-1/3 shrink-0 overflow-hidden bg-secondary-100 text-white">
+      {/* Background Image */}
+      <img
+        src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80&w=1200"
+        alt="Event"
+        className="absolute inset-0 h-full w-full object-cover"
+      />
 
-      {/* Top Branding */}
-      <div className="relative z-10 flex items-center gap-2">
-        <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-lg">
-          🌿
+      {/* Dark Overlay */}
+      <div className="absolute inset-0 bg-black/60" />
+
+      <div className="relative z-10 flex h-full flex-col justify-between p-8">
+        <div className="flex items-center">
+          <div className="rounded-2xl bg-white px-8 py-5 shadow-xl">
+            <img
+              src={logo}
+              alt="FlowMart Logo"
+              className="max-w-[100px] h-15 object-contain"
+            />
+          </div>
         </div>
-        <span className="text-lg font-bold tracking-tight text-white">FlowMart Portal</span>
-      </div>
 
-      {/* Event Center Display */}
-      <div className="relative z-10 my-auto py-12 flex flex-col gap-4">
-        <div className="bg-white/10 backdrop-blur-md px-3.5 py-1.5 rounded-full text-[10px] font-bold tracking-widest uppercase text-primary bg-secondary/90 w-fit">
-          Partner Event 2025
+        {/* Content */}
+        <div className="space-y-4">
+          <span className="inline-flex rounded-full bg-primary-500/20 px-4 py-2 text-xs font-bold uppercase tracking-wider text-primary-100">
+            Partner Event 2025
+          </span>
+
+          <h1 className="text-4xl font-bold leading-tight">
+            RCCG Holy Ghost Congress 2025
+          </h1>
+
+          <p className="text-lg text-white/90">
+            Theme:
+            <span className="ml-2 font-bold">
+              "The God of All Flesh"
+            </span>
+          </p>
+
+          <p className="text-sm text-white/70">
+            December 8 – 14, 2025 • Redemption City, Nigeria
+          </p>
         </div>
-        <h1 className="text-3xl font-extrabold tracking-tight leading-tight">
-          RCCG Holy Ghost Congress 2025
-        </h1>
-        <p className="text-sm text-white/80 leading-relaxed font-light">
-          Theme: <strong className="font-bold text-white">"The God of All Flesh"</strong>
-        </p>
-        <p className="text-xs text-white/60 leading-relaxed">
-          December 8 – 14, 2025 • Redemption City, Nigeria
-        </p>
-      </div>
 
-      {/* Footer info */}
-      <div className="relative z-10 text-xs text-white/50">
-        © 2026 FlowMart. All rights reserved.
+        {/* Footer */}
+        <div className="text-sm text-white/60">
+          © 2026 FlowMart. All rights reserved.
+        </div>
       </div>
-    </div>
+    </aside>
   );
 }
