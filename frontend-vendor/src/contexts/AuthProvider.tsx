@@ -11,8 +11,11 @@ const mapApiUser = (data: any): AppUser => ({
   role: data.role as UserRole,
   phone: data.phone,
   gender: data.gender,
+  dob: data.dateOfBirth || data.dob,
   avatar: data.avatar,
   status: data.status,
+  isVerified: data.isVerified !== undefined ? data.isVerified : data.is_verified,
+  profileCompleted: data.profileCompleted !== undefined ? data.profileCompleted : data.profile_completed,
 });
 
 type AuthProviderProps = {
@@ -40,7 +43,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         
         try {
           const response = await apiClient.get<any>("/auth/me");
-          const fetchedUser = mapApiUser(response.data || response);
+          const responseData = response.data || response;
+          const userData = responseData.user || responseData;
+          const fetchedUser = mapApiUser(userData);
           setUser(fetchedUser);
           localStorage.setItem("currentUser", JSON.stringify(fetchedUser));
         } catch (error) {
@@ -125,13 +130,29 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  // ⚡ 6. Performance Optimization
+  // 🔄 6. Refresh User Session from Server
+  const refreshUser = async () => {
+    try {
+      const response = await authService.getCurrentUser();
+      const responseData = (response as any).data || response;
+      if (responseData && responseData.user) {
+        const mappedUser = mapApiUser(responseData.user);
+        setUser(mappedUser);
+        localStorage.setItem("currentUser", JSON.stringify(mappedUser));
+      }
+    } catch (err) {
+      console.error("Failed to refresh user session:", err);
+    }
+  };
+
+  // ⚡ 7. Performance Optimization
   const contextValue = useMemo(() => ({
     user,
     isLoading,
     login,
     register,
-    logout
+    logout,
+    refreshUser
   }), [user, isLoading]);
 
   return (
