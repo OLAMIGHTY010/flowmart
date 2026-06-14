@@ -1,36 +1,67 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Camera, Loader2 } from "lucide-react";
 import { UserInput } from "@/components/ui/input";
+import { useAuth } from "@/hooks/useAuth";
+import { userServices } from "@/services/UserServices";
 
 export default function EditProfile() {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { user, login } = useAuth(); // login is often used to refresh user state in auth hook
 
-  // Initial mock state
-  const [firstName, setFirstName] = useState("Martha");
-  const [lastName, setLastName] = useState("Johnson");
-  const [email, setEmail] = useState("martha@email.com");
-  const [phone, setPhone] = useState("08012345678");
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [profileImage, setProfileImage] = useState<string>("https://images.unsplash.com/photo-1531123897727-8f129e1bf98c?w=150&h=150&fit=crop&crop=faces");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setFullName(user.fullName || "");
+      setEmail(user.email || "");
+      setPhone(user.phone || "");
+      // if user.avatar exists, use it
+      if ((user as any).avatar) {
+        setProfileImage((user as any).avatar);
+      }
+    }
+  }, [user]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setProfileImage(URL.createObjectURL(file));
+      // In a real app, upload image to storage and get URL
     }
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    // Simulate API save
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      // In a real app, profileImage should be uploaded first and its URL passed here
+      const res = await userServices.updateProfile({
+        fullName,
+        phone,
+      });
+      
+      // Update local context/storage if api returns updated user
+      if (res.success && res.user) {
+        // You might need a more robust way to sync `useAuth` context, 
+        // e.g. a `refreshUser()` function if your auth context supports it.
+        const updatedUser = { ...user, ...res.user };
+        localStorage.setItem("currentUser", JSON.stringify(updatedUser));
+      }
+
       navigate("/profile");
-    }, 1000);
+    } catch (error) {
+      console.error("Failed to update profile", error);
+      alert("Failed to update profile. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -78,20 +109,12 @@ export default function EditProfile() {
 
         {/* Form Fields */}
         <div className="space-y-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-          <div className="grid grid-cols-2 gap-4">
-            <UserInput
-              label="First Name"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              required
-            />
-            <UserInput
-              label="Last Name"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              required
-            />
-          </div>
+          <UserInput
+            label="Full Name"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            required
+          />
 
           <UserInput
             label="Email Address"

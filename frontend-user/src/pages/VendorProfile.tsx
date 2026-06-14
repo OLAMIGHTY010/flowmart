@@ -1,13 +1,14 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, MapPin, ShieldCheck, Star, Users, CheckCircle2 } from "lucide-react";
-import { useVendorProducts } from "@/hooks/useVendorProducts";
+import { useVendorProducts, useVendorProfile } from "@/hooks/useVendorProducts";
 import ProductCard from "@/components/product/PurchaseCard";
 import { useVendorStore } from "@/stores/vendorStore";
 
 export default function VendorProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { data: products, isLoading } = useVendorProducts(id!);
+  const { data: products, isLoading: isLoadingProducts } = useVendorProducts(id!);
+  const { data: vendorProfile, isLoading: isLoadingVendor } = useVendorProfile(id!);
   
   const { followVendor, unfollowVendor, isFollowing } = useVendorStore();
   const following = isFollowing(id || "");
@@ -17,15 +18,7 @@ export default function VendorProfile() {
     else followVendor(id!);
   };
 
-  // Extract vendor info from the first product or use mock fallback
-  const vendor = products?.[0]?.vendor || {
-    id: id || "v1",
-    name: "FlowMart Official Store",
-    logo: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=150&h=150",
-    verified: true,
-    rating: 4.8,
-    totalProducts: products?.length || 0,
-  };
+  const isLoading = isLoadingProducts || isLoadingVendor;
 
   if (isLoading) {
     return (
@@ -34,6 +27,17 @@ export default function VendorProfile() {
       </div>
     );
   }
+
+  const vendor = vendorProfile || {
+    id: id || "v1",
+    name: "Vendor Store",
+    logo: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=150&h=150",
+    verified: false,
+    rating: 4.8,
+    totalProducts: products?.length || 0,
+    city: "Lagos",
+    stateRegion: "Nigeria"
+  };
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
@@ -71,7 +75,7 @@ export default function VendorProfile() {
                 </div>
                 <div className="mt-1 flex items-center gap-1 text-sm text-gray-500">
                   <MapPin size={14} />
-                  <span>Lagos, Nigeria</span>
+                  <span>{vendor.city ? `${vendor.city}, ${vendor.stateRegion || "Nigeria"}` : "Lagos, Nigeria"}</span>
                 </div>
               </div>
             </div>
