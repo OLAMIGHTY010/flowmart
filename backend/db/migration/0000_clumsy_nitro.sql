@@ -39,6 +39,11 @@ CREATE TABLE "users" (
 	"email" varchar(255) NOT NULL,
 	"password" varchar(255) NOT NULL,
 	"role" "role" DEFAULT 'attendee' NOT NULL,
+	"is_verified" boolean DEFAULT false NOT NULL,
+	"otp" varchar(255),
+	"otp_expiry" timestamp,
+	"reset_token" varchar(255),
+	"reset_token_expiry" timestamp,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
 	CONSTRAINT "users_email_unique" UNIQUE("email")

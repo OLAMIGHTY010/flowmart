@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
 import { db } from "../../db";
-import { orders } from "../../db/schema";
+import { orders, users } from "../../db/schema";
 import { eq, and, isNull } from "drizzle-orm";
 import { AuthenticatedRequest } from "../middleware/auth.middleware";
+import { emailService } from "../services/email.service";
 
 // 1. View Available Deliveries (Riders)
 export const getAvailableDeliveries = async (
@@ -76,6 +77,18 @@ export const acceptDelivery = async (
 	}
 };
 
+// Helper function to send delivery email
+const dispatchDeliveryEmail = async (attendeeId: string, orderId: string) => {
+	try {
+		const [attendee] = await db.select().from(users).where(eq(users.id, attendeeId)).limit(1);
+		if (attendee) {
+			await emailService.sendDeliveryConfirmationEmail(attendee.email, { fullName: attendee.fullName, orderId });
+		}
+	} catch (err) {
+		console.error('Email Dispatch Error:', err);
+	}
+};
+
 // 3. Confirm Delivery via PIN (Riders)
 export const confirmDelivery = async (
 	req: AuthenticatedRequest,
@@ -127,6 +140,9 @@ export const confirmDelivery = async (
 			})
 			.where(eq(orders.id, orderId as string))
 			.returning();
+
+		// Fire & Forget Delivery Confirmation Email
+		dispatchDeliveryEmail(activeOrder.attendeeId, deliveredOrder.id);
 
 		return res.status(200).json({
 			success: true,
@@ -185,6 +201,9 @@ export const confirmDeliveryViaQR = async (
 			.set({ status: "delivered", updatedAt: new Date() })
 			.where(eq(orders.id, orderId))
 			.returning();
+
+		// Fire & Forget Delivery Confirmation Email
+		dispatchDeliveryEmail(activeOrder.attendeeId, deliveredOrder.id);
 
 		return res.status(200).json({
 			success: true,

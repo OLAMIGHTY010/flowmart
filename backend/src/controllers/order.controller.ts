@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
 import { db } from "../../db";
-import { products, orders, orderItems } from "../../db/schema";
+import { products, orders, orderItems, users } from "../../db/schema";
 import { eq, and } from "drizzle-orm";
 import { AuthenticatedRequest } from "../middleware/auth.middleware";
+import { emailService } from "../services/email.service";
 
 // 1. Place a New Order (Attendees)
 export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
@@ -11,45 +12,27 @@ export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
 		const { productId, quantity, deliveryZone } = req.body;
 
 		if (!productId || !quantity || !deliveryZone) {
-			return res.status(400).json({
-				success: false,
-				message: "Missing required order details",
-			});
+			return res.status(400).json({ success: false, message: "Missing required order details" });
 		}
 
-		// Check product availability and stock (Using type-cast to satisfy Drizzle compiler)
-		const [product] = await db
-			.select()
-			.from(products)
-			.where(eq(products.id, productId as string))
-			.limit(1);
+		const [product] = await db.select().from(products).where(eq(products.id, productId as string)).limit(1);
 
 		if (!product || product.stockQuantity < quantity) {
-			return res.status(400).json({
-				success: false,
-				message: "Product is unavailable or out of stock",
-			});
+			return res.status(400).json({ success: false, message: "Product is unavailable or out of stock" });
 		}
 
 		const totalAmount = (Number(product.price) * quantity).toString();
-		const deliveryPin = Math.floor(
-			100000 + Math.random() * 900000
-		).toString(); // 6-digit PIN for riders
+		const deliveryPin = Math.floor(100000 + Math.random() * 900000).toString(); 
 
-		// Create the order
-		const [newOrder] = await db
-			.insert(orders)
-			.values({
-				attendeeId: attendeeId!,
-				vendorId: product.vendorId,
-				deliveryZone,
-				totalAmount,
-				deliveryPin,
-				status: "pending",
-			})
-			.returning();
+		const [newOrder] = await db.insert(orders).values({
+			attendeeId: attendeeId!,
+			vendorId: product.vendorId,
+			deliveryZone,
+			totalAmount,
+			deliveryPin,
+			status: "pending",
+		}).returning();
 
-		// Create the order item record (Preserved from HEAD branch)
 		await db.insert(orderItems).values({
 			orderId: newOrder.id,
 			productId: product.id,
@@ -57,11 +40,32 @@ export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
 			unitPrice: product.price,
 		});
 
-		// Deduct from inventory
-		await db
-			.update(products)
-			.set({ stockQuantity: product.stockQuantity - quantity })
-			.where(eq(products.id, product.id as string));
+		const newStockQuantity = product.stockQuantity - quantity;
+		await db.update(products).set({ stockQuantity: newStockQuantity }).where(eq(products.id, product.id as string));
+
+		// === EMAIL INTEGRATIONS ===
+		// Fetch attendee and vendor info concurrently
+		const [attendee, vendor] = await Promise.all([
+			db.select().from(users).where(eq(users.id, attendeeId!)).limit(1).then(res => res[0]),
+			db.select().from(users).where(eq(users.id, product.vendorId)).limit(1).then(res => res[0])
+		]);
+
+		if (attendee) {
+			emailService.sendOrderReceiptEmail(attendee.email, {
+				fullName: attendee.fullName,
+				orderId: newOrder.id,
+				totalAmount,
+				deliveryPin,
+				items: [{ name: product.name, quantity, price: product.price.toString() }]
+			}).catch(console.error);
+		}
+
+		if (newStockQuantity === 0 && vendor) {
+			emailService.sendOutOfStockAlert(vendor.email, {
+				vendorName: vendor.fullName,
+				productName: product.name
+			}).catch(console.error);
+		}
 
 		return res.status(201).json({
 			success: true,
@@ -70,9 +74,7 @@ export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
 		});
 	} catch (error) {
 		console.error("Place Order Error:", error);
-		return res
-			.status(500)
-			.json({ success: false, message: "Internal Server Error" });
+		return res.status(500).json({ success: false, message: "Internal Server Error" });
 	}
 };
 
@@ -85,69 +87,39 @@ export const getOrders = async (req: AuthenticatedRequest, res: Response) => {
 		let userOrders;
 
 		if (role === "vendor") {
-			// Vendors see orders placed with their shop
-			userOrders = await db
-				.select()
-				.from(orders)
-				.where(eq(orders.vendorId, userId!));
+			userOrders = await db.select().from(orders).where(eq(orders.vendorId, userId!));
 		} else if (role === "attendee") {
-			// Attendees see their own order history
-			userOrders = await db
-				.select()
-				.from(orders)
-				.where(eq(orders.attendeeId, userId!));
+			userOrders = await db.select().from(orders).where(eq(orders.attendeeId, userId!));
 		} else {
-			return res
-				.status(403)
-				.json({ success: false, message: "Unauthorized view" });
+			return res.status(403).json({ success: false, message: "Unauthorized view" });
 		}
 
 		return res.status(200).json({ success: true, orders: userOrders });
 	} catch (error) {
 		console.error("Get Orders Error:", error);
-		return res
-			.status(500)
-			.json({ success: false, message: "Internal Server Error" });
+		return res.status(500).json({ success: false, message: "Internal Server Error" });
 	}
 };
 
 // 3. Update Order Status (Vendors & Logistics)
-export const updateOrderStatus = async (
-	req: AuthenticatedRequest,
-	res: Response
-) => {
+export const updateOrderStatus = async (req: AuthenticatedRequest, res: Response) => {
 	try {
 		const orderId = req.params.id as string;
-		const { status } = req.body; // e.g., 'confirmed', 'cancelled'
+		const { status } = req.body; 
 		const vendorId = req.user?.id;
 
-		// Verify order belongs to this vendor
-		const [existingOrder] = await db
-			.select()
-			.from(orders)
-			.where(
-				and(
-					eq(orders.id, orderId as string),
-					eq(orders.vendorId, vendorId!)
-				)
-			)
-			.limit(1);
+		const [existingOrder] = await db.select().from(orders).where(
+			and(eq(orders.id, orderId as string), eq(orders.vendorId, vendorId!))
+		).limit(1);
 
 		if (!existingOrder) {
-			return res.status(404).json({
-				success: false,
-				message: "Order not found or unauthorized",
-			});
+			return res.status(404).json({ success: false, message: "Order not found or unauthorized" });
 		}
 
-		const [updatedOrder] = await db
-			.update(orders)
-			.set({
-				status,
-				updatedAt: new Date(),
-			})
-			.where(eq(orders.id, orderId as string))
-			.returning();
+		const [updatedOrder] = await db.update(orders).set({
+			status,
+			updatedAt: new Date(),
+		}).where(eq(orders.id, orderId as string)).returning();
 
 		return res.status(200).json({
 			success: true,
@@ -156,8 +128,6 @@ export const updateOrderStatus = async (
 		});
 	} catch (error) {
 		console.error("Update Status Error:", error);
-		return res
-			.status(500)
-			.json({ success: false, message: "Internal Server Error" });
+		return res.status(500).json({ success: false, message: "Internal Server Error" });
 	}
 };

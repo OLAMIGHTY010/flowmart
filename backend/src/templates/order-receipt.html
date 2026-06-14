@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
+    .container { max-width: 600px; background: #ffffff; padding: 30px; border-radius: 8px; margin: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+    .header { text-align: center; border-bottom: 2px solid #edf2f7; padding-bottom: 20px; margin-bottom: 20px; }
+    .pin-box { background: #1e293b; color: #10b981; text-align: center; padding: 25px; font-size: 40px; letter-spacing: 8px; font-weight: bold; margin: 20px 0; border-radius: 8px; }
+    .order-details { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    .order-details th, .order-details td { padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: left; }
+    .total-row { font-weight: bold; font-size: 18px; }
+    .footer { font-size: 12px; color: #64748b; text-align: center; margin-top: 30px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>Order Confirmed!</h2>
+      <p style="color: #64748b;">Order ID: {{orderId}}</p>
+    </div>
+    <p>Hello {{fullName}},</p>
+    <p>Your order has been placed successfully and is being prepared. When your dispatch rider arrives at your zone, you <strong>must</strong> provide them with the following Delivery PIN to receive your items:</p>
+    
+    <div class="pin-box">{{deliveryPin}}</div>
+    
+    <h3>Order Summary</h3>
+    <table class="order-details">
+      <tr>
+        <th>Item</th>
+        <th>Qty</th>
+        <th>Price</th>
+      </tr>
+      {{#each items}}
+      <tr>
+        <td>{{this.name}}</td>
+        <td>{{this.quantity}}</td>
+        <td>₦{{this.price}}</td>
+      </tr>
+      {{/each}}
+      <tr class="total-row">
+        <td colspan="2" style="text-align: right;">Total:</td>
+        <td>₦{{totalAmount}}</td>
+      </tr>
+    </table>
+    
+    <div class="footer">
+      <p>Keep this PIN secure. Do not share it until the rider hands you your items.</p>
+    </div>
+  </div>
+</body>
+</html>
