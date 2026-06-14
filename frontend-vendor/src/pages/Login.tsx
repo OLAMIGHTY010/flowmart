@@ -18,6 +18,12 @@ export default function Login() {
   const [error, setError] = useState('');
 
   if (user) {
+    if (!user.isVerified) {
+      return <Navigate to="/otp" replace />;
+    }
+    if (!user.profileCompleted) {
+      return <Navigate to="/profile-setup" replace />;
+    }
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -56,8 +62,8 @@ export default function Login() {
         <div className="flex-grow flex items-center justify-center max-w-lg mx-auto w-full">
           <div className="w-full flex flex-col gap-6">
             {/* Logo / Title Area */}
-            <div className="text-center lg:text-left">
-              <div className="flex items-center gap-2 h-16 lg:h-20 mb-3 justify- w-fit-content">
+            <div className="text-center lg:text-left mt-8 lg:mt-0">
+              <div className="flex items-center gap-2 h-16 lg:h-20 mb-3 justify-center w-fit-content">
                 <img src={logo} alt="FlowMart Logo" className="h-40 lg:h-60 object-contain" />
               </div>
               <h2 className="text-3xl font-bold font-headings text-foreground leading-tight">
@@ -70,8 +76,17 @@ export default function Login() {
 
             <form onSubmit={handleLogin} className="flex flex-col gap-5">
               {error && (
-                <div className="bg-destructive/10 border border-destructive/20 text-destructive text-sm px-4 py-3 rounded-xl font-medium text-center">
-                  {error}
+                <div className="bg-destructive/10 border border-destructive/20 text-destructive text-sm px-4 py-3 rounded-xl font-medium text-center flex flex-col gap-2 items-center">
+                  <span>{error}</span>
+                  {(error.toLowerCase().includes("credentials") || error.toLowerCase().includes("password")) && (
+                    <button
+                      type="button"
+                      onClick={() => navigate('/forgot-password')}
+                      className="text-xs font-bold text-primary hover:underline cursor-pointer bg-transparent border-none p-0 outline-none"
+                    >
+                      Forgot your password? Reset it here.
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -80,7 +95,7 @@ export default function Login() {
                   label="Email Address"
                   name="email"
                   type="email"
-                  placeholder="martha@email.com"
+                  placeholder="Enter you email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -108,12 +123,13 @@ export default function Login() {
 
                 {/* Forgot Password Link */}
                 <div className="flex justify-end -mt-1">
-                  <a
-                    href="#"
-                    className="text-xs font-bold text-primary hover:underline transition-all"
+                  <button
+                    type="button"
+                    onClick={() => navigate('/forgot-password')}
+                    className="text-xs font-bold text-primary hover:underline transition-all cursor-pointer bg-transparent border-none p-0 outline-none"
                   >
                     Forgot password?
-                  </a>
+                  </button>
                 </div>
               </div>
 

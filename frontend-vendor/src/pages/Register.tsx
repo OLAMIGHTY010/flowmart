@@ -6,6 +6,7 @@ import { VendorButton } from "@/components/ui/button";
 import { VendorInput } from "@/components/ui/input";
 import logo from "@/assets/flowmart-logo.png";
 import SideBanner from "@/components/SideBanner";
+import OnboardingStepIndicator from "@/components/OnboardingStepIndicator";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -27,9 +28,17 @@ export default function Register() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showErrors, setShowErrors] = useState(false);
 
+  // If user is already logged in, route them appropriately
   if (user) {
-    return <Navigate to={from} replace />;
+    if (!user.isVerified) {
+      return <Navigate to="/otp" replace />;
+    }
+    if (!user.profileCompleted) {
+      return <Navigate to="/profile-setup" replace />;
+    }
+    return <Navigate to="/dashboard" replace />;
   }
 
   const isFormEmpty =
@@ -37,7 +46,8 @@ export default function Register() {
     !lastName.trim() ||
     !phoneNumber.trim() ||
     !email.trim() ||
-    !password.trim();
+    !password.trim() ||
+    !dob.trim();
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -49,6 +59,7 @@ export default function Register() {
   const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
+    setShowErrors(true);
 
     if (isFormEmpty) {
       setError("Please fill out all required fields");
@@ -93,9 +104,14 @@ export default function Register() {
         <div className="w-full max-w-lg flex flex-col gap-6">
           {/* Logo / Title */}
           <div className="text-center lg:text-left mt-8 lg:mt-0">
-            <div className="flex items-center gap-2 h-16 lg:h-20 mb-3 justify- w-fit-content ">
+            <div className="flex items-center gap-2 h-16 lg:h-20 mb-3 justify-center lg:justify-start w-fit-content">
               <img src={logo} alt="FlowMart Logo" className="h-40 lg:h-60 object-contain" />
             </div>
+            
+            <div className="mb-4 lg:mb-6">
+              <OnboardingStepIndicator currentStep={1} />
+            </div>
+
             <h2 className="text-3xl font-bold font-headings text-foreground leading-tight">
               Create Account
             </h2>
@@ -106,8 +122,17 @@ export default function Register() {
 
           <form onSubmit={handleRegister} className="flex flex-col gap-5">
             {error && (
-              <div className="bg-destructive/10 border border-destructive/20 text-destructive text-sm px-4 py-3 rounded-xl font-medium text-center">
-                {error}
+              <div className="bg-destructive/10 border border-destructive/20 text-destructive text-sm px-4 py-3 rounded-xl font-medium text-center flex flex-col gap-2 items-center">
+                <span>{error}</span>
+                {error.toLowerCase().includes("already registered") && (
+                  <button
+                    type="button"
+                    onClick={() => navigate('/forgot-password')}
+                    className="text-xs font-bold text-primary hover:underline cursor-pointer bg-transparent border-none p-0 outline-none"
+                  >
+                    Forgot your password? Reset it here.
+                  </button>
+                )}
               </div>
             )}
 
@@ -149,6 +174,7 @@ export default function Register() {
                   placeholder="First name"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
+                  isError={showErrors && !firstName.trim()}
                   required
                 />
                 <VendorInput
@@ -158,6 +184,7 @@ export default function Register() {
                   placeholder="Last name"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
+                  isError={showErrors && !lastName.trim()}
                   required
                 />
               </div>
@@ -170,6 +197,7 @@ export default function Register() {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                isError={showErrors && !email.trim()}
                 required
               />
 
@@ -181,6 +209,7 @@ export default function Register() {
                 placeholder="08012345678"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
+                isError={showErrors && !phoneNumber.trim()}
                 required
               />
 
@@ -193,6 +222,7 @@ export default function Register() {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  isError={showErrors && !password.trim()}
                   required
                 />
                 <button
@@ -226,11 +256,21 @@ export default function Register() {
                   type="date"
                   value={dob}
                   onChange={(e) => setDob(e.target.value)}
+                  isError={showErrors && !dob.trim()}
+                  required
                 />
               </div>
             </div>
 
-            <VendorButton type="submit" disabled={isFormEmpty || loading} className="mt-2">
+            <VendorButton 
+              type="submit" 
+              disabled={isFormEmpty || loading} 
+              className={`mt-2 transition-all duration-300 ${
+                isFormEmpty 
+                  ? "bg-muted text-muted-foreground hover:bg-muted cursor-not-allowed opacity-60 border border-border/10" 
+                  : "bg-emerald-600 text-white hover:bg-emerald-700 shadow-md shadow-emerald-600/10 active:scale-[0.98]"
+              }`}
+            >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin inline" />}
               {loading ? "Creating account..." : "Create Account"}
             </VendorButton>

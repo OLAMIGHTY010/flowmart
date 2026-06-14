@@ -23,43 +23,11 @@ export default function KYCVerification() {
   // Poll KYC status from TanStack query (refetch every 3 seconds)
   const { data: kycData } = useKYCStatus({ refetchInterval: 3000 });
 
-  // Mock Admin approval simulation: automatically approve after 8 seconds
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const currentStatus = localStorage.getItem("vendor_kyc_status");
-      if (currentStatus) {
-        try {
-          const parsed = JSON.parse(currentStatus);
-          if (parsed.status !== "approved") {
-            parsed.status = "approved";
-            parsed.steps = [
-              { label: "Application Submitted", time: "Today, 10:23 AM", status: "done" },
-              { label: "Document Review", time: "Today, 10:25 AM", status: "done" },
-              { label: "Admin Verification", time: "Today, 10:30 AM", status: "done" },
-              { label: "Account Activated", time: "Just now", status: "done" }
-            ];
-            localStorage.setItem("vendor_kyc_status", JSON.stringify(parsed));
-          }
-        } catch {
-          // ignore
-        }
-      } else {
-        // Create an approved status if none exists
-        localStorage.setItem("vendor_kyc_status", JSON.stringify({
-          status: "approved",
-          referenceId: "KYC-2024-00391",
-          steps: [
-            { label: "Application Submitted", time: "Today, 10:23 AM", status: "done" },
-            { label: "Document Review", time: "Today, 10:25 AM", status: "done" },
-            { label: "Admin Verification", time: "Today, 10:30 AM", status: "done" },
-            { label: "Account Activated", time: "Just now", status: "done" }
-          ]
-        }));
-      }
-    }, 8000);
-
-    return () => clearTimeout(timer);
-  }, []);
+    if (kycData?.status === 'unsubmitted') {
+      navigate('/kyc', { replace: true });
+    }
+  }, [kycData, navigate]);
 
   const referenceId = kycData?.referenceId || "KYC-2024-00391";
   const status = kycData?.status || "under_review";
