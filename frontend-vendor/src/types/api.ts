@@ -7,6 +7,7 @@ export interface AppUser {
   role: UserRole;
   phone?: string;
   gender?: string;
+  dob?: string;
   avatar?: string;
   status?: string;
   isVerified?: boolean;
@@ -33,6 +34,13 @@ export interface RegisterRequest {
   email: string;
   password: string;
   role: UserRole;
+  gender: string;
+  dateOfBirth: string;
+  profileImage: string;
+  phoneNumber: string;
+  // country: string;
+  // state: string;
+  // city: string;
 }
 
 export interface RegisterResponse {
@@ -56,6 +64,7 @@ export interface LoginResponse {
 
 export interface ProfileSetupRequest {
   displayName: string;
+  businessName?: string;
   businessPhone: string;
   stateRegion: string;
   city: string;
@@ -67,17 +76,69 @@ export interface KYCInfoRequest {
   fullName: string;
   dob: string;
   gender: string;
-  bvn: string;
   businessName: string;
   cacNo: string;
-  tin: string;
+  campCertificateId: string;
   bankName: string;
   accountNumber: string;
   accountName: string;
 }
 
+export interface KYCSubmitRequest {
+  governmentIdType: 'national_id' | 'passport' | 'drivers_license';
+  guarantorName: string;
+  guarantorPhone: string;
+  guarantorRelationship: string;
+}
+
+export interface KYCSubmitPayload {
+  // Profile Setup fields
+  displayName: string;
+  businessName: string;
+  businessPhone: string;
+  stateRegion: string;
+  city: string;
+  bio: string;
+  avatar?: string;
+
+  // KYC Info fields
+  fullName?: string;
+  dob?: string;
+  gender?: string;
+  cacNo?: string;
+  campCertificateId?: string;
+  bankName: string;
+  accountNumber: string;
+  accountName: string;
+  
+  // KYC Submit fields
+  govIdType: string;
+  guarantorName: string;
+  guarantorPhone: string;
+  guarantorRelationship: string;
+  governmentIdFile?: string;
+  campCertificateFile?: string;
+  guarantorIdFile?: string;
+}
+
+export interface Product {
+  id?: string;
+  vendorId?: string;
+  sku?: string;
+  name: string;
+  description?: string;
+  price: string | number;
+  oldPrice?: string | number;
+  stockQuantity: number;
+  imageUrl: string;
+  images?: string | string[];
+  category?: string;
+  brand?: string;
+  weight?: string | number;
+}
+
 export interface KYCStatusResponse {
-  status: 'pending' | 'under_review' | 'approved' | 'rejected';
+  status: 'unsubmitted' | 'pending' | 'under_review' | 'approved' | 'rejected';
   referenceId: string;
   steps: {
     label: string;
