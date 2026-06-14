@@ -58,4 +58,9 @@ export const productServices = {
   postReview: async (reviewData: any): Promise<any> => {
     return apiClient.post<any>(`/products/${reviewData.productId}/reviews`, reviewData);
   },
+
+  getVendorProfile: async (vendorId: string): Promise<any> => {
+    const res = await apiClient.get<{ success: boolean; vendor: any }>(`/vendors/${vendorId}`);
+    return res.vendor;
+  },
 };
