@@ -1,10 +1,11 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { Loader2 } from 'lucide-react';
-import { useProfileSetup } from '@/hooks/useVendorMutations';
+import { useAuth } from '@/hooks/useAuth';
+import { useProfileSetupFormCache } from '@/hooks/useKYCFormCache';
 import { VendorButton } from '@/components/ui/button';
 import { VendorInput } from '@/components/ui/input';
-import VendorProgressBar from '@/components/VendorProgressBar';
+import OnboardingStepIndicator from '@/components/OnboardingStepIndicator';
 import Icon from '@/components/Icon';
 import { Card, CardContent } from '@/components/ui/card';
 import SideBanner from '@/components/SideBanner';
@@ -15,18 +16,40 @@ interface ProfileSetupProps {
 
 export default function ProfileSetup({ onNext }: ProfileSetupProps) {
   const navigate = useNavigate();
+  const { user, refreshUser } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showToast, setShowToast] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
 
-  // Form states
-  const [displayName, setDisplayName] = useState('Chukwuemeka Vendor');
-  const [businessPhone, setBusinessPhone] = useState('+234 803 456 7890');
-  const [stateRegion, setStateRegion] = useState('Lagos');
-  const [city, setCity] = useState('Ikeja');
-  const [bio, setBio] = useState('');
+  // Form states - dynamically pre-populate from local cache (or empty string)
+  const { formData, updateForm } = useProfileSetupFormCache();
+  
+  const [businessName, setBusinessName] = useState(formData.businessName);
+  const [businessPhone, setBusinessPhone] = useState(formData.businessPhone || user?.phone || '');
+  const [stateRegion, setStateRegion] = useState(formData.stateRegion);
+  const [city, setCity] = useState(formData.city);
+  const [bio, setBio] = useState(formData.bio);
+  
+  React.useEffect(() => {
+    updateForm({ businessName, businessPhone, stateRegion, city, bio, avatar: profileImage || '' });
+  }, [businessName, businessPhone, stateRegion, city, bio, profileImage]);
 
-  const { mutateAsync: updateProfile, isPending } = useProfileSetup();
+  // Read-only personal info from registration
+  const fullName = user?.fullName || '';
+  const dob = user?.dob || '';
+  const gender = user?.gender || '';
+
+  const formatDob = (dateStr: string) => {
+    if (!dateStr) return '—';
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return dateStr;
+      return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+    } catch {
+      return dateStr;
+    }
+  };
+
   const [errorMsg, setErrorMsg] = useState('');
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,32 +63,24 @@ export default function ProfileSetup({ onNext }: ProfileSetupProps) {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
 
-    try {
-      await updateProfile({
-        displayName,
-        businessPhone,
-        stateRegion,
-        city,
-        bio,
-        avatar: profileImage || undefined,
-      });
-
-      setShowToast(true);
-      setTimeout(() => {
-        setShowToast(false);
-        if (onNext) {
-          onNext();
-        } else {
-          navigate('/kyc');
-        }
-      }, 1500);
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to save profile. Please try again.');
+    if (!businessName || !businessPhone || !stateRegion || !city) {
+      setErrorMsg('Please fill in all required fields.');
+      return;
     }
+
+    setShowToast(true);
+    setTimeout(() => {
+      setShowToast(false);
+      if (onNext) {
+        onNext();
+      } else {
+        navigate('/kyc');
+      }
+    }, 500);
   };
 
   return (
@@ -86,10 +101,7 @@ export default function ProfileSetup({ onNext }: ProfileSetupProps) {
       <div className="flex-1 p-6 lg:p-12 overflow-y-auto max-w-4xl mx-auto w-full">
         {/* Progress Bar (Desktop native, no status bar) */}
         <div className="mb-8 border-b border-border/80 pb-4">
-          <VendorProgressBar
-            steps={['Account', 'Profile', 'KYC', 'Store']}
-            current={1}
-          />
+          <OnboardingStepIndicator currentStep={3} />
         </div>
 
         {/* Title */}
@@ -120,54 +132,121 @@ export default function ProfileSetup({ onNext }: ProfileSetupProps) {
             </div>
           )}
 
-          {/* Avatar Upload */}
-          <Card className="bg-surface p-6 rounded-2xl border border-border/70 shadow-xs">
-            <CardContent className="p-0 flex flex-col items-center justify-center gap-3">
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                className="relative w-24 h-24 bg-muted rounded-full cursor-pointer group border-2 border-background shadow-inner flex items-center justify-center overflow-hidden transition-all hover:ring-4 hover:ring-primary/20"
-              >
-                {profileImage ? (
-                  <img src={profileImage} alt="Avatar" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="text-muted-foreground flex items-center justify-center">
-                    <Icon i="user" size={40} className="text-muted-foreground" />
+          {/* Section: Verified Personal Info (Read-only) */}
+          <Card className="bg-surface p-4 sm:p-6 rounded-2xl border border-border/70 shadow-xs">
+            <CardContent className="p-0 flex flex-col gap-4 sm:gap-5">
+              <div className="flex items-center gap-2 border-b border-border/50 pb-2.5">
+                <div className="w-6 h-6 bg-[#16a34a] rounded-md flex items-center justify-center">
+                  <Icon i="user" size={13} className="text-white" />
+                </div>
+                <span className="text-sm sm:text-base font-bold text-foreground">
+                  Personal Information
+                </span>
+                <span className="ml-auto text-[10px] font-bold uppercase tracking-wider text-[#16a34a] bg-[#dcfce7] px-2 py-0.5 rounded-full">
+                  From Registration
+                </span>
+              </div>
+
+              <div className="flex flex-col md:flex-row items-center gap-6 pb-2">
+                <div className="flex flex-col items-center gap-2">
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="relative w-20 h-20 bg-muted rounded-full cursor-pointer group border-2 border-background shadow-inner flex items-center justify-center overflow-hidden transition-all hover:ring-4 hover:ring-primary/20"
+                  >
+                    {profileImage ? (
+                      <img src={profileImage} alt="Avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="text-muted-foreground flex items-center justify-center">
+                        <Icon i="user" size={32} className="text-muted-foreground" />
+                      </div>
+                    )}
+                    <div className="absolute bottom-0 right-0 w-6 h-6 bg-primary rounded-full border-2 border-surface flex items-center justify-center shadow-md">
+                      <Icon i="camera" size={10} className="text-primary-foreground" />
+                    </div>
                   </div>
-                )}
-                {/* Camera overlay */}
-                <div className="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full border-2 border-surface flex items-center justify-center shadow-md">
-                  <Icon i="camera" size={14} className="text-primary-foreground" />
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleImageChange}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="text-[10px] font-semibold text-primary hover:underline transition-all cursor-pointer"
+                  >
+                    Upload Photo
+                  </button>
                 </div>
               </div>
 
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleImageChange}
-                accept="image/*"
-                className="hidden"
-              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Full Name</label>
+                  <div className="flex items-center gap-2 bg-[#f9fafb] border border-border/60 rounded-xl px-3.5 py-3">
+                    <Icon i="user" size={14} className="text-[#16a34a] flex-shrink-0" />
+                    <span className="text-sm font-semibold text-foreground truncate">{fullName}</span>
+                    <Icon i="check-circle" size={14} className="text-[#16a34a] ml-auto flex-shrink-0" />
+                  </div>
+                </div>
 
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="text-xs font-semibold text-primary hover:underline transition-all cursor-pointer"
-              >
-                Tap to upload profile photo
-              </button>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Date of Birth</label>
+                  <div className="flex items-center gap-2 bg-[#f9fafb] border border-border/60 rounded-xl px-3.5 py-3">
+                    <Icon i="calendar" size={14} className="text-[#16a34a] flex-shrink-0" />
+                    <span className="text-sm font-semibold text-foreground truncate">{formatDob(dob)}</span>
+                    <Icon i="check-circle" size={14} className="text-[#16a34a] ml-auto flex-shrink-0" />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Gender</label>
+                  <div className="flex items-center gap-2 bg-[#f9fafb] border border-border/60 rounded-xl px-3.5 py-3">
+                    <Icon i="users" size={14} className="text-[#16a34a] flex-shrink-0" />
+                    <span className="text-sm font-semibold text-foreground">{gender}</span>
+                    <Icon i="check-circle" size={14} className="text-[#16a34a] ml-auto flex-shrink-0" />
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
-          {/* Form Fields Section */}
+          {/* Section: Account Details */}
+          {/* <Card className="bg-surface p-6 rounded-2xl border border-border/70 shadow-xs">
+            <CardContent className="p-0 flex flex-col gap-5">
+              <div className="flex items-center gap-2 border-b border-border/50 pb-2.5">
+                <div className="w-6 h-6 bg-primary rounded-md flex items-center justify-center">
+                  <Icon i="user" size={13} className="text-primary-foreground" />
+                </div>
+                <span className="text-sm sm:text-base font-bold text-foreground">
+                  Account Details
+                </span>
+              </div>
+
+
+            </CardContent>
+          </Card> */}
+
+          {/* Section: Business Information */}
           <Card className="bg-surface p-6 rounded-2xl border border-border/70 shadow-xs">
             <CardContent className="p-0 flex flex-col gap-5">
+              <div className="flex items-center gap-2 border-b border-border/50 pb-2.5">
+                <div className="w-6 h-6 bg-primary rounded-md flex items-center justify-center">
+                  <Icon i="briefcase" size={13} className="text-primary-foreground" />
+                </div>
+                <span className="text-sm sm:text-base font-bold text-foreground">
+                  Business Information
+                </span>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <VendorInput
-                  label="Display Name"
-                  placeholder="How you appear to customers"
-                  icon="user"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
+                  label="Business Name"
+                  placeholder="Enter business name"
+                  icon="briefcase"
+                  value={businessName}
+                  onChange={(e) => setBusinessName(e.target.value)}
                   required
                 />
 
@@ -184,7 +263,7 @@ export default function ProfileSetup({ onNext }: ProfileSetupProps) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <VendorInput
                   label="State / Region"
-                  placeholder="Select your state"
+                  placeholder="Select state"
                   icon="map-pin"
                   value={stateRegion}
                   onChange={(e) => setStateRegion(e.target.value)}
@@ -193,7 +272,7 @@ export default function ProfileSetup({ onNext }: ProfileSetupProps) {
 
                 <VendorInput
                   label="City"
-                  placeholder="Enter your city"
+                  placeholder="Enter city"
                   icon="building"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
@@ -203,11 +282,11 @@ export default function ProfileSetup({ onNext }: ProfileSetupProps) {
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-semibold text-foreground" htmlFor="bio">
-                  Bio
+                  About Business
                 </label>
                 <textarea
                   id="bio"
-                  placeholder="Short description about your business..."
+                  placeholder="Describe your business and services..."
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
                   rows={4}
@@ -217,8 +296,7 @@ export default function ProfileSetup({ onNext }: ProfileSetupProps) {
             </CardContent>
           </Card>
 
-          <VendorButton type="submit" className="mt-2" disabled={isPending}>
-            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin inline" />}
+          <VendorButton type="submit" className="mt-2">
             Save & Continue
           </VendorButton>
         </form>

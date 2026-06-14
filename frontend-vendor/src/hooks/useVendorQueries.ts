@@ -25,3 +25,11 @@ export function useOrders() {
     staleTime: 10000, // 10 seconds cache fresh time
   });
 }
+
+export function useVendorProducts() {
+  return useQuery({
+    queryKey: ["vendorProducts"],
+    queryFn: () => vendorService.getVendorProducts(),
+    staleTime: 10000,
+  });
+}

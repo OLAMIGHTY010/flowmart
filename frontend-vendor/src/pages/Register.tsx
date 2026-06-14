@@ -1,65 +1,90 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
-import { VendorButton } from '@/components/ui/button';
-import { VendorInput } from '@/components/ui/input';
-import VendorProgressBar from '@/components/VendorProgressBar';
-import Icon from '@/components/Icon';
-import SideBanner from '@/components/SideBanner';
+import React, { useRef, useState } from "react";
+import { Navigate, useNavigate, useLocation } from "react-router-dom";
+import { Eye, EyeOff, Loader2, Camera, ArrowLeft } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { VendorButton } from "@/components/ui/button";
+import { VendorInput } from "@/components/ui/input";
+import logo from "@/assets/flowmart-logo.png";
+import SideBanner from "@/components/SideBanner";
+import OnboardingStepIndicator from "@/components/OnboardingStepIndicator";
 
 export default function Register() {
   const navigate = useNavigate();
-  const { register } = useAuth();
-  
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phoneNumber: '',
-    password: '',
-    confirmPassword: '',
-  });
+  const location = useLocation();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [termsAccepted, setTermsAccepted] = useState(false);
+  const { register, user } = useAuth();
+  const from = (location.state as any)?.from || "/";
+
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [dob, setDob] = useState("");
+  const [gender, setGender] = useState("Male");
+  const [profileImage, setProfileImage] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [validationError, setValidationError] = useState('');
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [showErrors, setShowErrors] = useState(false);
+
+  // If user is already logged in, route them appropriately
+  if (user) {
+    if (!user.isVerified) {
+      return <Navigate to="/otp" replace />;
+    }
+    if (!user.profileCompleted) {
+      return <Navigate to="/profile-setup" replace />;
+    }
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  const isFormEmpty =
+    !firstName.trim() ||
+    !lastName.trim() ||
+    !phoneNumber.trim() ||
+    !email.trim() ||
+    !password.trim() ||
+    !dob.trim();
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setProfileImage(URL.createObjectURL(file));
+    }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setValidationError('');
+    setError("");
+    setShowErrors(true);
 
-    if (formData.password !== formData.confirmPassword) {
-      setValidationError('Passwords do not match');
-      return;
-    }
-
-    if (!termsAccepted) {
-      setValidationError('You must accept the Terms and Conditions to proceed');
+    if (isFormEmpty) {
+      setError("Please fill out all required fields");
       return;
     }
 
     setLoading(true);
-    const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`;
+
+    const name = `${firstName.trim()} ${lastName.trim()}`.trim();
+
     const result = await register({
-      fullName,
-      email: formData.email,
-      password: formData.password,
-      role: 'vendor',
+      fullName: name,
+      phoneNumber,
+      email,
+      password,
+      dateOfBirth:dob,
+      gender,
+      profileImage,
+      role:"vendor",
     });
+
     setLoading(false);
 
-    if (result.success) {
-      navigate('/profile-setup'); // Redirect to Step 2: Profile Setup
-    } else {
-      setValidationError(result.error || 'Failed to create account. Please try again.');
+    if (!result.success) {
+      setError(result.error || "Failed to create account. Please try again.");
     }
   };
 
@@ -67,185 +92,202 @@ export default function Register() {
     <div className="min-h-screen bg-muted/20 flex flex-col lg:flex-row">
       <SideBanner />
 
-      {/* Main Registration Panel */}
-      <div className="flex-1 p-6 lg:p-12 overflow-y-auto max-w-4xl mx-auto w-full">
-        {/* Progress Bar (Desktop native, step 0: Account) */}
-        <div className="mb-8 border-b border-border/80 pb-4">
-          <VendorProgressBar
-            steps={['Account', 'Profile', 'KYC', 'Store']}
-            current={0}
-          />
-        </div>
-
-        {/* Header Title with Back button pointing strictly to Login */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate('/')}
-              className="w-9 h-9 rounded-full bg-input flex items-center justify-center hover:bg-border/60 transition-colors cursor-pointer"
-              aria-label="Go to login"
-            >
-              <Icon i="arrow-left" size={16} />
-            </button>
-            <div>
-              <h2 className="text-2xl font-bold font-headings text-foreground leading-tight">
-                Create Account
-              </h2>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                Register as a vendor to start selling
-              </p>
+      {/* Main Register Panel */}
+      <div className="flex-grow flex flex-col p-6 lg:p-12 relative w-full">
+        <button 
+          onClick={() => navigate('/')} 
+          className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition absolute top-6 left-6 lg:top-12 lg:left-12 cursor-pointer z-10"
+        >
+          <ArrowLeft size={16} /> Back to Home
+        </button>
+        <div className="flex-grow flex items-center justify-center w-full">
+        <div className="w-full max-w-lg flex flex-col gap-6">
+          {/* Logo / Title */}
+          <div className="text-center lg:text-left mt-8 lg:mt-0">
+            <div className="flex items-center gap-2 h-16 lg:h-20 mb-3 justify-center lg:justify-start w-fit-content">
+              <img src={logo} alt="FlowMart Logo" className="h-40 lg:h-60 object-contain" />
             </div>
+            
+            <div className="mb-4 lg:mb-6">
+              <OnboardingStepIndicator currentStep={1} />
+            </div>
+
+            <h2 className="text-3xl font-bold font-headings text-foreground leading-tight">
+              Create Account
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Join FlowMart and start shopping today
+            </p>
           </div>
-        </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-          {validationError && (
-            <div className="bg-destructive/10 border border-destructive/20 text-destructive text-sm px-4 py-3 rounded-xl font-medium">
-              {validationError}
-            </div>
-          )}
+          <form onSubmit={handleRegister} className="flex flex-col gap-5">
+            {error && (
+              <div className="bg-destructive/10 border border-destructive/20 text-destructive text-sm px-4 py-3 rounded-xl font-medium text-center flex flex-col gap-2 items-center">
+                <span>{error}</span>
+                {error.toLowerCase().includes("already registered") && (
+                  <button
+                    type="button"
+                    onClick={() => navigate('/forgot-password')}
+                    className="text-xs font-bold text-primary hover:underline cursor-pointer bg-transparent border-none p-0 outline-none"
+                  >
+                    Forgot your password? Reset it here.
+                  </button>
+                )}
+              </div>
+            )}
 
-          <div className="bg-surface p-6 rounded-2xl border border-border/70 shadow-xs flex flex-col gap-5">
-            {/* First Name & Last Name */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <VendorInput
-                label="First Name"
-                name="firstName"
-                type="text"
-                placeholder="Martha"
-                value={formData.firstName}
-                onChange={handleChange}
-                required
-              />
+            <div className="bg-surface p-6 rounded-2xl border border-border/70 shadow-xs flex flex-col gap-4">
+              {/* Avatar Upload */}
+              <div className="flex flex-col items-center">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageUpload}
+                />
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="group relative flex h-20 w-20 cursor-pointer items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-primary bg-muted transition hover:border-primary/80"
+                >
+                  {profileImage ? (
+                    <img src={profileImage} alt="Profile" className="h-full w-full object-cover" />
+                  ) : (
+                    <Camera size={22} className="text-primary" />
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="mt-1.5 text-xs font-semibold text-primary hover:underline cursor-pointer"
+                >
+                  Upload Photo
+                </button>
+              </div>
 
-              <VendorInput
-                label="Last Name"
-                name="lastName"
-                type="text"
-                placeholder="Johnson"
-                value={formData.lastName}
-                onChange={handleChange}
-                required
-              />
-            </div>
+              {/* Name row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <VendorInput
+                  label="First Name"
+                  name="firstName"
+                  type="text"
+                  placeholder="First name"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  isError={showErrors && !firstName.trim()}
+                  required
+                />
+                <VendorInput
+                  label="Last Name"
+                  name="lastName"
+                  type="text"
+                  placeholder="Last name"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  isError={showErrors && !lastName.trim()}
+                  required
+                />
+              </div>
 
-            {/* Email & Phone Number */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Email */}
               <VendorInput
                 label="Email Address"
                 name="email"
                 type="email"
-                placeholder="martha@email.com"
-                value={formData.email}
-                onChange={handleChange}
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                isError={showErrors && !email.trim()}
                 required
               />
 
+              {/* Phone */}
               <VendorInput
                 label="Phone Number"
                 name="phoneNumber"
                 type="tel"
-                placeholder="+234 800 000 0000"
-                value={formData.phoneNumber}
-                onChange={handleChange}
+                placeholder="08012345678"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                isError={showErrors && !phoneNumber.trim()}
                 required
               />
-            </div>
 
-            {/* Passwords */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Password with toggle */}
               <div className="relative w-full">
                 <VendorInput
                   label="Password"
                   name="password"
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
-                  value={formData.password}
-                  onChange={handleChange}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  isError={showErrors && !password.trim()}
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3.5 top-[44px] text-muted-foreground hover:text-foreground transition cursor-pointer"
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
 
-              <div className="relative w-full">
+              {/* Gender + DOB row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-[10px] w-full">
+                  <label className="text-sm font-medium text-foreground">Gender</label>
+                  <select
+                    value={gender}
+                    onChange={(e) => setGender(e.target.value)}
+                    className="flex items-center w-full border border-gray-300 rounded-md px-3 py-[14px] bg-background text-sm text-foreground transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+                  >
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
                 <VendorInput
-                  label="Confirm Password"
-                  name="confirmPassword"
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
+                  label="Date of Birth"
+                  name="dob"
+                  type="date"
+                  value={dob}
+                  onChange={(e) => setDob(e.target.value)}
+                  isError={showErrors && !dob.trim()}
                   required
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3.5 top-[44px] text-muted-foreground hover:text-foreground transition cursor-pointer"
-                  aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
-                >
-                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
               </div>
             </div>
 
-            {/* Terms and Conditions Checkbox */}
-            <div
-              onClick={() => setTermsAccepted(!termsAccepted)}
-              className="flex items-start gap-3 mt-2 cursor-pointer select-none"
+            <VendorButton 
+              type="submit" 
+              disabled={isFormEmpty || loading} 
+              className={`mt-2 transition-all duration-300 ${
+                isFormEmpty 
+                  ? "bg-muted text-muted-foreground hover:bg-muted cursor-not-allowed opacity-60 border border-border/10" 
+                  : "bg-emerald-600 text-white hover:bg-emerald-700 shadow-md shadow-emerald-600/10 active:scale-[0.98]"
+              }`}
             >
-              <div
-                className={`w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 mt-0.5 transition-all ${
-                  termsAccepted
-                    ? 'border-primary bg-primary text-white'
-                    : 'border-border bg-input'
-                }`}
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin inline" />}
+              {loading ? "Creating account..." : "Create Account"}
+            </VendorButton>
+
+            <p className="text-sm text-muted-foreground text-center">
+              Already have an account?{" "}
+              <button
+                type="button"
+                onClick={() => navigate("/login")}
+                className="text-primary font-bold hover:underline cursor-pointer bg-transparent border-none outline-none font-body"
               >
-                {termsAccepted && <Icon i="check" size={12} />}
-              </div>
-              <span className="text-xs text-muted-foreground leading-relaxed font-medium">
-                I agree to the{' '}
-                <a
-                  href="/terms"
-                  onClick={(e) => e.stopPropagation()}
-                  className="text-primary font-bold hover:underline"
-                >
-                  Terms of Service
-                </a>{' '}
-                and{' '}
-                <a
-                  href="/privacy"
-                  onClick={(e) => e.stopPropagation()}
-                  className="text-primary font-bold hover:underline"
-                >
-                  Privacy Policy
-                </a>
-              </span>
-            </div>
-          </div>
-
-          <VendorButton type="submit" className="mt-2" disabled={!termsAccepted || loading}>
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin inline" />}
-            Create Account
-          </VendorButton>
-
-          <p className="text-sm text-muted-foreground text-center">
-            Already have an account?{' '}
-            <button
-              type="button"
-              onClick={() => navigate('/')}
-              className="text-primary font-bold hover:underline cursor-pointer bg-transparent border-none outline-none font-body"
-            >
-              Login
-            </button>
-          </p>
-        </form>
+                Sign In
+              </button>
+            </p>
+          </form>
+        </div>
+        </div>
       </div>
     </div>
   );

@@ -7,8 +7,9 @@ import {
   ShoppingCart,
   CreditCard,
   Truck,
+  Loader2,
 } from "lucide-react";
-import { useOrderStore } from "@/stores/orderStore";
+import { useOrder } from "@/hooks/useOrders";
 
 const STEPS = [
   { label: "Cart", icon: ShoppingCart },
@@ -19,11 +20,18 @@ const STEPS = [
 
 export default function OrderConfirmation() {
   const { id } = useParams();
-  const order = useOrderStore((state) =>
-    state.orders.find((o) => o.id === id)
-  );
+  const { data, isLoading, isError } = useOrder(id!);
+  const order = data?.order;
 
-  if (!order) {
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+      </div>
+    );
+  }
+
+  if (isError || !order) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 text-center">
         <Package className="h-16 w-16 text-gray-300" />
@@ -40,7 +48,7 @@ export default function OrderConfirmation() {
     );
   }
 
-  const isAwaitingPayment = order.status === "awaiting_payment";
+  const isPending = order.status === "pending";
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-6">
@@ -102,7 +110,7 @@ export default function OrderConfirmation() {
           Order Placed Successfully!
         </h1>
         <p className="mt-2 text-sm text-gray-500">
-          Your order <span className="font-bold text-gray-900">#{order.id}</span> has been submitted
+          Your order <span className="font-bold text-gray-900">#{order.id.substring(0, 8)}</span> has been submitted
         </p>
       </div>
 
@@ -112,14 +120,14 @@ export default function OrderConfirmation() {
           <Clock className="h-6 w-6 flex-shrink-0 text-amber-600 animate-pulse" />
           <div>
             <p className="text-sm font-bold text-amber-800">
-              {isAwaitingPayment
-                ? "Awaiting Payment Confirmation"
-                : "Awaiting Order Confirmation"}
+              {isPending
+                ? "Awaiting Confirmation"
+                : `Order ${order.status.replace("_", " ")}`}
             </p>
             <p className="mt-0.5 text-xs text-amber-600">
-              {isAwaitingPayment
-                ? "We're verifying your bank transfer. This usually takes a few minutes."
-                : "The vendor will confirm your order shortly."}
+              {isPending
+                ? "The vendor will confirm your order shortly."
+                : "Your order is being processed."}
             </p>
           </div>
         </div>
@@ -131,7 +139,7 @@ export default function OrderConfirmation() {
 
         {/* Items */}
         <div className="space-y-3">
-          {order.items.map((item) => (
+          {order.items?.map((item) => (
             <div
               key={item.id}
               className="flex items-center gap-3 rounded-lg bg-gray-50 p-3"
@@ -156,19 +164,10 @@ export default function OrderConfirmation() {
 
         {/* Summary */}
         <div className="mt-5 space-y-2 border-t border-gray-100 pt-4">
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-500">Subtotal</span>
-            <span className="font-medium">₦{order.subtotal.toLocaleString()}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-500">Delivery ({order.zone})</span>
-            <span className="font-medium">₦{order.deliveryFee.toLocaleString()}</span>
-          </div>
-          <hr className="border-gray-100" />
           <div className="flex justify-between text-lg">
             <span className="font-bold">Total</span>
             <span className="font-extrabold text-orange-600">
-              ₦{order.total.toLocaleString()}
+              ₦{Number(order.totalAmount).toLocaleString()}
             </span>
           </div>
         </div>
@@ -177,12 +176,10 @@ export default function OrderConfirmation() {
         <div className="mt-5 grid gap-3 sm:grid-cols-2 border-t border-gray-100 pt-4">
           <div className="rounded-lg bg-gray-50 p-3">
             <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-              Payment Method
+              Status
             </p>
             <p className="mt-1 text-sm font-semibold text-gray-900">
-              {order.paymentMethod === "bank_transfer"
-                ? "Bank Transfer"
-                : "Pay on Delivery"}
+              {order.status.replace("_", " ").replace(/\b\w/g, l => l.toUpperCase())}
             </p>
           </div>
           <div className="rounded-lg bg-gray-50 p-3">
@@ -190,7 +187,7 @@ export default function OrderConfirmation() {
               Delivery Zone
             </p>
             <p className="mt-1 text-sm font-semibold text-gray-900">
-              {order.zone}
+              {order.deliveryZone}
             </p>
           </div>
         </div>

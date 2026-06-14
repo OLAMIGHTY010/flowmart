@@ -16,3 +16,11 @@ export const useVendorProducts = (
     enabled: !!vendorId,
   });
 };
+
+export const useVendorProfile = (vendorId: string) => {
+  return useQuery({
+    queryKey: ["vendor-profile", vendorId],
+    queryFn: async () => await productServices.getVendorProfile(vendorId),
+    enabled: !!vendorId,
+  });
+};
