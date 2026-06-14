@@ -15,10 +15,8 @@ export const OnboardingGuard = () => {
     return <Navigate to="/otp" replace />;
   }
 
-  // STEP 2: must complete profile setup before KYC
-  if (!user.profileCompleted) {
-    return <Navigate to="/profile-setup" replace />;
-  }
+  // Profile is now completed alongside KYC, so we no longer block /kyc pages here.
+  // The Dashboard component itself protects against incomplete KYC/Profile.
 
   return <Outlet />;
 };
