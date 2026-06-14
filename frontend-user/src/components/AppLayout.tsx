@@ -11,6 +11,7 @@ import {
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import FilterSidebar from "@/components/FilterSidebar";
+import { useCategories } from "@/hooks/useCategories";
 
 type SortKey =
   | "default"
@@ -18,23 +19,9 @@ type SortKey =
   | "price-desc"
   | "stock";
 
-const allCategories = [
-  "All",
-  "Food",
-  "Meals",
-  "Drinks",
-  "Fast Food",
-  "Snacks",
-  "Combos",
-  "Groceries",
-  "Dairy",
-  "Beverages",
-  "Welfare",
-  "Health",
-];
-
 const AppLayout = () => {
   const location = useLocation();
+  const { data: categories = ["All"] } = useCategories();
 
   const [query, setQuery] = useState("");
   const [showFilters, setShowFilters] =
@@ -167,7 +154,7 @@ const AppLayout = () => {
             setQuickFilters={setQuickFilters}
             offers={offers}
             setOffers={setOffers}
-            categories={allCategories}
+            categories={categories}
             showFilters={showFilters}
             setShowFilters={setShowFilters}
           />
