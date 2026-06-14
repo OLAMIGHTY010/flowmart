@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useKYCStatus } from '@/hooks/useVendorQueries';
 import { 
   User, Mail, Phone, ShoppingBag, Landmark, Clock, Key, MapPin, 
-  Map, DollarSign, Lock, ShieldCheck, Bell, LogOut, ChevronRight, ArrowLeft, Check, Loader2 
+  Map, DollarSign, Lock, ShieldCheck, Bell, LogOut, ChevronRight, ArrowLeft, Check, 
 } from 'lucide-react';
 import { VendorInput } from '@/components/ui/input';
 import { VendorButton } from '@/components/ui/button';
