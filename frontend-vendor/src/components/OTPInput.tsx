@@ -78,7 +78,7 @@ export default function OtpInput({ length = 6, onComplete }: OtpInputProps) {
   };
 
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-1.5 sm:gap-2 justify-center w-full">
       {otp.map((digit, i) => (
         <input
           key={i}
@@ -91,7 +91,7 @@ export default function OtpInput({ length = 6, onComplete }: OtpInputProps) {
           onPaste={handlePaste}
           maxLength={1}
           inputMode="numeric"
-          className="w-12 h-14 text-center text-xl border rounded-lg"
+          className="w-10 sm:w-12 h-12 sm:h-14 text-center text-lg sm:text-xl border border-border bg-background rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-semibold"
         />
       ))}
     </div>

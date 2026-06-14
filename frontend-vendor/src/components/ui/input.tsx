@@ -25,38 +25,83 @@ function Input({ className, type, ...props }: InputProps) {
 // ---------------------------------------------------------------------------
 // VendorInput – branded input with label & optional icon for vendor flows
 // ---------------------------------------------------------------------------
-interface VendorInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+interface VendorInputProps
+  extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   placeholder?: string;
-  icon?: string;
+  icon?: string | React.ReactNode;
+  rightIcon?: React.ReactNode;
   value?: string;
+  ref?: React.RefObject<HTMLInputElement>;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  isError?: boolean;
 }
 
 function VendorInput({
-  label = 'Label',
-  placeholder = 'Enter value',
-  icon = '',
-  value = '',
+  label = "Label",
+  placeholder = "Enter value",
+  icon,
+  rightIcon,
+  value = "",
+  ref,
   onChange,
-  className = '',
+  className = "",
+  isError = false,
   ...props
 }: VendorInputProps) {
   return (
-    <div className="flex flex-col gap-1.5 w-full">
-      <label className="text-sm font-body text-foreground font-semibold">{label}</label>
-      <div className="flex items-center gap-2 bg-input border border-border rounded-xl px-3.5 py-3 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all">
-        {icon && <Icon i={icon} size={16} className="text-muted-foreground" />}
+    <div className="flex flex-col gap-[10px] w-full">
+      
+      {label && (
+        <label className="text-sm font-medium text-foreground">
+          {label}
+        </label>
+      )}
+
+      <div
+        className={cn(
+          "flex items-center w-full gap-[10px]",
+          isError ? "border-red-500 ring-2 ring-red-500/10" : "border-gray-300",
+          "rounded-lg",
+          "px-3 py-[14px]",
+          "bg-background",
+          "transition",
+          isError ? "" : "focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
+        )}
+      >
+        {/* Left icon — string (mapped) or ReactNode */}
+        {icon && (
+          typeof icon === "string"
+            ? <Icon i={icon} size={16} className="text-muted-foreground" />
+            : <span className="text-muted-foreground flex-shrink-0">{icon}</span>
+        )}
+
         <input
+          ref={ref}
           value={value}
           onChange={onChange}
           placeholder={placeholder}
-          className={`w-full bg-transparent border-none outline-none text-sm font-body p-0 focus:ring-0 focus:outline-none ${
-            value ? 'text-foreground font-semibold' : 'text-muted-foreground'
-          } ${className}`}
+          className={cn(
+             "w-full bg-transparent outline-none text-sm",
+             "placeholder:text-muted-foreground",
+             value ? "text-foreground font-medium" : "text-muted-foreground",
+             className
+          )}
           {...props}
         />
+
+        {/* Right icon */}
+        {rightIcon && (
+          <span className="text-muted-foreground flex-shrink-0 cursor-pointer hover:text-foreground transition">
+            {rightIcon}
+          </span>
+        )}
       </div>
+      {isError && (
+        <span className="text-xs text-red-500 font-medium -mt-1">
+          This field is required
+        </span>
+      )}
     </div>
   );
 }
