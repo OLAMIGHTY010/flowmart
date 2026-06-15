@@ -71,7 +71,7 @@ function VendorButton({
   className = '',
   ...props
 }: VendorButtonProps) {
-  const base = `font-body text-base rounded-xl py-4 flex items-center justify-center font-bold transition-all active:scale-[0.98] cursor-pointer ${
+  const base = `font-body text-base rounded-xl py-4 flex items-center justify-center font-bold transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none ${
     full ? 'w-full' : 'px-6'
   }`;
 

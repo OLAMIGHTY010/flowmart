@@ -1,15 +1,29 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import OtpInput from "@/components/OTPInput";
 import { authService } from "@/services/AuthServices";
 import SideBanner from "@/components/SideBanner";
+import OnboardingStepIndicator from "@/components/OnboardingStepIndicator";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function VerifyOtpPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { user, refreshUser } = useAuth();
 
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
+
+  // No session at all — user must register/login first
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
+
+  // Already verified — send to login page
+  if (user.isVerified) {
+    return <Navigate to="/" replace />;
+  }
 
   const handleOtpComplete = async (otp: string) => {
     setLoading(true);
@@ -22,6 +36,9 @@ export default function VerifyOtpPage() {
           res.message || "OTP verified successfully",
           "success"
         );
+
+        // Sync context to update verified status
+        await refreshUser();
 
         setTimeout(() => {
           navigate("/profile-setup");
@@ -42,6 +59,36 @@ export default function VerifyOtpPage() {
     }
   };
 
+  const handleResendOtp = async () => {
+    if (!user?.email) {
+      showToast("Email address not found. Please register or login again.", "error");
+      return;
+    }
+
+    setResending(true);
+    try {
+      const res = await authService.resendOtp(user.email);
+      if (res?.success) {
+        showToast(
+          res.message || "A new verification code has been sent to your email.",
+          "success"
+        );
+      } else {
+        showToast(
+          res?.message || "Failed to resend verification code.",
+          "error"
+        );
+      }
+    } catch (err: any) {
+      showToast(
+        err?.message || "Failed to resend verification code.",
+        "error"
+      );
+    } finally {
+      setResending(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-muted/20 flex flex-col lg:flex-row">
       <SideBanner />
@@ -50,6 +97,9 @@ export default function VerifyOtpPage() {
         <div className="w-full max-w-md flex flex-col gap-6">
 
           <div className="text-center lg:text-left">
+            <div className="mb-4 lg:mb-6">
+              <OnboardingStepIndicator currentStep={2} />
+            </div>
             <h2 className="text-2xl font-bold font-headings text-foreground">
               Verify Your Account
             </h2>
@@ -59,7 +109,7 @@ export default function VerifyOtpPage() {
             </p>
           </div>
 
-          <div className="bg-surface p-6 rounded-2xl border border-border/70 shadow-xs flex flex-col items-center gap-6">
+          <div className="bg-surface p-4 sm:p-6 rounded-2xl border border-border/70 shadow-xs flex flex-col items-center gap-4 sm:gap-6">
             <OtpInput onComplete={handleOtpComplete} />
 
             {loading && (
@@ -70,9 +120,11 @@ export default function VerifyOtpPage() {
 
             <button
               type="button"
-              className="text-xs font-semibold text-primary hover:underline"
+              disabled={resending || loading}
+              onClick={handleResendOtp}
+              className="text-xs font-semibold text-primary hover:underline cursor-pointer disabled:opacity-50"
             >
-              Didn't receive code? Resend
+              {resending ? "Resending..." : "Didn't receive code? Resend"}
             </button>
           </div>
 

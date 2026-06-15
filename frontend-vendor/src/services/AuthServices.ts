@@ -19,6 +19,18 @@ export const authService = {
   },
 
   verifyOtp: async (otp: string): Promise<any> => {
-    return apiClient.post<any>("/auth/verify-otp", otp);
+    return apiClient.post<ApiResponse<any>>("/auth/verify-otp", { otp });
+  },
+
+  resendOtp: async (email: string): Promise<any> => {
+    return apiClient.post<ApiResponse<any>>("/auth/resend-otp", { email });
+  },
+
+  forgotPassword: async (email: string): Promise<any> => {
+    return apiClient.post<any>("/auth/forgot-password", { email });
+  },
+
+  resetPassword: async (data: any): Promise<any> => {
+    return apiClient.post<any>("/auth/reset-password", data);
   }
 };

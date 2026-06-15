@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
+import ForgotPassword from "@/pages/ForgotPassword";
 import VerifyOtpPage from "@/pages/VerifyOtpPage";
 import ProfileSetup from "@/pages/ProfileSetup";
 import KYCInfo from "@/pages/KYCInfo";
@@ -42,12 +43,14 @@ function App() {
           {/* PUBLIC */}
           <Route path="/" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/otp" element={<VerifyOtpPage />} />
 
           {/* AUTH ONLY (must be logged in) */}
           <Route element={<ProtectedRoute />}>
             <Route path="/profile-setup" element={<ProfileSetup />} />
           </Route>
+
 
           {/* ONBOARDING FLOW (profile → kyc → dashboard rules) */}
           <Route element={<OnboardingGuard />}>
@@ -56,6 +59,7 @@ function App() {
             <Route path="/kyc/review" element={<KYCReview />} />
             <Route path="/kyc/verification" element={<KYCVerification />} />
             <Route path="/dashboard" element={<Dashboard />} />
+
           </Route>
 
           {/* fallback */}

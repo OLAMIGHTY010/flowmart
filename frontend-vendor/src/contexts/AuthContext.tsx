@@ -13,6 +13,7 @@ export interface AuthContextType {
     error: string;
   }>;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);

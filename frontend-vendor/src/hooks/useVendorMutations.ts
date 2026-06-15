@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { vendorService } from "@/services/VendorServices";
-import type { ProfileSetupRequest, KYCInfoRequest } from "@/types/api";
+import type { ProfileSetupRequest, KYCInfoRequest, KYCSubmitPayload, Product } from "@/types/api";
 
 export function useProfileSetup() {
   const queryClient = useQueryClient();
@@ -32,9 +32,56 @@ export function useKYCDocUpload() {
 export function useKYCSubmit() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: () => vendorService.submitKYCForReview(),
+    mutationFn: (data: KYCSubmitPayload) => vendorService.submitKYCForReview(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["kycStatus"] });
+    },
+  });
+}
+
+export function useCreateProduct() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Product) =>
+      vendorService.createProduct(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["vendorProducts"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
+    },
+  });
+}
+
+export function useUpdateProduct() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Product }) =>
+      vendorService.updateProduct(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["vendorProducts"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
+    },
+  });
+}
+
+export function useDeleteProduct() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => vendorService.deleteProduct(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["vendorProducts"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
+    },
+  });
+}
+
+export function useUpdateOrderStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, status }: { id: string; status: string }) =>
+      vendorService.updateOrderStatus(id, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["vendorOrders"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
     },
   });
 }

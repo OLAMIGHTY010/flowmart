@@ -1,5 +1,4 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { useEffect, useState, useRef } from "react";
 import {
   ArrowLeft,
   Package,
@@ -7,12 +6,15 @@ import {
   FileText,
   CheckCircle2,
   Circle,
+  Loader2,
 } from "lucide-react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { useOrderStore } from "@/stores/orderStore";
-import type { OrderStatus, OrderTimeline } from "@/stores/orderStore";
+import { useOrder, useConfirmReceived } from "@/hooks/useOrders";
+import { useRiderTracking } from "@/hooks/useRiderTracking";
+import type { OrderStatus } from "@/types/order";
+import { useEffect } from "react";
 
 /* ── Leaflet icon fix (Vite bundler workaround) ── */
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
@@ -40,29 +42,6 @@ const riderIcon = new L.DivIcon({
   iconAnchor: [16, 16],
 });
 
-/* ── Simulated rider position hook ── */
-function useRiderPosition(status: OrderStatus) {
-  // Simulated positions around Redemption City area
-  const positions: Record<string, [number, number]> = {
-    awaiting_payment: [6.6018, 3.2396],
-    awaiting_confirmation: [6.6018, 3.2396],
-    confirmed: [6.6025, 3.2410],
-    assigned: [6.6040, 3.2430],
-    picked_up: [6.6060, 3.2460],
-    out_for_delivery: [6.6075, 3.2480],
-    delivered: [6.6090, 3.2500],
-    received: [6.6090, 3.2500],
-  };
-
-  const [pos, setPos] = useState<[number, number]>(positions[status] || [6.6018, 3.2396]);
-
-  useEffect(() => {
-    setPos(positions[status] || [6.6018, 3.2396]);
-  }, [status]);
-
-  return pos;
-}
-
 /* ── Auto-pan map to rider ── */
 function MapUpdater({ center }: { center: [number, number] }) {
   const map = useMap();
@@ -74,61 +53,67 @@ function MapUpdater({ center }: { center: [number, number] }) {
 
 /* ── Status config ── */
 const STATUS_LABELS: Record<OrderStatus, string> = {
-  awaiting_payment: "Awaiting Payment",
-  awaiting_confirmation: "Awaiting Confirmation",
+  pending: "Pending",
   confirmed: "Confirmed",
   assigned: "Assigned to Rider",
   picked_up: "Picked Up",
-  out_for_delivery: "In Transit",
   delivered: "Delivered",
-  received: "Received",
+  cancelled: "Cancelled",
 };
 
 const STATUS_COLORS: Record<
   OrderStatus,
   { bg: string; text: string; dot: string }
 > = {
-  awaiting_payment: { bg: "bg-amber-100", text: "text-amber-700", dot: "bg-amber-500" },
-  awaiting_confirmation: { bg: "bg-amber-100", text: "text-amber-700", dot: "bg-amber-500" },
+  pending: { bg: "bg-amber-100", text: "text-amber-700", dot: "bg-amber-500" },
   confirmed: { bg: "bg-blue-100", text: "text-blue-700", dot: "bg-blue-500" },
   assigned: { bg: "bg-blue-100", text: "text-blue-700", dot: "bg-blue-500" },
   picked_up: { bg: "bg-indigo-100", text: "text-indigo-700", dot: "bg-indigo-500" },
-  out_for_delivery: { bg: "bg-orange-100", text: "text-orange-700", dot: "bg-orange-500" },
   delivered: { bg: "bg-green-100", text: "text-green-700", dot: "bg-green-500" },
-  received: { bg: "bg-green-100", text: "text-green-700", dot: "bg-green-600" },
+  cancelled: { bg: "bg-red-100", text: "text-red-700", dot: "bg-red-500" },
 };
 
-function getCompletedIndex(
-  timeline: OrderTimeline[],
-  currentStatus: OrderStatus
-): number {
-  const statusOrder: OrderStatus[] = [
-    "awaiting_payment",
-    "awaiting_confirmation",
-    "confirmed",
-    "assigned",
-    "picked_up",
-    "out_for_delivery",
-    "delivered",
-    "received",
-  ];
-  return statusOrder.indexOf(currentStatus);
-}
+const TIMELINE_STEPS: { status: OrderStatus; label: string }[] = [
+  { status: "pending", label: "Order Placed" },
+  { status: "confirmed", label: "Order Confirmed" },
+  { status: "assigned", label: "Assigned to Rider" },
+  { status: "picked_up", label: "Picked Up" },
+  { status: "delivered", label: "Delivered" },
+];
+
+const STATUS_ORDER: OrderStatus[] = [
+  "pending",
+  "confirmed",
+  "assigned",
+  "picked_up",
+  "delivered",
+];
 
 /* ── Main Component ── */
 export default function OrderTracking() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const order = useOrderStore((state) =>
-    state.orders.find((o) => o.id === id)
-  );
-  const markAsReceived = useOrderStore((state) => state.markAsReceived);
-  const riderPos = useRiderPosition(order?.status || "awaiting_payment");
+  const { data, isLoading, isError } = useOrder(id!);
+  const confirmReceivedMutation = useConfirmReceived();
+  const { riderPosition, isConnected } = useRiderTracking(id);
 
-  // Delivery destination
-  const deliveryPos: [number, number] = [6.6090, 3.2500];
+  const order = data?.order;
 
-  if (!order) {
+  // Default map center (Lagos area)
+  const defaultCenter: [number, number] = [6.5244, 3.3792];
+  const mapCenter: [number, number] = riderPosition
+    ? [riderPosition.lat, riderPosition.lng]
+    : defaultCenter;
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+      </div>
+    );
+  }
+
+  if (isError || !order) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 text-center">
         <Package className="h-16 w-16 text-gray-300" />
@@ -145,12 +130,12 @@ export default function OrderTracking() {
     );
   }
 
-  const completedIdx = getCompletedIndex(order.timeline, order.status);
-  const statusColor = STATUS_COLORS[order.status];
-  const itemCount = order.items.reduce((sum, item) => sum + item.qty, 0);
+  const currentStatusIdx = STATUS_ORDER.indexOf(order.status);
+  const statusColor = STATUS_COLORS[order.status] || STATUS_COLORS.pending;
+  const itemCount = order.items?.reduce((sum, item) => sum + item.qty, 0) || 0;
 
   const handleReceived = () => {
-    markAsReceived(order.id);
+    confirmReceivedMutation.mutate(order.id);
   };
 
   return (
@@ -174,7 +159,7 @@ export default function OrderTracking() {
           {/* Live Map */}
           <div className="relative h-52 sm:h-64 overflow-hidden rounded-xl border border-gray-200 shadow-sm">
             <MapContainer
-              center={riderPos}
+              center={mapCenter}
               zoom={15}
               scrollWheelZoom={false}
               zoomControl={false}
@@ -184,30 +169,25 @@ export default function OrderTracking() {
               <TileLayer
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
-              <MapUpdater center={riderPos} />
-
-              {/* Rider marker */}
-              <Marker position={riderPos} icon={riderIcon}>
-                <Popup>
-                  <span className="text-xs font-bold">🚴 Rider Location</span>
-                </Popup>
-              </Marker>
-
-              {/* Delivery destination marker */}
-              <Marker position={deliveryPos}>
-                <Popup>
-                  <span className="text-xs font-bold">📍 Delivery Point</span>
-                </Popup>
-              </Marker>
+              {riderPosition && (
+                <>
+                  <MapUpdater center={[riderPosition.lat, riderPosition.lng]} />
+                  <Marker position={[riderPosition.lat, riderPosition.lng]} icon={riderIcon}>
+                    <Popup>
+                      <span className="text-xs font-bold">🚴 Rider Location</span>
+                    </Popup>
+                  </Marker>
+                </>
+              )}
             </MapContainer>
 
             {/* Live badge overlay */}
             <div className="absolute bottom-3 left-3 z-[1000] flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-[11px] font-bold text-gray-800 shadow-sm border border-gray-100">
               <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span>
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500"></span>
+                <span className={`absolute inline-flex h-full w-full rounded-full opacity-75 ${isConnected ? 'animate-ping bg-green-400' : 'bg-gray-400'}`}></span>
+                <span className={`relative inline-flex h-2 w-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-gray-400'}`}></span>
               </span>
-              Live delivery map
+              {riderPosition ? "Live tracking" : isConnected ? "Waiting for rider..." : "Connecting..."}
             </div>
           </div>
 
@@ -216,12 +196,12 @@ export default function OrderTracking() {
             <div className="flex items-start justify-between flex-wrap gap-2">
               <div>
                 <h2 className="text-base sm:text-lg font-extrabold text-gray-900">
-                  Order #{order.id}
+                  Order #{order.id.substring(0, 8)}
                 </h2>
                 <span
                   className={`mt-2 inline-block rounded-full px-3 py-1 text-xs font-bold ${statusColor.bg} ${statusColor.text}`}
                 >
-                  {STATUS_LABELS[order.status]}
+                  {STATUS_LABELS[order.status] || order.status}
                 </span>
               </div>
             </div>
@@ -232,42 +212,8 @@ export default function OrderTracking() {
               </span>
               <span>•</span>
               <span className="font-bold text-gray-900">
-                ₦{order.total.toLocaleString()}
+                ₦{Number(order.totalAmount).toLocaleString()}
               </span>
-            </div>
-
-            {order.status === "out_for_delivery" && (
-              <div className="mt-3 flex items-center gap-2 text-sm text-green-600 font-semibold">
-                <div className="h-2 w-2 animate-pulse rounded-full bg-green-500" />
-                Est. arrival: 38 mins
-              </div>
-            )}
-          </div>
-
-          {/* Dev Simulator Panel */}
-          <div className="rounded-xl border border-red-200 bg-red-50/50 p-4 sm:p-5 shadow-sm">
-            <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-red-600">
-              Vendor & Rider Simulator (Dev Tool)
-            </h3>
-            <p className="mb-3 text-xs text-red-700 leading-normal">
-              Click any step to simulate vendor approval or rider progress.
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {[
-                { label: "Approve Order", status: "confirmed" as OrderStatus },
-                { label: "Assign Rider", status: "assigned" as OrderStatus },
-                { label: "Pick Up", status: "picked_up" as OrderStatus },
-                { label: "Out for Delivery", status: "out_for_delivery" as OrderStatus },
-                { label: "Deliver Order", status: "delivered" as OrderStatus },
-              ].map((btn) => (
-                <button
-                  key={btn.status}
-                  onClick={() => useOrderStore.getState().updateOrderStatus(order.id, btn.status)}
-                  className="rounded bg-white border border-red-200 px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-xs font-bold text-red-800 transition hover:bg-red-100 cursor-pointer"
-                >
-                  {btn.label}
-                </button>
-              ))}
             </div>
           </div>
 
@@ -297,13 +243,13 @@ export default function OrderTracking() {
             </h3>
 
             <div className="relative">
-              {order.timeline.map((entry, i) => {
-                const isCompleted = i <= completedIdx;
-                const isCurrent = i === completedIdx;
-                const isLast = i === order.timeline.length - 1;
+              {TIMELINE_STEPS.map((step, i) => {
+                const isCompleted = i <= currentStatusIdx;
+                const isCurrent = i === currentStatusIdx;
+                const isLast = i === TIMELINE_STEPS.length - 1;
 
                 return (
-                  <div key={entry.status} className="relative flex gap-3 sm:gap-4">
+                  <div key={step.status} className="relative flex gap-3 sm:gap-4">
                     {/* Vertical line + dot */}
                     <div className="flex flex-col items-center">
                       <div
@@ -316,10 +262,10 @@ export default function OrderTracking() {
                         }`}
                       >
                         {isCompleted ? (
-                          <CheckCircle2 size={12} className="text-white sm:hidden" />
-                        ) : null}
-                        {isCompleted ? (
-                          <CheckCircle2 size={14} className="text-white hidden sm:block" />
+                          <>
+                            <CheckCircle2 size={12} className="text-white sm:hidden" />
+                            <CheckCircle2 size={14} className="text-white hidden sm:block" />
+                          </>
                         ) : (
                           <Circle
                             size={10}
@@ -333,7 +279,7 @@ export default function OrderTracking() {
                       {!isLast && (
                         <div
                           className={`w-0.5 flex-1 min-h-[28px] sm:min-h-[32px] ${
-                            i < completedIdx ? "bg-green-500" : "bg-gray-200"
+                            i < currentStatusIdx ? "bg-green-500" : "bg-gray-200"
                           }`}
                         />
                       )}
@@ -349,13 +295,8 @@ export default function OrderTracking() {
                               : "text-gray-400"
                           }`}
                         >
-                          {entry.label}
+                          {step.label}
                         </p>
-                        {entry.timestamp && (
-                          <span className="text-[10px] sm:text-xs text-gray-400 font-medium">
-                            {entry.timestamp}
-                          </span>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -368,14 +309,21 @@ export default function OrderTracking() {
           {order.status === "delivered" && (
             <button
               onClick={handleReceived}
-              className="w-full rounded-xl bg-green-600 py-3.5 sm:py-4 text-sm font-bold uppercase tracking-wider text-white shadow-sm transition hover:bg-green-700 cursor-pointer animate-pulse"
+              disabled={confirmReceivedMutation.isPending}
+              className="w-full rounded-xl bg-green-600 py-3.5 sm:py-4 text-sm font-bold uppercase tracking-wider text-white shadow-sm transition hover:bg-green-700 cursor-pointer animate-pulse disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              ✅ Confirm Order Received
+              {confirmReceivedMutation.isPending ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 size={16} className="animate-spin" /> Confirming...
+                </span>
+              ) : (
+                "✅ Confirm Order Received"
+              )}
             </button>
           )}
 
           {/* Received Confirmation */}
-          {order.status === "received" && (
+          {confirmReceivedMutation.isSuccess && (
             <div className="rounded-xl border border-green-200 bg-green-50 p-5 text-center">
               <CheckCircle2 className="mx-auto h-10 w-10 text-green-600 animate-bounce" />
               <p className="mt-2 text-sm font-bold text-green-800">

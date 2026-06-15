@@ -9,10 +9,6 @@ import tailwindcss from '@tailwindcss/vite'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-const routeConfig = {
-  apiPrefix: '/api/v1',
-  target: 'http://192.168.255.142:5000'
-}
 
 export default defineConfig({
   plugins: [
@@ -23,8 +19,8 @@ export default defineConfig({
       injectRegister: 'auto',
       manifest: {
         name: 'Flowmart',
-        short_name: 'Flowmart Admindashboard',
-        description: 'Admin dashboard - Your One-Stop Shop',
+        short_name: 'Flowmart',
+        description: 'Your One-Stop Shop',
         theme_color: '#ffffff',
         background_color: '#ffffff',
         start_url: '/',
@@ -35,36 +31,9 @@ export default defineConfig({
           { src: '/hero.png', sizes: '512x512', type: 'image/png' }
         ]
       },
-      // Added workbox config to ensure assets and API are cached correctly
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
-        runtimeCaching: [
-          {
-            urlPattern: ({ url }) => url.pathname.startsWith(routeConfig.apiPrefix),
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'api-cache',
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 5, // 5 minutes
-              },
-            },
-          },
-        ],
-      },
     })
   ],
-  server: {
-    host: "0.0.0.0",
 
-    proxy: {
-      [routeConfig.apiPrefix]: {
-        target: routeConfig.target,
-        changeOrigin: true,
-        // REMOVED the rewrite function so /api/v1 is kept in the URL path
-      }
-    }
-  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

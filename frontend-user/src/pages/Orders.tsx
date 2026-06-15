@@ -1,32 +1,46 @@
 import { Link } from "react-router-dom";
-import { Package, ChevronRight, ShoppingBag } from "lucide-react";
-import { useOrderStore } from "@/stores/orderStore";
-import type { OrderStatus } from "@/stores/orderStore";
+import { Package, ChevronRight, ShoppingBag, Loader2 } from "lucide-react";
+import { useOrders } from "@/hooks/useOrders";
+import type { OrderStatus } from "@/types/order";
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
-  awaiting_payment: "Awaiting Payment",
-  awaiting_confirmation: "Awaiting Confirmation",
+  pending: "Pending",
   confirmed: "Confirmed",
   assigned: "Assigned to Rider",
   picked_up: "Picked Up",
-  out_for_delivery: "In Transit",
   delivered: "Delivered",
-  received: "Received",
+  cancelled: "Cancelled",
 };
 
 const STATUS_COLORS: Record<OrderStatus, string> = {
-  awaiting_payment: "bg-amber-100 text-amber-700",
-  awaiting_confirmation: "bg-amber-100 text-amber-700",
+  pending: "bg-amber-100 text-amber-700",
   confirmed: "bg-blue-100 text-blue-700",
   assigned: "bg-blue-100 text-blue-700",
   picked_up: "bg-indigo-100 text-indigo-700",
-  out_for_delivery: "bg-orange-100 text-orange-700",
   delivered: "bg-green-100 text-green-700",
-  received: "bg-green-100 text-green-700",
+  cancelled: "bg-red-100 text-red-700",
 };
 
 export default function Orders() {
-  const orders = useOrderStore((state) => state.orders);
+  const { data: orders = [], isLoading, isError } = useOrders();
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 text-center">
+        <Package className="h-16 w-16 text-red-300" />
+        <h1 className="mt-4 text-xl font-bold text-gray-900">Failed to load orders</h1>
+        <p className="mt-2 text-sm text-gray-500">Please check your connection and try again.</p>
+      </div>
+    );
+  }
 
   if (orders.length === 0) {
     return (
@@ -56,10 +70,10 @@ export default function Orders() {
 
       <div className="space-y-4">
         {orders.map((order) => {
-          const itemCount = order.items.reduce(
+          const itemCount = order.items?.reduce(
             (sum, item) => sum + item.qty,
             0
-          );
+          ) || 0;
 
           const date = new Date(order.createdAt).toLocaleDateString(
             "en-US",
@@ -85,14 +99,14 @@ export default function Orders() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <h3 className="text-sm font-bold text-gray-900">
-                    Order #{order.id}
+                    Order #{order.id.substring(0, 8)}
                   </h3>
                   <span
                     className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
-                      STATUS_COLORS[order.status]
+                      STATUS_COLORS[order.status] || "bg-gray-100 text-gray-600"
                     }`}
                   >
-                    {STATUS_LABELS[order.status]}
+                    {STATUS_LABELS[order.status] || order.status}
                   </span>
                 </div>
 
@@ -104,7 +118,7 @@ export default function Orders() {
                   </span>
                   <span>•</span>
                   <span className="font-bold text-gray-900">
-                    ₦{order.total.toLocaleString()}
+                    ₦{Number(order.totalAmount).toLocaleString()}
                   </span>
                 </div>
               </div>

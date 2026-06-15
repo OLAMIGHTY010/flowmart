@@ -1,6 +1,19 @@
 import { apiClient } from "./api";
 
 export const userServices = {
+  getProfile: async () => {
+    const res = await apiClient.get<any>("/auth/me");
+    return res.user || res;
+  },
+
+  updateProfile: async (data: {
+    fullName?: string;
+    phone?: string;
+    avatar?: string;
+  }) => {
+    return apiClient.put<any>("/user/profile", data);
+  },
+
   getPrivacySettings: async () => {
     return apiClient.get<any>("/user/privacy-settings");
   },

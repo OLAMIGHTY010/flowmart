@@ -4,14 +4,13 @@ import {
   User,
   Bell,
   Lock,
-  MapPin,
   HelpCircle,
   FileText,
   LogOut,
   ShieldCheck,
   ChevronRight,
 } from "lucide-react";
-import Navbar from "@/components/Navbar";
+// import Navbar from "@/components/Navbar";
 
 export default function ProfileLayout() {
   const { user, logout } = useAuth();

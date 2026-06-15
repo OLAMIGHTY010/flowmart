@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   MapPin,
@@ -8,25 +8,14 @@ import {
   ShoppingCart,
   CheckCircle2,
   Truck,
+  Loader2,
 } from "lucide-react";
 import { useCartStore } from "@/stores/cartStore";
-import { useCheckout } from "@/hooks/useCheckout";
+import { usePlaceOrder } from "@/hooks/useOrders";
 import { useAuth } from "@/hooks/useAuth";
-import {
-  useOrderStore,
-  generateOrderId,
-  buildInitialTimeline,
-} from "@/stores/orderStore";
+import { orderServices } from "@/services/OrderServices";
 import { Card } from "@/components/ui/card";
 import { UserInput } from "@/components/ui/input";
-
-const zones = [
-  { name: "Camp Gate", fee: 500 },
-  { name: "Youth Center Area", fee: 800 },
-  { name: "Hostel Zone A", fee: 1000 },
-  { name: "Hostel Zone B", fee: 1200 },
-  { name: "Prayer Ground Area", fee: 700 },
-];
 
 const STEPS = [
   { label: "Cart", icon: ShoppingCart },
@@ -41,36 +30,57 @@ export default function Checkout() {
   const cart = useCartStore((state) => state.cart);
   const subtotal = useCartStore((state) => state.getCartSubtotal());
   const clearCart = useCartStore((state) => state.clearCart);
-  const addOrder = useOrderStore((state) => state.addOrder);
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [selectedZone, setSelectedZone] = useState(zones[0]);
-  const [paymentMethod, setPaymentMethod] = useState<
-    "bank_transfer" | "pay_on_delivery"
-  >("bank_transfer");
+  const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "pay_on_delivery">("bank_transfer");
   const [transactionReference, setTransactionReference] = useState("");
   const [proof, setProof] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false);
+  
+  const placeOrderMutation = usePlaceOrder();
+  const { user } = useAuth();
 
-  const total = subtotal + selectedZone.fee;
+  // Fetch vendor bank details
+  const [vendorBank, setVendorBank] = useState<{ bankName: string; accountNumber: string; accountName: string } | null>(null);
+  const [loadingBank, setLoadingBank] = useState(false);
 
-  const vendorBank = {
-    bankName: "Access Bank",
-    accountNumber: "0123456789",
-    accountName: "Flowmart Vendor",
-  };
+  useEffect(() => {
+    const fetchBankDetails = async () => {
+      if (paymentMethod === "bank_transfer" && cart.length > 0) {
+        try {
+          setLoadingBank(true);
+          const vendorId = cart[0].vendorId;
+          const res = await orderServices.getVendorBankDetails(vendorId);
+          if (res.success && res.bankDetails) {
+            setVendorBank(res.bankDetails);
+          }
+        } catch (err) {
+          console.error("Failed to fetch vendor bank details:", err);
+        } finally {
+          setLoadingBank(false);
+        }
+      }
+    };
+    fetchBankDetails();
+  }, [paymentMethod, cart]);
+
+  // Pre-fill user data
+  useEffect(() => {
+    if (user) {
+      setName(user.fullName || "");
+      setPhone(user.phone || "");
+    }
+  }, [user]);
+
+  const deliveryFee = 0; // Free delivery or flat rate since zones are removed
+  const total = subtotal + deliveryFee;
 
   if (cart.length === 0) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 text-center">
         <ShoppingCart className="h-16 w-16 text-gray-300" />
-        <h1 className="mt-4 text-xl font-bold text-gray-900">
-          Your cart is empty
-        </h1>
-        <p className="mt-2 text-sm text-gray-500">
-          Add products before checking out
-        </p>
+        <h1 className="mt-4 text-xl font-bold text-gray-900">Your cart is empty</h1>
+        <p className="mt-2 text-sm text-gray-500">Add products before checking out</p>
         <Link
           to="/"
           className="mt-6 rounded-lg bg-orange-500 px-8 py-3 text-sm font-bold text-white transition hover:bg-orange-600"
@@ -80,9 +90,6 @@ export default function Checkout() {
       </div>
     );
   }
-
-  const { submitOrder } = useCheckout();
-  const { user } = useAuth();
 
   const handleSubmit = async () => {
     if (!user) {
@@ -94,75 +101,38 @@ export default function Checkout() {
       return alert("Please fill in your name and phone number");
     }
 
-    if (
-      paymentMethod === "bank_transfer" &&
-      !transactionReference.trim()
-    ) {
+    if (paymentMethod === "bank_transfer" && !transactionReference.trim()) {
       return alert("Please provide your transaction reference");
     }
 
-    setLoading(true);
+    // Build items array matching backend expectations
+    const items = cart.map(item => ({
+      productId: item.id,
+      quantity: item.qty
+    }));
 
-    try {
-      const orderId = generateOrderId();
-      const timeline = buildInitialTimeline(paymentMethod);
-
-      // Prepare payload for backend db.json
-      const formData = new FormData();
-      formData.append("id", orderId);
-      formData.append("customer_name", name);
-      formData.append("phone", phone);
-      formData.append("zone", selectedZone.name);
-      formData.append("payment_method", paymentMethod);
+    const formData = new FormData();
+    formData.append("items", JSON.stringify(items));
+    formData.append("customer_name", name);
+    formData.append("phone", phone);
+    formData.append("payment_method", paymentMethod);
+    if (paymentMethod === "bank_transfer") {
       formData.append("transaction_reference", transactionReference);
-      if (proof) {
-        formData.append("payment_proof", proof);
-      }
-      formData.append("delivery_fee", String(selectedZone.fee));
-      formData.append("status", paymentMethod === "bank_transfer" ? "awaiting_payment" : "awaiting_confirmation");
-      formData.append("createdAt", new Date().toISOString());
-      cart.forEach((item) => {
-        formData.append(
-          "items[]",
-          JSON.stringify({
-            product_id: item.id,
-            qty: item.qty,
-          })
-        );
-      });
-
-      await submitOrder(formData);
-
-      const order = {
-        id: orderId,
-        items: [...cart],
-        customerName: name,
-        phone,
-        zone: selectedZone.name,
-        deliveryFee: selectedZone.fee,
-        subtotal,
-        total,
-        paymentMethod,
-        transactionReference:
-          paymentMethod === "bank_transfer"
-            ? transactionReference
-            : undefined,
-        status:
-          paymentMethod === "bank_transfer"
-            ? ("awaiting_payment" as const)
-            : ("awaiting_confirmation" as const),
-        timeline,
-        createdAt: new Date().toISOString(),
-      };
-
-      addOrder(order);
-      navigate(`/order-confirmation/${orderId}`);
-    } catch (err) {
-      console.error(err);
-      alert("Unable to place order. Please check connection.");
-    } finally {
-      setLoading(false);
     }
+    if (proof) {
+      formData.append("payment_proof", proof);
+    }
+
+    placeOrderMutation.mutate(formData, {
+      onSuccess: (data) => {
+        clearCart();
+        navigate(`/order-confirmation/${data.order.id}`);
+      },
+      onError: (err: any) => {
+        console.error("Order error:", err);
+        alert(err.response?.data?.message || "Unable to place order. Please check connection.");
+      }
+    });
   };
 
   return (
@@ -215,18 +185,14 @@ export default function Checkout() {
         </div>
       </div>
 
-      {/* Two-column grid */}
       <div className="grid w-full gap-4 lg:grid-cols-12 lg:gap-6">
         {/* Left Column — Forms */}
         <div className="space-y-4 lg:col-span-7 lg:space-y-6 min-w-0">
-          {/* Delivery Details Card */}
           <Card className="w-full overflow-hidden p-0">
             <div className="p-4 sm:p-6">
               <div className="mb-5 flex items-center gap-2">
                 <MapPin size={20} className="text-orange-500" />
-                <h2 className="text-lg font-bold text-gray-900">
-                  Delivery Details
-                </h2>
+                <h2 className="text-lg font-bold text-gray-900">Delivery Details</h2>
               </div>
 
               <div className="space-y-4">
@@ -244,39 +210,15 @@ export default function Checkout() {
                   placeholder="08012345678"
                   type="tel"
                 />
-
-                <div className="flex flex-col gap-[10px] w-full">
-                  <label className="text-sm font-medium text-foreground">
-                    Delivery Zone
-                  </label>
-                  <select
-                    value={selectedZone.name}
-                    onChange={(e) =>
-                      setSelectedZone(
-                        zones.find((z) => z.name === e.target.value)!
-                      )
-                    }
-                    className="flex items-center w-full border border-gray-300 rounded-md px-3 py-[14px] bg-background text-sm text-foreground transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
-                  >
-                    {zones.map((zone) => (
-                      <option key={zone.name} value={zone.name}>
-                        {zone.name} — ₦{zone.fee.toLocaleString()}
-                      </option>
-                    ))}
-                  </select>
-                </div>
               </div>
             </div>
           </Card>
 
-          {/* Payment Method Card */}
           <Card className="w-full overflow-hidden p-0">
             <div className="p-4 sm:p-6">
               <div className="mb-5 flex items-center gap-2">
                 <CreditCard size={20} className="text-orange-500" />
-                <h2 className="text-lg font-bold text-gray-900">
-                  Payment Method
-                </h2>
+                <h2 className="text-lg font-bold text-gray-900">Payment Method</h2>
               </div>
 
               <div className="space-y-3">
@@ -295,12 +237,8 @@ export default function Checkout() {
                     className="accent-orange-500"
                   />
                   <div>
-                    <p className="text-sm font-semibold text-gray-900">
-                      Bank Transfer
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Transfer to our bank account
-                    </p>
+                    <p className="text-sm font-semibold text-gray-900">Bank Transfer</p>
+                    <p className="text-xs text-gray-500">Transfer to vendor's bank account</p>
                   </div>
                 </label>
 
@@ -319,12 +257,8 @@ export default function Checkout() {
                     className="accent-orange-500"
                   />
                   <div>
-                    <p className="text-sm font-semibold text-gray-900">
-                      Pay on Delivery
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Pay when your order arrives
-                    </p>
+                    <p className="text-sm font-semibold text-gray-900">Pay on Delivery</p>
+                    <p className="text-xs text-gray-500">Pay when your order arrives</p>
                   </div>
                 </label>
               </div>
@@ -332,26 +266,34 @@ export default function Checkout() {
               {/* Bank Transfer Details */}
               {paymentMethod === "bank_transfer" && (
                 <div className="mt-5 space-y-4">
-                  <div className="rounded-lg border border-orange-200 bg-orange-50 p-4">
+                  <div className="rounded-lg border border-orange-200 bg-orange-50 p-4 min-h-[120px]">
                     <p className="mb-2 text-xs font-bold uppercase tracking-wider text-orange-600">
                       Transfer to this account
                     </p>
-                    <div className="space-y-1">
-                      <p className="text-sm text-gray-700">
-                        <span className="font-medium text-gray-500">Bank:</span>{" "}
-                        <span className="font-bold">{vendorBank.bankName}</span>
-                      </p>
-                      <p className="text-sm text-gray-700">
-                        <span className="font-medium text-gray-500">Account:</span>{" "}
-                        <span className="font-bold tracking-wide">
-                          {vendorBank.accountNumber}
-                        </span>
-                      </p>
-                      <p className="text-sm text-gray-700">
-                        <span className="font-medium text-gray-500">Name:</span>{" "}
-                        <span className="font-bold">{vendorBank.accountName}</span>
-                      </p>
-                    </div>
+                    {loadingBank ? (
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <Loader2 size={16} className="animate-spin" /> Fetching bank details...
+                      </div>
+                    ) : vendorBank ? (
+                      <div className="space-y-1">
+                        <p className="text-sm text-gray-700">
+                          <span className="font-medium text-gray-500">Bank:</span>{" "}
+                          <span className="font-bold">{vendorBank.bankName}</span>
+                        </p>
+                        <p className="text-sm text-gray-700">
+                          <span className="font-medium text-gray-500">Account:</span>{" "}
+                          <span className="font-bold tracking-wide">{vendorBank.accountNumber}</span>
+                        </p>
+                        <p className="text-sm text-gray-700">
+                          <span className="font-medium text-gray-500">Name:</span>{" "}
+                          <span className="font-bold">{vendorBank.accountName}</span>
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="text-sm text-red-600">
+                        Unable to load vendor bank details. Please try another payment method.
+                      </div>
+                    )}
                   </div>
 
                   <UserInput
@@ -362,9 +304,7 @@ export default function Checkout() {
                   />
 
                   <div className="flex flex-col gap-[10px] w-full">
-                    <label className="text-sm font-medium text-foreground">
-                      Payment Proof (optional)
-                    </label>
+                    <label className="text-sm font-medium text-foreground">Payment Proof (optional)</label>
                     <label className="flex w-full cursor-pointer items-center gap-3 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50/50 p-4 transition hover:border-orange-400 hover:bg-orange-50">
                       <Upload size={20} className="flex-shrink-0 text-gray-400" />
                       <span className="text-sm text-gray-500 truncate flex-1 min-w-0">
@@ -373,9 +313,7 @@ export default function Checkout() {
                       <input
                         type="file"
                         accept="image/*,.pdf"
-                        onChange={(e) =>
-                          setProof(e.target.files?.[0] ?? null)
-                        }
+                        onChange={(e) => setProof(e.target.files?.[0] ?? null)}
                         className="hidden"
                       />
                     </label>
@@ -390,26 +328,18 @@ export default function Checkout() {
         <div className="lg:col-span-5 min-w-0">
           <Card className="w-full overflow-hidden p-0">
             <div className="sticky top-24 p-4 sm:p-6">
-              <h2 className="mb-5 text-lg font-bold text-gray-900">
-                Order Summary
-              </h2>
+              <h2 className="mb-5 text-lg font-bold text-gray-900">Order Summary</h2>
 
-              {/* Items */}
               <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
                 {cart.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center gap-3 rounded-lg bg-gray-50 p-3"
-                  >
+                  <div key={item.id} className="flex items-center gap-3 rounded-lg bg-gray-50 p-3">
                     <img
                       src={item.imageUrl}
                       alt={item.name}
                       className="h-14 w-14 flex-shrink-0 rounded-lg object-cover"
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="truncate text-sm font-semibold text-gray-900">
-                        {item.name}
-                      </p>
+                      <p className="truncate text-sm font-semibold text-gray-900">{item.name}</p>
                       <p className="text-xs text-gray-500">Qty: {item.qty}</p>
                     </div>
                     <p className="text-sm font-bold text-gray-900 whitespace-nowrap">
@@ -419,39 +349,31 @@ export default function Checkout() {
                 ))}
               </div>
 
-              {/* Totals */}
               <div className="mt-5 space-y-3 border-t border-gray-100 pt-5">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Subtotal</span>
-                  <span className="font-semibold text-gray-900">
-                    ₦{subtotal.toLocaleString()}
-                  </span>
+                  <span className="font-semibold text-gray-900">₦{subtotal.toLocaleString()}</span>
                 </div>
 
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Delivery Fee</span>
-                  <span className="font-semibold text-gray-900">
-                    ₦{selectedZone.fee.toLocaleString()}
-                  </span>
+                  <span className="font-semibold text-gray-900">Free</span>
                 </div>
 
                 <hr className="border-gray-100" />
 
                 <div className="flex justify-between text-lg">
                   <span className="font-bold text-gray-900">Total</span>
-                  <span className="font-extrabold text-orange-600">
-                    ₦{total.toLocaleString()}
-                  </span>
+                  <span className="font-extrabold text-orange-600">₦{total.toLocaleString()}</span>
                 </div>
               </div>
 
-              {/* Place Order Button */}
               <button
-                disabled={loading}
+                disabled={placeOrderMutation.isPending}
                 onClick={handleSubmit}
                 className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-orange-500 py-3.5 text-sm font-bold uppercase tracking-wider text-white shadow-sm transition hover:bg-orange-600 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed cursor-pointer"
               >
-                {loading ? (
+                {placeOrderMutation.isPending ? (
                   <>
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                     Processing...
