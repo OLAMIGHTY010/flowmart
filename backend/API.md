@@ -14,10 +14,21 @@ Authorization: Bearer <your_jwt_token_here>
 
 ---
 
+## 📧 Note on Transactional Emails
+The backend now handles asynchronous email dispatch. The frontend **does not** need to wait for these or trigger them manually. They occur automatically during:
+* **Registration:** Sends a 6-digit OTP.
+* **OTP Verification:** Sends a Welcome Email.
+* **Password Reset:** Sends a magic link/token.
+* **Placing an Order:** Sends an Order Receipt (with the 6-digit Delivery PIN).
+* **Confirming Delivery:** Sends a final Delivery Success receipt.
+* **Inventory & Welfare:** Sends alerts to Vendors (Out of Stock) and Coordinators (New Allocations).
+
+---
+
 ## 👤 Authentication Module
 
-### 1. Register a New User
-Creates a new user account and returns an access token.
+### 1. Register a New User (Step 1)
+Creates an unverified user account and emails a 6-digit OTP. **Does not return a JWT.**
 
 - **Endpoint:** `/auth/register`
 - **Method:** `POST`
@@ -36,7 +47,26 @@ Creates a new user account and returns an access token.
 **Success Response (201 Created):**
 {
   "success": true,
-  "message": "User registered successfully",
+  "message": "Registration successful. Please check your email for the verification code."
+}
+
+### 2. Verify OTP (Step 2)
+Verifies the OTP sent to the user's email. If successful, activates the account and returns the JWT.
+
+- **Endpoint:** `/auth/verify-otp`
+- **Method:** `POST`
+- **Headers:** `Content-Type: application/json`
+
+**Request Body:**
+{
+  "email": "john@example.com",
+  "otp": "123456"
+}
+
+**Success Response (200 OK):**
+{
+  "success": true,
+  "message": "Account verified successfully",
   "token": "eyJhbGciOiJIUzI1NiIsInR...",
   "user": {
     "id": "uuid-string-here",
@@ -46,8 +76,8 @@ Creates a new user account and returns an access token.
   }
 }
 
-### 2. Login User
-Authenticates an existing user and returns an access token.
+### 3. Login User
+Authenticates an existing, *verified* user and returns an access token.
 
 - **Endpoint:** `/auth/login`
 - **Method:** `POST`
@@ -57,6 +87,31 @@ Authenticates an existing user and returns an access token.
 {
   "email": "john@example.com",
   "password": "securepassword123"
+}
+
+### 4. Request Password Reset
+Generates a secure token and emails a reset link to the user.
+
+- **Endpoint:** `/auth/request-reset`
+- **Method:** `POST`
+- **Headers:** `Content-Type: application/json`
+
+**Request Body:**
+{
+  "email": "john@example.com"
+}
+
+### 5. Reset Password
+Consumes the token from the email link and updates the user's password.
+
+- **Endpoint:** `/auth/reset-password`
+- **Method:** `POST`
+- **Headers:** `Content-Type: application/json`
+
+**Request Body:**
+{
+  "token": "32-byte-hex-string-from-url",
+  "newPassword": "mynewsecurepassword123"
 }
 
 ---
@@ -105,7 +160,7 @@ Removes a product entirely. (Restricted to the `vendor` who owns the item).
 ## 📦 Order & Commerce Module
 
 ### 1. Place an Order
-Purchases an item, generates a delivery PIN, and deducts from vendor inventory. (Restricted to `attendee`).
+Purchases an item, generates a delivery PIN, deducts inventory, and emails a receipt. (Restricted to `attendee`).
 
 - **Endpoint:** `/orders`
 - **Method:** `POST`
@@ -156,7 +211,7 @@ Assigns the logged-in rider to a specific order. (Restricted to `dispatch_rider`
 - **Headers:** `Authorization: Bearer <token>`
 
 ### 3. Confirm Delivery (Manual PIN)
-Completes the delivery using the 6-digit PIN provided by the attendee. (Restricted to `dispatch_rider`, `super_admin`).
+Completes the delivery using the 6-digit PIN provided by the attendee. Triggers a delivery confirmation email. (Restricted to `dispatch_rider`, `super_admin`).
 
 - **Endpoint:** `/riders/:id/confirm`
 - **Method:** `POST`
@@ -197,7 +252,7 @@ Creates a new welfare distribution tracking event. (Restricted to `super_admin`,
 }
 
 ### 2. Allocate Welfare to Zone
-Assigns item counts to a specific camp zone. (Restricted to `super_admin`, `camp_logistics_coordinator`).
+Assigns item counts to a specific camp zone and emails the Zone Coordinator. (Restricted to `super_admin`, `camp_logistics_coordinator`).
 
 - **Endpoint:** `/welfare/allocations`
 - **Method:** `POST`

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
+    .container { max-width: 600px; background: #ffffff; padding: 30px; border-radius: 8px; margin: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+    .header { text-align: center; color: #2c3e50; border-bottom: 2px solid #edf2f7; padding-bottom: 20px; margin-bottom: 20px; }
+    .role-badge { display: inline-block; background: #e0f2fe; color: #0284c7; padding: 5px 10px; border-radius: 4px; font-weight: bold; text-transform: uppercase; font-size: 14px; }
+    .footer { font-size: 12px; color: #64748b; text-align: center; margin-top: 30px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>Welcome to FlowMart!</h2>
+    </div>
+    <p>Hello {{fullName}},</p>
+    <p>Your account has been successfully verified. We are thrilled to have you on the official logistics and commerce platform for the Redemption Camp.</p>
+    <p>You are registered with the following access level: <span class="role-badge">{{role}}</span></p>
+    <p>You can now log in to the app to start exploring the marketplace, managing orders, or tracking welfare distributions.</p>
+    
+    <div class="footer">
+      <p>&copy; 2026 FlowMart Logistics. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>

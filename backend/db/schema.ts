@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, timestamp, pgEnum, integer, decimal, text } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, timestamp, pgEnum, integer, decimal, text, boolean } from 'drizzle-orm/pg-core';
 
 export const roleEnum = pgEnum('role', [
   'super_admin', 
@@ -15,6 +15,15 @@ export const users = pgTable('users', {
   email: varchar('email', { length: 255 }).notNull().unique(),
   password: varchar('password', { length: 255 }).notNull(), 
   role: roleEnum('role').default('attendee').notNull(),
+  
+  // --- NEW AUTH & SECURITY COLUMNS ---
+  isVerified: boolean('is_verified').default(false).notNull(),
+  otp: varchar('otp', { length: 255 }),
+  otpExpiry: timestamp('otp_expiry'),
+  resetToken: varchar('reset_token', { length: 255 }),
+  resetTokenExpiry: timestamp('reset_token_expiry'),
+  // -----------------------------------
+
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -61,7 +70,7 @@ export const orderItems = pgTable('order_items', {
   unitPrice: decimal('unit_price', { precision: 10, scale: 2 }).notNull(),
 });
 
-// --- NEW WELFARE TABLES ---
+// --- WELFARE TABLES ---
 
 export const welfareEvents = pgTable('welfare_events', {
   id: uuid('id').defaultRandom().primaryKey(),
