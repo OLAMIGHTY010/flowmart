@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { getDashboardStats } from "./analytics.controller";
+import { getDashboardStats } from "../../controllers/analytics.controller";
 
 // 1. Mock the database fluent layout
 jest.mock("../../db", () => {
@@ -10,7 +10,7 @@ jest.mock("../../db", () => {
 	return { db: mockChain };
 });
 
-import { db } from "../../db";
+import { db } from "../../../db";
 const mockDb = db as any;
 
 describe("Analytics Controller", () => {

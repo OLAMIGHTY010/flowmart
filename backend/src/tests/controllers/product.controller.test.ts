@@ -4,8 +4,8 @@ import {
 	getProducts,
 	updateProduct,
 	deleteProduct,
-} from "./product.controller";
-import { AuthenticatedRequest } from "../middleware/auth.middleware";
+} from "../../controllers/product.controller";
+import { AuthenticatedRequest } from "../../middleware/auth.middleware";
 
 // 1. Define the mock structure directly inside the factory block
 jest.mock("../../db", () => {
@@ -25,7 +25,7 @@ jest.mock("../../db", () => {
 });
 
 // 2. Import the mocked db instance
-import { db } from "../../db";
+import { db } from "../../../db";
 const mockDb = db as any;
 
 describe("Product Controller", () => {

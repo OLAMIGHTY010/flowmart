@@ -4,7 +4,7 @@ import {
 	authenticateJWT,
 	authorizeRoles,
 	AuthenticatedRequest,
-} from "./auth.middleware";
+} from "../../middleware/auth.middleware";
 
 // 1. Tell Jest to replace the real 'jsonwebtoken' library with a fake one we can control
 jest.mock("jsonwebtoken");

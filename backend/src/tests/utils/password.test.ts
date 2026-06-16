@@ -1,4 +1,4 @@
-import { hashPassword, comparePassword } from "./password";
+import { hashPassword, comparePassword } from "../../utils/password";
 
 describe("Password Utility", () => {
 	const plainTextPassword = "mySuperSecretPassword123!";
