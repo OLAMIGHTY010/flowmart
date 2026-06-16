@@ -3,8 +3,8 @@ import {
 	getAvailableDeliveries,
 	acceptDelivery,
 	confirmDeliveryViaQR,
-} from "./rider.controller";
-import { AuthenticatedRequest } from "../middleware/auth.middleware";
+} from "../../controllers/rider.controller";
+import { AuthenticatedRequest } from "../../middleware/auth.middleware";
 
 // 1. Mock the database layout directly in the factory block
 jest.mock("../../db", () => {
@@ -20,7 +20,7 @@ jest.mock("../../db", () => {
 	return { db: mockChain };
 });
 
-import { db } from "../../db";
+import { db } from "../../../db";
 const mockDb = db as any;
 
 describe("Rider Controller", () => {

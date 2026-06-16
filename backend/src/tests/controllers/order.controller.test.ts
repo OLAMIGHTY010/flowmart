@@ -1,6 +1,10 @@
 import { Response } from "express";
-import { placeOrder, getOrders, updateOrderStatus } from "./order.controller";
-import { AuthenticatedRequest } from "../middleware/auth.middleware";
+import {
+	placeOrder,
+	getOrders,
+	updateOrderStatus,
+} from "../../controllers/order.controller";
+import { AuthenticatedRequest } from "../../middleware/auth.middleware";
 
 // 1. Mock the database fluent-chain layout directly inside its factory block
 jest.mock("../../db", () => {
@@ -18,7 +22,7 @@ jest.mock("../../db", () => {
 	return { db: mockChain };
 });
 
-import { db } from "../../db";
+import { db } from "../../../db";
 const mockDb = db as any;
 
 describe("Order Controller", () => {

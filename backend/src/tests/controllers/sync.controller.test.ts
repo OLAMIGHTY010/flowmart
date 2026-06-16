@@ -1,6 +1,6 @@
 import { Response } from "express";
-import { processSyncQueue } from "./sync.controller";
-import { AuthenticatedRequest } from "../middleware/auth.middleware";
+import { processSyncQueue } from "../../controllers/sync.controller";
+import { AuthenticatedRequest } from "../../middleware/auth.middleware";
 
 // 1. Mock the database fluent-chain layout inside its factory block
 jest.mock("../../db", () => {
@@ -20,8 +20,8 @@ jest.mock("../services/websocket", () => ({
 	sendInAppNotification: jest.fn(),
 }));
 
-import { db } from "../../db";
-import { sendInAppNotification } from "../services/websocket";
+import { db } from "../../../db";
+import { sendInAppNotification } from "../../services/websocket";
 
 const mockDb = db as any;
 const mockSendNotification = sendInAppNotification as jest.Mock;
