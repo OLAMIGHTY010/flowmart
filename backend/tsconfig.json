@@ -27,7 +27,7 @@
       /* Modules */
       "module": "commonjs" /* Specify what module code is generated. */,
       // "rootDir": "./",                                  /* Specify the root folder within your source files. */
-      // "moduleResolution": "node",                       /* Specify how TypeScript looks up a file from a given module specifier. */
+      "moduleResolution": "node",
       "baseUrl": "./src",
       "paths": {
           "@/*": ["*"]
@@ -103,5 +103,9 @@
       "skipLibCheck": true /* Skip type checking all .d.ts files. */
   },
   "include": ["src"],
-  "exclude": ["node_modules", "test", "dist", "**/*spec.ts"]
+  "exclude": ["node_modules", "test", "dist", "**/*spec.ts"],
+  "ts-node": {
+    "transpileOnly": true,
+    "preferTsExts": true
+  }
 }

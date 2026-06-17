@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getDashboardStats } from '../controllers/analytics.controller';
+import { getDashboardStats } from '../controllers/admin.controller';
 import { authenticateJWT, authorizeRoles } from '../middleware/auth.middleware';
 
 const router = Router();

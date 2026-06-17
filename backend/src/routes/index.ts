@@ -6,6 +6,11 @@ import riderRoutes from './rider.routes';
 import welfareRoutes from './welfare.routes';
 import syncRoutes from './sync.routes';
 import analyticsRoutes from './analytics.routes';
+import vendorRoutes from './vendor.routes';
+import { authenticateJWT } from '../middleware/auth.middleware';
+import { getVendorPublicProfile } from '../controllers/product.controller';
+import adminRoutes from './admin.routes';
+import userManagementRoutes from './user-management.routes';
 
 const router = Router();
 
@@ -16,5 +21,11 @@ router.use('/riders', riderRoutes);
 router.use('/welfare', welfareRoutes);
 router.use('/sync', syncRoutes);
 router.use('/analytics', analyticsRoutes);
+router.use('/vendor', vendorRoutes);
+router.use('/admin', adminRoutes);
+router.use('/user-management', userManagementRoutes);
+
+// Public vendor profile (accessible to any authenticated user)
+router.get('/vendors/:id', authenticateJWT, getVendorPublicProfile);
 
 export default router;

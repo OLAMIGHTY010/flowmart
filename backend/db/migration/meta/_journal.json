@@ -8,6 +8,34 @@
       "when": 1780893086584,
       "tag": "0000_familiar_james_howlett",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1781373212744,
+      "tag": "0001_past_angel",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1781440146666,
+      "tag": "0002_fuzzy_wolf_cub",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1781589268876,
+      "tag": "0003_freezing_apocalypse",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1781590255671,
+      "tag": "0004_rapid_randall",
+      "breakpoints": true
     }
   ]
 }
