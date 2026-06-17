@@ -133,6 +133,10 @@
   --color-sidebar-primary: hsl(var(--sidebar-primary));
   --color-sidebar-accent: hsl(var(--sidebar-accent));
 
+  /* FlowMart Custom Brands */
+  --color-brand-navy: #0f172a;
+  --color-brand-green: #16a34a;
+
   /* Charts */
   --color-chart-1: hsl(var(--chart-1));
   --color-chart-2: hsl(var(--chart-2));

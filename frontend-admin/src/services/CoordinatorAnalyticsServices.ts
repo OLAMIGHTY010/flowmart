@@ -9,6 +9,12 @@ export interface CoordinatorOverview {
   completionTimeTrend: string;
   riderEfficiencyScore: number;
   riderEfficiencyGrowth: number;
+  deliveredZones: number;
+  totalZones: number;
+  pendingZones: number;
+  activeRiders: number;
+  totalRiders: number;
+  criticalAlerts: number;
 }
 
 export interface CoordinatorDeliveryTrend {
@@ -71,6 +77,26 @@ export const CoordinatorAnalyticsServices = {
   },
   getShortageIncidents: async (): Promise<ShortageIncident[]> => {
     const res = await apiClient.get<{ success: boolean, data: ShortageIncident[] }>('/admin/coordinator-analytics/shortage-incidents');
+    return res.data;
+  },
+  getWelfareZones: async () => {
+    const res = await apiClient.get<{ success: boolean, data: any }>('/admin/coordinator-analytics/welfare-zones');
+    return res.data;
+  },
+  getWelfareInventory: async () => {
+    const res = await apiClient.get<{ success: boolean, data: any }>('/admin/coordinator-analytics/welfare-inventory');
+    return res.data;
+  },
+  getLiveZoneGrid: async () => {
+    const res = await apiClient.get<{ success: boolean, data: any }>('/admin/coordinator-analytics/live-zone-grid');
+    return res.data;
+  },
+  getLiveActivityFeed: async () => {
+    const res = await apiClient.get<{ success: boolean, data: any }>('/admin/coordinator-analytics/live-activity-feed');
+    return res.data;
+  },
+  getShortageAlerts: async () => {
+    const res = await apiClient.get<{ success: boolean, data: any }>('/admin/coordinator-analytics/shortage-alerts');
     return res.data;
   }
 };

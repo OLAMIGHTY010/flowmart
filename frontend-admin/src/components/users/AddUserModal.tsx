@@ -11,6 +11,10 @@ interface AddUserModalProps {
 export default function AddUserModal({ isOpen, onClose }: AddUserModalProps) {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
+  const [gender, setGender] = useState('');
+  const [password, setPassword] = useState('');
   const [role, setRole] = useState('admin'); // Default role
   const [successData, setSuccessData] = useState<{message: string, tempPassword?: string} | null>(null);
   
@@ -29,12 +33,16 @@ export default function AddUserModal({ isOpen, onClose }: AddUserModalProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    mutation.mutate({ fullName, email, role });
+    mutation.mutate({ fullName, email, role, phone, dateOfBirth, gender, password });
   };
 
   const handleClose = () => {
     setFullName('');
     setEmail('');
+    setPhone('');
+    setDateOfBirth('');
+    setGender('');
+    setPassword('');
     setRole('admin');
     setSuccessData(null);
     mutation.reset();
@@ -83,7 +91,7 @@ export default function AddUserModal({ isOpen, onClose }: AddUserModalProps) {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="p-5">
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto px-1">
               
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">Full Name</label>
@@ -108,6 +116,57 @@ export default function AddUserModal({ isOpen, onClose }: AddUserModalProps) {
                   placeholder="name@example.com"
                 />
               </div>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Phone Number</label>
+                  <input 
+                    type="tel" 
+                    required
+                    value={phone}
+                    onChange={e => setPhone(e.target.value)}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#16a34a] focus:ring-1 focus:ring-[#16a34a]"
+                    placeholder="08012345678"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Date of Birth</label>
+                  <input 
+                    type="date" 
+                    required
+                    value={dateOfBirth}
+                    onChange={e => setDateOfBirth(e.target.value)}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#16a34a] focus:ring-1 focus:ring-[#16a34a]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Gender</label>
+                  <select 
+                    value={gender}
+                    onChange={e => setGender(e.target.value)}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#16a34a] focus:ring-1 focus:ring-[#16a34a] bg-white"
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Password</label>
+                  <input 
+                    type="password" 
+                    required
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#16a34a] focus:ring-1 focus:ring-[#16a34a]"
+                    placeholder="Enter password"
+                  />
+                </div>
+              </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">System Role</label>
@@ -116,6 +175,7 @@ export default function AddUserModal({ isOpen, onClose }: AddUserModalProps) {
                   onChange={e => setRole(e.target.value)}
                   className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#16a34a] focus:ring-1 focus:ring-[#16a34a] bg-white"
                 >
+                  <option value="super_admin">Super Admin</option>
                   <option value="admin">Admin</option>
                   <option value="zone_coordinator">Zonal Coordinator</option>
                   <option value="camp_logistics_coordinator">Camp Logistics Coordinator</option>
@@ -130,7 +190,7 @@ export default function AddUserModal({ isOpen, onClose }: AddUserModalProps) {
               </div>
             )}
 
-            <div className="mt-6 flex justify-end gap-3">
+            <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-100">
               <button 
                 type="button" 
                 onClick={handleClose}

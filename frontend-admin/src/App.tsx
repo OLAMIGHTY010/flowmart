@@ -9,7 +9,10 @@ import VendorApprovals from "@/pages/VendorApprovals";
 import RiderManagement from "@/pages/RiderManagement";
 import PlatformAnalytics from "@/pages/PlatformAnalytics";
 import CoordinatorAnalytics from "@/pages/CoordinatorAnalytics";
+import CoordinatorDashboard from "@/pages/CoordinatorDashboard";
 import AuditLog from "@/pages/AuditLog";
+import CreateEvent from "@/pages/CreateEvent";
+import LiveTracker from "@/pages/LiveTracker";
 import ForcePasswordChange from "@/pages/ForcePasswordChange";
 import AdminLayout from "@/components/AdminLayout";
 import { createProtectedRoute } from "@/routes/guards/ProtectedRoute";
@@ -50,6 +53,9 @@ function App() {
               <Route path="/riders" element={<RiderManagement />} />
               <Route path="/analytics" element={<PlatformAnalytics />} />
               <Route path="/coordinator-analytics" element={<CoordinatorAnalytics />} />
+              <Route path="/coordinator-dashboard" element={<CoordinatorDashboard />} />
+              <Route path="/events/create" element={<CreateEvent />} />
+              <Route path="/tracker" element={<LiveTracker />} />
               <Route path="/audit-logs" element={<AuditLog />} />
               {/* Other admin routes will go here later */}
             </Route>

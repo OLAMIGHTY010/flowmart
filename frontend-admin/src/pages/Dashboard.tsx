@@ -1,9 +1,9 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { 
-  Users, 
-  Activity, 
-  Package, 
+import {
+  Users,
+  Activity,
+  Package,
   Zap,
   CheckCircle2,
   AlertCircle,
@@ -14,12 +14,12 @@ import {
   FileText,
   UserCheck
 } from 'lucide-react';
-import { 
-  AreaChart, 
-  Area, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
 } from 'recharts';
 import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { AdminDashboardServices } from '@/services/AdminDashboardServices';
@@ -71,10 +71,10 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-col gap-6 max-w-7xl mx-auto">
-      
+
       {/* Top Stats Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        
+
         {/* Active Users */}
         <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
           <div className="flex justify-between items-start mb-4">
@@ -179,7 +179,7 @@ export default function Dashboard() {
 
       {/* Middle Section: Chart & Alerts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         {/* Delivery Metrics Chart */}
         <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col">
           <div className="flex justify-between items-center mb-6">
@@ -198,44 +198,44 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-          
+
           <div className="flex-1 w-full min-h-[250px]">
             <ChartContainer config={chartConfig} className="min-h-[250px] w-full">
               <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorDeliveries" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--color-deliveries)" stopOpacity={0.2}/>
-                    <stop offset="95%" stopColor="var(--color-deliveries)" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="var(--color-deliveries)" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="var(--color-deliveries)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                <XAxis 
-                  dataKey="name" 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fontSize: 12, fill: '#64748b' }} 
+                <XAxis
+                  dataKey="name"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 12, fill: '#64748b' }}
                   dy={10}
                 />
-                <YAxis 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fontSize: 12, fill: '#64748b' }} 
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 12, fill: '#64748b' }}
                 />
                 <ChartTooltip content={<ChartTooltipContent />} />
-                <Area 
-                  type="monotone" 
-                  dataKey="deliveries" 
-                  stroke="var(--color-deliveries)" 
+                <Area
+                  type="monotone"
+                  dataKey="deliveries"
+                  stroke="var(--color-deliveries)"
                   strokeWidth={2}
-                  fillOpacity={1} 
-                  fill="url(#colorDeliveries)" 
+                  fillOpacity={1}
+                  fill="url(#colorDeliveries)"
                 />
-                <Area 
-                  type="monotone" 
-                  dataKey="returns" 
-                  stroke="var(--color-returns)" 
+                <Area
+                  type="monotone"
+                  dataKey="returns"
+                  stroke="var(--color-returns)"
                   strokeWidth={2}
-                  fill="transparent" 
+                  fill="transparent"
                 />
               </AreaChart>
             </ChartContainer>
@@ -248,23 +248,21 @@ export default function Dashboard() {
             <h2 className="text-base font-bold text-slate-800">Critical Alerts</h2>
             <p className="text-xs text-slate-500 mt-1 font-medium">Require immediate attention</p>
           </div>
-          
+
           <div className="mt-5 flex-1 flex flex-col gap-3 overflow-y-auto pr-1">
             {alerts?.map((alert) => (
-              <div 
-                key={alert.id} 
-                className={`p-3 rounded-lg border flex flex-col gap-2 ${
-                  alert.type === 'critical' ? 'bg-red-50 border-red-100' :
-                  alert.type === 'warning' ? 'bg-orange-50 border-orange-100' :
-                  'bg-green-50 border-green-100'
-                }`}
+              <div
+                key={alert.id}
+                className={`p-3 rounded-lg border flex flex-col gap-2 ${alert.type === 'critical' ? 'bg-red-50 border-red-100' :
+                    alert.type === 'warning' ? 'bg-orange-50 border-orange-100' :
+                      'bg-green-50 border-green-100'
+                  }`}
               >
                 <div className="flex justify-between items-center">
-                  <div className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                    alert.type === 'critical' ? 'bg-red-100 text-red-600' :
-                    alert.type === 'warning' ? 'bg-orange-100 text-orange-600' :
-                    'bg-green-100 text-green-600'
-                  }`}>
+                  <div className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${alert.type === 'critical' ? 'bg-red-100 text-red-600' :
+                      alert.type === 'warning' ? 'bg-orange-100 text-orange-600' :
+                        'bg-green-100 text-green-600'
+                    }`}>
                     <div className="flex items-center gap-1">
                       {alert.type === 'critical' && <AlertCircle size={10} />}
                       {alert.type === 'warning' && <AlertCircle size={10} />}
@@ -274,11 +272,10 @@ export default function Dashboard() {
                   </div>
                   <span className="text-[10px] font-bold text-slate-400">{alert.time}</span>
                 </div>
-                <p className={`text-xs font-semibold leading-relaxed ${
-                  alert.type === 'critical' ? 'text-red-900' :
-                  alert.type === 'warning' ? 'text-orange-900' :
-                  'text-green-900'
-                }`}>
+                <p className={`text-xs font-semibold leading-relaxed ${alert.type === 'critical' ? 'text-red-900' :
+                    alert.type === 'warning' ? 'text-orange-900' :
+                      'text-green-900'
+                  }`}>
                   {alert.title}
                 </p>
               </div>
@@ -299,11 +296,11 @@ export default function Dashboard() {
             View All
           </button>
         </div>
-        
+
         <div className="divide-y divide-slate-100">
           {activities?.map((activity) => {
             const getTagStyle = (type: string) => {
-              switch(type) {
+              switch (type) {
                 case 'Vendor': return 'bg-green-100 text-green-700';
                 case 'Delivery': return 'bg-blue-100 text-blue-700';
                 case 'Wallet': return 'bg-red-100 text-red-700';
@@ -312,9 +309,9 @@ export default function Dashboard() {
                 default: return 'bg-slate-100 text-slate-700';
               }
             };
-            
+
             const getIcon = (type: string) => {
-              switch(type) {
+              switch (type) {
                 case 'Vendor': return <UserCheck size={14} />;
                 case 'Delivery': return <Package size={14} />;
                 case 'Wallet': return <CreditCard size={14} />;

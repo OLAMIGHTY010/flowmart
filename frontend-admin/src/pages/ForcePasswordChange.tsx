@@ -19,7 +19,11 @@ export default function ForcePasswordChange() {
     onSuccess: async () => {
       showToast('Password updated successfully', 'success');
       await refreshUser(); // This clears the forcePasswordChange flag
-      navigate('/dashboard');
+      if (user?.role === 'camp_logistics_coordinator' || user?.role === 'zone_coordinator') {
+        navigate('/coordinator-analytics');
+      } else {
+        navigate('/dashboard');
+      }
     },
     onError: (err: any) => {
       const msg = err.response?.data?.message || err.message || 'Failed to change password';

@@ -44,7 +44,7 @@ export const UserManagementServices = {
     return { data: response.data, meta: response.meta };
   },
 
-  createUser: async (userData: { fullName: string, email: string, role: string }): Promise<{success: boolean, message: string, tempPassword?: string}> => {
+  createUser: async (userData: { fullName: string, email: string, role: string, phone?: string, dateOfBirth?: string, gender?: string, password?: string }): Promise<{success: boolean, message: string, tempPassword?: string}> => {
     const response = await apiClient.post<{ success: boolean, message: string, tempPassword?: string }>('/user-management', userData);
     return response;
   },

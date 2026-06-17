@@ -13,10 +13,26 @@ import {
   Search,
   Bell,
   LogOut,
-  Car
+  Car,
+  PlusCircle
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import logo from '@/assets/flowmart-logo.png';
+
+const getInitials = (name?: string) => {
+  if (!name) return 'SA';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+  return parts[0].substring(0, 2).toUpperCase();
+};
+
+const getLastName = (name?: string) => {
+  if (!name) return 'Admin';
+  const parts = name.trim().split(/\s+/);
+  return parts[parts.length - 1] || 'Admin';
+};
 
 // Items dynamically generated based on role
 
@@ -46,9 +62,11 @@ export default function AdminLayout() {
       ];
     } else if (role === 'zone_coordinator' || role === 'camp_logistics_coordinator') {
       return [
-        { path: '/coordinator-analytics', label: 'Dashboard', icon: LayoutDashboard },
-        { path: '/distribution', label: 'Distribution Events', icon: Truck },
-        { path: '/settings', label: 'Settings', icon: Settings },
+        { path: '/coordinator-dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { path: '/events/create', label: 'Create Event', icon: PlusCircle },
+        { path: '/tracker', label: 'Live Tracker', icon: Truck },
+        { path: '/riders', label: 'Rider Management', icon: Users },
+        { path: '/coordinator-analytics', label: 'Analytics', icon: BarChart3 },
       ];
     }
 
@@ -170,21 +188,29 @@ export default function AdminLayout() {
                 {user?.avatar ? (
                   <img src={user.avatar} alt="Admin" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-slate-500 font-bold text-sm">SA</span>
+                  <span className="text-slate-500 font-bold text-sm">
+                    {getInitials(user?.fullName)}
+                  </span>
                 )}
               </div>
               <div className="hidden lg:block">
-                <p className="text-sm font-bold text-slate-800 leading-tight">Super Admin</p>
+                <p className="text-sm font-bold text-slate-800 leading-tight">
+                  {getLastName(user?.fullName)}
+                </p>
               </div>
             </div>
           </div>
         </header>
 
-        {/* Page Content */}
-        <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
+        {/* Main Content Area */}
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-[#f8fafc]">
           <Outlet />
         </main>
 
+        {/* Footer */}
+        <footer className="bg-brand-navy text-slate-300 py-4 px-6 text-xs sm:text-sm font-medium shrink-0 text-center">
+          Copyright © 2026 FlowMart. All Rights Reserved.
+        </footer>
       </div>
     </div>
   );

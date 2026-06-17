@@ -78,10 +78,10 @@ export default function CoordinatorAnalytics() {
   };
 
   return (
-    <div className="flex flex-col gap-6 max-w-[1400px] mx-auto h-full pb-10 font-body">
+    <div className="flex flex-col gap-6 max-w-[1400px] mx-auto min-h-full pb-10 font-body">
       
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-sm sticky top-0 z-10">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
         <div>
           <h1 className="text-2xl font-black text-slate-800 font-headings">Analytics & Insights</h1>
           <p className="text-sm text-slate-500 font-medium mt-1">Performance overview across all events and zones.</p>

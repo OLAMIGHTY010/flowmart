@@ -26,8 +26,9 @@ export default function Login() {
     if (!user.isVerified) {
       return <Navigate to="/otp" replace />;
     }
-    if (!user.profileCompleted) {
-      return <Navigate to="/profile-setup" replace />;
+    // Admins and coordinators do not require profile setup routing
+    if (user.role === 'camp_logistics_coordinator' || user.role === 'zone_coordinator') {
+      return <Navigate to="/coordinator-analytics" replace />;
     }
     return <Navigate to="/dashboard" replace />;
   }
