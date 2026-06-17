@@ -38,7 +38,7 @@ export const products = pgTable('products', {
   price: decimal('price', { precision: 10, scale: 2 }).notNull(),
   oldPrice: decimal('old_price', { precision: 10, scale: 2 }),
   stockQuantity: integer('stock_quantity').default(0).notNull(), 
-  imageUrl: varchar('image_url', { length: 500 }), 
+  imageUrl: text('image_url'), 
   images: text('images'), // Comma separated extra image URLs
   category: varchar('category', { length: 100 }),
   brand: varchar('brand', { length: 100 }),
@@ -165,4 +165,15 @@ export const auditLogs = pgTable('audit_logs', {
   status: varchar('status', { length: 50 }).notNull(), // Success, Failed
   metadata: jsonb('metadata'), // JSON object for previous/new state
   createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const welfareInventory = pgTable('welfare_inventory', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  stock: integer('stock').notNull().default(0),
+  allocated: integer('allocated').notNull().default(0),
+  unit: varchar('unit', { length: 50 }).notNull(), // 'packs', 'liters', 'bottles', etc.
+  status: varchar('status', { length: 50 }).notNull(), // 'Sufficient', 'Shortage Risk'
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull()
 });

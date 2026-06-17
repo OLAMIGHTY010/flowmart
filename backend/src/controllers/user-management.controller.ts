@@ -136,7 +136,7 @@ export const createUser = async (req: Request, res: Response) => {
       return res.status(403).json({ success: false, message: "Forbidden: Only Super Admins can create new user accounts." });
     }
 
-    const { fullName, email, role } = req.body;
+    const { fullName, email, role, phone, dateOfBirth, gender, password } = req.body;
     
     if (!fullName || !email || !role) {
       return res.status(400).json({ success: false, message: "Missing required fields" });
@@ -153,29 +153,32 @@ export const createUser = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: "User with this email already exists" });
     }
 
-    const generatedPassword = generateAlphanumericPassword(12);
-    const hashedPassword = await hashPassword(generatedPassword);
+    const actualPassword = password || generateAlphanumericPassword(12);
+    const hashedPassword = await hashPassword(actualPassword);
 
     await db.insert(users).values({
       fullName,
       email,
       password: hashedPassword,
       role: role as any,
+      phone: phone || null,
+      dateOfBirth: dateOfBirth || null,
+      gender: gender || null,
       isVerified: true, // Auto verified
       forcePasswordChange: true, // Must change on first login
       status: 'active'
     });
 
     // In a real app, send this password via email
-    console.log(`[Email Mock] Sent to ${email}: Your account is created. Role: ${role}. Password: ${generatedPassword}. Please change your password upon your first login.`);
+    console.log(`[Email Mock] Sent to ${email}: Your account is created. Role: ${role}. Password: ${actualPassword}. Please change your password upon your first login.`);
     
     // Attempt real email (fail gracefully)
     try {
       await sendEmail(
         email,
         "Welcome to FlowMart Admin Portal",
-        `Hello ${fullName},\n\nAn account has been created for you with the role ${role}.\n\nYour temporary password is: ${generatedPassword}\n\nYou will be required to change your password upon your first login.`,
-        `<p>Hello ${fullName},</p><p>An account has been created for you with the role <b>${role}</b>.</p><p>Your temporary password is: <b>${generatedPassword}</b></p><p>You will be required to change your password upon your first login.</p>`
+        `Hello ${fullName},\n\nAn account has been created for you with the role ${role}.\n\nYour temporary password is: ${actualPassword}\n\nYou will be required to change your password upon your first login.`,
+        `<p>Hello ${fullName},</p><p>An account has been created for you with the role <b>${role}</b>.</p><p>Your temporary password is: <b>${actualPassword}</b></p><p>You will be required to change your password upon your first login.</p>`
       );
     } catch (e) {
       console.warn("Could not send real email, continuing.");
@@ -185,7 +188,7 @@ export const createUser = async (req: Request, res: Response) => {
       success: true,
       message: "User created successfully",
       // Only returning password for debugging in dev mode, usually you don't return it
-      tempPassword: generatedPassword
+      tempPassword: actualPassword
     });
 
   } catch (error) {

@@ -30,7 +30,12 @@ import {
   getZonePerformance,
   getRiderEfficiencyDist,
   getEventMetricsSummary,
-  getShortageIncidents
+  getShortageIncidents,
+  getWelfareZones,
+  getWelfareInventory,
+  getLiveZoneGrid,
+  getLiveActivityFeed,
+  getShortageAlerts
 } from '../controllers/analytics.controller';
 
 import {
@@ -78,8 +83,14 @@ router.use('/coordinator-analytics', authorizeRoles('zone_coordinator', 'camp_lo
 router.get('/coordinator-analytics/overview', getCoordinatorOverview);
 router.get('/coordinator-analytics/delivery-trends', getCoordinatorDeliveryTrends);
 router.get('/coordinator-analytics/zone-performance', getZonePerformance);
-router.get('/coordinator-analytics/rider-efficiency', getRiderEfficiencyDist);
-router.get('/coordinator-analytics/event-metrics', getEventMetricsSummary);
+router.get('/coordinator-analytics/events-summary', getEventMetricsSummary);
 router.get('/coordinator-analytics/shortage-incidents', getShortageIncidents);
+
+// Live Tracker & Create Event Endpoints
+router.get('/coordinator-analytics/welfare-zones', getWelfareZones);
+router.get('/coordinator-analytics/welfare-inventory', getWelfareInventory);
+router.get('/coordinator-analytics/live-zone-grid', getLiveZoneGrid);
+router.get('/coordinator-analytics/live-activity-feed', getLiveActivityFeed);
+router.get('/coordinator-analytics/shortage-alerts', getShortageAlerts);
 
 export default router;

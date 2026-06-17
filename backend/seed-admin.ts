@@ -10,6 +10,8 @@ const seed = async () => {
     const fullName = "Adeyemi Olusola";
     const email = "emarkees@email.com";
     const defaultPassword = "SuperAdmin2026!";
+    const phone = "09012345678";
+    
     
     // Check if user already exists
     const existing = await db.select().from(users).where(eq(users.email, email)).limit(1);
@@ -28,6 +30,9 @@ const seed = async () => {
       email,
       password: hashedPassword,
       role: 'super_admin',
+      phone: '08012345678',
+      dateOfBirth: '1990-01-01',
+      gender: 'Male',
       isVerified: true,
       profileCompleted: true,
       status: 'active',

@@ -16,7 +16,7 @@ export const getVendorApprovalStats = async (req: Request, res: Response) => {
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
     allKyc.forEach(kyc => {
-      if (kyc.status === 'pending') {
+      if (kyc.status === 'pending' || kyc.status === 'under_review') {
         pendingReview++;
       } else if (kyc.status === 'rejected') {
         rejected++;
@@ -61,7 +61,11 @@ export const getVendorsList = async (req: Request, res: Response) => {
     let filtered = vendorsList;
 
     if (status && status !== 'all') {
-      filtered = filtered.filter(v => v.status === status);
+      if (status === 'pending') {
+        filtered = filtered.filter(v => v.status === 'pending' || v.status === 'under_review');
+      } else {
+        filtered = filtered.filter(v => v.status === status);
+      }
     }
     
     // We don't have a direct category field on vendor right now, so we will just return them.

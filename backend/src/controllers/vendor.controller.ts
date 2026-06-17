@@ -303,20 +303,32 @@ export const getVendorStats = async (req: AuthenticatedRequest, res: Response) =
       return `₦${num.toLocaleString()}`;
     };
 
+    const weeklyRevData = [0,0,0,0,0,0,0];
+    const today = new Date();
+    deliveredOrders.forEach(o => {
+      const orderDate = new Date(o.createdAt);
+      const diffTime = today.getTime() - orderDate.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+      if (diffDays <= 7) {
+        const dayIdx = (orderDate.getDay() + 6) % 7; // Monday=0, Sun=6
+        weeklyRevData[dayIdx] += parseFloat(o.totalAmount || "0");
+      }
+    });
+    
+    const maxRev = Math.max(...weeklyRevData, 1);
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const weeklyRevenue = days.map((day, i) => ({
+      day,
+      h: Math.round((weeklyRevData[i] / maxRev) * 100)
+    }));
+
     return res.status(200).json({
       success: true,
       newOrders,
       inProgress,
       revenueToday: formatCurrency(totalRevNum),
       availableStock,
-      weeklyRevenue: [
-        { day: "Mon", h: 25 },
-        { day: "Tue", h: 45 },
-        { day: "Wed", h: 30 },
-        { day: "Thu", h: 60 },
-        { day: "Fri", h: 75 },
-        { day: "Sat", h: 90 },
-      ],
+      weeklyRevenue,
       totalRevenue: formatCurrency(totalRevNum),
       avgOrder: formatCurrency(avgOrderNum),
     });

@@ -9,6 +9,38 @@ import { VendorButton } from '@/components/ui/button';
 import Icon from '@/components/Icon';
 import SideBanner from '@/components/SideBanner';
 import OnboardingStepIndicator from '@/components/OnboardingStepIndicator';
+
+const compressBase64Image = (base64Str: string, maxWidth = 800, quality = 0.6): Promise<string> => {
+  return new Promise((resolve) => {
+    if (!base64Str || !base64Str.startsWith('data:image')) {
+      resolve(base64Str);
+      return;
+    }
+    const img = new Image();
+    img.src = base64Str;
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let { width, height } = img;
+      if (width > maxWidth) {
+        height = Math.round((height * maxWidth) / width);
+        width = maxWidth;
+      }
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        resolve(base64Str);
+        return;
+      }
+      ctx.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => {
+      resolve(base64Str);
+    };
+  });
+};
+
 export default function KYCReview() {
   const navigate = useNavigate();
   const { user, refreshUser } = useAuth();
@@ -111,9 +143,15 @@ export default function KYCReview() {
     setErrorMsg('');
 
     try {
-      const governmentIdFile = submitData.documents.find(d => d.id === 'government_id')?.base64;
-      const campCertificateFile = submitData.documents.find(d => d.id === 'camp_certificate')?.base64;
-      const guarantorIdFile = submitData.documents.find(d => d.id === 'guarantor_id')?.base64;
+      let governmentIdFile = submitData.documents.find(d => d.id === 'government_id')?.base64;
+      let campCertificateFile = submitData.documents.find(d => d.id === 'camp_certificate')?.base64;
+      let guarantorIdFile = submitData.documents.find(d => d.id === 'guarantor_id')?.base64;
+      let avatarFile = profileData.avatar;
+
+      if (governmentIdFile) governmentIdFile = await compressBase64Image(governmentIdFile);
+      if (campCertificateFile) campCertificateFile = await compressBase64Image(campCertificateFile);
+      if (guarantorIdFile) guarantorIdFile = await compressBase64Image(guarantorIdFile);
+      if (avatarFile) avatarFile = await compressBase64Image(avatarFile);
 
       await submitKYC({
         // Profile Setup Fields
@@ -123,7 +161,7 @@ export default function KYCReview() {
         stateRegion: profileData.stateRegion,
         city: profileData.city,
         bio: profileData.bio,
-        avatar: profileData.avatar,
+        avatar: avatarFile,
         
         // KYC Info Fields
         fullName: personalInfo.fullName,

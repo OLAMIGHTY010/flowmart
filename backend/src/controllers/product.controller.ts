@@ -51,9 +51,17 @@ export const createProduct = async (
 	}
 };
 
-// 2. Get All Available Products (For Attendees)
-export const getProducts = async (req: Request, res: Response) => {
+// 2. Get All Available Products (For Attendees) or Vendor's Products
+export const getProducts = async (req: AuthenticatedRequest, res: Response) => {
 	try {
+		if (req.user?.role === 'vendor') {
+			const vendorProducts = await db
+				.select()
+				.from(products)
+				.where(eq(products.vendorId, req.user.id));
+			return res.status(200).json({ success: true, products: vendorProducts });
+		}
+
 		// Only fetch products where stockQuantity is greater than 0 to hide out-of-stock items
 		const availableProducts = await db
 			.select()
