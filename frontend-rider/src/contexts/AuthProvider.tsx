@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, type ReactNode } from "react";
 import { AuthContext } from "./AuthContext";
-import type { AppUser, UserRole, RegisterRequest } from "@/types/api";
+import type { AppUser, UserRole, RegisterRequest } from "@/lib/api";
 import { authService } from "@/services/AuthServices";
 import { apiClient } from "@/services/api"; 
 
