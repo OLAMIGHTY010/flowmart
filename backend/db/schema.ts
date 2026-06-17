@@ -51,6 +51,7 @@ export const orderStatusEnum = pgEnum('order_status', [
 
 export const orders = pgTable('orders', {
   id: uuid('id').defaultRandom().primaryKey(),
+  orderRef: varchar('order_ref', { length: 50 }).notNull().unique(), // ✨ NEW: Standardized Reference FLW-YYYYMMDD-XXXX
   attendeeId: uuid('attendee_id').references(() => users.id).notNull(), 
   vendorId: uuid('vendor_id').references(() => users.id).notNull(),     
   riderId: uuid('rider_id').references(() => users.id),                 
