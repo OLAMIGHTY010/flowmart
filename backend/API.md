@@ -1,289 +1,262 @@
 # FlowMart API Documentation
 
 **Base URL (Local Development):** `http://localhost:5000/api/v1`
+
 **WebSocket Hub (Real-time):** `ws://localhost:5000`
 
 ---
 
-## 🔐 Authorization Guide (For Frontend Developers)
+## 🔐 1. Authorization Guide (For Frontend Developers)
 
 For all protected routes, you must include the JWT token received from the Login/Register endpoints in the `Authorization` header of your HTTP requests.
 
 **Format:**
-Authorization: Bearer <your_jwt_token_here>
+`Authorization: Bearer <your_jwt_token_here>`
 
 ---
 
-## 📧 Note on Transactional Emails
-The backend now handles asynchronous email dispatch. The frontend **does not** need to wait for these or trigger them manually. They occur automatically during:
-* **Registration:** Sends a 6-digit OTP.
-* **OTP Verification:** Sends a Welcome Email.
-* **Password Reset:** Sends a magic link/token.
-* **Placing an Order:** Sends an Order Receipt (with the 6-digit Delivery PIN).
-* **Confirming Delivery:** Sends a final Delivery Success receipt.
-* **Inventory & Welfare:** Sends alerts to Vendors (Out of Stock) and Coordinators (New Allocations).
+## 👤 2. User & Profile Module
 
----
+### Update Profile
 
-## 👤 Authentication Module
+Updates the basic information for the currently authenticated user.
 
-### 1. Register a New User (Step 1)
-Creates an unverified user account and emails a 6-digit OTP. **Does not return a JWT.**
-
-- **Endpoint:** `/auth/register`
-- **Method:** `POST`
-- **Headers:** `Content-Type: application/json`
-
-**Request Body:**
+* **Endpoint:** `/users/profile`
+* **Method:** `PUT`
+* **Headers:** `Authorization: Bearer <token>`
+* **Request Body:**
+```json
 {
   "fullName": "John Doe",
-  "email": "john@example.com",
-  "password": "securepassword123",
-  "role": "attendee" 
+  "phone": "08012345678",
+  "avatar": "https://url-to-image.com/img.png",
+  "dateOfBirth": "1995-08-24",
+  "gender": "male"
 }
 
-*(Note: `role` is optional and defaults to `attendee`. Valid roles: `super_admin`, `camp_logistics_coordinator`, `zone_coordinator`, `vendor`, `dispatch_rider`, `attendee`)*
+```
 
-**Success Response (201 Created):**
-{
-  "success": true,
-  "message": "Registration successful. Please check your email for the verification code."
-}
 
-### 2. Verify OTP (Step 2)
-Verifies the OTP sent to the user's email. If successful, activates the account and returns the JWT.
-
-- **Endpoint:** `/auth/verify-otp`
-- **Method:** `POST`
-- **Headers:** `Content-Type: application/json`
-
-**Request Body:**
-{
-  "email": "john@example.com",
-  "otp": "123456"
-}
-
-**Success Response (200 OK):**
-{
-  "success": true,
-  "message": "Account verified successfully",
-  "token": "eyJhbGciOiJIUzI1NiIsInR...",
-  "user": {
-    "id": "uuid-string-here",
-    "fullName": "John Doe",
-    "email": "john@example.com",
-    "role": "attendee"
-  }
-}
-
-### 3. Login User
-Authenticates an existing, *verified* user and returns an access token.
-
-- **Endpoint:** `/auth/login`
-- **Method:** `POST`
-- **Headers:** `Content-Type: application/json`
-
-**Request Body:**
-{
-  "email": "john@example.com",
-  "password": "securepassword123"
-}
-
-### 4. Request Password Reset
-Generates a secure token and emails a reset link to the user.
-
-- **Endpoint:** `/auth/request-reset`
-- **Method:** `POST`
-- **Headers:** `Content-Type: application/json`
-
-**Request Body:**
-{
-  "email": "john@example.com"
-}
-
-### 5. Reset Password
-Consumes the token from the email link and updates the user's password.
-
-- **Endpoint:** `/auth/reset-password`
-- **Method:** `POST`
-- **Headers:** `Content-Type: application/json`
-
-**Request Body:**
-{
-  "token": "32-byte-hex-string-from-url",
-  "newPassword": "mynewsecurepassword123"
-}
 
 ---
 
-## 🛒 Marketplace & Product Module
+## 🏪 3. Vendor & KYC Onboarding Module
 
-### 1. Get Available Products
-Fetches all products currently in stock. (Accessible to all authenticated users).
+### Save Business & Bank Info (Step 1)
 
-- **Endpoint:** `/products`
-- **Method:** `GET`
-- **Headers:** `Authorization: Bearer <token>`
+Saves the initial business details and bank account information for vendors.
 
-### 2. Create a Product
-Uploads a new product to the marketplace. (Restricted to `vendor` or `super_admin`).
-
-- **Endpoint:** `/products`
-- **Method:** `POST`
-- **Headers:** `Authorization: Bearer <token>`, `Content-Type: application/json`
-
-**Request Body:**
+* **Endpoint:** `/vendors/profile`
+* **Method:** `POST`
+* **Headers:** `Authorization: Bearer <token>`
+* **Request Body:**
+```json
 {
-  "name": "Camp Bottled Water",
-  "description": "Pack of 12 chilled water bottles",
-  "price": "1500.00",
-  "stockQuantity": 50,
-  "imageUrl": "https://link-to-image.com/water.jpg"
+  "businessName": "FlowMart Tech Store",
+  "cacNo": "RC123456",
+  "campCertificateId": "NYSC/123/456",
+  "bankName": "Access Bank",
+  "accountNumber": "0123456789",
+  "accountName": "John Doe"
 }
 
-### 3. Update Product & Inventory
-Updates product details or stock counts. (Restricted to the `vendor` who owns the item).
+```
 
-- **Endpoint:** `/products/:id`
-- **Method:** `PUT`
-- **Headers:** `Authorization: Bearer <token>`, `Content-Type: application/json`
 
-### 4. Delete a Product
-Removes a product entirely. (Restricted to the `vendor` who owns the item).
 
-- **Endpoint:** `/products/:id`
-- **Method:** `DELETE`
-- **Headers:** `Authorization: Bearer <token>`
+### Submit Final KYC Documents (Step 2)
+
+Submits government IDs and guarantor info for final KYC review.
+
+* **Endpoint:** `/vendors/kyc/submit`
+* **Method:** `POST`
+* **Headers:** `Authorization: Bearer <token>`
+* **Request Body:**
+```json
+{
+  "governmentIdType": "national_id",
+  "guarantorName": "Jane Doe",
+  "guarantorPhone": "08098765432",
+  "guarantorRelationship": "Sister",
+  "governmentIdUrl": "https://cloud-storage.com/id.jpg",
+  "campCertificateUrl": "https://cloud-storage.com/cert.jpg"
+}
+
+```
+
+
+
+### Get KYC Status
+
+Used by the frontend Onboarding Guard to check if the vendor is approved.
+
+* **Endpoint:** `/vendors/kyc/status`
+* **Method:** `GET`
+* **Headers:** `Authorization: Bearer <token>`
+* **Response:** Returns `unsubmitted`, `pending`, `under_review`, `approved`, or `rejected` alongside an array of step completions.
 
 ---
 
-## 📦 Order & Commerce Module
+## 🛒 4. Commerce & Orders Module
 
-### 1. Place an Order
-Purchases an item, generates a delivery PIN, deducts inventory, and emails a receipt. (Restricted to `attendee`).
+> **🔖 Note on Order References:** Whenever displaying an order tracking number to an Attendee, Vendor, or Rider, **always use the `orderRef` property** returned by the API (e.g., `FLW-20261210-4829`). Do not display the UUID.
 
-- **Endpoint:** `/orders`
-- **Method:** `POST`
-- **Headers:** `Authorization: Bearer <token>`, `Content-Type: application/json`
+### Place an Order (Checkout)
 
-**Request Body:**
+* **Endpoint:** `/orders`
+* **Method:** `POST`
+* **Headers:** `Authorization: Bearer <token>`
+* **Request Body:**
+```json
 {
-  "productId": "uuid-of-product-here",
+  "productId": "uuid-here",
   "quantity": 2,
-  "deliveryZone": "Zone 4, Parish A"
+  "zone": "Zone A",
+  "payment_method": "bank_transfer", 
+  "transaction_reference": "TXN_987654321",
+  "payment_proof_url": "https://cloud-storage.com/receipt.jpg"
 }
 
-### 2. View Order History
-Returns order history. Attendees see their purchases; Vendors see orders placed at their shop. 
+```
 
-- **Endpoint:** `/orders`
-- **Method:** `GET`
-- **Headers:** `Authorization: Bearer <token>`
 
-### 3. Update Order Status
-Updates fulfillment progress (e.g., 'confirmed', 'cancelled'). (Restricted to `vendor` and `super_admin`).
+*(Note: `payment_method` defaults to `pay_on_delivery` if omitted).*
 
-- **Endpoint:** `/orders/:id/status`
-- **Method:** `PATCH`
-- **Headers:** `Authorization: Bearer <token>`, `Content-Type: application/json`
+### Get My Orders
 
-**Request Body:**
+Fetches orders depending on role (Attendees see their purchases; Vendors see orders placed with them).
+
+* **Endpoint:** `/orders`
+* **Method:** `GET`
+* **Headers:** `Authorization: Bearer <token>`
+
+### Update Order Status
+
+Used by Vendors or Riders to update the delivery state.
+
+* **Endpoint:** `/orders/:id/status`
+* **Method:** `PATCH`
+* **Headers:** `Authorization: Bearer <token>`
+* **Request Body:**
+```json
 {
-  "status": "confirmed"
+  "status": "confirmed" // 'pending', 'confirmed', 'assigned', 'picked_up', 'delivered', 'cancelled'
 }
+
+```
+
+
 
 ---
 
-## 🏍️ Logistics & Rider Module
+## ⛑️ 5. Welfare & Logistics Module
 
-### 1. Get Available Deliveries
-Fetches orders that vendors have confirmed but lack a rider. (Restricted to `dispatch_rider`, `super_admin`).
+### Allocate Welfare (Single Zone)
 
-- **Endpoint:** `/riders/available`
-- **Method:** `GET`
-- **Headers:** `Authorization: Bearer <token>`
+Assigns welfare items to a specific zone.
 
-### 2. Accept a Delivery
-Assigns the logged-in rider to a specific order. (Restricted to `dispatch_rider`, `super_admin`).
-
-- **Endpoint:** `/riders/:id/accept`
-- **Method:** `POST`
-- **Headers:** `Authorization: Bearer <token>`
-
-### 3. Confirm Delivery (Manual PIN)
-Completes the delivery using the 6-digit PIN provided by the attendee. Triggers a delivery confirmation email. (Restricted to `dispatch_rider`, `super_admin`).
-
-- **Endpoint:** `/riders/:id/confirm`
-- **Method:** `POST`
-- **Headers:** `Authorization: Bearer <token>`, `Content-Type: application/json`
-
-**Request Body:**
-{
-  "pin": "123456"
-}
-
-### 4. Confirm Delivery (QR Scan)
-Completes the delivery by submitting the decoded JSON string from the attendee's QR code. (Restricted to `dispatch_rider`, `super_admin`).
-
-- **Endpoint:** `/riders/qr-confirm`
-- **Method:** `POST`
-- **Headers:** `Authorization: Bearer <token>`, `Content-Type: application/json`
-
-**Request Body:**
-{
-  "scannedPayload": "{\"orderId\": \"uuid-string-here\", \"pin\": \"123456\"}"
-}
-
----
-
-## 🤝 Welfare & Allocation Module
-
-### 1. Create Welfare Event
-Creates a new welfare distribution tracking event. (Restricted to `super_admin`, `camp_logistics_coordinator`).
-
-- **Endpoint:** `/welfare/events`
-- **Method:** `POST`
-- **Headers:** `Authorization: Bearer <token>`, `Content-Type: application/json`
-
-**Request Body:**
-{
-  "name": "Holy Ghost Congress Welfare Pack",
-  "date": "2026-12-10T00:00:00.000Z"
-}
-
-### 2. Allocate Welfare to Zone
-Assigns item counts to a specific camp zone and emails the Zone Coordinator. (Restricted to `super_admin`, `camp_logistics_coordinator`).
-
-- **Endpoint:** `/welfare/allocations`
-- **Method:** `POST`
-- **Headers:** `Authorization: Bearer <token>`, `Content-Type: application/json`
-
-**Request Body:**
+* **Endpoint:** `/welfare/allocations`
+* **Method:** `POST`
+* **Headers:** `Authorization: Bearer <token>`
+* **Request Body:**
+```json
 {
   "eventId": "uuid-event-here",
-  "zoneId": "Zone 4",
+  "zoneId": "Zone A",
   "totalItems": 500
 }
 
-### 3. Get Welfare Reports
-Retrieves the real-time allocation and distribution data. (Restricted to `super_admin`, `camp_logistics_coordinator`).
+```
 
-- **Endpoint:** `/welfare/reports`
-- **Method:** `GET`
-- **Headers:** `Authorization: Bearer <token>`
+
+
+### Bulk Allocate Welfare
+
+Assigns welfare items to multiple zones at once.
+
+* **Endpoint:** `/welfare/allocations/bulk`
+* **Method:** `POST`
+* **Headers:** `Authorization: Bearer <token>`
+* **Request Body:**
+```json
+{
+  "eventId": "uuid-event-here",
+  "allocations": [
+    { "zoneId": "Zone A", "totalItems": 500 },
+    { "zoneId": "Zone B", "totalItems": 300 }
+  ]
+}
+
+```
+
+
+
+### Report Welfare Shortage
+
+Used by Dispatch Riders or Zone Coordinators if welfare items are missing upon arrival.
+
+* **Endpoint:** `/welfare/allocations/:id/shortage`
+* **Method:** `POST`
+* **Headers:** `Authorization: Bearer <token>`
+* **Request Body:**
+```json
+{
+  "quantityMissing": 5,
+  "shortageDescription": "2 boxes were damaged in transit"
+}
+
+```
+
+
+
+### Update Welfare Status (Assign Rider / Mark Delivered)
+
+* **Endpoint:** `/welfare/allocations/:id/status`
+* **Method:** `PATCH`
+* **Headers:** `Authorization: Bearer <token>`
+* **Request Body:**
+```json
+{
+  "status": "assigned" // or 'delivered'
+}
+
+```
+
+
 
 ---
 
-## 📡 Sync Queue Module (Offline Resilience)
+## 📊 6. Analytics Dashboard Module
 
-### 1. Process Offline Sync Queue
-Allows frontend applications to send a batch of offline actions to process synchronously when network connectivity is restored.
+### Get Global Dashboard Statistics
 
-- **Endpoint:** `/sync`
-- **Method:** `POST`
-- **Headers:** `Authorization: Bearer <token>`, `Content-Type: application/json`
+Retrieves high-level aggregations of orders, welfare distribution data, and active riders. (Restricted to `super_admin`).
 
-**Request Body:**
+* **Endpoint:** `/analytics`
+* **Method:** `GET`
+* **Headers:** `Authorization: Bearer <token>`
+
+### Get User Dashboard Statistics
+
+Retrieves personalized stats for the mobile home screen (e.g., Rider's pending/completed deliveries or Coordinator's alerts).
+
+* **Endpoint:** `/analytics/me`
+* **Method:** `GET`
+* **Headers:** `Authorization: Bearer <token>`
+
+---
+
+## 📡 7. Sync Queue Module (Offline Resilience)
+
+### Process Offline Sync Queue
+
+Allows frontend applications (like the Rider mobile app) to send a batch of offline actions to process synchronously when network connectivity is restored.
+
+* **Endpoint:** `/sync`
+* **Method:** `POST`
+* **Headers:** `Authorization: Bearer <token>`
+* **Request Body:**
+```json
 {
   "actions": [
     {
@@ -296,32 +269,38 @@ Allows frontend applications to send a batch of offline actions to process synch
   ]
 }
 
----
+```
 
-## 📊 Analytics Dashboard Module
 
-### 1. Get Dashboard Statistics
-Retrieves high-level aggregations of orders and welfare distribution data. (Restricted to `super_admin`).
-
-- **Endpoint:** `/analytics`
-- **Method:** `GET`
-- **Headers:** `Authorization: Bearer <token>`
 
 ---
 
-## ⚡ WebSocket Hub (Real-Time Events)
+## 📧 8. Background Events & Emails
+
+The backend handles asynchronous email dispatch. The frontend **does not** need to wait for these or trigger them manually. They occur automatically during:
+
+* **Registration:** Sends a 6-digit OTP.
+* **OTP Verification:** Sends a Welcome Email.
+* **Password Reset:** Sends a magic link/token.
+* **Placing an Order:** Sends an Order Receipt (with the 6-digit Delivery PIN).
+* **Confirming Delivery:** Sends a final Delivery Success receipt.
+* **Inventory & Welfare:** Sends alerts to Vendors (Out of Stock) and Coordinators (New Allocations/Bulk Imports).
+
+---
+
+## ⚡ 9. WebSocket Hub (Real-Time Events)
 
 To establish a real-time connection for in-app notifications (e.g., notifying an attendee when a delivery drops), connect using Socket.io and provide the authenticated `userId` as a query parameter.
 
-**Connection String:**
+**Connection Example (Frontend):**
+
 ```javascript
 import { io } from "socket.io-client";
 
-const socket = io("http://localhost:5000", {
-  query: { userId: "uuid-user-id-here" }
+const socket = io("ws://localhost:5000", {
+  query: { userId: "user-uuid-here" }
 });
 
-// Example Event Listener:
-socket.on("order.delivered", (data) => {
-  console.log("Your order was delivered:", data.orderId);
+socket.on("notification", (data) => {
+  console.log("New Alert:", data);
 });
