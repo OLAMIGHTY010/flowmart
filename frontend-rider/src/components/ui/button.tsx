@@ -56,21 +56,21 @@ function Button({
 }
 
 // ---------------------------------------------------------------------------
-// VendorButton – opinionated CTA used across the vendor onboarding flow
+// RiderButton – opinionated CTA used across the vendor onboarding flow
 // ---------------------------------------------------------------------------
-interface VendorButtonProps extends React.ComponentProps<"button"> {
+interface RiderButtonProps extends React.ComponentProps<"button"> {
   children?: React.ReactNode;
   variant?: 'primary' | 'outline' | 'ghost';
   full?: boolean;
 }
 
-function VendorButton({
+function RiderButton({
   children = 'Continue',
   variant = 'primary',
   full = true,
   className = '',
   ...props
-}: VendorButtonProps) {
+}: RiderButtonProps) {
   const base = `font-body text-base rounded-xl py-4 flex items-center justify-center font-bold transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none ${
     full ? 'w-full' : 'px-6'
   }`;
@@ -91,4 +91,4 @@ function VendorButton({
   );
 }
 
-export { Button, buttonVariants, VendorButton }
+export { Button, buttonVariants, RiderButton }

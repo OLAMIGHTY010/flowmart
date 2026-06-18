@@ -5,7 +5,7 @@ import { useKYCInfo } from '@/hooks/useRiderMutations';
 import { useKYCStatus } from '@/hooks/useRiderQueries';
 import { useKYCInfoFormCache } from '@/hooks/useKYCFormCache';
 import { useAuth } from '@/hooks/useAuth';
-import { VendorButton } from '@/components/ui/button';
+import { RiderButton } from '@/components/ui/button';
 import { VendorInput } from '@/components/ui/input';
 import Icon from '@/components/Icon';
 import { Card, CardContent } from '@/components/ui/card';
@@ -73,9 +73,9 @@ export default function KYCInfo() {
 
   const { data: kycStatus } = useKYCStatus();
 
-  // Redirect if already submitted
+  // Redirect if already submitted and not rejected
   useEffect(() => {
-    if (kycStatus && kycStatus.status !== 'unsubmitted') {
+    if (kycStatus && kycStatus.status !== 'unsubmitted' && kycStatus.status !== 'rejected') {
       if (kycStatus.status === 'approved') {
         navigate('/dashboard', { replace: true });
       } else {
@@ -86,7 +86,7 @@ export default function KYCInfo() {
 
   // Auto-populated from auth context (read-only)
   const fullName = user?.fullName || '';
-  const dob = user?.dob || '';
+  const dob = user?.dateOfBirth || '';
   const gender = user?.gender || '';
 
   // TanStack-cached form data
@@ -101,7 +101,16 @@ export default function KYCInfo() {
   const [year, setYear] = useState(formData.year);
   const [plateNumber, setPlateNumber] = useState(formData.plateNumber);
   const [color, setColor] = useState(formData.color);
-  const [documents, setDocuments] = useState<UploadDoc[]>(formData.documents);
+  
+  // Merge cached documents with default structure to ensure new fields like car_image exist
+  const [documents, setDocuments] = useState<UploadDoc[]>(() => {
+    const defaults = [
+      { id: 'insurance', title: 'Upload Vehicle Insurance', subtitle: 'Valid insurance document', status: 'upload' },
+      { id: 'road_worthiness', title: 'Upload Road Worthiness Certificate', subtitle: 'Valid road worthiness cert', status: 'upload' },
+      { id: 'car_image', title: 'Upload Car Image', subtitle: 'Clear photo of your vehicle showing the plate number', status: 'upload' },
+    ] as UploadDoc[];
+    return defaults.map(def => formData.documents.find(d => d.id === def.id) || def);
+  });
 
   const { mutateAsync: saveKYCInfo, isPending } = useKYCInfo();
 
@@ -376,7 +385,7 @@ export default function KYCInfo() {
                   <div className="flex flex-col gap-2 flex-1">
                     <label className="text-sm font-semibold text-foreground">Upload Vehicle Insurance</label>
                     {renderUploadCard(
-                      documents.find(d => d.id === 'insurance')!,
+                      documents.find(d => d.id === 'insurance') || { id: 'insurance', title: 'Vehicle Insurance', subtitle: 'Upload valid insurance', status: 'upload' },
                       uploadingId,
                       handleCardClick,
                       'border-emerald-200 bg-emerald-50/50 text-emerald-600 hover:bg-emerald-50'
@@ -386,12 +395,22 @@ export default function KYCInfo() {
                   <div className="flex flex-col gap-2 flex-1">
                     <label className="text-sm font-semibold text-foreground">Upload Road Worthiness</label>
                     {renderUploadCard(
-                      documents.find(d => d.id === 'road_worthiness')!,
+                      documents.find(d => d.id === 'road_worthiness') || { id: 'road_worthiness', title: 'Road Worthiness', subtitle: 'Upload cert', status: 'upload' },
                       uploadingId,
                       handleCardClick,
                       'border-amber-200 bg-amber-50/50 text-amber-500 hover:bg-amber-50'
                     )}
                   </div>
+                </div>
+
+                <div className="flex flex-col gap-2 mt-2">
+                  <label className="text-sm font-semibold text-foreground">Upload Car Image</label>
+                  {renderUploadCard(
+                    documents.find(d => d.id === 'car_image') || { id: 'car_image', title: 'Car Image', subtitle: 'Clear photo', status: 'upload' },
+                    uploadingId,
+                    handleCardClick,
+                    'border-blue-200 bg-blue-50/50 text-blue-600 hover:bg-blue-50'
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -406,10 +425,10 @@ export default function KYCInfo() {
             accept=".jpg,.jpeg,.png,.pdf"
           />
 
-          <VendorButton type="submit" className="mt-2" disabled={isPending || !canProceed}>
+          <RiderButton type="submit" className="mt-2" disabled={isPending || !canProceed}>
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin inline" />}
             Save & Continue
-          </VendorButton>
+          </RiderButton>
           
           {!canProceed && (
             <p className="text-xs text-center text-muted-foreground font-medium -mt-2">
@@ -433,8 +452,8 @@ function renderUploadCard(
 
   return (
     <div
-      onClick={() => !isUploading && !isUploaded && onUpload(doc.id, doc.status)}
-      className={`relative rounded-2xl border-2 border-dashed transition-all p-5 flex flex-col items-center justify-center cursor-pointer ${customStyles}`}
+      onClick={() => !isUploading && onUpload(doc.id, 'upload')}
+      className={`relative rounded-2xl border-2 border-dashed transition-all p-5 flex flex-col items-center justify-center cursor-pointer hover:opacity-80 ${customStyles}`}
     >
       {isUploading ? (
         <div className="flex flex-col items-center justify-center gap-2">

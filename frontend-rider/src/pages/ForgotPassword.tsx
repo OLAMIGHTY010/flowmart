@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router";
 import { ArrowLeft, Eye, EyeOff, Loader2 } from "lucide-react";
 import { authService } from "@/services/AuthServices";
-import { VendorButton } from "@/components/ui/button";
+import { RiderButton } from "@/components/ui/button";
 import { VendorInput } from "@/components/ui/input";
 import SideBanner from "@/components/SideBanner";
 import logo from "@/assets/flowmart-logo.png";
@@ -46,12 +46,12 @@ export default function ForgotPassword() {
         if (responseData?.code === "EMAIL_UNVERIFIED") {
           showToast(responseData.message || "Email is unverified. Redirecting to verify OTP...", "success");
           
-          // Set access credentials in localStorage
+          // Set access credentials in sessionStorage
           if (responseData.token) {
-            localStorage.setItem("accessToken", responseData.token);
+            sessionStorage.setItem("accessToken", responseData.token);
           }
           if (responseData.user) {
-            localStorage.setItem("currentUser", JSON.stringify(responseData.user));
+            sessionStorage.setItem("currentUser", JSON.stringify(responseData.user));
           }
 
           // Navigate to OTP page by forcing a reload to refresh AuthProvider context
@@ -71,10 +71,10 @@ export default function ForgotPassword() {
         showToast(data.message || "Email is unverified. Redirecting to verify OTP...", "success");
         
         if (data.token) {
-          localStorage.setItem("accessToken", data.token);
+          sessionStorage.setItem("accessToken", data.token);
         }
         if (data.user) {
-          localStorage.setItem("currentUser", JSON.stringify(data.user));
+          sessionStorage.setItem("currentUser", JSON.stringify(data.user));
         }
 
         setTimeout(() => {
@@ -173,10 +173,10 @@ export default function ForgotPassword() {
                   />
                 </div>
 
-                <VendorButton type="submit" disabled={!email.trim() || loading} className="mt-2">
+                <RiderButton type="submit" disabled={!email.trim() || loading} className="mt-2">
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin inline" />}
                   {loading ? "Sending..." : "Request Reset Code"}
-                </VendorButton>
+                </RiderButton>
               </form>
             ) : (
               <form onSubmit={handleResetPassword} className="flex flex-col gap-5">
@@ -221,14 +221,14 @@ export default function ForgotPassword() {
                   />
                 </div>
 
-                <VendorButton
+                <RiderButton
                   type="submit"
                   disabled={!otp.trim() || !newPassword.trim() || !confirmPassword.trim() || loading}
                   className="mt-2"
                 >
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin inline" />}
                   {loading ? "Resetting..." : "Reset Password"}
-                </VendorButton>
+                </RiderButton>
               </form>
             )}
           </div>

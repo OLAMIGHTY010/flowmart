@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router";
 import { CheckCircle2, Mail, User, Bell, BellRing } from "lucide-react";
 import { useState } from "react";
-import { VendorButton } from "@/components/ui/button";
+import { RiderButton } from "@/components/ui/button";
 
 export default function EmailVerified() {
   const navigate = useNavigate();
@@ -100,12 +100,12 @@ export default function EmailVerified() {
 
       {/* CTA Button */}
       <div className="w-full max-w-sm mt-8">
-        <VendorButton
+        <RiderButton
           onClick={() => navigate("/profile-setup")}
           className="w-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2"
         >
           <span>→</span> Continue
-        </VendorButton>
+        </RiderButton>
       </div>
     </div>
   );

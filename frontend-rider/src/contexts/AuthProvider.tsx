@@ -2,20 +2,21 @@ import { useState, useEffect, useMemo, type ReactNode } from "react";
 import { AuthContext } from "./AuthContext";
 import type { AppUser, UserRole, RegisterRequest } from "@/types/api";
 import { authService } from "@/services/AuthServices";
-import { apiClient } from "@/services/api"; 
+import { apiClient } from "@/services/api";
 
-const mapApiUser = (data: any): AppUser => ({
-  id: data.id || "",
-  fullName: data.fullName || data.full_name || "",
-  email: data.email || "",
-  role: data.role as UserRole,
-  phone: data.phone,
-  gender: data.gender,
-  dob: data.dateOfBirth || data.dob,
-  avatar: data.avatar,
-  status: data.status,
-  isVerified: data.isVerified !== undefined ? data.isVerified : data.is_verified,
-  profileCompleted: data.profileCompleted !== undefined ? data.profileCompleted : data.profile_completed,
+
+const mapApiUser = (data: Partial<AppUser>): AppUser => ({
+  id: data?.id || "",
+  fullName: data?.fullName || "",
+  email: data?.email || "",
+  role: data?.role as UserRole,
+  phone: data?.phone,
+  gender: data?.gender,
+  dateOfBirth: data?.dateOfBirth,
+  avatar: data?.avatar,
+  status: data?.status,
+  isVerified: data?.isVerified,
+  profileCompleted: data?.profileCompleted,
 });
 
 type AuthProviderProps = {
@@ -24,13 +25,13 @@ type AuthProviderProps = {
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<AppUser | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true); 
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // 🔄 0. Handle browser close (clear localstorage on new browser session)
   useEffect(() => {
     const isSessionActive = document.cookie.includes('app_session_active=true');
     if (!isSessionActive) {
-      localStorage.clear();
+      sessionStorage.clear();
       document.cookie = "app_session_active=true; path=/";
     }
   }, []);
@@ -38,9 +39,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   // 🔄 1. Handle page refreshes
   useEffect(() => {
     const checkActiveSession = async () => {
-      const token = localStorage.getItem("accessToken");
-      const savedUser = localStorage.getItem("currentUser");
-      
+      const token = sessionStorage.getItem("accessToken");
+      const savedUser = sessionStorage.getItem("currentUser");
+
       if (token) {
         if (savedUser) {
           try {
@@ -49,18 +50,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             // ignore JSON parse errors
           }
         }
-        
+
         try {
-          const response = await apiClient.get<any>("/auth/me");
-          const responseData = response.data || response;
+          const responseData = await apiClient.get<{ user?: Partial<AppUser> } & Partial<AppUser>>("/auth/me");
           const userData = responseData.user || responseData;
-          const fetchedUser = mapApiUser(userData);
+          const fetchedUser = mapApiUser(userData as Partial<AppUser>);
           setUser(fetchedUser);
-          localStorage.setItem("currentUser", JSON.stringify(fetchedUser));
+          sessionStorage.setItem("currentUser", JSON.stringify(fetchedUser));
         } catch (error) {
           console.warn("Session check from API failed, using cached session or logging out:", error);
           if (!savedUser) {
-            localStorage.clear();
+            sessionStorage.clear();
           }
         }
       }
@@ -74,7 +74,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   useEffect(() => {
     const handleGlobalLogout = () => {
       setUser(null);
-      localStorage.clear();
+      sessionStorage.clear();
       document.cookie = "app_session_active=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     };
 
@@ -85,21 +85,22 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   // 🔓 3. Login logic
   const login = async (email: string, password: string) => {
     try {
-      const response = await authService.login({ email, password });
-      const responseData = (response as any).data || response;
-      
+      const responseData = await authService.login({ email, password });
+
       if (responseData && responseData.token) {
-        localStorage.setItem("accessToken", responseData.token);
-        const mappedUser = mapApiUser(responseData.user);
+        sessionStorage.setItem("accessToken", responseData.token);
+        const mappedUser = mapApiUser(responseData.user as Partial<AppUser>);
         setUser(mappedUser);
-        localStorage.setItem("currentUser", JSON.stringify(mappedUser));
-        
-        return { success: true, error: "" }; 
+        sessionStorage.setItem("currentUser", JSON.stringify(mappedUser));
+
+        return { success: true, error: "" };
       }
-      
+
       return { success: false, error: 'Invalid server response structure' };
-    } catch (err: any) {
-      const errorMsg = err.response?.data?.message || err.message || 'Login failed';
+    } catch (err: unknown) {
+      const errorMsg = (err as Record<string, unknown>)?.response
+        ? ((err as { response?: { data?: { message?: string } } }).response?.data?.message || (err as Error).message)
+        : 'Login failed';
       return { success: false, error: errorMsg };
     }
   };
@@ -107,21 +108,22 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   // 📝 4. Register logic
   const register = async (data: RegisterRequest) => {
     try {
-      const response = await authService.register(data);
-      const responseData = (response as any).data || response;
-      
+      const responseData = await authService.register(data);
+
       if (responseData && responseData.token) {
-        localStorage.setItem("accessToken", responseData.token);
-        const mappedUser = mapApiUser(responseData.user);
+        sessionStorage.setItem("accessToken", responseData.token);
+        const mappedUser = mapApiUser(responseData.user as Partial<AppUser>);
         setUser(mappedUser);
-        localStorage.setItem("currentUser", JSON.stringify(mappedUser));
-        
+        sessionStorage.setItem("currentUser", JSON.stringify(mappedUser));
+
         return { success: true, error: "" };
       }
-      
+
       return { success: false, error: 'Invalid registration response' };
-    } catch (err: any) {
-      const errorMsg = err.response?.data?.message || err.message || 'Registration failed';
+    } catch (err: unknown) {
+      const errorMsg = (err as Record<string, unknown>)?.response
+        ? ((err as { response?: { data?: { message?: string } } }).response?.data?.message || (err as Error).message)
+        : 'Registration failed';
       return { success: false, error: errorMsg };
     }
   };
@@ -133,7 +135,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     } catch (err) {
       console.warn("Server side logout failed, clearing local state anyway", err);
     } finally {
-      localStorage.clear();
+      sessionStorage.clear();
       document.cookie = "app_session_active=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
       setUser(null);
     }
@@ -142,12 +144,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   // 🔄 6. Refresh User Session from Server
   const refreshUser = async () => {
     try {
-      const response = await authService.getCurrentUser();
-      const responseData = (response as any).data || response;
+      const responseData = await authService.getCurrentUser();
       if (responseData && responseData.user) {
-        const mappedUser = mapApiUser(responseData.user);
+        const mappedUser = mapApiUser(responseData.user as Partial<AppUser>);
         setUser(mappedUser);
-        localStorage.setItem("currentUser", JSON.stringify(mappedUser));
+        sessionStorage.setItem("currentUser", JSON.stringify(mappedUser));
       }
     } catch (err) {
       console.error("Failed to refresh user session:", err);

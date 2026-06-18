@@ -7,12 +7,13 @@ export interface AppUser {
   role: UserRole;
   phone?: string;
   gender?: string;
-  dob?: string;
+  dateOfBirth?: string;
   avatar?: string;
   status?: string;
   isVerified?: boolean;
   profileCompleted?: boolean;
 }
+
 
 export type GuardOptions = {
   requireAuth?: boolean;
@@ -95,7 +96,7 @@ export interface KYCSubmitRequest {
 export interface KYCSubmitPayload {
   // Profile Setup fields
   displayName: string;
-  businessPhone: string;
+  phone: string;
   stateRegion: string;
   city: string;
   bio: string;
@@ -117,6 +118,7 @@ export interface KYCSubmitPayload {
   color: string;
   insuranceFile?: string;
   roadWorthinessFile?: string;
+  carImageFile?: string;
   
   // KYC Submit fields
   govIdType: string;
@@ -125,6 +127,7 @@ export interface KYCSubmitPayload {
   guarantorRelationship: string;
   governmentIdFile?: string;
   guarantorIdFile?: string;
+  riderImageFile?: string;
 }
 
 export interface KYCStatusResponse {

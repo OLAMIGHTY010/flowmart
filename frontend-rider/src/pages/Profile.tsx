@@ -12,7 +12,7 @@ import {
   LogOut,
   ShieldCheck,
 } from "lucide-react";
-import { VendorButton } from "@/components/ui/button";
+import { RiderButton } from "@/components/ui/button";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -74,14 +74,14 @@ export default function Profile() {
           ))}
         </div>
 
-        <VendorButton 
+        <RiderButton 
           variant="outline" 
           onClick={handleLogout}
           className="mt-6 w-full py-6 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-2xl flex items-center gap-2 justify-center font-bold"
         >
           <LogOut size={18} />
           Sign Out
-        </VendorButton>
+        </RiderButton>
       </div>
     </div>
   );

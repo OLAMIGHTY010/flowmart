@@ -11,7 +11,7 @@ import {
   User,
   ShieldAlert
 } from "lucide-react";
-import { VendorButton } from "@/components/ui/button";
+import { RiderButton } from "@/components/ui/button";
 import { useOrder } from "@/hooks/useRiderQueries";
 import { useSubmitShortageReport } from "@/hooks/useRiderMutations";
 
@@ -124,12 +124,12 @@ export default function ShortageReport() {
                     <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide font-body">Quick Navigation</span>
                     <p className="text-xs font-bold text-foreground leading-tight">Begin routing to vendor immediately</p>
                   </div>
-                  <VendorButton 
+                  <RiderButton 
                     onClick={() => console.log("Routing connection initiated...")}
                     className="bg-[#006837] hover:bg-[#00522b] text-white text-[11px] font-bold py-2 px-3.5 rounded-lg shadow-xs"
                   >
                     Navigate to Vendor
-                  </VendorButton>
+                  </RiderButton>
                 </div>
               </div>
             </div>
@@ -150,12 +150,12 @@ export default function ShortageReport() {
 
         {/* Dynamic Static Footer Actions System Cluster */}
         <div className="p-4 bg-white border-t border-border/40 mt-auto flex flex-col gap-3">
-          <VendorButton
+          <RiderButton
             onClick={() => setShowSubmitSheet(true)}
             className="w-full bg-[#006837] hover:bg-[#00522b] text-white py-3.5 rounded-xl text-sm font-bold shadow-xs tracking-wide"
           >
             Submit Report
-          </VendorButton>
+          </RiderButton>
         </div>
 
 

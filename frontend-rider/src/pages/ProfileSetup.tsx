@@ -4,7 +4,7 @@ import { Loader2 } from 'lucide-react';
 import { riderService } from '@/services/RiderServices';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfileSetupFormCache } from '@/hooks/useKYCFormCache';
-import { VendorButton } from '@/components/ui/button';
+import { RiderButton } from '@/components/ui/button';
 import { VendorInput } from '@/components/ui/input';
 import OnboardingStepIndicator from '@/components/OnboardingStepIndicator';
 import Icon from '@/components/Icon';
@@ -37,7 +37,7 @@ export default function ProfileSetup({ onNext }: ProfileSetupProps) {
 
   // Read-only personal info from registration
   const fullName = user?.fullName || '';
-  const dob = user?.dob || '';
+  const dob = user?.dateOfBirth || '';
   const gender = user?.gender || '';
 
   const formatDob = (dateStr: string) => {
@@ -287,9 +287,9 @@ export default function ProfileSetup({ onNext }: ProfileSetupProps) {
             </CardContent>
           </Card>
 
-          <VendorButton type="submit" className="mt-2">
+          <RiderButton type="submit" className="mt-2">
             Save & Continue
-          </VendorButton>
+          </RiderButton>
         </form>
       </div>
     </div>

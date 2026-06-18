@@ -17,7 +17,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-import { VendorButton } from "@/components/ui/button";
+import { RiderButton } from "@/components/ui/button";
 import { useOrder } from "@/hooks/useRiderQueries";
 import { useLiveTracking } from "@/hooks/useLiveTracking";
 import { DeliveryChat } from "@/components/DeliveryChat";
@@ -153,12 +153,12 @@ export default function DeliveryDetails() {
                 </div>
 
                 <div className="flex gap-3 mb-2">
-                  <VendorButton 
+                  <RiderButton 
                     onClick={handleConfirmDelivery}
                     className="flex-1 bg-[#006837] hover:bg-[#00522b] text-white py-3.5 rounded-xl text-sm font-bold shadow-xs"
                   >
                     Slide to Arrive →
-                  </VendorButton>
+                  </RiderButton>
                 </div>
               </div>
             </div>
@@ -227,13 +227,13 @@ export default function DeliveryDetails() {
                 >
                   Report Issue
                 </button>
-                <VendorButton
+                <RiderButton
                   onClick={handleConfirmDelivery}
                   disabled={isConfirming}
                   className="w-full bg-[#006837] hover:bg-[#00522b] text-white py-3.5 rounded-xl text-sm font-bold shadow-xs"
                 >
                   {isConfirming ? "Processing..." : "Confirm Delivery"}
-                </VendorButton>
+                </RiderButton>
               </div>
             </div>
           )}

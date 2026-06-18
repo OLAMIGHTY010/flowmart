@@ -1,7 +1,7 @@
 import React from 'react';
 import { useDashboardStats } from '@/hooks/useRiderQueries';
 import { MoreHorizontal } from 'lucide-react';
-import { VendorButton } from '@/components/ui/button';
+import { RiderButton } from '@/components/ui/button';
 
 export default function Earnings() {
   const { data: stats } = useDashboardStats();
@@ -102,9 +102,9 @@ export default function Earnings() {
 
       {/* Floating Action Button area above the bottom nav */}
       <div className="fixed bottom-[80px] left-0 right-0 px-5 max-w-md mx-auto z-30">
-        <VendorButton className="w-full bg-[#15803d] hover:bg-[#166534] text-white py-6 rounded-[16px] text-sm font-bold shadow-lg">
+        <RiderButton className="w-full bg-[#15803d] hover:bg-[#166534] text-white py-6 rounded-[16px] text-sm font-bold shadow-lg">
           Request Payout
-        </VendorButton>
+        </RiderButton>
       </div>
     </div>
   );
