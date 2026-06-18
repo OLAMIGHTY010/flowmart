@@ -297,8 +297,8 @@ To establish a real-time connection for in-app notifications (e.g., notifying an
 ```javascript
 import { io } from "socket.io-client";
 
-const socket = io("ws://localhost:5000", {
-  query: { userId: "user-uuid-here" }
+const socket = io("http://localhost:5000/api/v1", {
+  query: { userId: "uuid-user-id-here" }
 });
 
 socket.on("notification", (data) => {

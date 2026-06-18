@@ -2,6 +2,7 @@ import { pgTable, uuid, varchar, timestamp, pgEnum, integer, decimal, text, bool
 
 export const roleEnum = pgEnum('role', [
   'super_admin', 
+  'admin',
   'camp_logistics_coordinator', 
   'zone_coordinator', 
   'vendor', 
@@ -18,6 +19,15 @@ export const users = pgTable('users', {
   email: varchar('email', { length: 255 }).notNull().unique(),
   password: varchar('password', { length: 255 }).notNull(), 
   role: roleEnum('role').default('attendee').notNull(),
+  phone: varchar('phone', { length: 50 }),
+  dateOfBirth: varchar('date_of_birth', { length: 50 }),
+  gender: varchar('gender', { length: 50 }),
+  isVerified: boolean('is_verified').default(false).notNull(),
+  profileCompleted: boolean('profile_completed').default(false).notNull(),
+  status: varchar('status', { length: 50 }).default('active').notNull(), // 'active', 'suspended'
+  forcePasswordChange: boolean('force_password_change').default(false).notNull(),
+  passwordChangedAt: timestamp('password_changed_at').defaultNow().notNull(),
+  lastLogin: timestamp('last_login'),
   
   // Auth & Security
   isVerified: boolean('is_verified').default(false).notNull(),
@@ -80,9 +90,11 @@ export const kycSubmissions = pgTable('kyc_submissions', {
 export const products = pgTable('products', {
   id: uuid('id').defaultRandom().primaryKey(),
   vendorId: uuid('vendor_id').references(() => users.id).notNull(), 
+  sku: varchar('sku', { length: 100 }),
   name: varchar('name', { length: 255 }).notNull(),
   description: text('description'),
   price: decimal('price', { precision: 10, scale: 2 }).notNull(),
+  oldPrice: decimal('old_price', { precision: 10, scale: 2 }),
   
   // Extended Product Metadata
   oldPrice: decimal('old_price', { precision: 10, scale: 2 }),
@@ -92,7 +104,9 @@ export const products = pgTable('products', {
   images: jsonb('images').default([]), 
   
   stockQuantity: integer('stock_quantity').default(0).notNull(), 
-  imageUrl: varchar('image_url', { length: 500 }), 
+  category: varchar('category', { length: 100 }),
+  brand: varchar('brand', { length: 100 }),
+  weight: decimal('weight', { precision: 10, scale: 2 }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -156,4 +170,83 @@ export const welfareAllocations = pgTable('welfare_allocations', {
   shortageReportedAt: timestamp('shortage_reported_at'),
   status: varchar('status', { length: 50 }).default('pending').notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const vendorProfiles = pgTable('vendor_profiles', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  vendorId: uuid('vendor_id').references(() => users.id).notNull().unique(),
+  displayName: varchar('display_name', { length: 255 }).notNull(),
+  businessName: varchar('business_name', { length: 255 }),
+  businessPhone: varchar('business_phone', { length: 50 }).notNull(),
+  stateRegion: varchar('state_region', { length: 100 }).notNull(),
+  city: varchar('city', { length: 100 }).notNull(),
+  bio: text('bio'),
+  avatar: text('avatar'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const vendorKyc = pgTable('vendor_kyc', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  vendorId: uuid('vendor_id').references(() => users.id).notNull().unique(),
+  businessName: varchar('business_name', { length: 255 }).notNull(),
+  cacNo: varchar('cac_no', { length: 255 }),
+  campCertificateId: varchar('camp_certificate_id', { length: 255 }),
+  bankName: varchar('bank_name', { length: 255 }).notNull(),
+  accountNumber: varchar('account_number', { length: 20 }).notNull(),
+  accountName: varchar('account_name', { length: 255 }).notNull(),
+  governmentIdType: varchar('government_id_type', { length: 100 }).notNull(),
+  guarantorName: varchar('guarantor_name', { length: 255 }).notNull(),
+  guarantorPhone: varchar('guarantor_phone', { length: 50 }).notNull(),
+  guarantorRelationship: varchar('guarantor_relationship', { length: 100 }).notNull(),
+  governmentIdFile: text('government_id_file'), // Base64 content or filename
+  campCertificateFile: text('camp_certificate_file'), // Base64 content or filename
+  guarantorIdFile: text('guarantor_id_file'), // Base64 content or filename
+  nafdacCertificateCode: varchar('nafdac_certificate_code', { length: 255 }),
+  nafdacCertificateFile: text('nafdac_certificate_file'),
+  status: varchar('status', { length: 50 }).default('pending').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const vendorKycHistory = pgTable('vendor_kyc_history', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  vendorId: uuid('vendor_id').references(() => users.id).notNull(),
+  action: varchar('action', { length: 50 }).notNull(), // e.g. 'submitted', 'approved', 'rejected'
+  notes: text('notes'),
+  reviewerId: uuid('reviewer_id').references(() => users.id),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const verificationOtps = pgTable('verification_otps', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').references(() => users.id).notNull(),
+  otp: varchar('otp', { length: 6 }).notNull(),
+  expiresAt: timestamp('expires_at').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const auditLogs = pgTable('audit_logs', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  eventId: varchar('event_id', { length: 50 }).notNull(), // e.g. AUT-3047
+  actorId: uuid('actor_id').references(() => users.id), // Can be null for system events
+  actorName: varchar('actor_name', { length: 255 }).notNull(), // Adebayo Wash, System, etc.
+  action: varchar('action', { length: 100 }).notNull(), // Rejected, Updated, Login
+  module: varchar('module', { length: 100 }).notNull(), // Onboard, Profile, Auth
+  description: text('description').notNull(),
+  ipAddress: varchar('ip_address', { length: 50 }),
+  status: varchar('status', { length: 50 }).notNull(), // Success, Failed
+  metadata: jsonb('metadata'), // JSON object for previous/new state
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const welfareInventory = pgTable('welfare_inventory', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  stock: integer('stock').notNull().default(0),
+  allocated: integer('allocated').notNull().default(0),
+  unit: varchar('unit', { length: 50 }).notNull(), // 'packs', 'liters', 'bottles', etc.
+  status: varchar('status', { length: 50 }).notNull(), // 'Sufficient', 'Shortage Risk'
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull()
 });

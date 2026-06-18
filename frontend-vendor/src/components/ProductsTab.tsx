@@ -48,6 +48,38 @@ export default function ProductsTab() {
     setIsModalOpen(true);
   };
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64Str = reader.result as string;
+        // Compress image
+        const img = new Image();
+        img.src = base64Str;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const maxWidth = 800;
+          let { width, height } = img;
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            setImageUrl(canvas.toDataURL('image/jpeg', 0.6));
+          } else {
+            setImageUrl(base64Str);
+          }
+        };
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const openEditModal = (prod: any) => {
     setEditingProduct(prod);
     setName(prod.name);
@@ -336,19 +368,22 @@ export default function ProductsTab() {
                 />
               </div>
 
-              <VendorInput 
-                label="Product Image URL (Optional)"
-                placeholder="https://images.unsplash.com/..."
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-              />
-
-              <VendorInput 
-                label="Extra Image URLs (Comma-separated)"
-                placeholder="https://img1.jpg, https://img2.jpg"
-                value={images}
-                onChange={(e) => setImages(e.target.value)}
-              />
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-foreground">Product Image Upload</label>
+                <div className="flex items-center gap-4">
+                  {imageUrl && (
+                    <div className="w-12 h-12 rounded-lg border border-border overflow-hidden flex-shrink-0">
+                      <img src={imageUrl} alt="preview" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="w-full rounded-xl border border-border bg-input px-3 py-2 text-sm text-foreground outline-none transition focus:ring-2 focus:ring-primary/20 focus:border-primary file:mr-4 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer"
+                  />
+                </div>
+              </div>
 
               <VendorButton type="submit" className="mt-2" disabled={createMutation.isPending || updateMutation.isPending}>
                 {(createMutation.isPending || updateMutation.isPending) && <Loader2 className="mr-2 h-4 w-4 animate-spin inline" />}

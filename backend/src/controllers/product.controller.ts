@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { db } from "../../db";
-import { products } from "../../db/schema";
-import { eq, and, gt } from "drizzle-orm";
+import { products, vendorProfiles, users, vendorKyc } from "../../db/schema";
+import { eq, and, gt, sql, count } from "drizzle-orm";
 import { AuthenticatedRequest } from "../middleware/auth.middleware";
 
 // 1. Create a Product (Vendors Only)
@@ -10,7 +10,7 @@ export const createProduct = async (
 	res: Response
 ) => {
 	try {
-		const { name, description, price, stockQuantity, imageUrl } = req.body;
+		const { name, description, price, stockQuantity, imageUrl, sku, category, brand, oldPrice, weight, images } = req.body;
 		const vendorId = req.user?.id;
 
 		if (!name || !price) {
@@ -29,6 +29,12 @@ export const createProduct = async (
 				price,
 				stockQuantity: stockQuantity || 0,
 				imageUrl,
+				sku,
+				category,
+				brand,
+				oldPrice: oldPrice || null,
+				weight: weight || null,
+				images: Array.isArray(images) ? images.join(',') : (images || null),
 			})
 			.returning();
 
@@ -45,9 +51,17 @@ export const createProduct = async (
 	}
 };
 
-// 2. Get All Available Products (For Attendees)
-export const getProducts = async (req: Request, res: Response) => {
+// 2. Get All Available Products (For Attendees) or Vendor's Products
+export const getProducts = async (req: AuthenticatedRequest, res: Response) => {
 	try {
+		if (req.user?.role === 'vendor') {
+			const vendorProducts = await db
+				.select()
+				.from(products)
+				.where(eq(products.vendorId, req.user.id));
+			return res.status(200).json({ success: true, products: vendorProducts });
+		}
+
 		// Only fetch products where stockQuantity is greater than 0 to hide out-of-stock items
 		const availableProducts = await db
 			.select()
@@ -73,7 +87,7 @@ export const updateProduct = async (
 	try {
 		const productId = req.params.id as string;
 		const vendorId = req.user?.id;
-		const { name, description, price, stockQuantity, imageUrl } = req.body;
+		const { name, description, price, stockQuantity, imageUrl, sku, category, brand, oldPrice, weight, images } = req.body;
 
 		// Verify the product belongs to the vendor requesting the update (Keeping type assertion)
 		const [existingProduct] = await db
@@ -108,6 +122,14 @@ export const updateProduct = async (
 						? stockQuantity
 						: existingProduct.stockQuantity,
 				imageUrl: imageUrl || existingProduct.imageUrl,
+				sku: sku !== undefined ? sku : existingProduct.sku,
+				category: category !== undefined ? category : existingProduct.category,
+				brand: brand !== undefined ? brand : existingProduct.brand,
+				oldPrice: oldPrice !== undefined ? oldPrice : existingProduct.oldPrice,
+				weight: weight !== undefined ? weight : existingProduct.weight,
+				images: images !== undefined 
+					? (Array.isArray(images) ? images.join(',') : images) 
+					: existingProduct.images,
 				updatedAt: new Date(),
 			})
 			.where(eq(products.id, productId as string))
@@ -163,3 +185,82 @@ export const deleteProduct = async (
 			.json({ success: false, message: "Internal Server Error" });
 	}
 };
+
+// 5. Get Public Vendor Profile
+export const getVendorPublicProfile = async (req: Request, res: Response) => {
+	try {
+		const vendorId = req.params.id as string;
+
+		// Get user info
+		const [user] = await db
+			.select({
+				id: users.id,
+				fullName: users.fullName,
+				email: users.email,
+				isVerified: users.isVerified,
+			})
+			.from(users)
+			.where(eq(users.id, vendorId))
+			.limit(1);
+
+		if (!user) {
+			return res.status(404).json({ success: false, message: "Vendor not found" });
+		}
+
+		// Get vendor profile
+		const [profile] = await db
+			.select()
+			.from(vendorProfiles)
+			.where(eq(vendorProfiles.vendorId, vendorId))
+			.limit(1);
+
+		// Get product count
+		const vendorProducts = await db
+			.select()
+			.from(products)
+			.where(eq(products.vendorId, vendorId));
+
+		const totalProducts = vendorProducts.length;
+
+		return res.status(200).json({
+			success: true,
+			vendor: {
+				id: user.id,
+				name: profile?.displayName || user.fullName,
+				businessName: profile?.businessName || null,
+				logo: profile?.avatar || null,
+				bio: profile?.bio || null,
+				city: profile?.city || null,
+				stateRegion: profile?.stateRegion || null,
+				verified: user.isVerified,
+				totalProducts,
+			},
+		});
+	} catch (error) {
+		console.error("Get Vendor Profile Error:", error);
+		return res.status(500).json({ success: false, message: "Internal Server Error" });
+	}
+};
+
+// 6. Get all product categories
+export const getCategories = async (_req: Request, res: Response) => {
+	try {
+		const result = await db
+			.selectDistinct({ category: products.category })
+			.from(products)
+			.where(gt(products.stockQuantity, 0));
+
+		const categories = result
+			.map(r => r.category)
+			.filter((c): c is string => c !== null && c !== undefined && c.trim() !== "");
+
+		return res.status(200).json({
+			success: true,
+			categories: ["All", ...categories],
+		});
+	} catch (error) {
+		console.error("Get Categories Error:", error);
+		return res.status(500).json({ success: false, message: "Internal Server Error" });
+	}
+};
+
