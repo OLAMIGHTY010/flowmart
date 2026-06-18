@@ -15,8 +15,8 @@
     "skipLibCheck": true,                                
     
     /* Global Types & Environment Fixes */
-    "types": ["node", "jest"],                           
-    "ignoreDeprecations": "6.0",                         
+    "types": ["node", "jest"],                           /* Explicitly include Node and Jest globals to prevent 'Cannot find name' errors */
+    "ignoreDeprecations": "5.0",                         /* Silences the 'baseUrl is deprecated' warning */
     "baseUrl": "./"
   },
   "include": [

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, type ReactNode } from "react";
 import { AuthContext } from "./AuthContext";
-import type { AppUser, UserRole, RegisterRequest } from "@/lib/api";
+import type { AppUser, UserRole, RegisterRequest } from "@/types/api";
 import { authService } from "@/services/AuthServices";
 import { apiClient } from "@/services/api"; 
 
@@ -25,6 +25,15 @@ type AuthProviderProps = {
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<AppUser | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true); 
+
+  // 🔄 0. Handle browser close (clear localstorage on new browser session)
+  useEffect(() => {
+    const isSessionActive = document.cookie.includes('app_session_active=true');
+    if (!isSessionActive) {
+      localStorage.clear();
+      document.cookie = "app_session_active=true; path=/";
+    }
+  }, []);
 
   // 🔄 1. Handle page refreshes
   useEffect(() => {
@@ -51,7 +60,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         } catch (error) {
           console.warn("Session check from API failed, using cached session or logging out:", error);
           if (!savedUser) {
-            localStorage.removeItem("accessToken");
+            localStorage.clear();
           }
         }
       }
@@ -65,8 +74,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   useEffect(() => {
     const handleGlobalLogout = () => {
       setUser(null);
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("currentUser");
+      localStorage.clear();
+      document.cookie = "app_session_active=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     };
 
     window.addEventListener("auth:logout", handleGlobalLogout);
@@ -124,8 +133,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     } catch (err) {
       console.warn("Server side logout failed, clearing local state anyway", err);
     } finally {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("currentUser");
+      localStorage.clear();
+      document.cookie = "app_session_active=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
       setUser(null);
     }
   };
