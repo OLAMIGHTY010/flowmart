@@ -1,73 +1,132 @@
-# React + TypeScript + Vite
+<a name="readme-top"></a>
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+# 📗 Table of Contents
 
-Currently, two official plugins are available:
+- [📖 About the Project](#about-project)
+  - [🛠 Built With](#built-with)
+    - [Tech Stack](#tech-stack)
+    - [Key Features](#key-features)
+  - [🚀 Live Demo](#live-demo)
+- [💻 Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Setup](#setup)
+- [👥 Author](#author)
+- [🔭 Future Features](#future-features)
+- [🤝 Contributing](#contributing)
+- [⭐️ Show your support](#support)
+- [🙏 Acknowledgements](#acknowledgements)
+- [📝 License](#license)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+# 📖 FlowMart Rider Portal <a name="about-project"></a>
 
-## React Compiler
+The **FlowMart Rider Portal** is the dedicated frontend application for delivery partners within the FlowMart ecosystem. It provides a mobile-first, highly responsive interface for riders to manage their onboarding (KYC), receive delivery assignments, update order statuses, report issues, and track their daily/weekly earnings.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🛠 Built With <a name="built-with"></a>
 
-## Expanding the ESLint configuration
+### Tech Stack <a name="tech-stack"></a>
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+<details>
+  <summary>Client</summary>
+  <ul>
+    <li><a href="https://reactjs.org/">React (Vite)</a></li>
+    <li><a href="https://www.typescriptlang.org/">TypeScript</a></li>
+    <li><a href="https://tailwindcss.com/">Tailwind CSS</a></li>
+    <li><a href="https://tanstack.com/query/latest">TanStack Query (React Query)</a></li>
+    <li><a href="https://lucide.dev/">Lucide React (Icons)</a></li>
+  </ul>
+</details>
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+<details>
+  <summary>Server / Backend</summary>
+  <ul>
+    <li>FlowMart Live RESTful API</li>
+  </ul>
+</details>
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### Key Features <a name="key-features"></a>
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- **Rider Onboarding & KYC Verification**
+- **Dynamic Dashboard with Live Stats**
+- **Mobile-first UI with Bottom Navigation Layout**
+- **Order Management (Accept/Decline Assignments)**
+- **Interactive Delivery Tracking & Route Mapping**
+- **Shortage & Issue Reporting System**
+- **Earnings & Payout History Tracking**
+- **Robust Client-Side Caching (TanStack Query)**
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## 🚀 Live Demo <a name="live-demo"></a>
+
+- [Live Demo Link](#) *(Coming Soon)*
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## 💻 Getting Started <a name="getting-started"></a>
+
+To get a local copy up and running, follow these steps:
+
+### Prerequisites
+
+In order to run this project you need:
+
+✅ Github account <br>
+✅ Visual Studio Code installed <br>
+✅ Node.js installed <br>
+
+### Setup
+
+Clone this repository to your desired folder and install dependencies:
+
+```sh
+  cd frontend-rider
+  npm install
+  npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 👥 Author <a name="author"></a>
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+**FlowMart Development Team**
+- GitHub: [@emarkees](https://github.com/Emarkees)
+- Twitter: [@emarkees](https://twitter.com/Mc-Emarkees)
+- LinkedIn: [Adeyemi Olusola](https://www.linkedin.com/in/adeyemi-olusola-1a3ab1141/)
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## 🔭 Future Features <a name="future-features"></a>
+
+- [ ] **Live GPS background location tracking**
+- [ ] **Push notifications for new delivery requests**
+- [ ] **In-app chat support with customers/vendors**
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## 🤝 Contributing <a name="contributing"></a>
+
+## 👤 Collaboration:
+
+Contributions, issues, and feature requests are welcome!
+
+Feel free to check the [issues page](#).
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## ⭐️ Show your support <a name="support"></a>
+
+If you like this project you can follow me on Github.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## 🙏 Acknowledgments <a name="acknowledgements"></a>
+
+Special thanks to the design and backend teams for providing the robust APIs and pixel-perfect mockups required to bring this portal to life.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## 📝 License <a name="license"></a>
+
+This project is [MIT](./LICENSE) licensed.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
