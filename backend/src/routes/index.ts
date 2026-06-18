@@ -12,7 +12,6 @@ import { getVendorPublicProfile } from '../controllers/product.controller';
 import adminRoutes from './admin.routes';
 import userManagementRoutes from './user-management.routes';
 import userRoutes from './user.routes';
-import vendorRoutes from './vendor.routes';
 
 const router = Router();
 
@@ -21,11 +20,11 @@ router.use('/users', userRoutes);
 router.use('/vendors', vendorRoutes);
 router.use('/products', productRoutes);
 router.use('/orders', orderRoutes);
-router.use('/riders', riderRoutes);
+router.use('/rider', riderRoutes); // Changed to singular to match frontend
+router.use('/riders', riderRoutes); // Kept plural for backwards compatibility
 router.use('/welfare', welfareRoutes);
 router.use('/sync', syncRoutes);
 router.use('/analytics', analyticsRoutes);
-router.use('/vendor', vendorRoutes);
 router.use('/admin', adminRoutes);
 router.use('/user-management', userManagementRoutes);
 

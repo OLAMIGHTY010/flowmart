@@ -366,6 +366,7 @@ export default function UserManagement() {
             user={selectedUser}
             onClose={() => setSelectedUser(null)}
             onStatusChange={handleStatusChange}
+            onRefresh={refetchUsers}
           />
         </>
       )}

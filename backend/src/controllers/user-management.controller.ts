@@ -3,7 +3,7 @@ import { db } from '../../db';
 import { users, vendorKyc } from '../../db/schema';
 import { eq, or, and, sql, desc, inArray } from 'drizzle-orm';
 import { hashPassword } from '../utils/password';
-import { sendEmail } from '../services/email';
+
 
 const generateAlphanumericPassword = (length = 10) => {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -94,6 +94,7 @@ export const getUsers = async (req: Request, res: Response) => {
       id: users.id,
       fullName: users.fullName,
       email: users.email,
+      phone: users.phone,
       role: users.role,
       status: users.status,
       lastLogin: users.lastLogin,
@@ -172,17 +173,7 @@ export const createUser = async (req: Request, res: Response) => {
     // In a real app, send this password via email
     console.log(`[Email Mock] Sent to ${email}: Your account is created. Role: ${role}. Password: ${actualPassword}. Please change your password upon your first login.`);
     
-    // Attempt real email (fail gracefully)
-    try {
-      await sendEmail(
-        email,
-        "Welcome to FlowMart Admin Portal",
-        `Hello ${fullName},\n\nAn account has been created for you with the role ${role}.\n\nYour temporary password is: ${actualPassword}\n\nYou will be required to change your password upon your first login.`,
-        `<p>Hello ${fullName},</p><p>An account has been created for you with the role <b>${role}</b>.</p><p>Your temporary password is: <b>${actualPassword}</b></p><p>You will be required to change your password upon your first login.</p>`
-      );
-    } catch (e) {
-      console.warn("Could not send real email, continuing.");
-    }
+
 
     return res.status(201).json({
       success: true,
@@ -235,6 +226,50 @@ export const updateUserStatus = async (req: Request, res: Response) => {
     return res.status(200).json({ success: true, message: `User status updated to ${status}` });
   } catch (error) {
     console.error("Error in updateUserStatus:", error);
+    return res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+export const updateUserProfile = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { fullName, email, phone, role } = req.body;
+    const currentUser = (req as any).user;
+
+    const targetUserArr = await db.select().from(users).where(eq(users.id, id)).limit(1);
+    if (!targetUserArr.length) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+    const targetUser = targetUserArr[0];
+
+    // RBAC logic for updating details
+    if (currentUser.role !== 'super_admin' && (targetUser.role === 'admin' || targetUser.role === 'super_admin')) {
+      return res.status(403).json({ success: false, message: "Only super admins can update admin profile details." });
+    }
+
+    if (currentUser.role === 'admin' && currentUser.id !== targetUser.id && (targetUser.role === 'admin' || targetUser.role === 'super_admin')) {
+      return res.status(403).json({ success: false, message: "Admins cannot modify other admin accounts." });
+    }
+
+    const updates: any = {};
+    if (fullName) updates.fullName = fullName;
+    if (email) updates.email = email;
+    if (phone !== undefined) updates.phone = phone || null;
+
+    // Only super_admin can change roles
+    if (role && currentUser.role === 'super_admin') {
+      updates.role = role;
+    } else if (role && role !== targetUser.role) {
+      return res.status(403).json({ success: false, message: "Only super admins can change user roles." });
+    }
+
+    if (Object.keys(updates).length > 0) {
+      await db.update(users).set(updates).where(eq(users.id, id));
+    }
+
+    return res.status(200).json({ success: true, message: "User profile updated successfully" });
+  } catch (error) {
+    console.error("Error in updateUserProfile:", error);
     return res.status(500).json({ success: false, message: "Internal server error" });
   }
 };

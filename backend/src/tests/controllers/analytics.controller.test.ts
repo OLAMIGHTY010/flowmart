@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { getDashboardStats } from "../../controllers/analytics.controller";
+import { getUserDashboardStats } from "../../controllers/analytics.controller";
 
 // 1. Mock the database fluent layout
 jest.mock("../../db", () => {
@@ -33,7 +33,7 @@ describe("Analytics Controller", () => {
 		};
 	});
 
-	describe("getDashboardStats", () => {
+	describe("getUserDashboardStats", () => {
 		it("should successfully compute order and welfare stats, returning 200", async () => {
 			const mockOrderData = { totalOrders: 150, deliveredOrders: 120 };
 			const mockWelfareData = {
@@ -47,7 +47,7 @@ describe("Analytics Controller", () => {
 				.mockResolvedValueOnce([mockOrderData]) // First call: from(orders)
 				.mockResolvedValueOnce([mockWelfareData]); // Second call: from(welfareAllocations)
 
-			await getDashboardStats(
+			await getUserDashboardStats(
 				mockRequest as Request,
 				mockResponse as Response
 			);
@@ -70,7 +70,7 @@ describe("Analytics Controller", () => {
 				new Error("Complex aggregation query parsing breakdown")
 			);
 
-			await getDashboardStats(
+			await getUserDashboardStats(
 				mockRequest as Request,
 				mockResponse as Response
 			);

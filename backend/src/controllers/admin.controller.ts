@@ -170,13 +170,20 @@ export const getCriticalAlerts = async (req: Request, res: Response) => {
 
 export const getRecentActivity = async (req: Request, res: Response) => {
   try {
-    const recentLogs = await db.select()
-      .from(auditLogs)
-      .orderBy(sql`${auditLogs.createdAt} DESC`)
-      .limit(6);
+    const result = await db.execute(sql`
+      SELECT id::text, 'User' as type, 'New user registered: ' || full_name as description, created_at as time FROM users
+      UNION ALL
+      SELECT id::text, 'Delivery' as type, 'Order ' || order_ref || ' status: ' || status as description, updated_at as time FROM orders
+      UNION ALL
+      SELECT id::text, 'Vendor' as type, 'Vendor KYC: ' || business_name as description, updated_at as time FROM vendor_kyc
+      UNION ALL
+      SELECT id::text, 'Welfare' as type, 'Welfare event: ' || name as description, created_at as time FROM welfare_events
+      ORDER BY time DESC
+      LIMIT 6
+    `);
 
-    const activities = recentLogs.map((log) => {
-      const d = new Date(log.createdAt);
+    const activities = result.rows.map((row: any) => {
+      const d = new Date(row.time);
       let timeString = '';
       const diffMins = Math.floor((Date.now() - d.getTime()) / 60000);
       if (diffMins < 60) timeString = `${diffMins}m ago`;
@@ -184,9 +191,9 @@ export const getRecentActivity = async (req: Request, res: Response) => {
       else timeString = d.toLocaleDateString();
 
       return {
-        id: log.id,
-        type: log.module,
-        description: log.description,
+        id: row.id,
+        type: row.type,
+        description: row.description,
         time: timeString || 'Just now',
       };
     });

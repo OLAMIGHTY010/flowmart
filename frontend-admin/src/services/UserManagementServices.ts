@@ -11,6 +11,7 @@ export interface User {
   id: string;
   fullName: string;
   email: string;
+  phone?: string;
   role: string;
   status: 'active' | 'suspended' | 'pending';
   lastLogin: string | null;
@@ -51,6 +52,11 @@ export const UserManagementServices = {
 
   updateStatus: async (id: string, status: 'active' | 'suspended' | 'deleted'): Promise<{success: boolean, message: string}> => {
     const response = await apiClient.patch<{ success: boolean, message: string }>(`/user-management/${id}/status`, { status });
+    return response;
+  },
+
+  updateUser: async (id: string, updates: Partial<User>): Promise<{success: boolean, message: string}> => {
+    const response = await apiClient.put<{ success: boolean, message: string }>(`/user-management/${id}`, updates);
     return response;
   }
 };
