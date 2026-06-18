@@ -1,222 +1,186 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router";
-import { 
-  QrCode, 
-  AlertTriangle, 
-  TrendingUp, 
-  Clock, 
-  ChevronRight, 
-  Home, 
-  Package, 
-  DollarSign, 
-  User, 
-  Bell 
-} from "lucide-react";
-import { VendorButton } from "@/components/ui/button";
-
-interface DeliveryItem {
-  id: string;
-  customerName: string;
-  zone: string;
-  packagesCount: number;
-  status: "Pending" | "In Transit" | "Completed";
-}
-
-function StatQuickAction({ icon, title, onClick }: { icon: React.ReactNode; title: string; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex flex-col items-center justify-center gap-2 bg-white rounded-2xl border border-border/60 shadow-2xs p-3 flex-1 hover:bg-muted/10 transition cursor-pointer"
-    >
-      <div className="w-10 h-10 rounded-xl bg-muted/30 flex items-center justify-center">
-        {icon}
-      </div>
-      <span className="text-xs font-bold text-foreground tracking-tight">{title}</span>
-    </button>
-  );
-}
-
-function DeliveryCard({ delivery, onClick }: { delivery: DeliveryItem; onClick: () => void }) {
-  const getStatusStyles = (status: DeliveryItem["status"]) => {
-    switch (status) {
-      case "In Transit":
-        return "bg-blue-50 border border-blue-200 text-blue-600";
-      case "Completed":
-        return "bg-emerald-50 border border-emerald-200 text-emerald-600";
-      default:
-        return "bg-amber-50 border border-amber-200 text-amber-600";
-    }
-  };
-
-  return (
-    <div 
-      onClick={onClick}
-      className="bg-white rounded-2xl border border-border/60 p-4 flex items-center justify-between cursor-pointer hover:border-border transition-all shadow-2xs"
-    >
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
-          <Package size={20} />
-        </div>
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="text-sm font-bold text-foreground leading-none">{delivery.customerName}</h3>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
-              {delivery.zone}
-            </span>
-          </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium font-body">
-            <span>×{delivery.packagesCount} {delivery.packagesCount > 1 ? "packs" : "pack"}</span>
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${getStatusStyles(delivery.status)}`}>
-              {delivery.status}
-            </span>
-          </div>
-        </div>
-      </div>
-      <ChevronRight size={16} className="text-muted-foreground/60" />
-    </div>
-  );
-}
+import React, { useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { useDashboardStats, useOrders } from '@/hooks/useRiderQueries';
+import {
+  Loader2, Bell, QrCode, AlertCircle, TrendingUp,
+  Clock, ChevronRight, Crosshair, Package
+} from 'lucide-react';
+import { format } from 'date-fns';
 
 export default function Dashboard() {
-  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { data: stats, isLoading: statsLoading } = useDashboardStats();
+  const { data: orders, isLoading: ordersLoading } = useOrders();
 
-  // Driver Online State Toggle
-  const [isOnline, setIsOnline] = useState<boolean>(true);
+  const [isOnline, setIsOnline] = useState(true);
 
-  // Active Mock Deliveries dataset matching the design cards
-  const [deliveries] = useState<DeliveryItem[]>([
-    { id: "1", customerName: "Chidi Nwosu", zone: "Zone A – Lekki", packagesCount: 3, status: "Pending" },
-    { id: "2", customerName: "Funke Balogun", zone: "Zone B – VI", packagesCount: 1, status: "In Transit" },
-    { id: "3", customerName: "Tunde Adeyemi", zone: "Zone C – Ajah", packagesCount: 2, status: "Pending" },
-  ]);
+  // Format the current date as "Tuesday, 17 Jun 2025"
+  const currentDate = format(new Date(), 'EEEE, d MMM yyyy');
 
-  const activeDeliveriesCount = deliveries.filter(d => d.status !== "Completed").length;
+  // Derive initial values from user/avatar
+  const firstName = user?.fullName?.split(' ')[0] || '';
+  const initials = user?.fullName
+    ? user.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
+    : '';
+
+  // Fallbacks for stats if the API hasn't resolved or returns differently
+  const revenue = stats?.revenueToday || 'N0.00';
+  const deliveryCount = stats?.newOrders || 0; // mapping newOrders to delivery count
+
+  // Filter pending and in-transit orders
+  const assignedOrders = orders?.filter(o => o.status === 'pending' || o.status === 'picked_up' || o.status === 'assigned') || [];
+  const inTransitOrder = assignedOrders.find(o => o.status === 'picked_up' || o.status === 'assigned'); // Active delivery
 
   return (
-    <div className="min-h-screen bg-muted/20 flex flex-col pb-24">
-      
-      {/* Top Greeting Navigation Bar Header */}
-      <div className="bg-background px-4 pt-5 pb-4 flex items-center justify-between border-b border-border/40 sticky top-0 z-30">
-        <div className="flex flex-col">
-          <h1 className="text-base font-bold text-foreground flex items-center gap-1 leading-tight">
-            Good Morning, Emeka <span role="img" aria-label="wave">👋</span>
+    <div className="min-h-screen bg-[#f8fafc] pb-32">
+      {/* Header */}
+      <div className="px-5 pt-6 pb-4 flex items-start justify-between bg-white sticky top-0 z-40 shadow-sm">
+        <div>
+          <h1 className="text-xl font-bold text-slate-800 tracking-tight">
+            Good Morning, {firstName} <span className="text-xl">👋</span>
           </h1>
-          <p className="text-xs text-muted-foreground font-semibold font-body mt-0.5">
-            Tuesday, 17 Jun 2025
-          </p>
+          <p className="text-xs text-slate-400 mt-1">{currentDate}</p>
         </div>
         <div className="flex items-center gap-3">
-          {/* Avatar Profile Silhouette badge */}
-          <div className="w-9 h-9 rounded-full bg-emerald-800 text-white font-bold text-xs flex items-center justify-center cursor-pointer">
-            EO
+          <div className="w-9 h-9 rounded-full bg-[#047857] flex items-center justify-center text-white font-bold text-sm">
+            {initials}
           </div>
-          {/* Notification Alert Trigger */}
-          <button type="button" className="relative p-1 text-foreground/80 hover:text-foreground transition cursor-pointer">
-            <Bell size={20} />
-            <span className="absolute top-1 right-1.5 w-2 h-2 rounded-full bg-destructive"></span>
-          </button>
+          <div className="relative">
+            <Bell size={20} className="text-slate-600" />
+            <div className="absolute 0 right-0 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></div>
+          </div>
         </div>
       </div>
 
-      <div className="flex flex-col gap-5 px-4 pt-4 max-w-lg mx-auto w-full">
-        
-        {/* Main Status / Balance Hero Banner */}
-        <div className="bg-[#006837] text-white rounded-2xl p-5 shadow-sm relative overflow-hidden flex flex-col gap-5">
-          <div className="flex items-center justify-between z-10">
-            <button
-              type="button"
-              onClick={() => setIsOnline(!isOnline)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition whitespace-nowrap cursor-pointer ${
-                isOnline ? "bg-white/20 text-white" : "bg-destructive text-destructive-foreground"
-              }`}
-            >
-              <span className={`w-2 h-2 rounded-full ${isOnline ? "bg-emerald-400" : "bg-white"} animate-pulse`}></span>
-              {isOnline ? "Online" : "Offline"}
-            </button>
-            <span className="text-xs font-semibold text-white/80 font-body">Ready for deliveries</span>
-          </div>
+      <div className="px-5 py-4 flex flex-col gap-5">
 
-          <div className="flex items-end justify-between mt-1 z-10">
-            <div className="flex flex-col gap-0.5">
-              <span className="text-2xl font-bold font-body tracking-tight">₦4,850</span>
-              <span className="text-xs font-semibold text-white/70 font-body">12 deliveries</span>
+        {/* Earnings Card */}
+        <div className="bg-[#15803d] rounded-2xl p-5 text-white shadow-md relative overflow-hidden">
+          <div className="flex justify-between items-start mb-4 relative z-10">
+            <button
+              onClick={() => setIsOnline(!isOnline)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${isOnline ? 'bg-white/20 text-white' : 'bg-slate-500/40 text-slate-200'
+                }`}
+            >
+              <Crosshair size={12} />
+              {isOnline ? 'Online' : 'Offline'}
+            </button>
+            <div className="text-right">
+              {statsLoading ? (
+                <Loader2 className="h-6 w-6 animate-spin text-white opacity-80 ml-auto" />
+              ) : (
+                <>
+                  <h2 className="text-2xl font-black">{revenue}</h2>
+                  <p className="text-[11px] font-medium text-emerald-100 opacity-90 mt-0.5 text-right">
+                    {deliveryCount} deliveries
+                  </p>
+                </>
+              )}
             </div>
           </div>
-          {/* Subtle design underlay layout circle matching standard vector brand rules */}
-          <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-white/5 rounded-full pointer-events-none"></div>
-        </div>
-
-        {/* Quick Action Grid Dashboard Section Subsystem */}
-        <div className="flex gap-3 justify-between">
-          <StatQuickAction icon={<QrCode size={18} className="text-emerald-700" />} title="Scan QR" onClick={() => navigate("/scan-zone")} />
-          <StatQuickAction icon={<AlertTriangle size={18} className="text-destructive" />} title="Report" onClick={() => console.log("Report route")} />
-          <StatQuickAction icon={<TrendingUp size={18} className="text-blue-600" />} title="Earnings" onClick={() => console.log("Earnings view")} />
-          <StatQuickAction icon={<Clock size={18} className="text-purple-600" />} title="History" onClick={() => console.log("History view")} />
-        </div>
-
-        {/* Assigned Deliveries Section Header Area */}
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-foreground">Assigned Deliveries</h2>
-            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 font-body">
-              {activeDeliveriesCount} pending
-            </span>
-          </div>
-
-          {/* Render Active Delivery Cards systematically */}
-          <div className="flex flex-col gap-3">
-            {deliveries.map((delivery) => (
-              <DeliveryCard 
-                key={delivery.id} 
-                delivery={delivery} 
-                onClick={() => console.log(`Opening delivery detail for: ${delivery.id}`)} 
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Highlight Banner: Currently Delivering status indicator box layout */}
-        <div className="bg-white rounded-2xl border border-border/60 p-4 shadow-sm flex flex-col gap-3 mt-1">
-          <div className="flex flex-col gap-0.5">
-            <span className="text-[10px] font-bold tracking-wider uppercase text-emerald-700 font-body">
-              Currently Delivering
-            </span>
-            <h3 className="text-base font-bold text-foreground">Adaeze Okonkwo</h3>
-            <p className="text-xs text-muted-foreground font-medium font-body">
-              14 Admiralty Way, Lekki Phase 1
+          <div className="relative z-10">
+            <p className="text-sm font-semibold text-emerald-50 max-w-[120px] leading-snug">
+              {isOnline ? 'Ready for deliveries' : 'You are currently offline'}
             </p>
           </div>
-          <VendorButton 
-            onClick={() => console.log("Navigating to view active details...")}
-            className="w-full bg-[#006837] hover:bg-[#00522b] text-white py-3 rounded-xl font-bold text-sm"
-          >
-            View Details
-          </VendorButton>
+          {/* Subtle background decoration */}
+          <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-emerald-600 rounded-full opacity-40 blur-2xl"></div>
         </div>
 
+        {/* Quick Actions */}
+        <div className="grid grid-cols-4 gap-3">
+          <QuickAction icon={<QrCode size={20} className="text-[#15803d]" />} label="Scan QR" />
+          <QuickAction icon={<AlertCircle size={20} className="text-red-500" />} label="Report" />
+          <QuickAction icon={<TrendingUp size={20} className="text-[#15803d]" />} label="My Earnings" />
+          <QuickAction icon={<Clock size={20} className="text-slate-500" />} label="History" />
+        </div>
+
+        {/* Assigned Deliveries Header */}
+        <div className="mt-2">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-bold text-slate-800">Assigned Deliveries</h3>
+            <div className="bg-[#dcfce7] text-[#166534] px-2.5 py-1 rounded-md text-[10px] font-bold">
+              {assignedOrders.length} pending
+            </div>
+          </div>
+
+          {/* Deliveries List */}
+          <div className="flex flex-col gap-3">
+            {ordersLoading ? (
+              <div className="flex justify-center p-6 bg-white rounded-2xl">
+                <Loader2 className="animate-spin text-[#15803d]" />
+              </div>
+            ) : assignedOrders.length === 0 ? (
+              <div className="p-6 bg-white rounded-2xl text-center text-sm text-slate-500 shadow-xs border border-slate-100">
+                No assigned deliveries at the moment.
+              </div>
+            ) : (
+              assignedOrders.map((order, i) => (
+                <div key={order.id || i} className="bg-white rounded-2xl p-4 flex items-center justify-between shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] border border-slate-100 cursor-pointer hover:border-emerald-200 transition">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-[#dcfce7] flex items-center justify-center shrink-0">
+                      <Package size={20} className="text-[#15803d]" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="text-sm font-bold text-slate-800">
+                          {order.vendorId /* Real API uses vendorId or attendee ID for name, falling back to ID if name missing */}
+                        </h4>
+                        <span className="bg-[#dcfce7] text-[#166534] text-[9px] px-1.5 py-0.5 rounded font-bold whitespace-nowrap">
+                          {order.deliveryZone}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-slate-400 font-medium">×{order.items?.length || 1} packs</span>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${order.status === 'picked_up' || order.status === 'assigned'
+                            ? 'bg-blue-100 text-blue-700'
+                            : 'bg-amber-100 text-amber-700'
+                          }`}>
+                          {order.status === 'picked_up' || order.status === 'assigned' ? 'In Transit' : 'Pending'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <ChevronRight size={18} className="text-slate-400" />
+                </div>
+              ))
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* Persistent Static Application Footer Tab Strip */}
-      <nav className="fixed bottom-0 left-0 right-0 border-t border-border/70 flex justify-around py-2.5 bg-white z-40 shadow-lg">
-        <button type="button" className="flex flex-col items-center gap-1 text-[11px] font-bold text-[#006837] flex-1 bg-transparent border-none cursor-pointer">
-          <Home size={18} />
-          <span>Home</span>
-        </button>
-        <button type="button" onClick={() => console.log("Deliveries layout")} className="flex flex-col items-center gap-1 text-[11px] font-medium text-muted-foreground/60 flex-1 bg-transparent border-none cursor-pointer hover:text-foreground">
-          <Package size={18} />
-          <span>Deliveries</span>
-        </button>
-        <button type="button" onClick={() => console.log("Earnings layout")} className="flex flex-col items-center gap-1 text-[11px] font-medium text-muted-foreground/60 flex-1 bg-transparent border-none cursor-pointer hover:text-foreground">
-          <DollarSign size={18} />
-          <span>Earnings</span>
-        </button>
-        <button type="button" onClick={() => console.log("Profile layout")} className="flex flex-col items-center gap-1 text-[11px] font-medium text-muted-foreground/60 flex-1 bg-transparent border-none cursor-pointer hover:text-foreground">
-          <User size={18} />
-          <span>Profile</span>
-        </button>
-      </nav>
-      
+      {/* Currently Delivering Sticky Card */}
+      {inTransitOrder && (
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-white via-white to-white/90 pb-8 z-50">
+          <div className="bg-white rounded-[20px] p-5 shadow-[0_-5px_20px_-5px_rgba(0,0,0,0.1)] border border-slate-100">
+            <p className="text-[10px] font-bold text-[#15803d] tracking-wider uppercase mb-2">
+              Currently Delivering
+            </p>
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <h4 className="font-bold text-slate-800 truncate">{inTransitOrder.customerName || inTransitOrder.vendorId || 'Unknown'}</h4>
+                <p className="text-xs text-slate-500 truncate mt-0.5">
+                  Zone: {inTransitOrder.deliveryZone}
+                </p>
+              </div>
+              <button className="bg-[#15803d] hover:bg-[#166534] text-white px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors shadow-sm">
+                View Details
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
+  );
+}
+
+function QuickAction({ icon, label }: { icon: React.ReactNode, label: string }) {
+  return (
+    <button className="bg-white rounded-[18px] p-3 flex flex-col items-center justify-center gap-2 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] border border-slate-100 hover:border-slate-200 transition-colors active:scale-95">
+      <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center">
+        {icon}
+      </div>
+      <span className="text-[10px] font-bold text-slate-600 tracking-tight">{label}</span>
+    </button>
   );
 }

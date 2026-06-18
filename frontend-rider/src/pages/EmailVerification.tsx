@@ -101,10 +101,10 @@ export default function EmailVerified() {
       {/* CTA Button */}
       <div className="w-full max-w-sm mt-8">
         <VendorButton
-          onClick={() => navigate("/dashboard")}
+          onClick={() => navigate("/profile-setup")}
           className="w-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2"
         >
-          <span>→</span> Continue to Home
+          <span>→</span> Continue
         </VendorButton>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useParams } from "react-router-dom";
 import { 
   ArrowLeft, 
   AlertTriangle, 
@@ -12,22 +12,27 @@ import {
   ShieldAlert
 } from "lucide-react";
 import { VendorButton } from "@/components/ui/button";
+import { useOrder } from "@/hooks/useRiderQueries";
+import { useSubmitShortageReport } from "@/hooks/useRiderMutations";
 
 export default function ShortageReport() {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const { data: order } = useOrder(id || "");
+  const submitMutation = useSubmitShortageReport();
   
   // Interactive state handling for the bottom confirmation sheet drawer
   const [showSubmitSheet, setShowSubmitSheet] = useState<boolean>(false);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
-  const handleConfirmSubmit = () => {
-    setIsSubmitting(true);
-    // Simulate API storage handling and redirect to main application flow
-    setTimeout(() => {
-      setIsSubmitting(false);
+  const handleConfirmSubmit = async () => {
+    if (!id) return;
+    try {
+      await submitMutation.mutateAsync({ id, data: { status: 'shortage_reported' } });
       setShowSubmitSheet(false);
       navigate("/dashboard");
-    }, 1500);
+    } catch (error) {
+      console.error("Failed to submit shortage report", error);
+    }
   };
 
   return (
@@ -61,7 +66,7 @@ export default function ShortageReport() {
             <div className="bg-white border border-border/60 rounded-2xl p-4 flex flex-col gap-3 shadow-2xs">
               <div className="flex justify-between items-center">
                 <span className="text-base font-bold text-emerald-800 font-body tracking-tight">
-                  FLW-20250621-0051
+                  {order?.id || id || "Loading..."}
                 </span>
                 <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 font-body">
                   +1 Pack Missing
@@ -72,13 +77,13 @@ export default function ShortageReport() {
               <div className="grid grid-cols-2 gap-3 pt-1">
                 <div className="bg-muted/30 rounded-xl p-3 border border-border/20 flex flex-col gap-0.5">
                   <span className="text-[10px] font-bold text-muted-foreground uppercase font-body tracking-wider">Recipient</span>
-                  <span className="text-xs font-bold text-foreground">Ngozi Eze</span>
-                  <span className="text-[10px] text-muted-foreground font-body font-medium">+234 802 345 8789</span>
+                  <span className="text-xs font-bold text-foreground">{order?.customerName || "Customer"}</span>
+                  <span className="text-[10px] text-muted-foreground font-body font-medium">{order?.customerPhone || "Phone Unavailable"}</span>
                 </div>
                 <div className="bg-muted/30 rounded-xl p-3 border border-border/20 flex flex-col gap-0.5">
                   <span className="text-[10px] font-bold text-muted-foreground uppercase font-body tracking-wider">Route</span>
-                  <span className="text-xs font-bold text-foreground">Zone B</span>
-                  <span className="text-[10px] text-muted-foreground font-body font-medium truncate">Victoria Island, Lagos</span>
+                  <span className="text-xs font-bold text-foreground">{order?.deliveryZone?.split(" ")[0] || "Zone"}</span>
+                  <span className="text-[10px] text-muted-foreground font-body font-medium truncate">{order?.deliveryZone || "Unavailable"}</span>
                 </div>
               </div>
 
@@ -99,10 +104,10 @@ export default function ShortageReport() {
               <div className="flex justify-between items-center">
                 <div className="flex flex-col">
                   <span className="text-[10px] font-bold text-muted-foreground uppercase font-body tracking-wider">Delivery Contents</span>
-                  <h3 className="text-sm font-bold text-foreground mt-0.5">Welfare Pack — Premium</h3>
+                  <h3 className="text-sm font-bold text-foreground mt-0.5">Welfare Pack</h3>
                 </div>
                 <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-muted text-muted-foreground font-body">
-                  Expected 4 Packs
+                  Expected {order?.packsCount || 0} Packs
                 </span>
               </div>
 
@@ -153,25 +158,7 @@ export default function ShortageReport() {
           </VendorButton>
         </div>
 
-        {/* Global Floating Layout App Utility Bar */}
-        <nav className="border-t border-border/70 flex justify-around py-2.5 bg-white z-10">
-          <button type="button" onClick={() => navigate("/dashboard")} className="flex flex-col items-center gap-1 text-[11px] font-medium text-muted-foreground/60 flex-1 bg-transparent border-none cursor-pointer hover:text-foreground">
-            <Home size={18} />
-            <span>Home</span>
-          </button>
-          <button type="button" className="flex flex-col items-center gap-1 text-[11px] font-bold text-[#006837] flex-1 bg-transparent border-none cursor-pointer">
-            <Package size={18} />
-            <span>Deliveries</span>
-          </button>
-          <button type="button" className="flex flex-col items-center gap-1 text-[11px] font-medium text-muted-foreground/60 flex-1 bg-transparent border-none cursor-not-allowed">
-            <DollarSign size={18} />
-            <span>Earnings</span>
-          </button>
-          <button type="button" className="flex flex-col items-center gap-1 text-[11px] font-medium text-muted-foreground/60 flex-1 bg-transparent border-none cursor-not-allowed">
-            <User size={18} />
-            <span>Profile</span>
-          </button>
-        </nav>
+
 
         {/* Absolute Submission Flow Warning Drawer Modal */}
         {showSubmitSheet && (
@@ -194,7 +181,7 @@ export default function ShortageReport() {
               <div className="text-center flex flex-col gap-1 px-2">
                 <h2 className="text-base font-bold text-foreground">Submit Shortage Report?</h2>
                 <p className="text-xs text-muted-foreground/90 font-medium font-body leading-relaxed">
-                  You are about to submit a shortage report for order FLW-20250621-0051. This action will be reviewed by the FlowMart team.
+                  You are about to submit a shortage report for order {order?.id || id}. This action will be reviewed by the FlowMart team.
                 </p>
               </div>
 
@@ -231,10 +218,10 @@ export default function ShortageReport() {
                 <button
                   type="button"
                   onClick={handleConfirmSubmit}
-                  disabled={isSubmitting}
+                  disabled={submitMutation.isPending}
                   className="w-full bg-[#006837] text-white font-bold py-3.5 rounded-xl text-sm shadow-xs hover:bg-[#00522b] transition cursor-pointer font-body"
                 >
-                  {isSubmitting ? "Submitting..." : "Yes, Submit"}
+                  {submitMutation.isPending ? "Submitting..." : "Yes, Submit"}
                 </button>
               </div>
 

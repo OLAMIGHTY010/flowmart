@@ -14,6 +14,7 @@ export default function VerifyOtpPage() {
 
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
+  const [justVerified, setJustVerified] = useState(false);
 
   // No session at all — user must register/login first
   if (!user) {
@@ -21,7 +22,7 @@ export default function VerifyOtpPage() {
   }
 
   // Already verified — send to login page
-  if (user.isVerified) {
+  if (user.isVerified && !justVerified) {
     return <Navigate to="/" replace />;
   }
 
@@ -32,6 +33,7 @@ export default function VerifyOtpPage() {
       const res = await authService.verifyOtp(otp);
 
       if (res?.success) {
+        setJustVerified(true);
         showToast(
           res.message || "OTP verified successfully",
           "success"
@@ -41,7 +43,7 @@ export default function VerifyOtpPage() {
         await refreshUser();
 
         setTimeout(() => {
-          navigate("/profile-setup");
+          navigate("/email-verified");
         }, 1000);
       } else {
         showToast(
