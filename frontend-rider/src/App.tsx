@@ -46,8 +46,8 @@ const ProtectedRoute = createProtectedRoute();
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <PushNotificationManager>
-        <BrowserRouter>
+      <BrowserRouter>
+        <PushNotificationManager>
           <Routes>
 
             {/* PUBLIC */}
@@ -91,8 +91,8 @@ function App() {
             {/* fallback */}
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
-        </BrowserRouter>
-      </PushNotificationManager>
+        </PushNotificationManager>
+      </BrowserRouter>
     </QueryClientProvider>
   );
 }
