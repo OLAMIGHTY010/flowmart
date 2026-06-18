@@ -11,8 +11,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 // ── Profile Setup Form Cache ──
 export interface ProfileSetupFormData {
   displayName: string;
-  businessName: string;
-  businessPhone: string;
+  phone: string;
   stateRegion: string;
   city: string;
   bio: string;
@@ -20,7 +19,7 @@ export interface ProfileSetupFormData {
 }
 
 const PROFILE_SETUP_KEY = ["profileSetupForm"] as const;
-const PROFILE_SETUP_STORAGE_KEY = "vendor_profile_setup_form";
+const PROFILE_SETUP_STORAGE_KEY = "rider_profile_setup_form";
 
 function loadProfileSetupFromStorage(): ProfileSetupFormData {
   try {
@@ -29,8 +28,7 @@ function loadProfileSetupFromStorage(): ProfileSetupFormData {
   } catch { /* ignore */ }
   return {
     displayName: '',
-    businessName: '',
-    businessPhone: '',
+    phone: '',
     stateRegion: '',
     city: '',
     bio: '',
@@ -66,30 +64,60 @@ export function useProfileSetupFormCache() {
 
 // ── KYCInfo Form Cache ──
 export interface KYCInfoFormData {
-  businessName: string;
-  cacNo: string;
-  campCertificateId: string;
   bankName: string;
   accountNumber: string;
   accountName: string;
+  vehicleType: string;
+  makeModel: string;
+  year: string;
+  plateNumber: string;
+  color: string;
+  documents: {
+    id: string;
+    title: string;
+    subtitle: string;
+    status: 'uploaded' | 'upload';
+    fileName?: string;
+    filePreviewUrl?: string;
+    base64?: string;
+  }[];
 }
 
 const KYC_INFO_KEY = ["kycInfoForm"] as const;
-const KYC_INFO_STORAGE_KEY = "vendor_kyc_info_form";
+const KYC_INFO_STORAGE_KEY = "rider_kyc_info_form";
 
 function loadKYCInfoFromStorage(): KYCInfoFormData {
-  try {
-    const stored = localStorage.getItem(KYC_INFO_STORAGE_KEY);
-    if (stored) return JSON.parse(stored);
-  } catch { /* ignore */ }
-  return {
-    businessName: '',
-    cacNo: '',
-    campCertificateId: '',
+  const defaultState: KYCInfoFormData = {
     bankName: '',
     accountNumber: '',
     accountName: '',
+    vehicleType: 'Motorcycle',
+    makeModel: '',
+    year: '',
+    plateNumber: '',
+    color: '',
+    documents: [
+      { id: 'insurance', title: 'Upload Vehicle Insurance', subtitle: 'Valid insurance document', status: 'upload' },
+      { id: 'road_worthiness', title: 'Upload Road Worthiness Certificate', subtitle: 'Valid road worthiness cert', status: 'upload' },
+    ],
   };
+
+  try {
+    const stored = localStorage.getItem(KYC_INFO_STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (parsed.documents && Array.isArray(parsed.documents)) {
+        parsed.documents = parsed.documents.map((d: any) => ({
+          ...d,
+          filePreviewUrl: undefined,
+        }));
+      } else {
+        parsed.documents = defaultState.documents;
+      }
+      return { ...defaultState, ...parsed };
+    }
+  } catch { /* ignore */ }
+  return defaultState;
 }
 
 export function useKYCInfoFormCache() {
@@ -109,7 +137,11 @@ export function useKYCInfoFormCache() {
     const current = queryClient.getQueryData<KYCInfoFormData>(KYC_INFO_KEY) || loadKYCInfoFromStorage();
     const next = { ...current, ...updates };
     queryClient.setQueryData(KYC_INFO_KEY, next);
-    localStorage.setItem(KYC_INFO_STORAGE_KEY, JSON.stringify(next));
+    const toStore = {
+      ...next,
+      documents: next.documents.map(d => ({ ...d, filePreviewUrl: undefined })),
+    };
+    localStorage.setItem(KYC_INFO_STORAGE_KEY, JSON.stringify(toStore));
   };
 
   return {
@@ -117,6 +149,9 @@ export function useKYCInfoFormCache() {
     updateForm,
   };
 }
+
+
+
 
 
 // ── KYCSubmit Form Cache ──
@@ -137,7 +172,7 @@ export interface KYCSubmitFormData {
 }
 
 const KYC_SUBMIT_KEY = ["kycSubmitForm"] as const;
-const KYC_SUBMIT_STORAGE_KEY = "vendor_kyc_submit_form";
+const KYC_SUBMIT_STORAGE_KEY = "rider_kyc_submit_form";
 
 function loadKYCSubmitFromStorage(): KYCSubmitFormData {
   try {
@@ -162,7 +197,6 @@ function loadKYCSubmitFromStorage(): KYCSubmitFormData {
     guarantorRelationship: '',
     documents: [
       { id: 'government_id', title: 'Government ID', subtitle: 'Upload a valid government-issued ID', status: 'upload' },
-      { id: 'camp_certificate', title: 'Camp Certificate', subtitle: 'Upload your camp certificate document', status: 'upload' },
       { id: 'guarantor_id', title: 'Guarantor ID', subtitle: "Upload guarantor's government-issued ID", status: 'upload' },
     ],
   };

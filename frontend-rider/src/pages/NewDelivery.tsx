@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { 
   ArrowLeft, 
   MapPin, 
@@ -12,27 +12,40 @@ import {
   ShieldAlert 
 } from "lucide-react";
 import { VendorButton } from "@/components/ui/button";
+import { useOrder } from "@/hooks/useRiderQueries";
+import { useAcceptDelivery, useDeclineDelivery } from "@/hooks/useRiderMutations";
 
 export default function DeliveryRequest() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const id = searchParams.get("id") || "";
+  const { data: order, isLoading } = useOrder(id);
+  
+  const acceptMutation = useAcceptDelivery();
+  const declineMutation = useDeclineDelivery();
 
   // State control to toggle the active warning sheet overlay
   const [showDeclineSheet, setShowDeclineSheet] = useState<boolean>(false);
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
-  const handleAcceptDelivery = () => {
-    setIsProcessing(true);
-    // Simulate API acceptance transition to live trip tracking
-    setTimeout(() => {
-      setIsProcessing(false);
+  const handleAcceptDelivery = async () => {
+    if (!id) return;
+    try {
+      await acceptMutation.mutateAsync(id);
       navigate("/dashboard"); 
-    }, 1200);
+    } catch (error) {
+      console.error("Accept error:", error);
+    }
   };
 
-  const handleConfirmDecline = () => {
-    setShowDeclineSheet(false);
-    // Bounce the rider back or clear the current active modal presentation
-    navigate(-1);
+  const handleConfirmDecline = async () => {
+    if (!id) return;
+    try {
+      await declineMutation.mutateAsync(id);
+      setShowDeclineSheet(false);
+      navigate(-1);
+    } catch (error) {
+      console.error("Decline error:", error);
+    }
   };
 
   return (
@@ -77,7 +90,7 @@ export default function DeliveryRequest() {
                   Order ID
                 </span>
                 <span className="text-base font-bold text-foreground tracking-tight">
-                  FLW-20250621-0051
+                  {order?.id || id || "Loading..."}
                 </span>
               </div>
               <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-md bg-muted text-muted-foreground border border-border/30 font-body">
@@ -87,10 +100,10 @@ export default function DeliveryRequest() {
 
             {/* Client Context Information Frame */}
             <div className="bg-muted/30 rounded-xl p-3.5 border border-border/20 flex flex-col gap-1">
-              <h3 className="text-sm font-bold text-foreground">Ngozi Eze</h3>
-              <p className="text-xs text-muted-foreground font-medium font-body">+234 802 345 8789</p>
+              <h3 className="text-sm font-bold text-foreground">{order?.customerName || "Customer"}</h3>
+              <p className="text-xs text-muted-foreground font-medium font-body">{order?.customerPhone || "Phone Unavailable"}</p>
               <p className="text-xs text-muted-foreground font-medium font-body mt-0.5">
-                Zone B — Victoria Island, Lagos
+                {order?.deliveryZone || "Zone Unavailable"}
               </p>
             </div>
 
@@ -103,7 +116,7 @@ export default function DeliveryRequest() {
                 </p>
               </div>
               <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 font-body">
-                +6 Packs
+                +{order?.packsCount || 0} Packs
               </span>
             </div>
 
@@ -111,18 +124,18 @@ export default function DeliveryRequest() {
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-muted/30 rounded-xl p-3 border border-border/20 flex flex-col">
                 <span className="text-[10px] font-semibold text-muted-foreground font-body">Distance</span>
-                <span className="text-sm font-bold text-foreground font-body mt-0.5">3.2 km</span>
+                <span className="text-sm font-bold text-foreground font-body mt-0.5">{order?.distance || "0 km"}</span>
               </div>
               <div className="bg-muted/30 rounded-xl p-3 border border-border/20 flex flex-col">
                 <span className="text-[10px] font-semibold text-muted-foreground font-body">Est. Time</span>
-                <span className="text-sm font-bold text-foreground font-body mt-0.5">~12 min</span>
+                <span className="text-sm font-bold text-foreground font-body mt-0.5">~{order?.estimatedTime || "0 min"}</span>
               </div>
             </div>
 
             {/* Income Allocation Tracker Flag */}
             <div className="bg-emerald-50/60 border border-emerald-100 rounded-xl py-3 px-4 text-center">
               <p className="text-xs font-bold text-emerald-800 font-body tracking-wide">
-                💰 Earn ₦850 for this delivery →
+                💰 Earn ₦{order?.totalAmount || "0"} for this delivery →
               </p>
             </div>
 
@@ -130,10 +143,10 @@ export default function DeliveryRequest() {
             <div className="flex flex-col gap-2.5 mt-1">
               <VendorButton
                 onClick={handleAcceptDelivery}
-                disabled={isProcessing}
+                disabled={acceptMutation.isPending || isLoading}
                 className="w-full bg-[#006837] hover:bg-[#00522b] text-white py-3.5 rounded-xl text-sm font-bold tracking-wide"
               >
-                {isProcessing ? "Accepting offer..." : "Accept Delivery"}
+                {acceptMutation.isPending ? "Accepting offer..." : "Accept Delivery"}
               </VendorButton>
               
               <button
@@ -148,25 +161,7 @@ export default function DeliveryRequest() {
           </div>
         </div>
 
-        {/* Global Structural Application Utility Footer Area */}
-        <nav className="border-t border-border/70 flex justify-around py-2.5 bg-white z-10 mt-auto">
-          <button type="button" onClick={() => navigate("/dashboard")} className="flex flex-col items-center gap-1 text-[11px] font-medium text-muted-foreground/60 flex-1 bg-transparent border-none cursor-pointer hover:text-foreground">
-            <Home size={18} />
-            <span>Home</span>
-          </button>
-          <button type="button" className="flex flex-col items-center gap-1 text-[11px] font-bold text-[#006837] flex-1 bg-transparent border-none cursor-pointer">
-            <Package size={18} />
-            <span>Deliveries</span>
-          </button>
-          <button type="button" className="flex flex-col items-center gap-1 text-[11px] font-medium text-muted-foreground/60 flex-1 bg-transparent border-none cursor-not-allowed">
-            <DollarSign size={18} />
-            <span>Earnings</span>
-          </button>
-          <button type="button" className="flex flex-col items-center gap-1 text-[11px] font-medium text-muted-foreground/60 flex-1 bg-transparent border-none cursor-not-allowed">
-            <User size={18} />
-            <span>Profile</span>
-          </button>
-        </nav>
+
 
         {/* Warning Sheets presentation Drawer Sheet Overlay */}
         {showDeclineSheet && (
