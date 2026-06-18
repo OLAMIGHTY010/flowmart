@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import { register, login } from "./auth.controller";
-import { hashPassword, comparePassword } from "../utils/password";
+import { register, login, adminCreateUser } from "../../controllers/auth.controller";
+import { hashPassword, comparePassword } from "../../utils/password";
 
 // 1. Create mock chain spies for Drizzle ORM
 const mockLimit = jest.fn();
@@ -40,6 +40,15 @@ jest.mock("jsonwebtoken", () => ({
 	sign: jest.fn(),
 }));
 
+// Mock Email Service to silence real SMTP connection errors during testing
+jest.mock("../services/email.service", () => ({
+	emailService: {
+		sendOtpEmail: jest.fn().mockResolvedValue(undefined),
+		sendWelcomeEmail: jest.fn().mockResolvedValue(undefined),
+		sendPasswordResetEmail: jest.fn().mockResolvedValue(undefined),
+	},
+}));
+
 describe("Auth Controller", () => {
 	let mockRequest: Partial<Request>;
 	let mockResponse: Partial<Response>;
@@ -54,6 +63,9 @@ describe("Auth Controller", () => {
 		};
 
 		process.env.JWT_SECRET = "test-secret";
+
+		// Suppress expected internal error logs to keep terminal output readable
+		jest.spyOn(console, "error").mockImplementation(() => {});
 	});
 
 	describe("register", () => {
@@ -88,12 +100,12 @@ describe("Auth Controller", () => {
 			});
 		});
 
-		it("should register a new user successfully and return 201 with a token", async () => {
+		it("should register a new user successfully as an attendee and ignore role overrides", async () => {
 			mockRequest.body = {
 				fullName: "New User",
 				email: "new@example.com",
 				password: "password123",
-				role: "dispatch_rider",
+				role: "super_admin", // Malicious payload role bypass attempt
 			};
 
 			mockLimit.mockResolvedValue([]); // No existing user found
@@ -103,10 +115,9 @@ describe("Auth Controller", () => {
 				id: "new-id",
 				fullName: "New User",
 				email: "new@example.com",
-				role: "dispatch_rider",
+				role: "attendee", // Verified locked fallback configuration
 			};
 			mockReturning.mockResolvedValue([createdUser]);
-			(jwt.sign as jest.Mock).mockReturnValue("mock-jwt-token");
 
 			await register(mockRequest as Request, mockResponse as Response);
 
@@ -114,9 +125,8 @@ describe("Auth Controller", () => {
 			expect(mockResponse.status).toHaveBeenCalledWith(201);
 			expect(mockResponse.json).toHaveBeenCalledWith({
 				success: true,
-				message: "User registered successfully",
-				token: "mock-jwt-token",
-				user: createdUser,
+				message:
+					"Registration successful. Please check your email for the verification code.",
 			});
 		});
 
@@ -127,9 +137,6 @@ describe("Auth Controller", () => {
 				password: "password",
 			};
 			mockLimit.mockRejectedValue(new Error("DB Connection Timeout"));
-
-			// Suppress console.error inside tests to keep the terminal output clean
-			jest.spyOn(console, "error").mockImplementation(() => {});
 
 			await register(mockRequest as Request, mockResponse as Response);
 
@@ -170,6 +177,30 @@ describe("Auth Controller", () => {
 			});
 		});
 
+		it("should return 403 if user exists but is unverified", async () => {
+			mockRequest.body = {
+				email: "unverified@example.com",
+				password: "password123",
+			};
+
+			const dbUser = {
+				id: "user-id",
+				email: "unverified@example.com",
+				password: "hashed-password",
+				role: "attendee",
+				isVerified: false, // Triggers verification gate
+			};
+			mockLimit.mockResolvedValue([dbUser]);
+
+			await login(mockRequest as Request, mockResponse as Response);
+
+			expect(mockResponse.status).toHaveBeenCalledWith(403);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				success: false,
+				message: "Please verify your email before logging in.",
+			});
+		});
+
 		it("should return 401 if the password check fails", async () => {
 			mockRequest.body = {
 				email: "user@example.com",
@@ -181,6 +212,7 @@ describe("Auth Controller", () => {
 				email: "user@example.com",
 				password: "hashed-password",
 				role: "attendee",
+				isVerified: true, // Verification passed
 			};
 			mockLimit.mockResolvedValue([dbUser]);
 			(comparePassword as jest.Mock).mockResolvedValue(false); // Invalid password match
@@ -206,6 +238,7 @@ describe("Auth Controller", () => {
 				email: "rider@flowmart.com",
 				password: "hashed-password",
 				role: "dispatch_rider",
+				isVerified: true, // Verification passed
 			};
 			mockLimit.mockResolvedValue([dbUser]);
 			(comparePassword as jest.Mock).mockResolvedValue(true);
@@ -224,6 +257,60 @@ describe("Auth Controller", () => {
 					email: "rider@flowmart.com",
 					role: "dispatch_rider",
 				},
+			});
+		});
+	});
+
+	describe("adminCreateUser", () => {
+		it("should allow an admin to provision users with elevated system roles", async () => {
+			mockRequest.body = {
+				fullName: "Authorized Vendor",
+				email: "vendor@flowmart.com",
+				password: "securePassword123",
+				role: "vendor",
+			};
+
+			mockLimit.mockResolvedValue([]);
+			(hashPassword as jest.Mock).mockResolvedValue("hashed-password");
+
+			const createdUser = {
+				id: "vendor-101",
+				fullName: "Authorized Vendor",
+				email: "vendor@flowmart.com",
+				role: "vendor",
+			};
+			mockReturning.mockResolvedValue([createdUser]);
+
+			await adminCreateUser(
+				mockRequest as Request,
+				mockResponse as Response
+			);
+
+			expect(mockResponse.status).toHaveBeenCalledWith(201);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				success: true,
+				message: "User created successfully by administration.",
+				user: createdUser,
+			});
+		});
+
+		it("should reject user generation and return 400 if an invalid system role is specified", async () => {
+			mockRequest.body = {
+				fullName: "Malicious Injector",
+				email: "attacker@flowmart.com",
+				password: "password123",
+				role: "super_root_unlocked_system",
+			};
+
+			await adminCreateUser(
+				mockRequest as Request,
+				mockResponse as Response
+			);
+
+			expect(mockResponse.status).toHaveBeenCalledWith(400);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				success: false,
+				message: "Invalid role specified",
 			});
 		});
 	});

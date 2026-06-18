@@ -6,6 +6,7 @@ import { hashPassword, comparePassword } from '../utils/password';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { emailService } from '../services/email.service';
+import { AuthenticatedRequest } from '../middleware/auth.middleware';
 
 // Helper to generate a 6-digit OTP
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
@@ -16,6 +17,17 @@ export const register = async (req: Request, res: Response) => {
 
     if (!fullName || !email || !password) {
       return res.status(400).json({ success: false, message: 'All fields are required' });
+    }
+
+    // ✨ SECURITY FIX: Restrict public registration roles
+    const allowedPublicRoles = ['attendee', 'vendor', 'dispatch_rider'];
+    const requestedRole = role || 'attendee';
+
+    if (!allowedPublicRoles.includes(requestedRole)) {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Forbidden: Institutional roles must be assigned by an admin' 
+      });
     }
 
     const existingUser = await db.select().from(users).where(eq(users.email, email)).limit(1);
@@ -31,7 +43,7 @@ export const register = async (req: Request, res: Response) => {
       fullName,
       email,
       password: hashedPassword,
-      role: role || 'attendee',
+      role: requestedRole, // ✨ Safely insert the validated role
       isVerified: false,
       otp,
       otpExpiry,
@@ -163,7 +175,7 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
       updatedAt: new Date()
     }).where(eq(users.id, user.id));
 
-    // For production, this should be your frontend domain (e.g., https://flowmart.com/reset-password?token=...)
+    // For production, this should be your frontend domain
     const resetLink = `http://localhost:3000/reset-password?token=${resetToken}`;
 
     emailService.sendPasswordResetEmail(user.email, { 
@@ -203,6 +215,42 @@ export const resetPassword = async (req: Request, res: Response) => {
     return res.status(200).json({ success: true, message: 'Password has been successfully reset. You can now log in.' });
   } catch (error) {
     console.error('Reset Password Error:', error);
+    return res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+};
+
+// ✨ NEW: Secure Role Assignment Gateway
+export const assignRole = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { userId, newRole } = req.body;
+
+    if (!userId || !newRole) {
+      return res.status(400).json({ success: false, message: 'User ID and new role are required' });
+    }
+
+    const validRoles = ['super_admin', 'camp_logistics_coordinator', 'zone_coordinator', 'vendor', 'dispatch_rider', 'attendee'];
+    if (!validRoles.includes(newRole)) {
+      return res.status(400).json({ success: false, message: 'Invalid role provided' });
+    }
+
+    const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const [updatedUser] = await db.update(users).set({ 
+      role: newRole as any, 
+      updatedAt: new Date() 
+    }).where(eq(users.id, userId)).returning();
+
+    return res.status(200).json({ 
+      success: true, 
+      message: `User role successfully updated to ${newRole}`,
+      user: { id: updatedUser.id, fullName: updatedUser.fullName, email: updatedUser.email, role: updatedUser.role }
+    });
+
+  } catch (error) {
+    console.error('Assign Role Error:', error);
     return res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 };

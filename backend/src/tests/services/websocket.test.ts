@@ -1,5 +1,8 @@
 import { Server as HttpServer } from "http";
-import { initWebSocketHub, sendInAppNotification } from "./websocket";
+import {
+	initWebSocketHub,
+	sendInAppNotification,
+} from "../../services/websocket";
 import { Server } from "socket.io";
 
 // 1. Mock socket.io entirely to intercept internal constructor instances and event chains

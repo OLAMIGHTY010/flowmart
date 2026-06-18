@@ -5,13 +5,25 @@ import { eq, and } from "drizzle-orm";
 import { AuthenticatedRequest } from "../middleware/auth.middleware";
 import { emailService } from "../services/email.service";
 
+// Helper to generate FLW-YYYYMMDD-XXXX
+const generateOrderRef = () => {
+	const date = new Date();
+	const yyyy = date.getFullYear();
+	const mm = String(date.getMonth() + 1).padStart(2, '0');
+	const dd = String(date.getDate()).padStart(2, '0');
+	const randomSeq = Math.floor(1000 + Math.random() * 9000).toString(); // 4 random digits
+	return `FLW-${yyyy}${mm}${dd}-${randomSeq}`;
+};
+
 // 1. Place a New Order (Attendees)
 export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
 	try {
 		const attendeeId = req.user?.id;
-		const { productId, quantity, deliveryZone } = req.body;
+		const { productId, quantity, deliveryZone, zone, payment_method, transaction_reference, payment_proof_url } = req.body;
 
-		if (!productId || !quantity || !deliveryZone) {
+		const finalZone = deliveryZone || zone;
+
+		if (!productId || !quantity || !finalZone) {
 			return res.status(400).json({ success: false, message: "Missing required order details" });
 		}
 
@@ -23,13 +35,18 @@ export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
 
 		const totalAmount = (Number(product.price) * quantity).toString();
 		const deliveryPin = Math.floor(100000 + Math.random() * 900000).toString(); 
+		const orderRef = generateOrderRef(); 
 
 		const [newOrder] = await db.insert(orders).values({
+			orderRef, 
 			attendeeId: attendeeId!,
 			vendorId: product.vendorId,
-			deliveryZone,
+			deliveryZone: finalZone,
 			totalAmount,
 			deliveryPin,
+			paymentMethod: payment_method || 'pay_on_delivery',
+			transactionReference: transaction_reference,
+			paymentProofUrl: payment_proof_url,
 			status: "pending",
 		}).returning();
 
@@ -44,7 +61,6 @@ export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
 		await db.update(products).set({ stockQuantity: newStockQuantity }).where(eq(products.id, product.id as string));
 
 		// === EMAIL INTEGRATIONS ===
-		// Fetch attendee and vendor info concurrently
 		const [attendee, vendor] = await Promise.all([
 			db.select().from(users).where(eq(users.id, attendeeId!)).limit(1).then(res => res[0]),
 			db.select().from(users).where(eq(users.id, product.vendorId)).limit(1).then(res => res[0])
@@ -53,7 +69,7 @@ export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
 		if (attendee) {
 			emailService.sendOrderReceiptEmail(attendee.email, {
 				fullName: attendee.fullName,
-				orderId: newOrder.id,
+				orderId: newOrder.orderRef, 
 				totalAmount,
 				deliveryPin,
 				items: [{ name: product.name, quantity, price: product.price.toString() }]
