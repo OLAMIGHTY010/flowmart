@@ -11,10 +11,14 @@ import { authenticateJWT } from '../middleware/auth.middleware';
 import { getVendorPublicProfile } from '../controllers/product.controller';
 import adminRoutes from './admin.routes';
 import userManagementRoutes from './user-management.routes';
+import userRoutes from './user.routes';
+import vendorRoutes from './vendor.routes';
 
 const router = Router();
 
 router.use('/auth', authRoutes);
+router.use('/users', userRoutes);
+router.use('/vendors', vendorRoutes);
 router.use('/products', productRoutes);
 router.use('/orders', orderRoutes);
 router.use('/riders', riderRoutes);

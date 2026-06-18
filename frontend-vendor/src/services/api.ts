@@ -38,7 +38,7 @@ class ApiClient {
         if (status === 401) {
           console.warn('Unauthorized: Token expired or invalid.');
 
-          localStorage.removeItem('accessToken');
+          localStorage.clear();
           window.dispatchEvent(new Event('auth:logout'));
         }
 

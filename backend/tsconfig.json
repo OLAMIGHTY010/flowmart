@@ -108,4 +108,31 @@
     "transpileOnly": true,
     "preferTsExts": true
   }
+    /* Language and Environment */
+    "target": "es2020",                                  
+    
+    /* Modules */
+    "module": "commonjs",                                
+    "rootDir": "./",                                     
+    "outDir": "./dist",                                  
+    "esModuleInterop": true,                             
+    "forceConsistentCasingInFileNames": true,            
+    
+    /* Type Checking */
+    "strict": true,                                      
+    "skipLibCheck": true,                                
+    
+    /* Global Types & Environment Fixes */
+    "types": ["node", "jest"],                           /* Explicitly include Node and Jest globals to prevent 'Cannot find name' errors */
+    "ignoreDeprecations": "5.0",                         /* Silences the 'baseUrl is deprecated' warning */
+    "baseUrl": "./"
+  },
+  "include": [
+    "src/**/*",
+    "db/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }

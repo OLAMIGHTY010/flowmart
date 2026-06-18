@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
+    .container { max-width: 600px; background: #ffffff; padding: 30px; border-radius: 8px; margin: auto; border-top: 5px solid #8b5cf6; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+    .metric { background: #f5f3ff; color: #6d28d9; padding: 15px; text-align: center; font-size: 24px; font-weight: bold; border-radius: 6px; margin: 20px 0; }
+    .footer { font-size: 12px; color: #64748b; text-align: center; margin-top: 30px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>📦 New Welfare Allocation</h2>
+    <p>Hello {{coordinatorName}},</p>
+    <p>Camp Logistics Command has just assigned a new allocation of welfare items to your zone.</p>
+    
+    <div style="margin: 20px 0; line-height: 1.6;">
+      <strong>Event:</strong> {{eventName}}<br>
+      <strong>Target Zone:</strong> {{zoneId}}<br>
+    </div>
+    
+    <div class="metric">
+      {{totalItems}} Items Allocated
+    </div>
+    
+    <p>Please log in to your Zone Coordinator Dashboard to acknowledge receipt and begin logging distributions to attendees.</p>
+    
+    <div class="footer">
+      <p>FlowMart Welfare Distribution System</p>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #fef2f2; margin: 0; padding: 20px; }
+    .container { max-width: 600px; background: #ffffff; padding: 30px; border-radius: 8px; margin: auto; border-top: 5px solid #ef4444; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+    .footer { font-size: 12px; color: #64748b; text-align: center; margin-top: 30px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2 style="color: #ef4444;">🚨 Out of Stock Alert</h2>
+    <p>Hello {{vendorName}},</p>
+    <p>A recent order has completely depleted your inventory for the following item:</p>
+    
+    <h3 style="background: #f8fafc; padding: 15px; border-radius: 4px; text-align: center;">{{productName}}</h3>
+    
+    <p>This item will no longer appear to attendees on the FlowMart app. If you have restocked, please log in to your Vendor Dashboard immediately to update your inventory quantity and resume sales.</p>
+    
+    <div class="footer">
+      <p>Automated Vendor Alert • FlowMart Logistics</p>
+    </div>
+  </div>
+</body>
+</html>
