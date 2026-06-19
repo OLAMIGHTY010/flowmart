@@ -89,13 +89,26 @@ export default function UserManagement() {
 
   const timeAgo = (dateStr: string | null) => {
     if (!dateStr) return 'Never';
-    // very basic time ago implementation
-    const diff = new Date().getTime() - new Date(dateStr).getTime();
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    if (days === 0) return 'Today';
-    if (days === 1) return 'Yesterday';
-    if (days < 30) return `${days} days ago`;
-    return '1 month ago'; // simplified
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return 'Never';
+    
+    const diffInSeconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
+    if (diffInSeconds < 60) return 'Just now';
+    
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    if (diffInMinutes < 60) return `${diffInMinutes} min${diffInMinutes > 1 ? 's' : ''} ago`;
+    
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
+    
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays === 1) return 'Yesterday';
+    if (diffInDays < 30) return `${diffInDays} days ago`;
+    
+    const diffInMonths = Math.floor(diffInDays / 30);
+    if (diffInMonths < 12) return `${diffInMonths} month${diffInMonths > 1 ? 's' : ''} ago`;
+    
+    return date.toLocaleDateString();
   };
 
   return (
@@ -218,7 +231,7 @@ export default function UserManagement() {
             className={`px-5 py-3.5 text-sm font-bold whitespace-nowrap flex items-center gap-2 transition-colors border-b-2 ${activeTab === 'pending' ? 'border-[#16a34a] text-[#16a34a]' : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50'}`}
             onClick={() => {setActiveTab('pending'); setPage(1);}}
           >
-            Pending Approval
+          Active Admins
             {stats?.pendingApprovals ? <span className="bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded text-[10px]">{stats.pendingApprovals}</span> : null}
           </button>
           <button 

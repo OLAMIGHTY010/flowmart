@@ -23,7 +23,7 @@ export default function Orders() {
   return (
     <div className="flex-1 flex flex-col bg-[#f8fafc] font-body min-h-screen relative">
       <div className="px-5 pt-6 pb-4 bg-white sticky top-0 z-10 shadow-sm border-b border-slate-100">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-4 md:hidden">
           <div>
             <h1 className="text-xl font-headings font-extrabold text-slate-800 tracking-tight">My Deliveries</h1>
             <p className="text-[11px] text-slate-400 font-medium mt-0.5">Track your past and current assignments</p>
@@ -40,7 +40,7 @@ export default function Orders() {
         </div>
       </div>
 
-      <div className="flex-1 px-5 py-5 flex flex-col gap-4 overflow-y-auto pb-24">
+      <div className="flex-1 px-5 py-5 flex flex-col gap-4 overflow-y-auto pb-24 md:grid md:grid-cols-2 lg:grid-cols-3 md:content-start md:p-8">
         {isLoading ? (
           <div className="flex justify-center p-10">
             <Loader2 className="animate-spin text-[#15803d]" />

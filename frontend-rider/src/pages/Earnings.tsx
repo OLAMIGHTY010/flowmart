@@ -11,7 +11,7 @@ export default function Earnings() {
 
   return (
     <div className="flex-1 flex flex-col bg-[#f8fafc] font-body min-h-screen relative">
-      <div className="px-5 pt-6 pb-4 flex items-center justify-between sticky top-0 bg-[#f8fafc] z-10">
+      <div className="md:hidden px-5 pt-6 pb-4 flex items-center justify-between sticky top-0 bg-[#f8fafc] z-10">
         <div>
           <h1 className="text-xl font-headings font-extrabold text-slate-800">My Earnings</h1>
           <p className="text-[11px] text-slate-400 font-medium">Weekly summary and payout history</p>
@@ -21,9 +21,12 @@ export default function Earnings() {
         </button>
       </div>
 
-      <div className="px-5 flex flex-col gap-5">
-        {/* Total Earnings Card */}
-        <div className="bg-[#15803d] rounded-3xl p-5 text-white shadow-md">
+      <div className="px-5 flex flex-col gap-5 md:grid md:grid-cols-12 md:items-start md:gap-6 md:p-8">
+        
+        {/* Left Column for desktop */}
+        <div className="flex flex-col gap-5 md:col-span-7 lg:col-span-8">
+          {/* Total Earnings Card */}
+          <div className="bg-[#15803d] rounded-3xl p-5 text-white shadow-md">
           <p className="text-xs text-emerald-100/90 font-medium tracking-wide">Total Earnings (This Week)</p>
           <h2 className="text-3xl font-black mt-1 mb-6">{totalEarnings}</h2>
           
@@ -68,9 +71,13 @@ export default function Earnings() {
           </div>
         </div>
 
-        {/* Recent Payouts */}
-        <div className="pb-[90px]">
-          <div className="mb-3">
+        </div>
+
+        {/* Right Column for desktop */}
+        <div className="pb-[90px] md:pb-0 md:col-span-5 lg:col-span-4 flex flex-col gap-5">
+          {/* Recent Payouts */}
+          <div className="bg-white md:p-5 md:rounded-3xl md:border md:border-slate-100 md:shadow-sm">
+            <div className="mb-3">
             <h3 className="text-sm font-bold text-slate-800">Recent Payouts</h3>
             <p className="text-[10px] text-slate-400">Funds transferred to your bank</p>
           </div>
@@ -98,13 +105,13 @@ export default function Earnings() {
             )}
           </div>
         </div>
-      </div>
 
-      {/* Floating Action Button area above the bottom nav */}
-      <div className="fixed bottom-[80px] left-0 right-0 px-5 max-w-md mx-auto z-30">
-        <RiderButton className="w-full bg-[#15803d] hover:bg-[#166534] text-white py-6 rounded-[16px] text-sm font-bold shadow-lg">
-          Request Payout
-        </RiderButton>
+          <div className="mt-4">
+            <RiderButton className="w-full bg-[#15803d] hover:bg-[#166534] text-white py-6 rounded-[16px] text-sm font-bold shadow-lg">
+              Request Payout
+            </RiderButton>
+          </div>
+        </div>
       </div>
     </div>
   );

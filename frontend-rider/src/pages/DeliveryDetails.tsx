@@ -76,8 +76,8 @@ export default function DeliveryDetails() {
   };
 
   return (
-    <div className="min-h-screen bg-muted/20 flex flex-col justify-center items-center py-8 relative">
-      <div className="w-full max-w-[412px] h-[900px] bg-background border border-border/80 shadow-xs flex flex-col overflow-hidden relative">
+    <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center md:py-8 relative">
+      <div className="w-full h-screen md:h-[800px] md:max-w-4xl bg-background md:border border-border/80 md:rounded-3xl shadow-xs flex flex-col overflow-hidden relative">
         
         {/* Absolute Header Overlay (Map Mode) or Sticky Header (Details Mode) */}
         <div className={`flex items-center justify-between px-4 pt-6 pb-3 w-full z-20 transition-colors ${
@@ -166,7 +166,7 @@ export default function DeliveryDetails() {
 
           {/* DETAILS VIEW */}
           {activeTab === 'details' && (
-            <div className="p-4 flex flex-col gap-4 pb-24">
+            <div className="p-4 md:p-8 flex flex-col gap-4 pb-24 max-w-2xl mx-auto w-full">
               {/* Status Badges */}
               <div className="flex items-center gap-2.5">
                 <span className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full bg-emerald-800 text-white">
