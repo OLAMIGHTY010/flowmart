@@ -59,7 +59,7 @@ export default function Profile() {
         </p>
       </div>
 
-      <div className="px-5 mt-6 flex-1 flex flex-col gap-2">
+      <div className="px-5 mt-6 flex-1 flex flex-col gap-2 max-w-3xl mx-auto w-full">
         <div className="bg-white rounded-3xl p-2 border border-slate-100 shadow-xs flex flex-col">
           {menuItems.map((item, index) => (
             <div key={index} className="flex items-center gap-4 p-4 hover:bg-slate-50 cursor-pointer transition-colors border-b border-slate-50 last:border-0 rounded-2xl" onClick={() => navigate(item.path)}>

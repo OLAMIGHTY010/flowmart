@@ -49,9 +49,9 @@ export default function DeliveryRequest() {
   };
 
   return (
-    <div className="min-h-screen bg-muted/20 flex flex-col justify-center items-center py-8 relative">
+    <div className="min-h-screen bg-[#f8fafc] flex flex-col justify-center items-center md:py-8 relative">
       {/* Target Application Frame Viewport */}
-      <div className="w-full max-w-[412px] h-[900px] bg-background border border-border/80 shadow-xs flex flex-col justify-between overflow-y-auto no-scrollbar relative">
+      <div className="w-full h-screen md:max-w-xl md:h-[800px] bg-background border border-border/80 shadow-xs md:rounded-2xl flex flex-col justify-between overflow-y-auto no-scrollbar relative">
         
         {/* Main Request Container Body */}
         <div className="p-4 flex flex-col gap-4">

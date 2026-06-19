@@ -33,8 +33,8 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-[#f8fafc] pb-32">
-      {/* Header */}
-      <div className="px-5 pt-6 pb-4 flex items-start justify-between bg-white sticky top-0 z-40 shadow-sm">
+      {/* Mobile Header */}
+      <div className="md:hidden px-5 pt-6 pb-4 flex items-start justify-between bg-white sticky top-0 z-40 shadow-sm">
         <div>
           <h1 className="text-xl font-bold text-slate-800 tracking-tight">
             Good Morning, {firstName} <span className="text-xl">👋</span>
@@ -52,10 +52,12 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="px-5 py-4 flex flex-col gap-5">
-
-        {/* Earnings Card */}
-        <div className="bg-[#15803d] rounded-2xl p-5 text-white shadow-md relative overflow-hidden">
+      <div className="px-5 py-4 flex flex-col gap-5 md:grid md:grid-cols-12 md:items-start md:gap-6 md:p-8">
+        
+        {/* Left Column for desktop */}
+        <div className="flex flex-col gap-5 md:col-span-7 lg:col-span-8">
+          {/* Earnings Card */}
+          <div className="bg-[#15803d] rounded-2xl p-5 text-white shadow-md relative overflow-hidden">
           <div className="flex justify-between items-start mb-4 relative z-10">
             <button
               onClick={() => setIsOnline(!isOnline)}
@@ -94,9 +96,11 @@ export default function Dashboard() {
           <QuickAction icon={<TrendingUp size={20} className="text-[#15803d]" />} label="My Earnings" />
           <QuickAction icon={<Clock size={20} className="text-slate-500" />} label="History" />
         </div>
+        </div>
 
-        {/* Assigned Deliveries Header */}
-        <div className="mt-2">
+        {/* Right Column for desktop */}
+        <div className="flex flex-col gap-5 md:col-span-5 lg:col-span-4 mt-2 md:mt-0">
+          {/* Assigned Deliveries Header */}
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-bold text-slate-800">Assigned Deliveries</h3>
             <div className="bg-[#dcfce7] text-[#166534] px-2.5 py-1 rounded-md text-[10px] font-bold">
