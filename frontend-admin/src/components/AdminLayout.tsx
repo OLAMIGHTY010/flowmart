@@ -56,19 +56,23 @@ export default function AdminLayout() {
         { path: '/vendors', label: 'Vendor Approvals', icon: UserCheck },
         { path: '/distribution', label: 'Distribution Events', icon: Truck },
         { path: '/riders', label: 'Riders (Live)', icon: Car },
-        { path: '/rider-approvals', label: 'Rider Approvals', icon: UserCheck },
         { path: '/analytics', label: 'Platform Analytics', icon: BarChart3 },
         { path: '/audit-logs', label: 'Audit Log', icon: FileText },
         { path: '/settings', label: 'Settings', icon: Settings },
       ];
     } else if (role === 'zone_coordinator' || role === 'camp_logistics_coordinator') {
-      return [
+      const items = [
         { path: '/coordinator-dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { path: '/events/create', label: 'Create Event', icon: PlusCircle },
         { path: '/tracker', label: 'Live Tracker', icon: Truck },
         { path: '/riders', label: 'Rider Management', icon: Users },
         { path: '/coordinator-analytics', label: 'Analytics', icon: BarChart3 },
       ];
+
+      if (role === 'camp_logistics_coordinator') {
+        items.push({ path: '/rider-approvals', label: 'Rider Approvals', icon: UserCheck });
+      }
+      return items;
     }
 
     return [];
