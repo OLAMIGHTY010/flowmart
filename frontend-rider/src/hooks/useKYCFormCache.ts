@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
  * 
  * Stores form state in the query cache so navigating back/forward
  * between KYC pages preserves all user input without re-fetching.
- * Data is also persisted to localStorage for cross-session durability.
+ * Data is also persisted to sessionStorage for cross-session durability.
  */
 
 // ── Profile Setup Form Cache ──
@@ -23,7 +23,7 @@ const PROFILE_SETUP_STORAGE_KEY = "rider_profile_setup_form";
 
 function loadProfileSetupFromStorage(): ProfileSetupFormData {
   try {
-    const stored = localStorage.getItem(PROFILE_SETUP_STORAGE_KEY);
+    const stored = sessionStorage.getItem(PROFILE_SETUP_STORAGE_KEY);
     if (stored) return JSON.parse(stored);
   } catch { /* ignore */ }
   return {
@@ -53,7 +53,12 @@ export function useProfileSetupFormCache() {
     const current = queryClient.getQueryData<ProfileSetupFormData>(PROFILE_SETUP_KEY) || loadProfileSetupFromStorage();
     const next = { ...current, ...updates };
     queryClient.setQueryData(PROFILE_SETUP_KEY, next);
-    localStorage.setItem(PROFILE_SETUP_STORAGE_KEY, JSON.stringify(next));
+    try {
+      const toStore = { ...next, avatar: '' }; // Omit base64 avatar from sessionStorage to prevent quota limits
+      sessionStorage.setItem(PROFILE_SETUP_STORAGE_KEY, JSON.stringify(toStore));
+    } catch (e) {
+      console.warn("sessionStorage quota exceeded for profile setup", e);
+    }
   };
 
   return {
@@ -99,18 +104,21 @@ function loadKYCInfoFromStorage(): KYCInfoFormData {
     documents: [
       { id: 'insurance', title: 'Upload Vehicle Insurance', subtitle: 'Valid insurance document', status: 'upload' },
       { id: 'road_worthiness', title: 'Upload Road Worthiness Certificate', subtitle: 'Valid road worthiness cert', status: 'upload' },
+      { id: 'car_image', title: 'Upload Car Image', subtitle: 'Clear photo of your vehicle showing the plate number', status: 'upload' },
     ],
   };
 
   try {
-    const stored = localStorage.getItem(KYC_INFO_STORAGE_KEY);
+    const stored = sessionStorage.getItem(KYC_INFO_STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
       if (parsed.documents && Array.isArray(parsed.documents)) {
-        parsed.documents = parsed.documents.map((d: any) => ({
-          ...d,
-          filePreviewUrl: undefined,
-        }));
+        parsed.documents = parsed.documents.map((d: any) => {
+          if (d.status === 'uploaded' && !d.base64) {
+            return { ...d, status: 'upload', fileName: undefined, filePreviewUrl: undefined };
+          }
+          return { ...d, filePreviewUrl: undefined };
+        });
       } else {
         parsed.documents = defaultState.documents;
       }
@@ -141,7 +149,11 @@ export function useKYCInfoFormCache() {
       ...next,
       documents: next.documents.map(d => ({ ...d, filePreviewUrl: undefined })),
     };
-    localStorage.setItem(KYC_INFO_STORAGE_KEY, JSON.stringify(toStore));
+    try {
+      sessionStorage.setItem(KYC_INFO_STORAGE_KEY, JSON.stringify(toStore));
+    } catch (e) {
+      console.warn("sessionStorage quota exceeded for kyc info", e);
+    }
   };
 
   return {
@@ -176,16 +188,18 @@ const KYC_SUBMIT_STORAGE_KEY = "rider_kyc_submit_form";
 
 function loadKYCSubmitFromStorage(): KYCSubmitFormData {
   try {
-    const stored = localStorage.getItem(KYC_SUBMIT_STORAGE_KEY);
+    const stored = sessionStorage.getItem(KYC_SUBMIT_STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
-      // filePreviewUrl won't survive localStorage (blob URLs are session-scoped)
+      // filePreviewUrl won't survive sessionStorage (blob URLs are session-scoped)
       // so mark uploaded docs as uploaded but without preview
       if (parsed.documents) {
-        parsed.documents = parsed.documents.map((d: any) => ({
-          ...d,
-          filePreviewUrl: undefined,  // Blob URLs don't persist
-        }));
+        parsed.documents = parsed.documents.map((d: any) => {
+          if (d.status === 'uploaded' && !d.base64) {
+            return { ...d, status: 'upload', fileName: undefined, filePreviewUrl: undefined };
+          }
+          return { ...d, filePreviewUrl: undefined };
+        });
       }
       return parsed;
     }
@@ -198,6 +212,7 @@ function loadKYCSubmitFromStorage(): KYCSubmitFormData {
     documents: [
       { id: 'government_id', title: 'Government ID', subtitle: 'Upload a valid government-issued ID', status: 'upload' },
       { id: 'guarantor_id', title: 'Guarantor ID', subtitle: "Upload guarantor's government-issued ID", status: 'upload' },
+      { id: 'rider_image', title: 'Rider Image/Logo', subtitle: "Clear photo of yourself for your rider profile", status: 'upload' },
     ],
   };
 }
@@ -219,12 +234,16 @@ export function useKYCSubmitFormCache() {
     const current = queryClient.getQueryData<KYCSubmitFormData>(KYC_SUBMIT_KEY) || loadKYCSubmitFromStorage();
     const next = { ...current, ...updates };
     queryClient.setQueryData(KYC_SUBMIT_KEY, next);
-    // Save to localStorage (strip blob URLs which are session-only)
+    // Save to sessionStorage (strip blob URLs which are session-only)
     const toStore = {
       ...next,
       documents: next.documents.map(d => ({ ...d, filePreviewUrl: undefined })),
     };
-    localStorage.setItem(KYC_SUBMIT_STORAGE_KEY, JSON.stringify(toStore));
+    try {
+      sessionStorage.setItem(KYC_SUBMIT_STORAGE_KEY, JSON.stringify(toStore));
+    } catch (e) {
+      console.warn("sessionStorage quota exceeded for kyc submit", e);
+    }
   };
 
   return {

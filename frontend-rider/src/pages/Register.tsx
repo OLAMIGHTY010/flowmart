@@ -2,7 +2,7 @@ import React, { useRef, useState } from "react";
 import { Navigate, useNavigate, useLocation } from "react-router";
 import { Eye, EyeOff, Loader2, Camera, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { VendorButton } from "@/components/ui/button";
+import { RiderButton } from "@/components/ui/button";
 import { VendorInput } from "@/components/ui/input";
 import logo from "@/assets/flowmart-logo.png";
 import SideBanner from "@/components/SideBanner";
@@ -78,7 +78,7 @@ export default function Register() {
       dateOfBirth:dob,
       gender,
       profileImage,
-      role:"vendor",
+      role:"dispatch_rider",
     });
 
     setLoading(false);
@@ -262,7 +262,7 @@ export default function Register() {
               </div>
             </div>
 
-            <VendorButton 
+            <RiderButton 
               type="submit" 
               disabled={isFormEmpty || loading} 
               className={`mt-2 transition-all duration-300 ${
@@ -273,7 +273,7 @@ export default function Register() {
             >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin inline" />}
               {loading ? "Creating account..." : "Create Account"}
-            </VendorButton>
+            </RiderButton>
 
             <p className="text-sm text-muted-foreground text-center">
               Already have an account?{" "}

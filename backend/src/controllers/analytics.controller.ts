@@ -1,10 +1,8 @@
 import { Request, Response } from 'express';
 import { db } from '../../db';
 import { orders, users, vendorKyc, welfareEvents, welfareAllocations, welfareInventory } from '../../db/schema';
-import { sql, eq, desc } from 'drizzle-orm';
+import { sql, eq, desc, and, ne, gt } from 'drizzle-orm';
 import { parse } from 'json2csv';
-import { orders, welfareAllocations, users } from '../../db/schema';
-import { sql, eq, and, ne, gt } from 'drizzle-orm';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 
 export const getPlatformOverview = async (req: Request, res: Response) => {
@@ -160,23 +158,6 @@ export const getCoordinatorOverview = async (req: Request, res: Response) => {
         activeRiders: activeRiders,
         totalRiders: Number(activeRidersResult[0]?.count) || 0,
         criticalAlerts: Number(stats?.criticalAlerts) || 0
-      totalShortages: sql<number>`sum(${welfareAllocations.shortageReported})`,
-      pendingZones: sql<number>`sum(case when ${welfareAllocations.status} != 'delivered' then 1 else 0 end)`,
-      shortageAlerts: sql<number>`sum(case when ${welfareAllocations.shortageReported} > 0 then 1 else 0 end)`
-    }).from(welfareAllocations);
-
-    const [riderStats] = await db.select({
-      activeRiders: sql<number>`count(distinct ${users.id})`
-    }).from(users).where(eq(users.role, 'dispatch_rider'));
-
-    return res.status(200).json({
-      success: true,
-      stats: { 
-        commerce: orderStats, 
-        welfare: welfareStats,
-        system: {
-          activeRiders: riderStats?.activeRiders || 0
-        }
       }
     });
   } catch (error) {

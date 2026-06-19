@@ -22,6 +22,7 @@ import Profile from "@/pages/Profile";
 
 import { createProtectedRoute } from "@/routes/guards/ProtectedRoute";
 import { OnboardingGuard } from "@/routes/guards/OnboardingGuard";
+import { DashboardGuard } from "@/routes/guards/DashboardGuard";
 import RiderLayout from "@/components/RiderLayout";
 import { PushNotificationManager } from "@/components/PushNotificationManager";
 
@@ -55,25 +56,19 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/otp" element={<VerifyOtpPage />} />
-            <Route path="/profile-setup" element={<ProfileSetup />} />
             <Route path="/email-verified" element={<EmailVerified />} />
-            <Route path="/kyc" element={<KYCInfo />} />
-            <Route path="/kyc/submit" element={<KYCSubmit />} />
-            <Route path="/kyc/review" element={<KYCReview />} />
-            <Route path="/kyc/verification" element={<KYCVerification />} />
-            {/* AUTH ONLY (must be logged in) */}
-            <Route element={<ProtectedRoute />}>
-
-            </Route>
-
 
             {/* ONBOARDING FLOW (profile → kyc → dashboard rules) */}
             <Route element={<OnboardingGuard />}>
-              {/* <Route path="/kyc" element={<KYCInfo />} />
+              <Route path="/profile-setup" element={<ProfileSetup />} />
+              <Route path="/kyc" element={<KYCInfo />} />
               <Route path="/kyc/submit" element={<KYCSubmit />} />
               <Route path="/kyc/review" element={<KYCReview />} />
-              <Route path="/kyc/verification" element={<KYCVerification />} /> */}
+              <Route path="/kyc/verification" element={<KYCVerification />} />
+            </Route>
 
+            {/* DASHBOARD FLOW (requires approved KYC) */}
+            <Route element={<DashboardGuard />}>
               {/* Rider Main Layout Screens */}
               <Route element={<RiderLayout />}>
                 <Route path="/dashboard" element={<Dashboard />} />

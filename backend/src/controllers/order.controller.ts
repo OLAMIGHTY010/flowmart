@@ -4,9 +4,6 @@ import { products, orders, orderItems, users, vendorProfiles, vendorKyc } from "
 import { eq, and, desc, sql } from "drizzle-orm";
 import { AuthenticatedRequest } from "../middleware/auth.middleware";
 import { sendInAppNotification } from "../services/websocket";
-import { products, orders, orderItems, users } from "../../db/schema";
-import { eq, and } from "drizzle-orm";
-import { AuthenticatedRequest } from "../middleware/auth.middleware";
 import { emailService } from "../services/email.service";
 
 // Helper to generate FLW-YYYYMMDD-XXXX
@@ -23,89 +20,6 @@ const generateOrderRef = () => {
 export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
 	try {
 		const attendeeId = req.user?.id;
-		const { items, deliveryZone } = req.body;
-
-		if (!items || !Array.isArray(items) || items.length === 0) {
-			return res.status(400).json({
-				success: false,
-				message: "Cart is empty",
-			});
-		}
-
-		// Group items by vendorId. For now, assume all items in an order are from the same vendor,
-		// or create a separate order for each vendor. Let's create one order per vendor.
-		// To simplify, let's assume the frontend groups by vendor and makes multiple requests,
-		// OR we handle it here by picking the first item's vendor. The frontend checkout
-		// currently assumes 1 order per checkout. Let's use the first item's vendorId for the order.
-		
-		let totalAmountNum = 0;
-		const orderItemsData: any[] = [];
-		const productUpdates: any[] = [];
-		
-		// 1. Fetch all products to verify stock and prices
-		const productIds = items.map(item => item.productId);
-		const dbProducts = await db
-			.select()
-			.from(products)
-			.where(sql`${products.id} IN ${productIds}`);
-
-		const productMap = new Map(dbProducts.map(p => [p.id, p]));
-		let vendorId = dbProducts[0]?.vendorId;
-
-		for (const item of items) {
-			const product = productMap.get(item.productId);
-			
-			if (!product || product.stockQuantity < item.quantity) {
-				return res.status(400).json({
-					success: false,
-					message: `Product ${product?.name || item.productId} is unavailable or out of stock`,
-				});
-			}
-
-			totalAmountNum += Number(product.price) * item.quantity;
-			
-			orderItemsData.push({
-				productId: product.id,
-				quantity: item.quantity,
-				unitPrice: product.price,
-			});
-
-			productUpdates.push({
-				id: product.id,
-				newStock: product.stockQuantity - item.quantity,
-			});
-		}
-
-		const totalAmount = totalAmountNum.toString();
-		const deliveryPin = Math.floor(100000 + Math.random() * 900000).toString();
-
-		// Create the order
-		const [newOrder] = await db
-			.insert(orders)
-			.values({
-				attendeeId: attendeeId!,
-				vendorId: vendorId,
-				deliveryZone: deliveryZone || "Standard",
-				totalAmount,
-				deliveryPin,
-				status: "pending",
-			})
-			.returning();
-
-		// Create all order items
-		await db.insert(orderItems).values(
-			orderItemsData.map(item => ({
-				orderId: newOrder.id,
-				...item
-			}))
-		);
-
-		// Deduct from inventory (run sequentially or use transaction)
-		for (const update of productUpdates) {
-			await db
-				.update(products)
-				.set({ stockQuantity: update.newStock })
-				.where(eq(products.id, update.id));
 		const { productId, quantity, deliveryZone, zone, payment_method, transaction_reference, payment_proof_url } = req.body;
 
 		const finalZone = deliveryZone || zone;
@@ -190,7 +104,7 @@ const enrichOrderWithItems = async (order: any) => {
 			quantity: orderItems.quantity,
 			unitPrice: orderItems.unitPrice,
 			productName: products.name,
-			productImage: products.imageUrl,
+			productImage: products.images,
 			productCategory: products.category,
 		})
 		.from(orderItems)
@@ -232,8 +146,7 @@ export const getOrders = async (req: AuthenticatedRequest, res: Response) => {
 				.where(eq(orders.attendeeId, userId!))
 				.orderBy(desc(orders.createdAt));
 			userOrders = await db.select().from(orders).where(eq(orders.vendorId, userId!));
-		} else if (role === "attendee") {
-			userOrders = await db.select().from(orders).where(eq(orders.attendeeId, userId!));
+
 		} else {
 			return res.status(403).json({ success: false, message: "Unauthorized view" });
 		}
@@ -304,7 +217,6 @@ export const updateOrderStatus = async (req: AuthenticatedRequest, res: Response
 	try {
 		const orderId = req.params.id as string;
 		const { status } = req.body;
-		const { status } = req.body; 
 		const vendorId = req.user?.id;
 
 		const [existingOrder] = await db.select().from(orders).where(

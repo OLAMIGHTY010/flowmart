@@ -4,7 +4,8 @@ import {
   getUsersStats, 
   getUsers, 
   createUser, 
-  updateUserStatus 
+  updateUserStatus,
+  updateUserProfile
 } from '../controllers/user-management.controller';
 
 const router = Router();
@@ -17,5 +18,6 @@ router.get('/stats', getUsersStats);
 router.get('/', getUsers);
 router.post('/', createUser);
 router.patch('/:id/status', updateUserStatus);
+router.put('/:id', updateUserProfile);
 
 export default router;

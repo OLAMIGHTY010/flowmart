@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { db } from '../../db';
 import { users, vendorProfiles, vendorKyc, vendorKycHistory, products } from '../../db/schema';
 import { eq, sql, and, desc, asc } from 'drizzle-orm';
-import { sendEmail } from '../services/email';
+
 
 export const getVendorApprovalStats = async (req: Request, res: Response) => {
   try {
@@ -183,16 +183,8 @@ export const reviewVendor = async (req: Request, res: Response) => {
       htmlContent = `<p>Hello ${userRecord[0].fullName},</p><p>Unfortunately, your vendor application has been <b>rejected</b>.</p><p><b>Reason:</b> ${notes}</p><p>Please update your profile and try again.</p>`;
     }
 
-    try {
-      await sendEmail(
-        userEmail,
-        subject,
-        htmlContent.replace(/<[^>]+>/g, ''), // Strip tags for text version
-        htmlContent
-      );
-    } catch (e) {
-      console.warn("Failed to send review email", e);
-    }
+    // Email notification would go here
+    console.log("Mock Email Sent:", subject, htmlContent);
 
     return res.status(200).json({ success: true, message: `Vendor ${status} successfully` });
   } catch (error) {

@@ -16,7 +16,7 @@ interface WelcomeData {
 
 interface PasswordResetData {
   fullName: string;
-  resetLink: string; // or just the token, depending on your frontend setup
+  resetLink: string;
 }
 
 interface OrderReceiptData {
@@ -82,7 +82,7 @@ class EmailService {
       // Going up one level from 'services' to reach 'templates'
       const templatePath = path.join(__dirname, '..', 'templates', `${templateName}.html`);
       const templateContent = await fs.readFile(templatePath, 'utf-8');
-      
+
       const compiledTemplate = handlebars.compile(templateContent);
       return compiledTemplate(data);
     } catch (error) {
@@ -159,6 +159,29 @@ class EmailService {
       from: this.fromEmail,
       to: coordinatorEmail,
       subject: `📦 New Welfare Allocation for ${data.zoneId}`,
+      html,
+    });
+  }
+
+  public async sendKYCRejection(email: string, fullName: string, reason: string): Promise<void> {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #ef4444;">Application Update</h2>
+        <p>Dear ${fullName},</p>
+        <p>We have reviewed your recent application, and unfortunately, we are unable to approve it at this time.</p>
+        <p><strong>Reason for rejection:</strong></p>
+        <blockquote style="border-left: 4px solid #ef4444; padding-left: 15px; color: #555; background: #f9f9f9; padding: 10px; margin: 15px 0;">
+          ${reason}
+        </blockquote>
+        <p>You can return to the portal to update your profile and correct any missing or invalid documents.</p>
+        <br/>
+        <p>Best regards,<br/>The FlowMart Team</p>
+      </div>
+    `;
+    await this.transporter.sendMail({
+      from: this.fromEmail,
+      to: email,
+      subject: 'Update on Your FlowMart Application',
       html,
     });
   }

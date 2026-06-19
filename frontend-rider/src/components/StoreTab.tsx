@@ -51,14 +51,14 @@ export default function StoreTab() {
   // Load from LocalStorage
   useEffect(() => {
     try {
-      const profile = localStorage.getItem("vendor_profile");
+      const profile = sessionStorage.getItem("vendor_profile");
       if (profile) {
         const parsed = JSON.parse(profile);
         if (parsed.displayName) setStoreName(parsed.displayName);
         if (parsed.businessPhone) setPhone(parsed.businessPhone);
       }
 
-      const kyc = localStorage.getItem("vendor_kyc_info");
+      const kyc = sessionStorage.getItem("vendor_kyc_info");
       if (kyc) {
         const parsed = JSON.parse(kyc);
         if (parsed.businessName) setStoreName(parsed.businessName);
@@ -67,13 +67,13 @@ export default function StoreTab() {
         if (parsed.accountName) setAccountName(parsed.accountName);
       }
 
-      const userStr = localStorage.getItem("auth_user");
+      const userStr = sessionStorage.getItem("auth_user");
       if (userStr) {
         const parsed = JSON.parse(userStr);
         if (parsed.email) setEmail(parsed.email);
       }
 
-      const localSettings = localStorage.getItem("vendor_store_settings");
+      const localSettings = sessionStorage.getItem("vendor_store_settings");
       if (localSettings) {
         const parsed = JSON.parse(localSettings);
         if (parsed.category) setCategory(parsed.category);
@@ -93,10 +93,10 @@ export default function StoreTab() {
   // Save Settings Helper
   const saveSettings = (updatedFields: any, successMsg = "Settings Saved!") => {
     try {
-      const localSettings = localStorage.getItem("vendor_store_settings") || "{}";
+      const localSettings = sessionStorage.getItem("vendor_store_settings") || "{}";
       const current = JSON.parse(localSettings);
       const merged = { ...current, ...updatedFields };
-      localStorage.setItem("vendor_store_settings", JSON.stringify(merged));
+      sessionStorage.setItem("vendor_store_settings", JSON.stringify(merged));
       
       setToastMessage(successMsg);
       setShowToast(true);
@@ -128,10 +128,10 @@ export default function StoreTab() {
       content = (
         <form onSubmit={(e) => {
           e.preventDefault();
-          const profile = localStorage.getItem("vendor_profile") || "{}";
+          const profile = sessionStorage.getItem("vendor_profile") || "{}";
           const parsed = JSON.parse(profile);
           parsed.displayName = storeName;
-          localStorage.setItem("vendor_profile", JSON.stringify(parsed));
+          sessionStorage.setItem("vendor_profile", JSON.stringify(parsed));
           saveSettings({ storeName });
           setActiveSubPage(null);
         }} className="flex flex-col gap-5">
@@ -171,10 +171,10 @@ export default function StoreTab() {
       content = (
         <form onSubmit={(e) => {
           e.preventDefault();
-          const profile = localStorage.getItem("vendor_profile") || "{}";
+          const profile = sessionStorage.getItem("vendor_profile") || "{}";
           const parsed = JSON.parse(profile);
           parsed.businessPhone = phone;
-          localStorage.setItem("vendor_profile", JSON.stringify(parsed));
+          sessionStorage.setItem("vendor_profile", JSON.stringify(parsed));
           saveSettings({ phone });
           setActiveSubPage(null);
         }} className="flex flex-col gap-5">
@@ -225,12 +225,12 @@ export default function StoreTab() {
       content = (
         <form onSubmit={(e) => {
           e.preventDefault();
-          const kyc = localStorage.getItem("vendor_kyc_info") || "{}";
+          const kyc = sessionStorage.getItem("vendor_kyc_info") || "{}";
           const parsed = JSON.parse(kyc);
           parsed.bankName = bankName;
           parsed.accountNumber = accountNumber;
           parsed.accountName = accountName;
-          localStorage.setItem("vendor_kyc_info", JSON.stringify(parsed));
+          sessionStorage.setItem("vendor_kyc_info", JSON.stringify(parsed));
           saveSettings({ bankName, accountNumber, accountName }, "Bank account details saved!");
           setActiveSubPage(null);
         }} className="flex flex-col gap-4">
@@ -556,9 +556,9 @@ export default function StoreTab() {
         }
         
         // save directly
-        const localSettings = localStorage.getItem("vendor_store_settings") || "{}";
+        const localSettings = sessionStorage.getItem("vendor_store_settings") || "{}";
         const current = JSON.parse(localSettings);
-        localStorage.setItem("vendor_store_settings", JSON.stringify({ ...current, ...update }));
+        sessionStorage.setItem("vendor_store_settings", JSON.stringify({ ...current, ...update }));
       };
 
       content = (

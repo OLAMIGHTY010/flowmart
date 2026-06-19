@@ -11,21 +11,13 @@ import type {
 
 export const riderService = {
   updateProfile: async (data: ProfileSetupRequest): Promise<ApiResponse<any>> => {
-    const res = await apiClient.put<ApiResponse<any>>("/rider/profile", data);
-    
-    // Update local storage auth user profile completed flag
-    const storedUser = localStorage.getItem("currentUser");
-    if (storedUser) {
-      const user = JSON.parse(storedUser);
-      user.profileCompleted = true;
-      localStorage.setItem("currentUser", JSON.stringify(user));
-    }
-    
-    return res;
+    // Save to local cache only (no network requests per user requirement until review step)
+    sessionStorage.setItem("rider_profile_setup", JSON.stringify(data));
+    return { success: true, message: "Profile details saved locally", data };
   },
 
   submitKYCInfo: async (data: KYCInfoRequest): Promise<ApiResponse<any>> => {
-    localStorage.setItem("rider_kyc_info", JSON.stringify(data));
+    sessionStorage.setItem("rider_kyc_info", JSON.stringify(data));
     return { success: true, message: "KYC details saved locally", data };
   },
 

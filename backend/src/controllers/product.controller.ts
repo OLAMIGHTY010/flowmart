@@ -10,7 +10,7 @@ export const createProduct = async (
 	res: Response
 ) => {
 	try {
-		const { name, description, price, stockQuantity, imageUrl, sku, category, brand, oldPrice, weight, images } = req.body;
+		const { name, description, price, stockQuantity, sku, category, brand, oldPrice, weight, images } = req.body;
 		const vendorId = req.user?.id;
 
 		if (!name || !price) {
@@ -28,7 +28,6 @@ export const createProduct = async (
 				description,
 				price,
 				stockQuantity: stockQuantity || 0,
-				imageUrl,
 				sku,
 				category,
 				brand,
@@ -87,7 +86,7 @@ export const updateProduct = async (
 	try {
 		const productId = req.params.id as string;
 		const vendorId = req.user?.id;
-		const { name, description, price, stockQuantity, imageUrl, sku, category, brand, oldPrice, weight, images } = req.body;
+		const { name, description, price, stockQuantity, sku, category, brand, oldPrice, weight, images } = req.body;
 
 		// Verify the product belongs to the vendor requesting the update (Keeping type assertion)
 		const [existingProduct] = await db
@@ -121,7 +120,7 @@ export const updateProduct = async (
 					stockQuantity !== undefined
 						? stockQuantity
 						: existingProduct.stockQuantity,
-				imageUrl: imageUrl || existingProduct.imageUrl,
+
 				sku: sku !== undefined ? sku : existingProduct.sku,
 				category: category !== undefined ? category : existingProduct.category,
 				brand: brand !== undefined ? brand : existingProduct.brand,

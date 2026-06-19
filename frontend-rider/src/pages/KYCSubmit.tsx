@@ -4,7 +4,7 @@ import { Loader2 } from 'lucide-react';
 import { useKYCDocUpload } from '@/hooks/useRiderMutations';
 import { useKYCStatus } from '@/hooks/useRiderQueries';
 import { useKYCSubmitFormCache } from '@/hooks/useKYCFormCache';
-import { VendorButton } from '@/components/ui/button';
+import { RiderButton } from '@/components/ui/button';
 import { VendorInput } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/Icon';
@@ -50,9 +50,9 @@ export default function KYCSubmitScreen() {
 
   const { data: kycStatus } = useKYCStatus();
 
-  // Redirect if already submitted
+  // Redirect if already submitted and not rejected
   useEffect(() => {
-    if (kycStatus && kycStatus.status !== 'unsubmitted') {
+    if (kycStatus && kycStatus.status !== 'unsubmitted' && kycStatus.status !== 'rejected') {
       if (kycStatus.status === 'approved') {
         navigate('/dashboard', { replace: true });
       } else {
@@ -67,7 +67,15 @@ export default function KYCSubmitScreen() {
   const [guarantorName, setGuarantorName] = useState(formData.guarantorName);
   const [guarantorPhone, setGuarantorPhone] = useState(formData.guarantorPhone);
   const [guarantorRelationship, setGuarantorRelationship] = useState(formData.guarantorRelationship);
-  const [documents, setDocuments] = useState<UploadDoc[]>(formData.documents);
+  
+  const [documents, setDocuments] = useState<UploadDoc[]>(() => {
+    const defaults = [
+      { id: 'government_id', title: 'Government ID', subtitle: 'Upload a valid government-issued ID', status: 'upload' },
+      { id: 'guarantor_id', title: 'Guarantor ID', subtitle: "Upload guarantor's government-issued ID", status: 'upload' },
+      { id: 'rider_image', title: 'Rider Image/Logo', subtitle: "Clear photo of yourself for your rider profile", status: 'upload' },
+    ] as UploadDoc[];
+    return defaults.map(def => formData.documents.find(d => d.id === def.id) || def);
+  });
 
   useEffect(() => {
     updateForm({ govIdType, guarantorName, guarantorPhone, guarantorRelationship, documents });
@@ -277,6 +285,16 @@ export default function KYCSubmitScreen() {
                   handleRemoveFile
                 )}
               </div>
+
+              <div className="mt-4 border-t border-border/50 pt-4">
+                <label className="text-sm font-semibold text-foreground mb-2 block">Rider Image</label>
+                {renderUploadCard(
+                  documents.find(d => d.id === 'rider_image')!,
+                  uploadingId,
+                  handleCardClick,
+                  handleRemoveFile
+                )}
+              </div>
             </CardContent>
           </Card>
 
@@ -295,13 +313,13 @@ export default function KYCSubmitScreen() {
             </p>
           </div>
 
-          <VendorButton
+          <RiderButton
             onClick={() => navigate('/kyc/review')}
             disabled={!canProceed}
             className={!canProceed ? 'opacity-60 cursor-not-allowed' : ''}
           >
             Review Application
-          </VendorButton>
+          </RiderButton>
 
           {!canProceed && (
             <p className="text-xs text-center text-muted-foreground font-medium -mt-2">
@@ -325,7 +343,7 @@ function renderUploadCard(
 
   return (
     <div
-      onClick={() => !isUploading && !isUploaded && onUpload(doc.id, doc.status)}
+      onClick={() => !isUploading && onUpload(doc.id, 'upload')}
       className={`relative rounded-2xl border-2 border-dashed transition-all ${
         isUploaded
           ? 'border-[#86efac] bg-[#f0fdf4]'

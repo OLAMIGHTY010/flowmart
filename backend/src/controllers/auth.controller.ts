@@ -4,16 +4,9 @@ import { users, verificationOtps } from '../../db/schema';
 import { eq, and, gt } from 'drizzle-orm';
 import { hashPassword, comparePassword } from '../utils/password';
 import jwt from 'jsonwebtoken';
-import { sendEmail } from '../services/email';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
-import { db } from '../../db';
-import { users } from '../../db/schema';
-import { eq, and, gt } from 'drizzle-orm';
-import { hashPassword, comparePassword } from '../utils/password';
-import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
 import { emailService } from '../services/email.service';
-import { AuthenticatedRequest } from '../middleware/auth.middleware';
+import crypto from 'crypto';
 
 // Helper to generate a 6-digit OTP
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
@@ -47,18 +40,12 @@ export const register = async (req: Request, res: Response) => {
         const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
         const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
 
-        await db.delete(verificationOtps).where(eq(verificationOtps.userId, user.id));
-        await db.insert(verificationOtps).values({
-          userId: user.id,
+        await db.update(users).set({
           otp: otpCode,
-          expiresAt,
-        });
+          otpExpiry: expiresAt,
+        }).where(eq(users.id, user.id));
 
-        await sendEmail(
-          user.email,
-          'Verify Your FlowMart Account',
-          `Hello ${user.fullName},\n\nYour 6-digit verification code is: ${otpCode}\n\nThis code will expire in 1 hour.\n\nBest regards,\nThe FlowMart Team`
-        );
+        emailService.sendOtpEmail(user.email, { fullName: user.fullName, otp: otpCode }).catch(console.error);
 
         // Generate Token
         const token = jwt.sign(
@@ -96,7 +83,9 @@ export const register = async (req: Request, res: Response) => {
     // Hash and save new user
     const hashedPassword = await hashPassword(password);
     const otp = generateOTP();
-    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+    // Generate a 6-digit OTP code
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour expiration
 
     const [newUser] = await db.insert(users).values({
       fullName,
@@ -106,33 +95,12 @@ export const register = async (req: Request, res: Response) => {
       phone: phoneNumber || null,
       dateOfBirth: dateOfBirth || null,
       gender: gender || null,
-    }).returning();
-
-    // Generate a 6-digit OTP code (e.g. "123456")
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour expiration
-
-    // Insert into verificationOtps
-    await db.insert(verificationOtps).values({
-      userId: newUser.id,
       otp: otpCode,
-      expiresAt,
-    });
-
-    // Send verification email (logs to emails.log too!)
-    await sendEmail(
-      newUser.email,
-      'Verify Your FlowMart Account',
-      `Hello ${newUser.fullName},\n\nYour 6-digit verification code is: ${otpCode}\n\nThis code will expire in 1 hour.\n\nBest regards,\nThe FlowMart Team`
-    );
-      role: requestedRole, // ✨ Safely insert the validated role
-      isVerified: false,
-      otp,
-      otpExpiry,
+      otpExpiry: expiresAt,
     }).returning();
 
     // Fire & Forget Email
-    emailService.sendOtpEmail(newUser.email, { fullName: newUser.fullName, otp }).catch(console.error);
+    emailService.sendOtpEmail(newUser.email, { fullName: newUser.fullName, otp: otpCode }).catch(console.error);
 
     return res.status(201).json({
       success: true,
@@ -147,15 +115,22 @@ export const register = async (req: Request, res: Response) => {
 
 export const verifyOtp = async (req: Request, res: Response) => {
   try {
-    const { email, otp } = req.body;
-
-    if (!email || !otp) {
-      return res.status(400).json({ success: false, message: 'Email and OTP are required' });
+    let { otp } = req.body;
+    
+    // Support both raw string body and wrapped object body (just in case)
+    if (!otp && typeof req.body === 'string') {
+      otp = req.body;
     }
 
-    const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    if (!otp) {
+      return res.status(400).json({ success: false, message: 'OTP is required' });
+    }
 
-    if (!user || user.otp !== otp) {
+    // Find user by OTP. (Note: In a production app, OTPs are 6 digits and could collide.
+    // Searching by email+otp is safer, but this matches the frontend requirement.)
+    const [user] = await db.select().from(users).where(eq(users.otp, otp)).limit(1);
+
+    if (!user) {
       return res.status(400).json({ success: false, message: 'Invalid OTP' });
     }
 
@@ -188,17 +163,6 @@ export const verifyOtp = async (req: Request, res: Response) => {
       success: true,
       message: 'Account verified successfully',
       token,
-      user: {
-        id: newUser.id,
-        fullName: newUser.fullName,
-        email: newUser.email,
-        role: newUser.role,
-        phone: newUser.phone,
-        dateOfBirth: newUser.dateOfBirth,
-        gender: newUser.gender,
-        isVerified: false,
-        profileCompleted: false
-      }
       user: { id: verifiedUser.id, fullName: verifiedUser.fullName, email: verifiedUser.email, role: verifiedUser.role }
     });
 
@@ -328,6 +292,9 @@ export const forceChangePassword = async (req: Request, res: Response) => {
     return res.status(200).json({ success: true, message: 'Password changed successfully' });
   } catch (error) {
     console.error('Force Change Password Error:', error);
+    return res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+};
 export const requestPasswordReset = async (req: Request, res: Response) => {
   try {
     const { email } = req.body;
@@ -362,72 +329,6 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
   }
 };
 
-export const verifyOtp = async (req: Request, res: Response) => {
-  try {
-    let { otp } = req.body;
-
-    // Support both raw string body and wrapped object body
-    if (!otp && typeof req.body === 'string') {
-      otp = req.body;
-    }
-
-    if (!otp) {
-      return res.status(400).json({ success: false, message: 'OTP code is required' });
-    }
-
-    // Find valid OTP record (not expired)
-    const now = new Date();
-    const [otpRecord] = await db
-      .select()
-      .from(verificationOtps)
-      .where(and(eq(verificationOtps.otp, otp), gt(verificationOtps.expiresAt, now)))
-      .limit(1);
-
-    if (!otpRecord) {
-      return res.status(400).json({ success: false, message: 'Invalid or expired OTP code' });
-    }
-
-    // Mark user as verified
-    await db.update(users).set({ isVerified: true }).where(eq(users.id, otpRecord.userId));
-
-    // Delete verification OTP
-    await db.delete(verificationOtps).where(eq(verificationOtps.id, otpRecord.id));
-
-    return res.status(200).json({
-      success: true,
-      message: 'OTP verified successfully'
-    });
-  } catch (error) {
-    console.error('OTP Verification Error:', error);
-export const resetPassword = async (req: Request, res: Response) => {
-  try {
-    const { token, newPassword } = req.body;
-    if (!token || !newPassword) return res.status(400).json({ success: false, message: 'Token and new password required' });
-
-    const [user] = await db.select().from(users).where(
-      and(eq(users.resetToken, token), gt(users.resetTokenExpiry, new Date()))
-    ).limit(1);
-
-    if (!user) {
-      return res.status(400).json({ success: false, message: 'Invalid or expired reset token' });
-    }
-
-    const hashedPassword = await hashPassword(newPassword);
-
-    await db.update(users).set({
-      password: hashedPassword,
-      resetToken: null,
-      resetTokenExpiry: null,
-      updatedAt: new Date()
-    }).where(eq(users.id, user.id));
-
-    return res.status(200).json({ success: true, message: 'Password has been successfully reset. You can now log in.' });
-  } catch (error) {
-    console.error('Reset Password Error:', error);
-    return res.status(500).json({ success: false, message: 'Internal Server Error' });
-  }
-};
-
 export const resendOtp = async (req: Request, res: Response) => {
   try {
     const { email } = req.body;
@@ -436,32 +337,20 @@ export const resendOtp = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: 'Email is required' });
     }
 
-    // Find user by email
     const [userRecord] = await db.select().from(users).where(eq(users.email, email)).limit(1);
     if (!userRecord) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    // Generate new OTP
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour expiration
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); 
 
-    // Delete old OTPs first
-    await db.delete(verificationOtps).where(eq(verificationOtps.userId, userRecord.id));
-
-    // Insert new OTP
-    await db.insert(verificationOtps).values({
-      userId: userRecord.id,
+    await db.update(users).set({
       otp: otpCode,
-      expiresAt,
-    });
+      otpExpiry: expiresAt,
+    }).where(eq(users.id, userRecord.id));
 
-    // Send email (logs to emails.log too!)
-    await sendEmail(
-      userRecord.email,
-      'Verify Your FlowMart Account (Resent OTP)',
-      `Hello ${userRecord.fullName},\n\nYour new 6-digit verification code is: ${otpCode}\n\nThis code will expire in 1 hour.\n\nBest regards,\nThe FlowMart Team`
-    );
+    emailService.sendOtpEmail(userRecord.email, { fullName: userRecord.fullName, otp: otpCode }).catch(console.error);
 
     return res.status(200).json({
       success: true,
@@ -481,71 +370,20 @@ export const forgotPassword = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: 'Email is required' });
     }
 
-    // Find user by email
     const [userRecord] = await db.select().from(users).where(eq(users.email, email)).limit(1);
     if (!userRecord) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    // If unverified, redirect them to verify
-    if (!userRecord.isVerified) {
-      // Generate OTP and send email
-      const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-      const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
-
-      await db.delete(verificationOtps).where(eq(verificationOtps.userId, userRecord.id));
-      await db.insert(verificationOtps).values({
-        userId: userRecord.id,
-        otp: otpCode,
-        expiresAt,
-      });
-
-      await sendEmail(
-        userRecord.email,
-        'Verify Your FlowMart Account',
-        `Hello ${userRecord.fullName},\n\nYour 6-digit verification code is: ${otpCode}\n\nThis code will expire in 1 hour.\n\nBest regards,\nThe FlowMart Team`
-      );
-
-      // Return token so frontend can log them in to verify
-      const token = jwt.sign(
-        { id: userRecord.id, email: userRecord.email, role: userRecord.role },
-        process.env.JWT_SECRET!,
-        { expiresIn: '24h' }
-      );
-
-      return res.status(200).json({
-        success: false,
-        code: 'EMAIL_UNVERIFIED',
-        message: 'This email is registered but not verified yet. Redirecting to OTP verification...',
-        token,
-        user: {
-          id: userRecord.id,
-          fullName: userRecord.fullName,
-          email: userRecord.email,
-          role: userRecord.role,
-          isVerified: false,
-          profileCompleted: userRecord.profileCompleted
-        }
-      });
-    }
-
-    // Generate reset OTP
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 mins for password reset
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); 
 
-    await db.delete(verificationOtps).where(eq(verificationOtps.userId, userRecord.id));
-    await db.insert(verificationOtps).values({
-      userId: userRecord.id,
+    await db.update(users).set({
       otp: otpCode,
-      expiresAt,
-    });
+      otpExpiry: expiresAt,
+    }).where(eq(users.id, userRecord.id));
 
-    // Send reset password email
-    await sendEmail(
-      userRecord.email,
-      'Reset Your FlowMart Password',
-      `Hello ${userRecord.fullName},\n\nYour 6-digit password reset code is: ${otpCode}\n\nThis code will expire in 15 minutes.\n\nBest regards,\nThe FlowMart Team`
-    );
+    emailService.sendOtpEmail(userRecord.email, { fullName: userRecord.fullName, otp: otpCode }).catch(console.error);
 
     return res.status(200).json({
       success: true,
@@ -565,30 +403,26 @@ export const resetPassword = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: 'Email, OTP code, and new password are required' });
     }
 
-    // Find user
     const [userRecord] = await db.select().from(users).where(eq(users.email, email)).limit(1);
     if (!userRecord) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    // Find valid OTP record
-    const now = new Date();
-    const [otpRecord] = await db
-      .select()
-      .from(verificationOtps)
-      .where(and(eq(verificationOtps.otp, otp), eq(verificationOtps.userId, userRecord.id), gt(verificationOtps.expiresAt, now)))
-      .limit(1);
-
-    if (!otpRecord) {
-      return res.status(400).json({ success: false, message: 'Invalid or expired OTP code' });
+    if (!userRecord.otp || userRecord.otp !== otp) {
+      return res.status(400).json({ success: false, message: 'Invalid OTP code' });
     }
 
-    // Hash and update password
-    const hashedPassword = await hashPassword(newPassword);
-    await db.update(users).set({ password: hashedPassword }).where(eq(users.id, userRecord.id));
+    if (userRecord.otpExpiry && new Date() > userRecord.otpExpiry) {
+      return res.status(400).json({ success: false, message: 'OTP code has expired' });
+    }
 
-    // Delete OTP
-    await db.delete(verificationOtps).where(eq(verificationOtps.id, otpRecord.id));
+    const hashedPassword = await hashPassword(newPassword);
+    
+    await db.update(users).set({ 
+      password: hashedPassword,
+      otp: null,
+      otpExpiry: null
+    }).where(eq(users.id, userRecord.id));
 
     return res.status(200).json({
       success: true,

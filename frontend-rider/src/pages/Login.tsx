@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router';
 import { ArrowLeft, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { VendorButton } from '@/components/ui/button';
+import { RiderButton } from '@/components/ui/button';
 import { VendorInput } from '@/components/ui/input';
 import SideBanner from '@/components/SideBanner';
 import logo from '@/assets/flowmart-logo.png';
@@ -133,10 +133,10 @@ export default function Login() {
                 </div>
               </div>
 
-              <VendorButton type="submit" disabled={isFormEmpty || loading} className="mt-2">
+              <RiderButton type="submit" disabled={isFormEmpty || loading} className="mt-2">
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin inline" />}
                 {loading ? 'Signing in...' : 'Login'}
-              </VendorButton>
+              </RiderButton>
 
               <p className="text-sm text-muted-foreground text-center">
                 Don’t have an account?{' '}

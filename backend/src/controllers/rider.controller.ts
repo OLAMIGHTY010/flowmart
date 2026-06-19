@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { db } from "../../db";
-import { orders, users } from "../../db/schema";
+import { orders, users, riderProfiles, riderKyc } from "../../db/schema";
 import { eq, and, isNull } from "drizzle-orm";
 import { AuthenticatedRequest } from "../middleware/auth.middleware";
 import { emailService } from "../services/email.service";
@@ -215,5 +215,183 @@ export const confirmDeliveryViaQR = async (
 		return res
 			.status(500)
 			.json({ success: false, message: "Internal Server Error" });
+	}
+};
+
+// 5. Submit Rider KYC
+export const submitKYC = async (req: AuthenticatedRequest, res: Response) => {
+	try {
+		const riderId = req.user?.id;
+		if (!riderId) {
+			return res.status(401).json({ success: false, message: "Unauthorized" });
+		}
+
+		const {
+			// Profile fields
+			displayName,
+			phone,
+			stateRegion,
+			city,
+			bio,
+			avatar,
+			
+			// KYC fields
+			fullName,
+			dob,
+			gender,
+			bankName,
+			accountNumber,
+			accountName,
+			vehicleType,
+			makeModel,
+			year,
+			plateNumber,
+			color,
+			insuranceFile,
+			roadWorthinessFile,
+			govIdType,
+			guarantorName,
+			guarantorPhone,
+			guarantorRelationship,
+			governmentIdFile,
+			guarantorIdFile,
+			carImageFile,
+			riderImageFile,
+		} = req.body;
+
+		// 1. CREATE OR UPDATE RIDER PROFILE
+		const [existingProfile] = await db
+			.select()
+			.from(riderProfiles)
+			.where(eq(riderProfiles.riderId, riderId))
+			.limit(1);
+
+		if (existingProfile) {
+			await db
+				.update(riderProfiles)
+				.set({
+					displayName: displayName || fullName,
+					phone,
+					stateRegion,
+					city,
+					bio: bio || null,
+					avatar: avatar || null,
+					updatedAt: new Date(),
+				})
+				.where(eq(riderProfiles.riderId, riderId));
+		} else {
+			await db.insert(riderProfiles).values({
+				riderId,
+				displayName: displayName || fullName,
+				phone,
+				stateRegion,
+				city,
+				bio: bio || null,
+				avatar: avatar || null,
+			});
+		}
+
+		// Mark user profile as completed
+		await db
+			.update(users)
+			.set({
+				fullName: fullName || undefined,
+				phone: phone || undefined,
+				dateOfBirth: dob || undefined,
+				gender: gender || undefined,
+				profileCompleted: true,
+				updatedAt: new Date(),
+			})
+			.where(eq(users.id, riderId));
+
+		// 2. CREATE OR UPDATE RIDER KYC
+		const [existingKyc] = await db
+			.select()
+			.from(riderKyc)
+			.where(eq(riderKyc.riderId, riderId))
+			.limit(1);
+
+		if (existingKyc) {
+			await db
+				.update(riderKyc)
+				.set({
+					bankName,
+					accountNumber,
+					accountName,
+					vehicleType,
+					makeModel,
+					year,
+					plateNumber,
+					color,
+					insuranceFile: insuranceFile || existingKyc.insuranceFile,
+					roadWorthinessFile: roadWorthinessFile || existingKyc.roadWorthinessFile,
+					governmentIdType: govIdType,
+					guarantorName,
+					guarantorPhone,
+					guarantorRelationship,
+					governmentIdFile: governmentIdFile || existingKyc.governmentIdFile,
+					guarantorIdFile: guarantorIdFile || existingKyc.guarantorIdFile,
+					carImageFile: carImageFile || existingKyc.carImageFile,
+					riderImageFile: riderImageFile || existingKyc.riderImageFile,
+					status: 'under_review',
+					updatedAt: new Date(),
+				})
+				.where(eq(riderKyc.riderId, riderId));
+		} else {
+			await db.insert(riderKyc).values({
+				riderId,
+				bankName,
+				accountNumber,
+				accountName,
+				vehicleType,
+				makeModel,
+				year,
+				plateNumber,
+				color,
+				insuranceFile: insuranceFile || null,
+				roadWorthinessFile: roadWorthinessFile || null,
+				governmentIdType: govIdType,
+				guarantorName,
+				guarantorPhone,
+				guarantorRelationship,
+				governmentIdFile: governmentIdFile || null,
+				guarantorIdFile: guarantorIdFile || null,
+				carImageFile: carImageFile || null,
+				riderImageFile: riderImageFile || null,
+				status: 'under_review',
+			});
+		}
+
+		return res.status(200).json({
+			success: true,
+			message: "KYC submitted successfully and is now under review.",
+		});
+	} catch (error) {
+		console.error("Submit KYC Error:", error);
+		return res.status(500).json({ success: false, message: "Internal Server Error" });
+	}
+};
+
+// 6. Get Rider KYC Status
+export const getKYCStatus = async (req: AuthenticatedRequest, res: Response) => {
+	try {
+		const riderId = req.user?.id;
+		if (!riderId) {
+			return res.status(401).json({ success: false, message: "Unauthorized" });
+		}
+
+		const [kyc] = await db
+			.select({ status: riderKyc.status })
+			.from(riderKyc)
+			.where(eq(riderKyc.riderId, riderId))
+			.limit(1);
+
+		return res.status(200).json({
+			success: true,
+			status: kyc ? kyc.status : 'unsubmitted',
+		});
+	} catch (error) {
+		console.error("Get KYC Status Error:", error);
+		return res.status(500).json({ success: false, message: "Internal Server Error" });
 	}
 };

@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Loader2 } from 'lucide-react';
 import { useKYCSubmit } from '@/hooks/useRiderMutations';
-import { 
-  useProfileSetupFormCache, 
+import {
+  useProfileSetupFormCache,
   useKYCInfoFormCache, 
   useKYCSubmitFormCache 
 } from '@/hooks/useKYCFormCache';
 import { useAuth } from '@/hooks/useAuth';
-import { VendorButton } from '@/components/ui/button';
+import { RiderButton } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/Icon';
 import SideBanner from '@/components/SideBanner';
@@ -36,7 +36,7 @@ export default function KYCReview() {
       const payload = {
         // Profile
         displayName: profileData.displayName || user?.fullName || '',
-        businessPhone: profileData.phone || user?.phone || '',
+        phone: profileData.phone || user?.phone || '',
         stateRegion: profileData.stateRegion,
         city: profileData.city,
         bio: profileData.bio,
@@ -44,7 +44,7 @@ export default function KYCReview() {
 
         // Identity & Bank
         fullName: user?.fullName,
-        dob: user?.dob,
+        dob: user?.dateOfBirth,
         gender: user?.gender,
         bankName: kycInfo.bankName,
         accountNumber: kycInfo.accountNumber,
@@ -62,6 +62,14 @@ export default function KYCReview() {
         guarantorName: kycSubmitData.guarantorName,
         guarantorPhone: kycSubmitData.guarantorPhone,
         guarantorRelationship: kycSubmitData.guarantorRelationship,
+
+        // Files
+        insuranceFile: kycInfo.documents.find(d => d.id === 'insurance')?.base64,
+        roadWorthinessFile: kycInfo.documents.find(d => d.id === 'road_worthiness')?.base64,
+        carImageFile: kycInfo.documents.find(d => d.id === 'car_image')?.base64,
+        governmentIdFile: kycSubmitData.documents.find(d => d.id === 'government_id')?.base64,
+        guarantorIdFile: kycSubmitData.documents.find(d => d.id === 'guarantor_id')?.base64,
+        riderImageFile: kycSubmitData.documents.find(d => d.id === 'rider_image')?.base64,
       };
 
       await submitKYC(payload);
@@ -112,7 +120,7 @@ export default function KYCReview() {
             </div>
             <CardContent className="p-5 grid grid-cols-2 sm:grid-cols-3 gap-4">
               <DetailItem label="Full Name" value={user?.fullName || '—'} />
-              <DetailItem label="Date of Birth" value={user?.dob || '—'} />
+              <DetailItem label="Date of Birth" value={user?.dateOfBirth || '—'} />
               <DetailItem label="Bank Name" value={kycInfo.bankName || '—'} />
               <DetailItem label="Account Number" value={kycInfo.accountNumber || '—'} />
               <DetailItem label="Account Name" value={kycInfo.accountName || '—'} />
@@ -198,13 +206,13 @@ export default function KYCReview() {
             </label>
           </div>
 
-          <VendorButton
+          <RiderButton
             onClick={handleFinalSubmit}
             disabled={!agreed || isPending}
             className={`w-full py-4 text-base ${!agreed ? 'opacity-50' : ''}`}
           >
             {isPending ? <><Loader2 className="mr-2 h-5 w-5 animate-spin inline" /> Submitting...</> : 'Submit Application'}
-          </VendorButton>
+          </RiderButton>
         </div>
       </div>
     </div>

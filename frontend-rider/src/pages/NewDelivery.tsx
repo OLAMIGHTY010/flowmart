@@ -11,7 +11,7 @@ import {
   User, 
   ShieldAlert 
 } from "lucide-react";
-import { VendorButton } from "@/components/ui/button";
+import { RiderButton } from "@/components/ui/button";
 import { useOrder } from "@/hooks/useRiderQueries";
 import { useAcceptDelivery, useDeclineDelivery } from "@/hooks/useRiderMutations";
 
@@ -141,13 +141,13 @@ export default function DeliveryRequest() {
 
             {/* Interactive Functional Controls Systems Row */}
             <div className="flex flex-col gap-2.5 mt-1">
-              <VendorButton
+              <RiderButton
                 onClick={handleAcceptDelivery}
                 disabled={acceptMutation.isPending || isLoading}
                 className="w-full bg-[#006837] hover:bg-[#00522b] text-white py-3.5 rounded-xl text-sm font-bold tracking-wide"
               >
                 {acceptMutation.isPending ? "Accepting offer..." : "Accept Delivery"}
-              </VendorButton>
+              </RiderButton>
               
               <button
                 type="button"

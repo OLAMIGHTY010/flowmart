@@ -116,7 +116,7 @@ export const reportShortage = async (req: AuthenticatedRequest, res: Response) =
       shortageReportedAt: new Date(),
       status: 'shortage',
       updatedAt: new Date()
-    }).where(eq(welfareAllocations.id, id)).returning();
+    }).where(eq(welfareAllocations.id, id as string)).returning();
 
     if (!updatedAllocation) {
       return res.status(404).json({ success: false, message: 'Allocation not found' });
@@ -143,7 +143,7 @@ export const updateWelfareStatus = async (req: AuthenticatedRequest, res: Respon
 
     const [updatedAllocation] = await db.update(welfareAllocations)
       .set(updatePayload)
-      .where(eq(welfareAllocations.id, id))
+      .where(eq(welfareAllocations.id, id as string))
       .returning();
 
     return res.status(200).json({ success: true, allocation: updatedAllocation });

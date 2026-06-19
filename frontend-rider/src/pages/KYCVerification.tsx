@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useKYCStatus } from '@/hooks/useRiderQueries';
-import { VendorButton } from '@/components/ui/button';
+import { RiderButton } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/Icon';
 import SideBanner from '@/components/SideBanner';
@@ -124,19 +124,26 @@ export default function KYCVerification() {
           {/* Actions */}
           <div className="w-full flex flex-col items-center gap-4">
             {status === 'approved' ? (
-              <VendorButton 
+              <RiderButton 
                 onClick={() => navigate('/dashboard')} 
                 className="w-full py-6 text-base font-bold bg-[#15803d] hover:bg-[#166534] text-white rounded-[16px]"
               >
                 Go to Dashboard
-              </VendorButton>
+              </RiderButton>
+            ) : status === 'rejected' ? (
+              <RiderButton 
+                onClick={() => navigate('/profile-setup')} 
+                className="w-full py-6 text-base font-bold bg-[#ef4444] hover:bg-[#dc2626] text-white rounded-[16px]"
+              >
+                Complete Your Profile Setup
+              </RiderButton>
             ) : (
-              <VendorButton 
+              <RiderButton 
                 disabled 
                 className="w-full py-6 text-base font-bold bg-[#15803d]/50 text-white rounded-[16px] opacity-70"
               >
                 Go to Home
-              </VendorButton>
+              </RiderButton>
             )}
             
             {status !== 'approved' && (

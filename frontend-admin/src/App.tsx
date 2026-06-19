@@ -7,6 +7,7 @@ import Dashboard from "@/pages/Dashboard";
 import UserManagement from "@/pages/UserManagement";
 import VendorApprovals from "@/pages/VendorApprovals";
 import RiderManagement from "@/pages/RiderManagement";
+import RiderApprovals from "@/pages/RiderApprovals";
 import PlatformAnalytics from "@/pages/PlatformAnalytics";
 import CoordinatorAnalytics from "@/pages/CoordinatorAnalytics";
 import CoordinatorDashboard from "@/pages/CoordinatorDashboard";
@@ -51,6 +52,7 @@ function App() {
               <Route path="/users" element={<UserManagement />} />
               <Route path="/vendors" element={<VendorApprovals />} />
               <Route path="/riders" element={<RiderManagement />} />
+              <Route path="/rider-approvals" element={<RiderApprovals />} />
               <Route path="/analytics" element={<PlatformAnalytics />} />
               <Route path="/coordinator-analytics" element={<CoordinatorAnalytics />} />
               <Route path="/coordinator-dashboard" element={<CoordinatorDashboard />} />

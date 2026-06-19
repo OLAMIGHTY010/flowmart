@@ -17,7 +17,9 @@ import {
 
 import {
   getRiderStats,
-  getRidersList
+  getRidersList,
+  getRiderDetails,
+  reviewRider
 } from '../controllers/admin-rider.controller';
 
 import {
@@ -65,6 +67,8 @@ router.post('/vendors/:id/review', reviewVendor);
 // Rider Management routes
 router.get('/riders/stats', getRiderStats);
 router.get('/riders', getRidersList);
+router.get('/riders/:id', getRiderDetails);
+router.post('/riders/:id/review', reviewRider);
 
 // Audit Logs
 router.get('/audit-logs', getAuditLogs);

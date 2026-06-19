@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import { register, login, adminCreateUser } from "../../controllers/auth.controller";
+import { register, login } from "../../controllers/auth.controller";
 import { hashPassword, comparePassword } from "../../utils/password";
 
 // 1. Create mock chain spies for Drizzle ORM
@@ -257,60 +257,6 @@ describe("Auth Controller", () => {
 					email: "rider@flowmart.com",
 					role: "dispatch_rider",
 				},
-			});
-		});
-	});
-
-	describe("adminCreateUser", () => {
-		it("should allow an admin to provision users with elevated system roles", async () => {
-			mockRequest.body = {
-				fullName: "Authorized Vendor",
-				email: "vendor@flowmart.com",
-				password: "securePassword123",
-				role: "vendor",
-			};
-
-			mockLimit.mockResolvedValue([]);
-			(hashPassword as jest.Mock).mockResolvedValue("hashed-password");
-
-			const createdUser = {
-				id: "vendor-101",
-				fullName: "Authorized Vendor",
-				email: "vendor@flowmart.com",
-				role: "vendor",
-			};
-			mockReturning.mockResolvedValue([createdUser]);
-
-			await adminCreateUser(
-				mockRequest as Request,
-				mockResponse as Response
-			);
-
-			expect(mockResponse.status).toHaveBeenCalledWith(201);
-			expect(mockResponse.json).toHaveBeenCalledWith({
-				success: true,
-				message: "User created successfully by administration.",
-				user: createdUser,
-			});
-		});
-
-		it("should reject user generation and return 400 if an invalid system role is specified", async () => {
-			mockRequest.body = {
-				fullName: "Malicious Injector",
-				email: "attacker@flowmart.com",
-				password: "password123",
-				role: "super_root_unlocked_system",
-			};
-
-			await adminCreateUser(
-				mockRequest as Request,
-				mockResponse as Response
-			);
-
-			expect(mockResponse.status).toHaveBeenCalledWith(400);
-			expect(mockResponse.json).toHaveBeenCalledWith({
-				success: false,
-				message: "Invalid role specified",
 			});
 		});
 	});

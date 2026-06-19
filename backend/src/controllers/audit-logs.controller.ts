@@ -4,70 +4,89 @@ import { auditLogs, users } from '../../db/schema';
 import { desc, eq, and, or, ilike, sql, gte, lte } from 'drizzle-orm';
 import { Parser } from 'json2csv';
 
+const buildDynamicLogsQuery = (search: string, filter: string, dateRange: string) => {
+  const query = sql`
+    WITH dynamic_logs AS (
+      SELECT id::text as id, event_id, actor_id::text as actor_id, actor_name, action, module, description, ip_address, status, metadata, created_at FROM audit_logs
+      UNION ALL
+      SELECT id::text, 'AUT-' || substring(id::text from 1 for 4), id::text, full_name, 'Registered', 'Auth', 'New user registered: ' || full_name, 'N/A', 'Success', '{}'::jsonb, created_at FROM users
+      UNION ALL
+      SELECT id::text, 'ORD-' || order_ref, attendee_id::text, 'System', status, 'Delivery', 'Order ' || order_ref || ' status changed to ' || status, 'N/A', 'Success', '{}'::jsonb, updated_at FROM orders
+      UNION ALL
+      SELECT id::text, 'VEN-' || substring(id::text from 1 for 4), vendor_id::text, business_name, status, 'Vendor', 'Vendor KYC status: ' || status, 'N/A', 'Success', '{}'::jsonb, updated_at FROM vendor_kyc
+      UNION ALL
+      SELECT id::text, 'RID-' || substring(id::text from 1 for 4), rider_id::text, 'System', status, 'Rider', 'Rider KYC status: ' || status, 'N/A', 'Success', '{}'::jsonb, updated_at FROM rider_kyc
+      UNION ALL
+      SELECT id::text, 'WEL-' || substring(id::text from 1 for 4), created_by::text, 'System', status, 'Welfare', 'Welfare event ' || name || ' created', 'N/A', 'Success', '{}'::jsonb, created_at FROM welfare_events
+    )
+    SELECT * FROM dynamic_logs WHERE 1=1
+  `;
+
+  if (filter && filter !== 'All Events') {
+    switch(filter) {
+      case 'User Actions':
+        query.append(sql` AND (module = 'Auth' OR module = 'Profile')`);
+        break;
+      case 'Vendor Changes':
+        query.append(sql` AND module = 'Vendor'`);
+        break;
+      case 'Platform Updates':
+        query.append(sql` AND module = 'Platform'`);
+        break;
+      case 'System Errors':
+        query.append(sql` AND status = 'Failed'`);
+        break;
+      case 'Security Alerts':
+        query.append(sql` AND module = 'Security'`);
+        break;
+    }
+  }
+
+  if (search) {
+    const searchParam = `%${search}%`;
+    query.append(sql` AND (description ILIKE ${searchParam} OR event_id ILIKE ${searchParam} OR actor_name ILIKE ${searchParam})`);
+  }
+
+  if (dateRange) {
+    const [start, end] = dateRange.split(',');
+    if (start && end) {
+      query.append(sql` AND created_at >= ${new Date(start)} AND created_at <= ${new Date(end)}`);
+    }
+  }
+
+  return query;
+};
+
 export const getAuditLogs = async (req: Request, res: Response) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 15;
-    const search = req.query.search as string;
-    const filter = req.query.filter as string; // 'All Events', 'User Actions', 'Vendor Changes', etc.
-    const dateRange = req.query.dateRange as string; // e.g. '2026-06-01,2026-06-30'
+    const search = req.query.search as string || '';
+    const filter = req.query.filter as string || '';
+    const dateRange = req.query.dateRange as string || '';
 
-    let conditions: any[] = [];
+    const baseQuery = buildDynamicLogsQuery(search, filter, dateRange);
 
-    // Filter mapping
-    if (filter && filter !== 'All Events') {
-      switch(filter) {
-        case 'User Actions':
-          conditions.push(or(eq(auditLogs.module, 'Auth'), eq(auditLogs.module, 'Profile')));
-          break;
-        case 'Vendor Changes':
-          conditions.push(eq(auditLogs.module, 'Vendor'));
-          break;
-        case 'Platform Updates':
-          conditions.push(eq(auditLogs.module, 'Platform'));
-          break;
-        case 'System Errors':
-          conditions.push(eq(auditLogs.status, 'Failed'));
-          break;
-        case 'Security Alerts':
-          conditions.push(eq(auditLogs.module, 'Security'));
-          break;
-      }
-    }
+    const countQuery = sql`SELECT count(*) FROM (${baseQuery}) as count_logs`;
+    const totalResult = await db.execute(countQuery);
+    const total = parseInt(totalResult.rows[0].count as string);
 
-    if (search) {
-      conditions.push(
-        or(
-          ilike(auditLogs.description, `%${search}%`),
-          ilike(auditLogs.eventId, `%${search}%`),
-          ilike(auditLogs.actorName, `%${search}%`)
-        )
-      );
-    }
+    const logsQuery = sql`${baseQuery} ORDER BY created_at DESC LIMIT ${limit} OFFSET ${(page - 1) * limit}`;
+    const logsResult = await db.execute(logsQuery);
 
-    if (dateRange) {
-      const [start, end] = dateRange.split(',');
-      if (start && end) {
-        conditions.push(gte(auditLogs.createdAt, new Date(start)));
-        conditions.push(lte(auditLogs.createdAt, new Date(end)));
-      }
-    }
-
-    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
-
-    // Get total count
-    const totalResult = await db.select({ count: sql<number>`count(*)` })
-      .from(auditLogs)
-      .where(whereClause);
-    const total = totalResult[0].count;
-
-    // Get paginated data
-    const logs = await db.select()
-      .from(auditLogs)
-      .where(whereClause)
-      .orderBy(desc(auditLogs.createdAt))
-      .limit(limit)
-      .offset((page - 1) * limit);
+    const logs = logsResult.rows.map((row: any) => ({
+      id: row.id,
+      eventId: row.event_id,
+      actorId: row.actor_id,
+      actorName: row.actor_name,
+      action: row.action,
+      module: row.module,
+      description: row.description,
+      ipAddress: row.ip_address,
+      status: row.status,
+      metadata: row.metadata,
+      createdAt: row.created_at,
+    }));
 
     return res.status(200).json({
       success: true,
@@ -88,48 +107,27 @@ export const getAuditLogs = async (req: Request, res: Response) => {
 
 export const exportAuditLogs = async (req: Request, res: Response) => {
   try {
-    const filter = req.query.filter as string;
-    let conditions: any[] = [];
+    const filter = req.query.filter as string || '';
+    
+    const baseQuery = buildDynamicLogsQuery('', filter, '');
+    const logsQuery = sql`${baseQuery} ORDER BY created_at DESC`;
+    const logsResult = await db.execute(logsQuery);
 
-    if (filter && filter !== 'All Events') {
-      switch(filter) {
-        case 'User Actions':
-          conditions.push(or(eq(auditLogs.module, 'Auth'), eq(auditLogs.module, 'Profile')));
-          break;
-        case 'Vendor Changes':
-          conditions.push(eq(auditLogs.module, 'Vendor'));
-          break;
-        case 'System Errors':
-          conditions.push(eq(auditLogs.status, 'Failed'));
-          break;
-        case 'Security Alerts':
-          conditions.push(eq(auditLogs.module, 'Security'));
-          break;
-      }
-    }
-
-    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
-
-    const logs = await db.select()
-      .from(auditLogs)
-      .where(whereClause)
-      .orderBy(desc(auditLogs.createdAt));
-
-    if (!logs.length) {
+    if (!logsResult.rows.length) {
       return res.status(404).json({ success: false, message: 'No logs to export' });
     }
 
     // Flatten metadata for CSV
-    const csvData = logs.map(log => ({
-      Event_ID: log.eventId,
-      Timestamp: log.createdAt.toISOString(),
-      Actor: log.actorName,
-      Action: log.action,
-      Module: log.module,
-      Description: log.description,
-      IP_Address: log.ipAddress || 'N/A',
-      Status: log.status,
-      Metadata: log.metadata ? JSON.stringify(log.metadata) : ''
+    const csvData = logsResult.rows.map((row: any) => ({
+      Event_ID: row.event_id,
+      Timestamp: new Date(row.created_at).toISOString(),
+      Actor: row.actor_name,
+      Action: row.action,
+      Module: row.module,
+      Description: row.description,
+      IP_Address: row.ip_address || 'N/A',
+      Status: row.status,
+      Metadata: row.metadata ? JSON.stringify(row.metadata) : ''
     }));
 
     const json2csvParser = new Parser();

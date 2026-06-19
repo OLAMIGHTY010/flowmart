@@ -29,19 +29,13 @@ export const users = pgTable('users', {
   passwordChangedAt: timestamp('password_changed_at').defaultNow().notNull(),
   lastLogin: timestamp('last_login'),
   
-  // Auth & Security
-  isVerified: boolean('is_verified').default(false).notNull(),
   otp: varchar('otp', { length: 255 }),
   otpExpiry: timestamp('otp_expiry'),
   resetToken: varchar('reset_token', { length: 255 }),
   resetTokenExpiry: timestamp('reset_token_expiry'),
 
   // User Profile Extensions
-  phone: varchar('phone', { length: 50 }),
-  dateOfBirth: date('date_of_birth'),
-  gender: varchar('gender', { length: 20 }),
   avatar: varchar('avatar', { length: 500 }),
-  profileCompleted: boolean('profile_completed').default(false).notNull(),
   twoFactorEnabled: boolean('two_factor_enabled').default(false).notNull(),
   privacySettings: jsonb('privacy_settings').default({ profileVisibility: true, showOnlineStatus: true, locationTracking: false }),
 
@@ -49,25 +43,7 @@ export const users = pgTable('users', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-export const vendorProfiles = pgTable('vendor_profiles', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id').references(() => users.id).notNull().unique(),
-  businessName: varchar('business_name', { length: 255 }),
-  businessPhone: varchar('business_phone', { length: 50 }),
-  stateRegion: varchar('state_region', { length: 100 }),
-  city: varchar('city', { length: 100 }),
-  bio: text('bio'),
-  
-  cacNo: varchar('cac_no', { length: 100 }),
-  campCertificateId: varchar('camp_certificate_id', { length: 100 }),
-  bankName: varchar('bank_name', { length: 100 }),
-  accountNumber: varchar('account_number', { length: 50 }),
-  accountName: varchar('account_name', { length: 255 }),
 
-  rating: decimal('rating', { precision: 3, scale: 2 }).default('0.00'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
 
 export const kycSubmissions = pgTable('kyc_submissions', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -97,16 +73,12 @@ export const products = pgTable('products', {
   oldPrice: decimal('old_price', { precision: 10, scale: 2 }),
   
   // Extended Product Metadata
-  oldPrice: decimal('old_price', { precision: 10, scale: 2 }),
   category: varchar('category', { length: 100 }),
   brand: varchar('brand', { length: 100 }),
   weight: decimal('weight', { precision: 8, scale: 2 }),
   images: jsonb('images').default([]), 
   
-  stockQuantity: integer('stock_quantity').default(0).notNull(), 
-  category: varchar('category', { length: 100 }),
-  brand: varchar('brand', { length: 100 }),
-  weight: decimal('weight', { precision: 10, scale: 2 }),
+  stockQuantity: integer('stock_quantity').default(0).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -249,4 +221,52 @@ export const welfareInventory = pgTable('welfare_inventory', {
   status: varchar('status', { length: 50 }).notNull(), // 'Sufficient', 'Shortage Risk'
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull()
+});
+export const riderProfiles = pgTable('rider_profiles', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  riderId: uuid('rider_id').references(() => users.id).notNull().unique(),
+  displayName: varchar('display_name', { length: 255 }).notNull(),
+  phone: varchar('phone', { length: 50 }).notNull(),
+  stateRegion: varchar('state_region', { length: 100 }).notNull(),
+  city: varchar('city', { length: 100 }).notNull(),
+  bio: text('bio'),
+  avatar: text('avatar'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const riderKyc = pgTable('rider_kyc', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  riderId: uuid('rider_id').references(() => users.id).notNull().unique(),
+  
+  // Bank Details
+  bankName: varchar('bank_name', { length: 255 }).notNull(),
+  accountNumber: varchar('account_number', { length: 20 }).notNull(),
+  accountName: varchar('account_name', { length: 255 }).notNull(),
+  
+  // Vehicle Details
+  vehicleType: varchar('vehicle_type', { length: 100 }).notNull(),
+  makeModel: varchar('make_model', { length: 255 }).notNull(),
+  year: varchar('year', { length: 20 }).notNull(),
+  plateNumber: varchar('plate_number', { length: 100 }).notNull(),
+  color: varchar('color', { length: 50 }).notNull(),
+  
+  // Document URLs
+  insuranceFile: text('insurance_file'),
+  roadWorthinessFile: text('road_worthiness_file'),
+  
+  // Guarantor and Govt ID
+  governmentIdType: varchar('government_id_type', { length: 100 }).notNull(),
+  guarantorName: varchar('guarantor_name', { length: 255 }).notNull(),
+  guarantorPhone: varchar('guarantor_phone', { length: 50 }).notNull(),
+  guarantorRelationship: varchar('guarantor_relationship', { length: 100 }).notNull(),
+  
+  governmentIdFile: text('government_id_file'),
+  guarantorIdFile: text('guarantor_id_file'),
+  carImageFile: text('car_image_file'),
+  riderImageFile: text('rider_image_file'),
+  
+  status: varchar('status', { length: 50 }).default('pending').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

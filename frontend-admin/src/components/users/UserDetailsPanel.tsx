@@ -1,33 +1,52 @@
-import { useState } from 'react';
-import { X } from 'lucide-react';
-import type { User } from '@/services/UserManagementServices';
+import { useState, useEffect } from 'react';
+import { X, Save } from 'lucide-react';
+import { UserManagementServices, type User } from '@/services/UserManagementServices';
 import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
 
 interface UserDetailsPanelProps {
   user: User;
   onClose: () => void;
   onStatusChange: (id: string, status: 'active' | 'suspended' | 'deleted') => Promise<void>;
+  onRefresh?: () => void;
 }
 
-export default function UserDetailsPanel({ user, onClose, onStatusChange }: UserDetailsPanelProps) {
+const ALL_PERMISSIONS = ['View Reports', 'Approve Vendors', 'Manage Welfare', 'Export Data'];
+
+export default function UserDetailsPanel({ user, onClose, onStatusChange, onRefresh }: UserDetailsPanelProps) {
   const { user: currentUser } = useAuth();
+  const { showToast } = useToast();
+  
   const [isUpdating, setIsUpdating] = useState(false);
   const [isActive, setIsActive] = useState(user.status === 'active');
+  
+  const [fullName, setFullName] = useState(user.fullName);
+  const [email, setEmail] = useState(user.email);
+  const [phone, setPhone] = useState(user.phone || '');
+  const [role, setRole] = useState(user.role);
+  
+  const [selectedPermissions, setSelectedPermissions] = useState<string[]>(
+    (user.role === 'super_admin' || user.role === 'admin') ? ALL_PERMISSIONS : []
+  );
 
+  const isCurrentSuperAdmin = (currentUser as any)?.role === 'super_admin';
   const isAdmin = (currentUser as any)?.role === 'admin';
   const isTargetSuperAdmin = user.role === 'super_admin';
 
+  // Only super admin can edit other admins
+  const canEdit = isCurrentSuperAdmin;
+  
   // Block actions if current user is Admin AND target is Super Admin
   const isActionBlocked = (isAdmin && isTargetSuperAdmin);
 
-  const getRoleBadgeColor = (role: string) => {
-    if (role === 'super_admin') return 'bg-purple-100 text-purple-700';
-    if (role === 'admin') return 'bg-blue-100 text-blue-700';
+  const getRoleBadgeColor = (r: string) => {
+    if (r === 'super_admin') return 'bg-purple-100 text-purple-700';
+    if (r === 'admin') return 'bg-blue-100 text-blue-700';
     return 'bg-slate-100 text-slate-700';
   };
 
-  const getRoleLabel = (role: string) => {
-    return role.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  const getRoleLabel = (r: string) => {
+    return r.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
   };
 
   const handleToggleStatus = async () => {
@@ -55,6 +74,37 @@ export default function UserDetailsPanel({ user, onClose, onStatusChange }: User
     }
   };
 
+  const handleSave = async () => {
+    if (!canEdit) {
+      onClose();
+      return;
+    }
+    
+    setIsUpdating(true);
+    try {
+      await UserManagementServices.updateUser(user.id, {
+        fullName,
+        email,
+        phone,
+        role
+      });
+      showToast("User details updated successfully", "success");
+      if (onRefresh) onRefresh();
+      onClose();
+    } catch (error: any) {
+      showToast(error.response?.data?.message || "Failed to update user", "error");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handlePermissionToggle = (perm: string) => {
+    if (!canEdit) return;
+    setSelectedPermissions(prev => 
+      prev.includes(perm) ? prev.filter(p => p !== perm) : [...prev, perm]
+    );
+  };
+
   return (
     <div className="fixed inset-y-0 right-0 w-full md:w-[400px] bg-white shadow-2xl border-l border-slate-200 z-50 flex flex-col transform transition-transform duration-300">
       <div className="flex items-center justify-between p-4 border-b border-slate-200">
@@ -70,16 +120,16 @@ export default function UserDetailsPanel({ user, onClose, onStatusChange }: User
         <div className="flex flex-col items-center">
           <div className="relative">
             <div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-md">
-              {user.fullName.charAt(0)}
+              {fullName.charAt(0).toUpperCase()}
             </div>
             {isActive && (
               <div className="absolute bottom-0 right-0 w-5 h-5 bg-success rounded-full border-2 border-white"></div>
             )}
           </div>
-          <h3 className="font-bold text-slate-800 text-lg mt-3">{user.fullName}</h3>
-          <p className="text-sm text-slate-500 mb-2">{user.email}</p>
-          <span className={`px-3 py-1 rounded-full text-xs font-bold ${getRoleBadgeColor(user.role)}`}>
-            {getRoleLabel(user.role)}
+          <h3 className="font-bold text-slate-800 text-lg mt-3">{fullName}</h3>
+          <p className="text-sm text-slate-500 mb-2">{email}</p>
+          <span className={`px-3 py-1 rounded-full text-xs font-bold ${getRoleBadgeColor(role)}`}>
+            {getRoleLabel(role)}
           </span>
         </div>
 
@@ -87,15 +137,54 @@ export default function UserDetailsPanel({ user, onClose, onStatusChange }: User
         <div className="flex flex-col gap-4">
           <div>
             <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 block">Full Name</label>
-            <input type="text" value={user.fullName} readOnly className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-700 outline-none" />
+            <input 
+              type="text" 
+              value={fullName} 
+              onChange={e => setFullName(e.target.value)}
+              readOnly={!canEdit} 
+              className={`w-full px-3 py-2 border rounded-lg text-sm outline-none transition-colors ${canEdit ? 'border-slate-300 bg-white focus:border-green-500' : 'border-slate-200 bg-slate-50 text-slate-700'}`} 
+            />
           </div>
           <div>
             <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 block">Email</label>
-            <input type="text" value={user.email} readOnly className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-700 outline-none" />
+            <input 
+              type="email" 
+              value={email} 
+              onChange={e => setEmail(e.target.value)}
+              readOnly={!canEdit} 
+              className={`w-full px-3 py-2 border rounded-lg text-sm outline-none transition-colors ${canEdit ? 'border-slate-300 bg-white focus:border-green-500' : 'border-slate-200 bg-slate-50 text-slate-700'}`} 
+            />
+          </div>
+          <div>
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 block">Phone Number</label>
+            <input 
+              type="text" 
+              value={phone} 
+              onChange={e => setPhone(e.target.value)}
+              placeholder="Not provided"
+              readOnly={!canEdit} 
+              className={`w-full px-3 py-2 border rounded-lg text-sm outline-none transition-colors ${canEdit ? 'border-slate-300 bg-white focus:border-green-500' : 'border-slate-200 bg-slate-50 text-slate-700'}`} 
+            />
           </div>
           <div>
             <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 block">Role</label>
-            <input type="text" value={getRoleLabel(user.role)} readOnly className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-700 outline-none" />
+            {canEdit ? (
+              <select
+                value={role}
+                onChange={e => setRole(e.target.value)}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:border-green-500 outline-none"
+              >
+                <option value="super_admin">Super Admin</option>
+                <option value="admin">Admin</option>
+                <option value="zone_coordinator">Zone Coordinator</option>
+                <option value="camp_logistics_coordinator">Camp Logistics</option>
+                <option value="vendor">Vendor</option>
+                <option value="dispatch_rider">Rider</option>
+                <option value="attendee">Attendee</option>
+              </select>
+            ) : (
+              <input type="text" value={getRoleLabel(role)} readOnly className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-700 outline-none" />
+            )}
           </div>
         </div>
 
@@ -118,13 +207,14 @@ export default function UserDetailsPanel({ user, onClose, onStatusChange }: User
         <div>
           <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 block">Permissions</label>
           <div className="flex flex-col gap-3">
-            {['View Reports', 'Approve Vendors', 'Manage Welfare', 'Export Data'].map(perm => (
-              <label key={perm} className="flex items-center gap-3">
+            {ALL_PERMISSIONS.map(perm => (
+              <label key={perm} className={`flex items-center gap-3 ${canEdit ? 'cursor-pointer hover:opacity-80' : 'cursor-not-allowed'}`}>
                 <input 
                   type="checkbox" 
-                  checked={user.role === 'super_admin' || user.role === 'admin'} 
-                  readOnly 
-                  className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500" 
+                  checked={selectedPermissions.includes(perm)} 
+                  onChange={() => handlePermissionToggle(perm)}
+                  disabled={!canEdit} 
+                  className="w-4 h-4 text-green-600 rounded border-slate-300 focus:ring-green-500 disabled:opacity-60" 
                 />
                 <span className="text-sm text-slate-700 font-medium">{perm}</span>
               </label>
@@ -153,10 +243,12 @@ export default function UserDetailsPanel({ user, onClose, onStatusChange }: User
       {/* Action Buttons */}
       <div className="p-4 border-t border-slate-200 bg-white flex flex-col gap-3">
         <button 
-          onClick={onClose}
-          className="w-full py-2.5 bg-success hover:bg-green-600 text-white font-bold rounded-lg transition-colors flex items-center justify-center gap-2"
+          onClick={handleSave}
+          disabled={isUpdating}
+          className="w-full py-2.5 bg-success hover:bg-green-600 text-white font-bold rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
         >
-          Save Changes
+          {isUpdating ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <Save size={18} />}
+          {canEdit ? 'Save Changes' : 'Close'}
         </button>
         
         <button 
