@@ -5,8 +5,12 @@ const connectedUsers = new Map<string, string>();
 let io: Server;
 
 export const initWebSocketHub = (server: HttpServer) => {
+  const allowedOrigins = process.env.ALLOWED_ORIGINS 
+    ? process.env.ALLOWED_ORIGINS.split(',') 
+    : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002'];
+
   io = new Server(server, {
-    cors: { origin: '*' }
+    cors: { origin: allowedOrigins, credentials: true }
   });
 
   io.on('connection', (socket: Socket) => {
@@ -17,13 +21,11 @@ export const initWebSocketHub = (server: HttpServer) => {
       console.log(`User ${userId} connected.`);
     }
 
-    // Allow clients to subscribe to order tracking rooms
     socket.on('track:order', ({ orderId }: { orderId: string }) => {
       socket.join(`order:${orderId}`);
       console.log(`Socket ${socket.id} joined room order:${orderId}`);
     });
 
-    // Allow clients to leave order tracking rooms
     socket.on('track:leave', ({ orderId }: { orderId: string }) => {
       socket.leave(`order:${orderId}`);
     });
@@ -44,19 +46,16 @@ export const sendInAppNotification = (userId: string, event: string, payload: an
   }
 };
 
-// Emit rider location to all subscribers of an order room
 export const emitRiderLocation = (orderId: string, position: { lat: number; lng: number }) => {
   if (io) {
     io.to(`order:${orderId}`).emit('rider:location', { orderId, position });
   }
 };
 
-// Emit order status update to all subscribers of an order room
 export const emitOrderStatusUpdate = (orderId: string, status: string) => {
   if (io) {
     io.to(`order:${orderId}`).emit('order:statusUpdate', { orderId, status });
   }
 };
 
-// Get the io instance for external use
 export const getIO = () => io;
