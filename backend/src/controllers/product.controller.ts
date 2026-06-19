@@ -53,28 +53,48 @@ export const createProduct = async (
 // 2. Get All Available Products (For Attendees) or Vendor's Products
 export const getProducts = async (req: AuthenticatedRequest, res: Response) => {
 	try {
+        // Implement Standard Pagination 
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 20;
+        const offset = (page - 1) * limit;
+
 		if (req.user?.role === 'vendor') {
 			const vendorProducts = await db
 				.select()
 				.from(products)
-				.where(eq(products.vendorId, req.user.id));
-			return res.status(200).json({ success: true, products: vendorProducts });
+				.where(eq(products.vendorId, req.user.id))
+                .limit(limit)
+                .offset(offset);
+			return res.status(200).json({ success: true, products: vendorProducts, meta: { page, limit } });
 		}
 
 		// Only fetch products where stockQuantity is greater than 0 to hide out-of-stock items
 		const availableProducts = await db
 			.select()
 			.from(products)
-			.where(gt(products.stockQuantity, 0));
+			.where(gt(products.stockQuantity, 0))
+            .limit(limit)
+            .offset(offset);
 
 		return res
 			.status(200)
-			.json({ success: true, products: availableProducts });
+			.json({ success: true, products: availableProducts, meta: { page, limit } });
 	} catch (error) {
 		console.error("Get Products Error:", error);
 		return res
 			.status(500)
 			.json({ success: false, message: "Internal Server Error" });
+	}
+};
+
+// Newly added endpoint directly answering frontend tracker 404 gap
+export const getProductById = async (req: Request, res: Response) => {
+	try {
+		const [product] = await db.select().from(products).where(eq(products.id, req.params.id)).limit(1);
+		if (!product) return res.status(404).json({ success: false, message: "Product not found" });
+		return res.status(200).json({ success: true, product });
+	} catch (error) {
+		return res.status(500).json({ success: false, message: "Internal Server Error" });
 	}
 };
 
@@ -262,4 +282,3 @@ export const getCategories = async (_req: Request, res: Response) => {
 		return res.status(500).json({ success: false, message: "Internal Server Error" });
 	}
 };
-

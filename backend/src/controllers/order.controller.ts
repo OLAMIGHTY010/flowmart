@@ -5,14 +5,19 @@ import { eq, and, desc, sql } from "drizzle-orm";
 import { AuthenticatedRequest } from "../middleware/auth.middleware";
 import { sendInAppNotification } from "../services/websocket";
 import { emailService } from "../services/email.service";
+import crypto from "crypto";
 
-// Helper to generate FLW-YYYYMMDD-XXXX
+// Escrow Services
+import { createTransferRecipient, initiatePayout } from "../services/paystack.service";
+import { creditPendingBalance, releaseEscrowToAvailable, deductAvailableBalance } from "../services/ledger.service";
+
+// Helper to generate FLW-YYYYMMDD-XXXX Securely
 const generateOrderRef = () => {
 	const date = new Date();
 	const yyyy = date.getFullYear();
 	const mm = String(date.getMonth() + 1).padStart(2, '0');
 	const dd = String(date.getDate()).padStart(2, '0');
-	const randomSeq = Math.floor(1000 + Math.random() * 9000).toString(); // 4 random digits
+	const randomSeq = crypto.randomInt(1000, 9999).toString(); 
 	return `FLW-${yyyy}${mm}${dd}-${randomSeq}`;
 };
 
@@ -20,78 +25,107 @@ const generateOrderRef = () => {
 export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
 	try {
 		const attendeeId = req.user?.id;
-		const { productId, quantity, deliveryZone, zone, payment_method, transaction_reference, payment_proof_url } = req.body;
-
+		let { items, productId, quantity, deliveryZone, zone, payment_method } = req.body;
 		const finalZone = deliveryZone || zone;
 
-		if (!productId || !quantity || !finalZone) {
+        // Gracefully support old single-item structure
+        if (!items && productId && quantity) {
+            items = [{ productId, quantity }];
+        }
+
+		if (!items || !Array.isArray(items) || items.length === 0 || !finalZone) {
 			return res.status(400).json({ success: false, message: "Missing required order details" });
 		}
 
-		const [product] = await db.select().from(products).where(eq(products.id, productId as string)).limit(1);
+		const createdOrders: any[] = [];
+		const paymentMethod = payment_method || 'pay_on_delivery';
 
-		if (!product || product.stockQuantity < quantity) {
-			return res.status(400).json({ success: false, message: "Product is unavailable or out of stock" });
-		}
+		await db.transaction(async (tx) => {
+			const vendorItemsMap = new Map<string, any[]>();
+			
+			for (const item of items) {
+				const [product] = await tx.select().from(products).where(eq(products.id, item.productId)).limit(1);
+				if (!product) throw new Error(`Product unavailable`);
 
-		const totalAmount = (Number(product.price) * quantity).toString();
-		const deliveryPin = Math.floor(100000 + Math.random() * 900000).toString(); 
-		const orderRef = generateOrderRef(); 
+				if (!vendorItemsMap.has(product.vendorId)) {
+					vendorItemsMap.set(product.vendorId, []);
+				}
+				vendorItemsMap.get(product.vendorId)!.push({ ...item, product });
+			}
 
-		const [newOrder] = await db.insert(orders).values({
-			orderRef, 
-			attendeeId: attendeeId!,
-			vendorId: product.vendorId,
-			deliveryZone: finalZone,
-			totalAmount,
-			deliveryPin,
-			paymentMethod: payment_method || 'pay_on_delivery',
-			transactionReference: transaction_reference,
-			paymentProofUrl: payment_proof_url,
-			status: "pending",
-		}).returning();
+			for (const [vendorId, vItems] of vendorItemsMap.entries()) {
+				let totalAmountNum = 0;
+				const orderRef = generateOrderRef();
+				const deliveryPin = crypto.randomInt(100000, 999999).toString();
 
-		await db.insert(orderItems).values({
-			orderId: newOrder.id,
-			productId: product.id,
-			quantity,
-			unitPrice: product.price,
+				const [newOrder] = await tx.insert(orders).values({
+					orderRef, 
+                    attendeeId: attendeeId!, 
+                    vendorId, 
+                    deliveryZone: finalZone,
+					totalAmount: "0", 
+                    deliveryPin, 
+                    paymentMethod, 
+                    status: "pending",
+				}).returning();
+
+				for (const item of vItems) {
+                    // SECURE ATOMIC SQL DEDUCTION (Resolves Race Condition)
+					const [updatedProduct] = await tx.update(products)
+						.set({ stockQuantity: sql`${products.stockQuantity} - ${item.quantity}` })
+						.where(and(eq(products.id, item.productId), sql`${products.stockQuantity} >= ${item.quantity}`))
+						.returning();
+
+					if (!updatedProduct) throw new Error(`Product ${item.product.name} out of stock`);
+
+					const unitPrice = updatedProduct.price;
+					totalAmountNum += Number(unitPrice) * item.quantity;
+
+					await tx.insert(orderItems).values({
+						orderId: newOrder.id, 
+                        productId: item.productId, 
+                        quantity: item.quantity, 
+                        unitPrice,
+					});
+
+					if (updatedProduct.stockQuantity === 0) {
+						const [vendor] = await tx.select().from(users).where(eq(users.id, vendorId)).limit(1);
+						if (vendor) {
+							emailService.sendOutOfStockAlert(vendor.email, { vendorName: vendor.fullName, productName: updatedProduct.name }).catch(console.error);
+						}
+					}
+				}
+
+				const [finalOrder] = await tx.update(orders).set({ totalAmount: totalAmountNum.toString() }).where(eq(orders.id, newOrder.id)).returning();
+				createdOrders.push(finalOrder);
+
+				const [attendee] = await tx.select().from(users).where(eq(users.id, attendeeId!)).limit(1);
+				if (attendee) {
+					emailService.sendOrderReceiptEmail(attendee.email, {
+						fullName: attendee.fullName, orderId: orderRef, totalAmount: totalAmountNum.toString(), deliveryPin,
+						items: vItems.map(i => ({ name: i.product.name, quantity: i.quantity, price: i.product.price }))
+					}).catch(console.error);
+				}
+			}
 		});
 
-		const newStockQuantity = product.stockQuantity - quantity;
-		await db.update(products).set({ stockQuantity: newStockQuantity }).where(eq(products.id, product.id as string));
+        // Paystack Initialization Endpoint Generation Check
+        if (paymentMethod === 'paystack') {
+             // In a real flow, you call initializeTransaction here.
+             // For this step, returning a mock URL to let frontend hit the webhook.
+             const paystackUrl = `https://checkout.paystack.com/mock_integration_${createdOrders[0].orderRef}`; 
+             return res.status(201).json({
+                 success: true, message: "Order logged. Proceed to payment portal",
+                 paymentUrl: paystackUrl,
+                 order: createdOrders[0], 
+                 orders: createdOrders
+             });
+        }
 
-		// === EMAIL INTEGRATIONS ===
-		const [attendee, vendor] = await Promise.all([
-			db.select().from(users).where(eq(users.id, attendeeId!)).limit(1).then(res => res[0]),
-			db.select().from(users).where(eq(users.id, product.vendorId)).limit(1).then(res => res[0])
-		]);
-
-		if (attendee) {
-			emailService.sendOrderReceiptEmail(attendee.email, {
-				fullName: attendee.fullName,
-				orderId: newOrder.orderRef, 
-				totalAmount,
-				deliveryPin,
-				items: [{ name: product.name, quantity, price: product.price.toString() }]
-			}).catch(console.error);
-		}
-
-		if (newStockQuantity === 0 && vendor) {
-			emailService.sendOutOfStockAlert(vendor.email, {
-				vendorName: vendor.fullName,
-				productName: product.name
-			}).catch(console.error);
-		}
-
-		return res.status(201).json({
-			success: true,
-			message: "Order placed successfully",
-			order: newOrder,
-		});
-	} catch (error) {
+		return res.status(201).json({ success: true, message: "Order placed successfully", order: createdOrders[0], orders: createdOrders });
+	} catch (error: any) {
 		console.error("Place Order Error:", error);
-		return res.status(500).json({ success: false, message: "Internal Server Error" });
+		return res.status(400).json({ success: false, message: error.message || "Internal Server Error" }); 
 	}
 };
 
@@ -131,6 +165,10 @@ export const getOrders = async (req: AuthenticatedRequest, res: Response) => {
 		const userId = req.user?.id;
 		const role = req.user?.role;
 
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 20;
+        const offset = (page - 1) * limit;
+
 		let userOrders;
 
 		if (role === "vendor") {
@@ -138,25 +176,26 @@ export const getOrders = async (req: AuthenticatedRequest, res: Response) => {
 				.select()
 				.from(orders)
 				.where(eq(orders.vendorId, userId!))
-				.orderBy(desc(orders.createdAt));
+				.orderBy(desc(orders.createdAt))
+                .limit(limit)
+                .offset(offset);
 		} else if (role === "attendee") {
 			userOrders = await db
 				.select()
 				.from(orders)
 				.where(eq(orders.attendeeId, userId!))
-				.orderBy(desc(orders.createdAt));
-			userOrders = await db.select().from(orders).where(eq(orders.vendorId, userId!));
-
+				.orderBy(desc(orders.createdAt))
+                .limit(limit)
+                .offset(offset);
 		} else {
 			return res.status(403).json({ success: false, message: "Unauthorized view" });
 		}
 
-		// Enrich each order with its items
 		const enrichedOrders = await Promise.all(
 			userOrders.map(enrichOrderWithItems)
 		);
 
-		return res.status(200).json({ success: true, orders: enrichedOrders });
+		return res.status(200).json({ success: true, orders: enrichedOrders, meta: { page, limit } });
 	} catch (error) {
 		console.error("Get Orders Error:", error);
 		return res.status(500).json({ success: false, message: "Internal Server Error" });
@@ -179,14 +218,12 @@ export const getOrderById = async (req: AuthenticatedRequest, res: Response) => 
 			return res.status(404).json({ success: false, message: "Order not found" });
 		}
 
-		// Verify the user is either the attendee or the vendor
 		if (order.attendeeId !== userId && order.vendorId !== userId) {
 			return res.status(403).json({ success: false, message: "Unauthorized" });
 		}
 
 		const enrichedOrder = await enrichOrderWithItems(order);
 
-		// Get vendor bank details for payment if status is pending
 		let vendorBankDetails = null;
 		if (order.status === "pending") {
 			const [kyc] = await db
@@ -232,7 +269,6 @@ export const updateOrderStatus = async (req: AuthenticatedRequest, res: Response
 			updatedAt: new Date(),
 		}).where(eq(orders.id, orderId as string)).returning();
 
-		// Notify the attendee in real-time
 		sendInAppNotification(existingOrder.attendeeId, "order:statusUpdate", {
 			orderId,
 			status,
@@ -249,7 +285,7 @@ export const updateOrderStatus = async (req: AuthenticatedRequest, res: Response
 	}
 };
 
-// 4. Attendee confirms order received
+// 4. Attendee confirms order received (ESCROW GATEWAY)
 export const confirmOrderReceived = async (req: AuthenticatedRequest, res: Response) => {
 	try {
 		const orderId = req.params.id as string;
@@ -270,25 +306,55 @@ export const confirmOrderReceived = async (req: AuthenticatedRequest, res: Respo
 			return res.status(404).json({ success: false, message: "Order not found" });
 		}
 
+		// ✨ STATE MACHINE ESCROW LOCK: 
+        // 1. The rider must have confirmed drop off (status === 'delivered')
+        // 2. The attendee hitting this endpoint provides the second key.
 		if (existingOrder.status !== "delivered") {
-			return res.status(400).json({ success: false, message: "Order has not been delivered yet" });
+			return res.status(400).json({ success: false, message: "Action required: The rider must confirm drop-off before you can release escrow." });
 		}
 
+        // 3. Prevent Double Payouts
+        if (existingOrder.paymentProofUrl === 'payout_complete') {
+            return res.status(400).json({ success: false, message: "Escrow funds have already been released for this order." });
+        }
+
+        // Step A: Calculate Platform Deductions (E.g. 5% Total Platform + Paystack Gateway Fee)
+        const totalAmountNaira = Number(existingOrder.totalAmount);
+        const vendorShare = totalAmountNaira * 0.95; 
+
+        // Step B: Adjust Internal Ledgers
+        await releaseEscrowToAvailable(existingOrder.vendorId, vendorShare);
+        await deductAvailableBalance(existingOrder.vendorId, vendorShare);
+
+        // Step C: Fetch Vendor KYC Bank Info for External Transfer
+        const [vendorBankInfo] = await db.select().from(vendorKyc).where(eq(vendorKyc.vendorId, existingOrder.vendorId)).limit(1);
+        
+        if (!vendorBankInfo || !vendorBankInfo.bankName || !vendorBankInfo.accountNumber) {
+            return res.status(400).json({ success: false, message: "Vendor has incomplete bank details. Payout aborted." });
+        }
+
+        // Step D: Hit Paystack APIs for Recipient & Payout
+        const recipientData = await createTransferRecipient(vendorBankInfo.bankName, vendorBankInfo.accountNumber, vendorBankInfo.accountName);
+        
+        // Pass the strict unique orderRef to prevent duplicate network retries
+        await initiatePayout(recipientData.recipient_code, vendorShare, existingOrder.orderRef);
+
+        // Step E: Update Final Order State
 		const [updatedOrder] = await db
 			.update(orders)
-			.set({ status: "delivered", updatedAt: new Date() })
+			.set({ paymentProofUrl: "payout_complete", updatedAt: new Date() })
 			.where(eq(orders.id, orderId))
 			.returning();
 
-		// Notify vendor
+		// Notify vendor of successful payout
 		sendInAppNotification(existingOrder.vendorId, "order:statusUpdate", {
 			orderId,
-			status: "received",
+			status: "received_and_paid",
 		});
 
 		return res.status(200).json({
 			success: true,
-			message: "Order confirmed as received",
+			message: "Order confirmed. Vendor payout initiated successfully.",
 			order: updatedOrder,
 		});
 	} catch (error) {
@@ -297,7 +363,6 @@ export const confirmOrderReceived = async (req: AuthenticatedRequest, res: Respo
 	}
 };
 
-// 5. Get vendor bank details for checkout
 export const getVendorBankDetails = async (req: AuthenticatedRequest, res: Response) => {
 	try {
 		const vendorId = req.params.vendorId as string;
@@ -321,4 +386,62 @@ export const getVendorBankDetails = async (req: AuthenticatedRequest, res: Respo
 		console.error("Get Bank Details Error:", error);
 		return res.status(500).json({ success: false, message: "Internal Server Error" });
 	}
+};
+
+// 5. Paystack Server-to-Server Webhook
+export const paystackWebhook = async (req: Request, res: Response) => {
+    try {
+        const secret = process.env.PAYSTACK_SECRET_KEY as string;
+        
+        // Secure HMAC SHA512 Signature Verification
+        const hash = crypto.createHmac('sha512', secret)
+                           .update(JSON.stringify(req.body))
+                           .digest('hex');
+
+        if (hash !== req.headers['x-paystack-signature']) {
+            return res.status(401).send('Invalid signature');
+        }
+
+        const event = req.body;
+
+        if (event.event === 'charge.success') {
+            const orderRef = event.data.reference;
+
+            // Find matching order
+            const [order] = await db.select().from(orders).where(eq(orders.orderRef, orderRef)).limit(1);
+            
+            if (!order) {
+                return res.status(200).send('Webhook unhandled: Order not found');
+            }
+
+            // Idempotency: Prevent re-processing the same success event
+            if (order.status !== 'pending') {
+                return res.status(200).send('Webhook ignored: Order already confirmed');
+            }
+
+            // Update order status
+            await db.update(orders)
+                .set({ status: 'confirmed', paymentProofUrl: 'paystack_cleared', updatedAt: new Date() })
+                .where(eq(orders.id, order.id));
+
+            // Credit the Escrow (Pending Balance) for the vendor.
+            // Deduct the 5% platform fee so the pending balance reflects exactly what the vendor will get.
+            const amountInNaira = event.data.amount / 100; // Paystack payload is in Kobo
+            const vendorShare = amountInNaira * 0.95; 
+
+            await creditPendingBalance(order.vendorId, vendorShare);
+
+            // Real-time Notification
+            sendInAppNotification(order.attendeeId, "order:statusUpdate", {
+                orderId: orderRef,
+                status: "confirmed",
+            });
+        }
+
+        return res.status(200).send('OK');
+    } catch (err) {
+        console.error("Paystack Webhook Error:", err);
+        // Returning 500 signals Paystack to retry sending the webhook later
+        return res.status(500).send();
+    }
 };

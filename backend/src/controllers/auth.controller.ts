@@ -1,15 +1,15 @@
 import { Request, Response } from 'express';
-import { db } from '../../db'; // Assuming db is at the root
-import { users, verificationOtps } from '../../db/schema';
-import { eq, and, gt } from 'drizzle-orm';
+import { db } from '../../db'; 
+import { users } from '../../db/schema';
+import { eq } from 'drizzle-orm';
 import { hashPassword, comparePassword } from '../utils/password';
 import jwt from 'jsonwebtoken';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import { emailService } from '../services/email.service';
 import crypto from 'crypto';
 
-// Helper to generate a 6-digit OTP
-const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
+// Helper to generate a secure 6-digit OTP
+const generateSecureOTP = () => crypto.randomInt(100000, 999999).toString();
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -36,18 +36,17 @@ export const register = async (req: Request, res: Response) => {
       
       // Scenario A: User is registered but not verified
       if (!user.isVerified) {
-        // Generate new OTP
-        const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpCode = generateSecureOTP();
+        const hashedOtp = await hashPassword(otpCode);
         const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
 
         await db.update(users).set({
-          otp: otpCode,
+          otp: hashedOtp,
           otpExpiry: expiresAt,
         }).where(eq(users.id, user.id));
 
         emailService.sendOtpEmail(user.email, { fullName: user.fullName, otp: otpCode }).catch(console.error);
 
-        // Generate Token
         const token = jwt.sign(
           { id: user.id, email: user.email, role: user.role },
           process.env.JWT_SECRET!,
@@ -82,9 +81,8 @@ export const register = async (req: Request, res: Response) => {
 
     // Hash and save new user
     const hashedPassword = await hashPassword(password);
-    const otp = generateOTP();
-    // Generate a 6-digit OTP code
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpCode = generateSecureOTP();
+    const hashedOtp = await hashPassword(otpCode);
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour expiration
 
     const [newUser] = await db.insert(users).values({
@@ -95,7 +93,7 @@ export const register = async (req: Request, res: Response) => {
       phone: phoneNumber || null,
       dateOfBirth: dateOfBirth || null,
       gender: gender || null,
-      otp: otpCode,
+      otp: hashedOtp,
       otpExpiry: expiresAt,
     }).returning();
 
@@ -115,27 +113,26 @@ export const register = async (req: Request, res: Response) => {
 
 export const verifyOtp = async (req: Request, res: Response) => {
   try {
-    let { otp } = req.body;
+    const { email, otp } = req.body;
     
-    // Support both raw string body and wrapped object body (just in case)
-    if (!otp && typeof req.body === 'string') {
-      otp = req.body;
+    if (!email || !otp) {
+      return res.status(400).json({ success: false, message: 'Email and OTP are required' });
     }
 
-    if (!otp) {
-      return res.status(400).json({ success: false, message: 'OTP is required' });
-    }
+    const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
 
-    // Find user by OTP. (Note: In a production app, OTPs are 6 digits and could collide.
-    // Searching by email+otp is safer, but this matches the frontend requirement.)
-    const [user] = await db.select().from(users).where(eq(users.otp, otp)).limit(1);
-
-    if (!user) {
-      return res.status(400).json({ success: false, message: 'Invalid OTP' });
+    if (!user || !user.otp) {
+      return res.status(400).json({ success: false, message: 'Invalid request or OTP' });
     }
 
     if (user.otpExpiry && new Date() > user.otpExpiry) {
       return res.status(400).json({ success: false, message: 'OTP has expired. Please request a new one.' });
+    }
+
+    // Securely compare the hashed OTP
+    const isValid = await comparePassword(otp, user.otp);
+    if (!isValid) {
+      return res.status(400).json({ success: false, message: 'Invalid OTP' });
     }
 
     // Mark as verified and clear OTP
@@ -227,6 +224,12 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
+// ✨ NEW: Secure Logout Gateway
+export const logout = async (req: Request, res: Response) => {
+  // Clear auth client-side
+  return res.status(200).json({ success: true, message: 'Logged out successfully' });
+};
+
 export const getMe = async (req: Request, res: Response) => {
   try {
     const authReq = req as AuthenticatedRequest;
@@ -295,6 +298,7 @@ export const forceChangePassword = async (req: Request, res: Response) => {
     return res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 };
+
 export const requestPasswordReset = async (req: Request, res: Response) => {
   try {
     const { email } = req.body;
@@ -342,11 +346,12 @@ export const resendOtp = async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpCode = generateSecureOTP();
+    const hashedOtp = await hashPassword(otpCode);
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000); 
 
     await db.update(users).set({
-      otp: otpCode,
+      otp: hashedOtp,
       otpExpiry: expiresAt,
     }).where(eq(users.id, userRecord.id));
 
@@ -375,11 +380,12 @@ export const forgotPassword = async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpCode = generateSecureOTP();
+    const hashedOtp = await hashPassword(otpCode);
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000); 
 
     await db.update(users).set({
-      otp: otpCode,
+      otp: hashedOtp,
       otpExpiry: expiresAt,
     }).where(eq(users.id, userRecord.id));
 
@@ -408,12 +414,17 @@ export const resetPassword = async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    if (!userRecord.otp || userRecord.otp !== otp) {
+    if (!userRecord.otp) {
       return res.status(400).json({ success: false, message: 'Invalid OTP code' });
     }
 
     if (userRecord.otpExpiry && new Date() > userRecord.otpExpiry) {
       return res.status(400).json({ success: false, message: 'OTP code has expired' });
+    }
+
+    const isValid = await comparePassword(otp, userRecord.otp);
+    if (!isValid) {
+      return res.status(400).json({ success: false, message: 'Invalid OTP code' });
     }
 
     const hashedPassword = await hashPassword(newPassword);
@@ -433,6 +444,7 @@ export const resetPassword = async (req: Request, res: Response) => {
     return res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 };
+
 // ✨ NEW: Secure Role Assignment Gateway
 export const assignRole = async (req: AuthenticatedRequest, res: Response) => {
   try {

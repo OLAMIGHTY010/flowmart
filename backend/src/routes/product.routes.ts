@@ -1,16 +1,12 @@
 import { Router } from 'express';
-import { createProduct, getProducts, updateProduct, deleteProduct, getVendorPublicProfile, getCategories } from '../controllers/product.controller';
+import { createProduct, getProducts, getProductById, updateProduct, deleteProduct, getVendorPublicProfile, getCategories } from '../controllers/product.controller';
 import { authenticateJWT, authorizeRoles } from '../middleware/auth.middleware';
 
 const router = Router();
 
-// Get all product categories (public, but authenticated)
 router.get('/categories', authenticateJWT, getCategories);
-
-// Everyone logged in (including attendees) can browse available products
 router.get('/', authenticateJWT, getProducts);
-
-// Only vendors (and super admins) can manage inventory
+router.get('/:id', authenticateJWT, getProductById); 
 router.post('/', authenticateJWT, authorizeRoles('vendor', 'super_admin'), createProduct);
 router.put('/:id', authenticateJWT, authorizeRoles('vendor', 'super_admin'), updateProduct);
 router.delete('/:id', authenticateJWT, authorizeRoles('vendor', 'super_admin'), deleteProduct);

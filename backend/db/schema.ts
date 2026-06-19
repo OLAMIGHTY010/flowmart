@@ -10,7 +10,7 @@ export const roleEnum = pgEnum('role', [
   'attendee'
 ]);
 
-export const paymentMethodEnum = pgEnum('payment_method', ['bank_transfer', 'pay_on_delivery']);
+export const paymentMethodEnum = pgEnum('payment_method', ['bank_transfer', 'pay_on_delivery', 'paystack']);
 export const kycStatusEnum = pgEnum('kyc_status', ['unsubmitted', 'pending', 'under_review', 'approved', 'rejected']);
 
 export const users = pgTable('users', {
@@ -42,8 +42,6 @@ export const users = pgTable('users', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
-
-
 
 export const kycSubmissions = pgTable('kyc_submissions', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -154,6 +152,12 @@ export const vendorProfiles = pgTable('vendor_profiles', {
   city: varchar('city', { length: 100 }).notNull(),
   bio: text('bio'),
   avatar: text('avatar'),
+
+  // ✨ NEW: Escrow Balance Tracking
+  pendingBalance: decimal('pending_balance', { precision: 12, scale: 2 }).default('0.00').notNull(),
+  availableBalance: decimal('available_balance', { precision: 12, scale: 2 }).default('0.00').notNull(),
+  totalEarned: decimal('total_earned', { precision: 12, scale: 2 }).default('0.00').notNull(),
+
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -171,9 +175,9 @@ export const vendorKyc = pgTable('vendor_kyc', {
   guarantorName: varchar('guarantor_name', { length: 255 }).notNull(),
   guarantorPhone: varchar('guarantor_phone', { length: 50 }).notNull(),
   guarantorRelationship: varchar('guarantor_relationship', { length: 100 }).notNull(),
-  governmentIdFile: text('government_id_file'), // Base64 content or filename
-  campCertificateFile: text('camp_certificate_file'), // Base64 content or filename
-  guarantorIdFile: text('guarantor_id_file'), // Base64 content or filename
+  governmentIdFile: text('government_id_file'), 
+  campCertificateFile: text('camp_certificate_file'), 
+  guarantorIdFile: text('guarantor_id_file'), 
   nafdacCertificateCode: varchar('nafdac_certificate_code', { length: 255 }),
   nafdacCertificateFile: text('nafdac_certificate_file'),
   status: varchar('status', { length: 50 }).default('pending').notNull(),
@@ -184,7 +188,7 @@ export const vendorKyc = pgTable('vendor_kyc', {
 export const vendorKycHistory = pgTable('vendor_kyc_history', {
   id: uuid('id').defaultRandom().primaryKey(),
   vendorId: uuid('vendor_id').references(() => users.id).notNull(),
-  action: varchar('action', { length: 50 }).notNull(), // e.g. 'submitted', 'approved', 'rejected'
+  action: varchar('action', { length: 50 }).notNull(), 
   notes: text('notes'),
   reviewerId: uuid('reviewer_id').references(() => users.id),
   createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -200,15 +204,15 @@ export const verificationOtps = pgTable('verification_otps', {
 
 export const auditLogs = pgTable('audit_logs', {
   id: uuid('id').defaultRandom().primaryKey(),
-  eventId: varchar('event_id', { length: 50 }).notNull(), // e.g. AUT-3047
-  actorId: uuid('actor_id').references(() => users.id), // Can be null for system events
-  actorName: varchar('actor_name', { length: 255 }).notNull(), // Adebayo Wash, System, etc.
-  action: varchar('action', { length: 100 }).notNull(), // Rejected, Updated, Login
-  module: varchar('module', { length: 100 }).notNull(), // Onboard, Profile, Auth
+  eventId: varchar('event_id', { length: 50 }).notNull(), 
+  actorId: uuid('actor_id').references(() => users.id), 
+  actorName: varchar('actor_name', { length: 255 }).notNull(), 
+  action: varchar('action', { length: 100 }).notNull(), 
+  module: varchar('module', { length: 100 }).notNull(), 
   description: text('description').notNull(),
   ipAddress: varchar('ip_address', { length: 50 }),
-  status: varchar('status', { length: 50 }).notNull(), // Success, Failed
-  metadata: jsonb('metadata'), // JSON object for previous/new state
+  status: varchar('status', { length: 50 }).notNull(), 
+  metadata: jsonb('metadata'), 
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
@@ -217,11 +221,12 @@ export const welfareInventory = pgTable('welfare_inventory', {
   name: varchar('name', { length: 255 }).notNull(),
   stock: integer('stock').notNull().default(0),
   allocated: integer('allocated').notNull().default(0),
-  unit: varchar('unit', { length: 50 }).notNull(), // 'packs', 'liters', 'bottles', etc.
-  status: varchar('status', { length: 50 }).notNull(), // 'Sufficient', 'Shortage Risk'
+  unit: varchar('unit', { length: 50 }).notNull(), 
+  status: varchar('status', { length: 50 }).notNull(), 
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull()
 });
+
 export const riderProfiles = pgTable('rider_profiles', {
   id: uuid('id').defaultRandom().primaryKey(),
   riderId: uuid('rider_id').references(() => users.id).notNull().unique(),
