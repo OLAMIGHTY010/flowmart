@@ -79,7 +79,7 @@ In order to run this project you need:
 Clone this repository to your desired folder and install dependencies:
 
 ```sh
-  cd frontend-rider
+  cd FlowMart
   npm install
   npm run dev
 ```
