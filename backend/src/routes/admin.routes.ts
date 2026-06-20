@@ -68,7 +68,7 @@ router.post('/vendors/:id/review', reviewVendor);
 router.get('/riders/stats', getRiderStats);
 router.get('/riders', getRidersList);
 router.get('/riders/:id', getRiderDetails);
-router.post('/riders/:id/review', reviewRider);
+router.post('/riders/:id/review', authorizeRoles('camp_logistics_coordinator'), reviewRider);
 
 // Audit Logs
 router.get('/audit-logs', getAuditLogs);

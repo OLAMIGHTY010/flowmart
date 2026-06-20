@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { useNavigate, Navigate } from 'react-router';
+import { Navigate } from 'react-router';
 import { useAuth } from '@/hooks/useAuth';
 import { authService } from '@/services/AuthServices';
 import logo from '@/assets/flowmart.png';
 import { Shield, ArrowLeft } from 'lucide-react';
 
 export default function Login() {
-  const navigate = useNavigate();
   const { login, user } = useAuth();
 
   const [mode, setMode] = useState<'login' | 'forgot' | 'reset'>('login');
@@ -117,7 +116,6 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-[#0f341c] flex flex-col items-center justify-center p-4 font-body relative overflow-hidden">
-      {/* Abstract Background Elements (optional, for depth) */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-[#164a28] opacity-20 blur-[120px]"></div>
         <div className="absolute bottom-[10%] right-[10%] w-[40%] h-[40%] rounded-full bg-[#164a28] opacity-30 blur-[100px]"></div>

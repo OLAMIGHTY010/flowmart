@@ -16,7 +16,7 @@ export const getRiderStats = async (req: Request, res: Response) => {
       .where(
         and(
           eq(users.role, 'dispatch_rider'),
-          eq(users.status, 'active') // In reality, maybe tracking a "is_online" field
+          eq(users.status, 'active')
         )
       );
     const activeNow = activeResult[0].count;
@@ -105,7 +105,7 @@ export const getRidersList = async (req: Request, res: Response) => {
       email: users.email,
       phone: users.phone,
       lastLogin: users.lastLogin,
-      status: riderKyc.status, // We use KYC status primarily
+      status: riderKyc.status,
     })
     .from(riderKyc)
     .innerJoin(users, eq(users.id, riderKyc.riderId))

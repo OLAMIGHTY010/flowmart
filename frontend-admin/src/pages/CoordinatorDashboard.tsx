@@ -1,16 +1,13 @@
-import { useState } from 'react';
+
 import { useQuery } from '@tanstack/react-query';
 import { 
   CheckCircle2, 
   AlertTriangle, 
-  Clock, 
   Package, 
   Users, 
   Map as MapIcon, 
   Activity,
-  RefreshCw,
-  Search,
-  Bell
+  RefreshCw
 } from 'lucide-react';
 import { CoordinatorAnalyticsServices } from '@/services/CoordinatorAnalyticsServices';
 
@@ -35,7 +32,7 @@ export default function CoordinatorDashboard() {
     queryFn: CoordinatorAnalyticsServices.getLiveActivityFeed
   });
 
-  const [lastUpdated] = useState('Just now');
+
 
   if (overviewLoading) {
     return (
