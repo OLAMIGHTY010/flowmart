@@ -44,7 +44,7 @@ export default function ForgotPassword() {
       } else {
         // Handle unverified user redirection (Scenario A)
         if (responseData?.code === "EMAIL_UNVERIFIED") {
-          showToast(responseData.message || "Email is unverified. Redirecting to verify OTP...", "info");
+          showToast(responseData.message || "Email is unverified. Redirecting to verify OTP...", "success");
           
           // Set access credentials in localStorage
           if (responseData.token) {
@@ -68,7 +68,7 @@ export default function ForgotPassword() {
       
       // Secondary check for Scenario A redirection
       if (data?.code === "EMAIL_UNVERIFIED") {
-        showToast(data.message || "Email is unverified. Redirecting to verify OTP...", "info");
+        showToast(data.message || "Email is unverified. Redirecting to verify OTP...", "success");
         
         if (data.token) {
           localStorage.setItem("accessToken", data.token);
