@@ -1,9 +1,9 @@
 import { X } from "lucide-react";
 import { useContext } from "react";
-import { ToastContext } from "@/contexts/ToastContext";
+import { ToastContext, type ToastContextType } from "@/contexts/ToastContext";
 
 export const GlobalToast = () => {
-  const context = useContext(ToastContext);
+  const context = useContext(ToastContext) as ToastContextType | null;
 
   if (!context || !context.toast) return null;
 
@@ -28,4 +28,4 @@ export const GlobalToast = () => {
       </button>
     </div>
   );
-};
+};

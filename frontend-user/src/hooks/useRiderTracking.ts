@@ -30,7 +30,7 @@ export function useRiderTracking(orderId: string | undefined): UseRiderTrackingR
       }
     })();
 
-    const socket = io("http://localhost:5000", {
+    const socket = io("https://flowmart-backend-2s2d-o0ljo79px-gbotemiojos-projects.vercel.app", {
       query: { userId },
       transports: ["websocket", "polling"],
     });

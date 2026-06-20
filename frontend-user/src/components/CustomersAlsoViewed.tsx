@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useRecommendationStore } from "@/stores/recommendationStore";
-import { useCartStore } from "@/stores/cartStore";
 import { useProducts } from "@/hooks/useProducts";
 import type { Product } from "@/types/product";
 import { Card } from "./ui/card";
@@ -19,10 +18,6 @@ export default function CustomersAlsoViewed({
 
   const setRecommendations = useRecommendationStore(
     (state) => state.setRecommendations
-  );
-
-  const addToCart = useCartStore(
-    (state) => state.addToCart
   );
 
   const { data: allProducts = [] } = useProducts();

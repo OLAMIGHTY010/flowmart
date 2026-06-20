@@ -4,7 +4,7 @@ import { apiClient } from '@/services/api';
 import io, { Socket } from 'socket.io-client';
 import { Send, CheckCircle2, AlertCircle, Clock, UserCircle, MessageSquare } from 'lucide-react';
 
-const SOCKET_URL = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api/v1', '') : "http://localhost:5000";
+const SOCKET_URL = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api/v1', '') : "https://flowmart-backend-2s2d-o0ljo79px-gbotemiojos-projects.vercel.app";
 
 interface Ticket {
   id: string;

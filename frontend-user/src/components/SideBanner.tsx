@@ -1,4 +1,4 @@
-import React from "react";
+// Side banner component for auth pages
 import logo from "@/assets/flowmart-logo.png";
 
 export default function SideBanner() {

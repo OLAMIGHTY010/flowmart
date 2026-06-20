@@ -8,7 +8,7 @@ import { userServices } from "@/services/UserServices";
 
 export default function ChangePassword() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  useAuth();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");

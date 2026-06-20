@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { paymentService } from "@/services/paymentService";
+import { orderServices } from "@/services/OrderServices";
 import { useCartStore } from "@/stores/cartStore";
 
 export function useCheckout() {
@@ -17,7 +17,7 @@ export function useCheckout() {
       setLoading(true);
 
       const response =
-        await paymentService.submitOrder(
+        await orderServices.placeOrder(
           payload
         );
 
