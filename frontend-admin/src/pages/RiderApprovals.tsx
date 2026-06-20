@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   Search, Filter, Clock, CheckCircle2, XCircle, 
-  Edit3, Check, X
+  Edit3, X
 } from 'lucide-react';
 import { RiderApprovalServices } from '@/services/RiderApprovalServices';
-import type { RiderListItem } from '@/services/RiderApprovalServices';
+
 import { useToast } from '@/hooks/use-toast';
 
 export default function RiderApprovals() {
