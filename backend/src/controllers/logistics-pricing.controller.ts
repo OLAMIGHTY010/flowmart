@@ -36,8 +36,8 @@ export class LogisticsPricingController {
 
       const [newZone] = await db.insert(deliveryZones).values({
         zoneName,
-        baseFee: finalBaseFee,
-        perKmFee: finalPerKmFee,
+        baseFee: String(finalBaseFee),
+        perKmFee: String(finalPerKmFee),
         riderCommissionPct: finalRiderPct,
         platformCommissionPct: finalPlatformPct,
         active: active !== undefined ? active : true
@@ -50,7 +50,7 @@ export class LogisticsPricingController {
 
   static async updateZone(req: Request, res: Response) {
     try {
-      const { id } = req.params;
+      const id = req.params.id as string;
       const updates = req.body;
       const user = (req as any).user;
 
@@ -118,7 +118,7 @@ export class LogisticsPricingController {
 
   static async updateRule(req: Request, res: Response) {
     try {
-      const { id } = req.params;
+      const id = req.params.id as string;
       const updates = req.body;
       const [updatedRule] = await db.update(pricingRules)
         .set({ ...updates, updatedAt: new Date() })

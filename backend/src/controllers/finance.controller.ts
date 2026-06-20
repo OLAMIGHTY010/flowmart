@@ -125,8 +125,7 @@ export class FinanceController {
         createdAt: payouts.createdAt,
         user: {
           id: users.id,
-          firstName: users.firstName,
-          lastName: users.lastName,
+          fullName: users.fullName,
           email: users.email,
           role: users.role,
         }
@@ -145,7 +144,7 @@ export class FinanceController {
 
   static async retryPayout(req: Request, res: Response) {
     try {
-      const payoutId = req.params.id;
+      const payoutId = req.params.id as string;
       
       const payoutRecord = await db.select().from(payouts).where(eq(payouts.id, payoutId)).limit(1);
       if (!payoutRecord.length) {
