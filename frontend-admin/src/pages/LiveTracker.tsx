@@ -9,8 +9,7 @@ import {
   Map as MapIcon, 
   Activity,
   Users,
-  AlertCircle,
-  Car
+  AlertCircle
 } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { CoordinatorAnalyticsServices } from '../services/CoordinatorAnalyticsServices';
@@ -299,16 +298,12 @@ export default function LiveTracker() {
               
               <div className="flex flex-col gap-5 relative z-10">
                 {activityFeed?.map((feed: any, i: number) => {
-                  let icon = CheckCircle2;
                   let iconBg = 'bg-[#16a34a]';
                   if (feed.type === 'error') {
-                    icon = AlertTriangle;
                     iconBg = 'bg-red-500';
                   } else if (feed.type === 'info') {
-                    icon = Car;
                     iconBg = 'bg-blue-500';
                   }
-                  const Icon = icon;
                   return (
                   <div key={i} className="flex gap-4 group">
                     <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 border-2 border-white shadow-sm bg-white`}>
