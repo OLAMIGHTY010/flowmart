@@ -5,6 +5,52 @@ dotenv.config();
 
 const FLUTTERWAVE_SECRET_KEY = process.env.FLUTTERWAVE_SECRET_KEY || '';
 
+// Added the missing initializeTransaction function
+export const initializeTransaction = async (
+  email: string, 
+  amount: number, 
+  tx_ref: string, 
+  redirect_url: string, 
+  customer: { name?: string, phone?: string }
+) => {
+  if (!FLUTTERWAVE_SECRET_KEY) {
+    console.warn("FLUTTERWAVE_SECRET_KEY missing. Simulating init.");
+    return { link: "https://simulated-flutterwave-payment-link.com" };
+  }
+
+  try {
+    const response = await axios.post(
+      'https://api.flutterwave.com/v3/payments',
+      {
+        tx_ref,
+        amount,
+        currency: "NGN",
+        redirect_url,
+        customer: {
+          email,
+          phonenumber: customer.phone,
+          name: customer.name
+        },
+        customizations: {
+          title: "Flowmart Order",
+          logo: "https://yourdomain.com/logo.png" // update with your actual logo
+        }
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${FLUTTERWAVE_SECRET_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    
+    return { link: response.data.data.link };
+  } catch (error: any) {
+    console.error("Flutterwave Init Error:", error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || 'Flutterwave initialization failed');
+  }
+};
+
 export class FlutterwaveService {
   static async initiateTransfer(amount: number, bankCode: string, accountNumber: string, reference: string, narration: string) {
     if (!FLUTTERWAVE_SECRET_KEY) {

@@ -7,8 +7,8 @@ import { sendInAppNotification } from "../services/websocket";
 import { emailService } from "../services/email.service";
 import crypto from "crypto";
 
-// Escrow Services
-import { createTransferRecipient, initiatePayout } from "../services/paystack.service";
+// Escrow Services - Added initializeTransaction here
+import { createTransferRecipient, initiatePayout, initializeTransaction } from "../services/paystack.service";
 import { creditPendingBalance, releaseEscrowToAvailable, deductAvailableBalance } from "../services/ledger.service";
 import { PricingService } from "../services/pricing.service";
 import { globalSettings, orderDelivery } from "../../db/schema";
@@ -163,6 +163,9 @@ export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
                  const orderRef = createdOrders[0].orderRef;
                  const email = req.user?.email || "customer@flowmart.com";
                  
+                 // Fetch attendee details to get actual fullName and phone number (not present in standard JWT req.user)
+                 const [attendee] = await db.select().from(users).where(eq(users.id, req.user!.id)).limit(1);
+                 
                  // Compute grand total
                  const grandTotal = createdOrders.reduce((sum, order) => sum + Number(order.totalAmount), 0);
                  const callbackUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment-callback`;
@@ -175,7 +178,7 @@ export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
                  } else {
                      const initData = await flutterwaveService.initializeTransaction(
                          email, grandTotal, orderRef, callbackUrl, 
-                         { name: req.user?.fullName, phone: req.user?.phone }
+                         { name: attendee?.fullName || "Customer", phone: attendee?.phone || "" }
                      );
                      paymentUrl = initData.link;
                  }
