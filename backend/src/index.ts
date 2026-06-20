@@ -15,13 +15,11 @@ const server = http.createServer(app);
 const allowedOrigins = process.env.ALLOWED_ORIGINS 
   ? process.env.ALLOWED_ORIGINS.split(',') 
   : [
-      'http://localhost:3000', 
-      'http://localhost:3001', 
-      'http://localhost:3002',
-      'http://localhost:5173',
-      'http://localhost:5174',
-      'http://127.0.0.1:5173',
-      'http://127.0.0.1:5174'
+      'https://riderflowmart.vercel.app',
+      'https://flowmart-iota.vercel.app',
+      'https://userflowmart.vercel.app',
+
+      'https://flowmart-vendor.vercel.app'
     ];
 
 app.use(cors({
