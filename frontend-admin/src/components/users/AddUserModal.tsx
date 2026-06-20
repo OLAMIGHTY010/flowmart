@@ -16,6 +16,14 @@ export default function AddUserModal({ isOpen, onClose }: AddUserModalProps) {
   const [gender, setGender] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('admin'); // Default role
+  
+  // Staff fields
+  const [church, setChurch] = useState('');
+  const [zonal, setZonal] = useState('');
+  const [department, setDepartment] = useState('');
+  const [professionalCertification, setProfessionalCertification] = useState('');
+  const [grade, setGrade] = useState('');
+
   const [successData, setSuccessData] = useState<{message: string, tempPassword?: string} | null>(null);
   
   const queryClient = useQueryClient();
@@ -33,7 +41,7 @@ export default function AddUserModal({ isOpen, onClose }: AddUserModalProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    mutation.mutate({ fullName, email, role, phone, dateOfBirth, gender, password });
+    mutation.mutate({ fullName, email, role, phone, dateOfBirth, gender, password, church, zonal, department, professionalCertification, grade });
   };
 
   const handleClose = () => {
@@ -44,6 +52,11 @@ export default function AddUserModal({ isOpen, onClose }: AddUserModalProps) {
     setGender('');
     setPassword('');
     setRole('admin');
+    setChurch('');
+    setZonal('');
+    setDepartment('');
+    setProfessionalCertification('');
+    setGrade('');
     setSuccessData(null);
     mutation.reset();
     onClose();
@@ -51,9 +64,9 @@ export default function AddUserModal({ isOpen, onClose }: AddUserModalProps) {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[95vh]">
         
-        <div className="flex items-center justify-between p-5 border-b border-slate-100">
+        <div className="flex items-center justify-between p-5 border-b border-slate-100 flex-shrink-0">
           <h2 className="text-lg font-bold text-slate-800">Add New User</h2>
           <button onClick={handleClose} className="p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 rounded-md transition-colors">
             <X size={20} />
@@ -90,10 +103,18 @@ export default function AddUserModal({ isOpen, onClose }: AddUserModalProps) {
             </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="p-5">
-            <div className="space-y-4 max-h-[60vh] overflow-y-auto px-1">
-              
-              <div>
+          <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden bg-slate-50">
+            <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-white p-6 rounded-xl border border-slate-200">
+                
+                {/* Left Column: Core Account Details */}
+                <div className="space-y-4">
+                  <h4 className="text-xs font-bold text-brand-primary uppercase mb-4 flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-brand-primary"></span>
+                    Account Details
+                  </h4>
+                  
+                  <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">Full Name</label>
                 <input 
                   type="text" 
@@ -168,43 +189,115 @@ export default function AddUserModal({ isOpen, onClose }: AddUserModalProps) {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">System Role</label>
-                <select 
-                  value={role}
-                  onChange={e => setRole(e.target.value)}
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#16a34a] focus:ring-1 focus:ring-[#16a34a] bg-white"
-                >
-                  <option value="super_admin">Super Admin</option>
-                  <option value="admin">Admin</option>
-                  <option value="zone_coordinator">Zonal Coordinator</option>
-                  <option value="camp_logistics_coordinator">Camp Logistics Coordinator</option>
-                </select>
-              </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">System Role</label>
+                    <select 
+                      value={role}
+                      onChange={e => setRole(e.target.value)}
+                      className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#16a34a] focus:ring-1 focus:ring-[#16a34a] bg-white"
+                    >
+                      <option value="super_admin">Super Admin</option>
+                      <option value="admin">Admin</option>
+                      <option value="zone_coordinator">Zonal Coordinator</option>
+                      <option value="camp_logistics_coordinator">Camp Logistics Coordinator</option>
+                      <option value="finance">Finance</option>
+                      <option value="auditor">Auditor</option>
+                      <option value="customer_service">Customer Service</option>
+                    </select>
+                  </div>
+                </div>
 
+                {/* Right Column: Staff Profile */}
+                <div className="space-y-4">
+                  <h4 className="text-xs font-bold text-brand-primary uppercase mb-4 flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-brand-primary"></span>
+                    Staff Profile Data
+                  </h4>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Church / Parish</label>
+                      <input 
+                        type="text" 
+                        value={church}
+                        onChange={e => setChurch(e.target.value)}
+                        className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#16a34a] focus:ring-1 focus:ring-[#16a34a]"
+                        placeholder="e.g. RCCG Main"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Zonal</label>
+                      <input 
+                        type="text" 
+                        value={zonal}
+                        onChange={e => setZonal(e.target.value)}
+                        className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#16a34a] focus:ring-1 focus:ring-[#16a34a]"
+                        placeholder="e.g. Zone 4"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Department</label>
+                      <input 
+                        type="text" 
+                        value={department}
+                        onChange={e => setDepartment(e.target.value)}
+                        className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#16a34a] focus:ring-1 focus:ring-[#16a34a]"
+                        placeholder="e.g. Logistics"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Prof. Certification</label>
+                      <input 
+                        type="text" 
+                        value={professionalCertification}
+                        onChange={e => setProfessionalCertification(e.target.value)}
+                        className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#16a34a] focus:ring-1 focus:ring-[#16a34a]"
+                        placeholder="e.g. ICAN (Optional)"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Grade</label>
+                    <input 
+                      type="text" 
+                      value={grade}
+                      onChange={e => setGrade(e.target.value)}
+                      className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#16a34a] focus:ring-1 focus:ring-[#16a34a]"
+                      placeholder="e.g. Level 2"
+                    />
+                  </div>
+                </div>
+
+              </div>
             </div>
 
-            {mutation.isError && (
-              <div className="mt-4 p-3 bg-red-50 text-red-600 text-xs font-medium rounded-lg border border-red-100">
-                {(mutation.error as any)?.response?.data?.message || mutation.error.message || 'An error occurred'}
+            <div className="p-5 border-t border-slate-100 flex-shrink-0 bg-slate-50/50">
+              {mutation.isError && (
+                <div className="mb-4 p-3 bg-red-50 text-red-600 text-xs font-medium rounded-lg border border-red-100">
+                  {(mutation.error as any)?.response?.data?.message || mutation.error.message || 'An error occurred'}
+                </div>
+              )}
+              
+              <div className="flex justify-end gap-3">
+                <button 
+                  type="button" 
+                  onClick={handleClose}
+                  className="px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={mutation.isPending}
+                  className="bg-[#16a34a] text-white px-5 py-2 text-sm font-bold rounded-lg hover:bg-green-600 transition-colors flex items-center disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  {mutation.isPending ? <><Loader2 size={16} className="animate-spin mr-2" /> Creating...</> : 'Create User'}
+                </button>
               </div>
-            )}
-
-            <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-100">
-              <button 
-                type="button" 
-                onClick={handleClose}
-                className="px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-              >
-                Cancel
-              </button>
-              <button 
-                type="submit" 
-                disabled={mutation.isPending}
-                className="bg-[#16a34a] text-white px-5 py-2 text-sm font-bold rounded-lg hover:bg-green-600 transition-colors flex items-center disabled:opacity-70 disabled:cursor-not-allowed"
-              >
-                {mutation.isPending ? <><Loader2 size={16} className="animate-spin mr-2" /> Creating...</> : 'Create User'}
-              </button>
             </div>
           </form>
         )}

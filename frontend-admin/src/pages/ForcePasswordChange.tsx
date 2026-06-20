@@ -20,7 +20,7 @@ export default function ForcePasswordChange() {
       showToast('Password updated successfully', 'success');
       await refreshUser(); // This clears the forcePasswordChange flag
       if (user?.role === 'camp_logistics_coordinator' || user?.role === 'zone_coordinator') {
-        navigate('/coordinator-analytics');
+        navigate('/coordinator-dashboard');
       } else {
         navigate('/dashboard');
       }

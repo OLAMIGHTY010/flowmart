@@ -44,6 +44,13 @@ interface WelfareAllocationData {
   totalItems: number;
 }
 
+export interface StaffOnboardingData {
+  fullName: string;
+  role: string;
+  tempPassword: string;
+  loginUrl: string;
+}
+
 class EmailService {
   private transporter: Transporter;
   private fromEmail: string;
@@ -159,6 +166,16 @@ class EmailService {
       from: this.fromEmail,
       to: coordinatorEmail,
       subject: `📦 New Welfare Allocation for ${data.zoneId}`,
+      html,
+    });
+  }
+
+  public async sendStaffOnboardingEmail(email: string, data: StaffOnboardingData): Promise<void> {
+    const html = await this.compileTemplate('staff-onboarding', data);
+    await this.transporter.sendMail({
+      from: this.fromEmail,
+      to: email,
+      subject: 'Welcome to FlowMart - Administrative Account Details',
       html,
     });
   }

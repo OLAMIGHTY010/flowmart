@@ -11,6 +11,7 @@ import {
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import FilterSidebar from "@/components/FilterSidebar";
+import ChatWidget from "@/components/ChatWidget";
 import { useCategories } from "@/hooks/useCategories";
 
 type SortKey =
@@ -130,7 +131,7 @@ const AppLayout = () => {
   }, []);
 
   return (
-    <div className="flex h-screen flex-col bg-background">
+    <div className="flex h-screen flex-col bg-background relative">
       <Navbar
         query={query}
         setQuery={setQuery}
@@ -192,13 +193,16 @@ const AppLayout = () => {
       </div>
 
       <div
-        className={`fixed bottom-0 left-0 right-0 z-50 transition-transform duration-300 ${showFooter
+        className={`fixed bottom-0 left-0 right-0 z-40 transition-transform duration-300 ${showFooter
             ? "translate-y-0"
             : "translate-y-full"
           }`}
       >
         <Footer />
       </div>
+
+      {/* Global Support Chat Widget */}
+      <ChatWidget />
     </div>
   );
 };

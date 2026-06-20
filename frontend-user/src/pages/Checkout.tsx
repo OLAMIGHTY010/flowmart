@@ -16,6 +16,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { orderServices } from "@/services/OrderServices";
 import { Card } from "@/components/ui/card";
 import { UserInput } from "@/components/ui/input";
+import { apiClient } from "@/services/api";
 
 const STEPS = [
   { label: "Cart", icon: ShoppingCart },
@@ -33,7 +34,7 @@ export default function Checkout() {
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "pay_on_delivery">("bank_transfer");
+  const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "pay_on_delivery" | "paystack" | "flutterwave">("paystack");
   const [transactionReference, setTransactionReference] = useState("");
   const [proof, setProof] = useState<File | null>(null);
   
@@ -125,8 +126,17 @@ export default function Checkout() {
 
     placeOrderMutation.mutate(formData, {
       onSuccess: (data) => {
-        clearCart();
-        navigate(`/order-confirmation/${data.order.id}`);
+        if (paymentMethod === 'paystack' || paymentMethod === 'flutterwave') {
+           // Redirect to secure backend-generated payment URL
+           if (data.paymentUrl) {
+               window.location.href = data.paymentUrl;
+           } else {
+               alert("Payment URL not provided by server.");
+           }
+        } else {
+           clearCart();
+           navigate(`/order-confirmation/${data.order.id}`);
+        }
       },
       onError: (err: any) => {
         console.error("Order error:", err);
@@ -224,6 +234,49 @@ export default function Checkout() {
               <div className="space-y-3">
                 <label
                   className={`flex cursor-pointer items-center gap-3 rounded-lg border-2 p-4 transition ${
+                    paymentMethod === "paystack"
+                      ? "border-orange-500 bg-orange-50"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="payment"
+                    checked={paymentMethod === "paystack"}
+                    onChange={() => setPaymentMethod("paystack")}
+                    className="accent-orange-500"
+                  />
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                      Paystack 
+                      <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider">Fast & Secure</span>
+                    </p>
+                    <p className="text-xs text-gray-500">Pay securely via card, transfer, or USSD</p>
+                  </div>
+                </label>
+
+                <label
+                  className={`flex cursor-pointer items-center gap-3 rounded-lg border-2 p-4 transition ${
+                    paymentMethod === "flutterwave"
+                      ? "border-orange-500 bg-orange-50"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="payment"
+                    checked={paymentMethod === "flutterwave"}
+                    onChange={() => setPaymentMethod("flutterwave")}
+                    className="accent-orange-500"
+                  />
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">Flutterwave</p>
+                    <p className="text-xs text-gray-500">Multiple payment options across Africa</p>
+                  </div>
+                </label>
+
+                <label
+                  className={`flex cursor-pointer items-center gap-3 rounded-lg border-2 p-4 transition ${
                     paymentMethod === "bank_transfer"
                       ? "border-orange-500 bg-orange-50"
                       : "border-gray-200 hover:border-gray-300"
@@ -237,8 +290,8 @@ export default function Checkout() {
                     className="accent-orange-500"
                   />
                   <div>
-                    <p className="text-sm font-semibold text-gray-900">Bank Transfer</p>
-                    <p className="text-xs text-gray-500">Transfer to vendor's bank account</p>
+                    <p className="text-sm font-semibold text-gray-900">Direct Bank Transfer</p>
+                    <p className="text-xs text-gray-500">Transfer directly to vendor's account</p>
                   </div>
                 </label>
 

@@ -16,6 +16,12 @@ import CreateEvent from "@/pages/CreateEvent";
 import LiveTracker from "@/pages/LiveTracker";
 import ForcePasswordChange from "@/pages/ForcePasswordChange";
 import AdminLayout from "@/components/AdminLayout";
+import LogisticsPricing from "@/pages/LogisticsPricing";
+import FinanceDashboard from "@/pages/FinanceDashboard";
+import SupportDashboard from "@/pages/SupportDashboard";
+import OtpVerification from "@/pages/OtpVerification";
+import ProfileSetup from "@/pages/ProfileSetup";
+import Settings from "@/pages/Settings";
 import { createProtectedRoute } from "@/routes/guards/ProtectedRoute";
 
 const queryClient = new QueryClient({
@@ -45,6 +51,8 @@ function App() {
           <Route path="/" element={<Login />} />
           {/* AUTH ONLY (must be logged in) */}
           <Route element={<ProtectedRoute />}>
+            <Route path="/otp" element={<OtpVerification />} />
+            <Route path="/profile-setup" element={<ProfileSetup />} />
             <Route path="/force-password-change" element={<ForcePasswordChange />} />
             
             <Route element={<AdminLayout />}>
@@ -59,6 +67,10 @@ function App() {
               <Route path="/events/create" element={<CreateEvent />} />
               <Route path="/tracker" element={<LiveTracker />} />
               <Route path="/audit-logs" element={<AuditLog />} />
+              <Route path="/logistics-pricing" element={<LogisticsPricing />} />
+              <Route path="/finance" element={<FinanceDashboard />} />
+              <Route path="/support" element={<SupportDashboard />} />
+              <Route path="/settings" element={<Settings />} />
               {/* Other admin routes will go here later */}
             </Route>
           </Route>

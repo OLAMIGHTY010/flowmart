@@ -14,7 +14,10 @@ import {
   Bell,
   LogOut,
   Car,
-  PlusCircle
+  PlusCircle,
+  Banknote,
+  Wallet,
+  MessageSquare
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import logo from '@/assets/flowmart-logo.png';
@@ -57,8 +60,16 @@ export default function AdminLayout() {
         { path: '/distribution', label: 'Distribution Events', icon: Truck },
         { path: '/riders', label: 'Riders (Live)', icon: Car },
         { path: '/analytics', label: 'Platform Analytics', icon: BarChart3 },
+        { path: '/logistics-pricing', label: 'Delivery Fees', icon: Truck },
+        { path: '/support', label: 'Support Queue', icon: MessageSquare },
         { path: '/audit-logs', label: 'Audit Log', icon: FileText },
         { path: '/settings', label: 'Settings', icon: Settings },
+      ];
+    } else if (role === 'finance') {
+      return [
+        { path: '/finance', label: 'Finance Dashboard', icon: Wallet },
+        { path: '/logistics-pricing', label: 'Pricing Engine', icon: Banknote },
+        { path: '/settings', label: 'Settings', icon: Settings }
       ];
     } else if (role === 'zone_coordinator' || role === 'camp_logistics_coordinator') {
       const items = [
@@ -71,8 +82,21 @@ export default function AdminLayout() {
 
       if (role === 'camp_logistics_coordinator') {
         items.push({ path: '/rider-approvals', label: 'Rider Approvals', icon: UserCheck });
+        items.push({ path: '/logistics-pricing', label: 'Delivery Fees', icon: Banknote });
       }
+      
+      items.push({ path: '/settings', label: 'Settings', icon: Settings });
       return items;
+    } else if (role === 'auditor') {
+      const items = [
+        { path: '/audit-logs', label: 'System Audit Logs', icon: FileText },
+      ];
+      return [...items, { path: '/settings', label: 'Settings', icon: Settings }];
+    } else if (role === 'customer_service') {
+      const items = [
+        { path: '/support', label: 'Support Dashboard', icon: MessageSquare }
+      ];
+      return [...items, { path: '/settings', label: 'Settings', icon: Settings }];
     }
 
     return [];

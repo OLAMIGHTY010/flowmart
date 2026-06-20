@@ -11,6 +11,7 @@ import AppLayout from "@/components/AppLayout";
 import Checkout from "./pages/Checkout";
 import OrderConfirmation from "@/pages/OrderConfirmation";
 import OrderTracking from "@/pages/OrderTracking";
+import PaymentCallback from "@/pages/PaymentCallback";
 
 import VerifyEmail from "@/pages/VerifyEmail";
 import Profile from "@/pages/Profile";
@@ -59,6 +60,7 @@ function App() {
             <Route path="order-confirmation/:id" element={<OrderConfirmation />} />
             <Route path="cart" element={<Cart />} />
             <Route path="checkout" element={<Checkout />} />
+            <Route path="payment-callback" element={<PaymentCallback />} />
 
             {/* Vendor Profile Route */}
             <Route path="vendor/:id" element={<VendorProfile />} />

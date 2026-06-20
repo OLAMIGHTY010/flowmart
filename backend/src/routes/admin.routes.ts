@@ -71,6 +71,7 @@ router.get('/riders/:id', getRiderDetails);
 router.post('/riders/:id/review', authorizeRoles('camp_logistics_coordinator'), reviewRider);
 
 // Audit Logs
+router.use('/audit-logs', authorizeRoles('super_admin', 'admin', 'auditor'));
 router.get('/audit-logs', getAuditLogs);
 router.get('/audit-logs/export', exportAuditLogs);
 

@@ -23,9 +23,9 @@ function Input({ className, type, ...props }: InputProps) {
 }
 
 // ---------------------------------------------------------------------------
-// VendorInput – branded input with label & optional icon for vendor flows
+// UserInput – branded input with label & optional icon for vendor flows
 // ---------------------------------------------------------------------------
-interface VendorInputProps
+interface UserInputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   placeholder?: string;
@@ -37,7 +37,7 @@ interface VendorInputProps
   isError?: boolean;
 }
 
-function VendorInput({
+function UserInput({
   label = "Label",
   placeholder = "Enter value",
   icon,
@@ -48,7 +48,7 @@ function VendorInput({
   className = "",
   isError = false,
   ...props
-}: VendorInputProps) {
+}: UserInputProps) {
   return (
     <div className="flex flex-col gap-[10px] w-full">
       
@@ -106,4 +106,4 @@ function VendorInput({
   );
 }
 
-export { Input, VendorInput };
+export { Input, UserInput };

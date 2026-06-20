@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Navigate } from 'react-router';
 import { useAuth } from '@/hooks/useAuth';
 import { authService } from '@/services/AuthServices';
-import logo from '@/assets/flowmart.png';
+import logo from '@/assets/flowmart-logo.png';
 import { Shield, ArrowLeft } from 'lucide-react';
 
 export default function Login() {
@@ -25,9 +25,19 @@ export default function Login() {
     if (!user.isVerified) {
       return <Navigate to="/otp" replace />;
     }
-    // Admins and coordinators do not require profile setup routing
+    
+    // Admins and coordinators routing
     if (user.role === 'camp_logistics_coordinator' || user.role === 'zone_coordinator') {
-      return <Navigate to="/coordinator-analytics" replace />;
+      return <Navigate to="/coordinator-dashboard" replace />;
+    }
+    if (user.role === 'finance') {
+      return <Navigate to="/finance" replace />;
+    }
+    if (user.role === 'auditor') {
+      return <Navigate to="/audit-logs" replace />;
+    }
+    if (user.role === 'customer_service') {
+      return <Navigate to="/support" replace />;
     }
     return <Navigate to="/dashboard" replace />;
   }
@@ -115,29 +125,48 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0f341c] flex flex-col items-center justify-center p-4 font-body relative overflow-hidden">
+    <div className="min-h-screen bg-[#0f341c] flex flex-col lg:flex-row items-center justify-center p-4 font-body relative overflow-hidden lg:gap-16 xl:gap-24">
+      <style>{`
+        @keyframes subtle-float {
+          0% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+          100% { transform: translateY(0px); }
+        }
+        .float-animation {
+          animation: subtle-float 5s ease-in-out infinite;
+        }
+      `}</style>
+
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-[#164a28] opacity-20 blur-[120px]"></div>
         <div className="absolute bottom-[10%] right-[10%] w-[40%] h-[40%] rounded-full bg-[#164a28] opacity-30 blur-[100px]"></div>
       </div>
 
-      {/* Top Header Section */}
-      <div className="flex flex-col items-center mb-10 z-10">
-        <div className="flex items-center justify-center mb-6">
-          <img src={logo} alt="FlowMart Logo" className="h-10 object-contain" />
+      {/* Top Header Section (Left on Desktop) */}
+      <div className="flex flex-col items-center lg:items-start mb-10 lg:mb-0 z-10 lg:w-[460px]">
+        <div className="flex items-center justify-center lg:justify-start mb-8 lg:mb-10 w-full float-animation">
+          <div className="bg-white/60 backdrop-blur-md p-6 lg:p-10 rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.15)] border border-white/50 ring-4 ring-white/10 flex items-center justify-center">
+            <img src={logo} alt="FlowMart Logo" className="w-[180px] lg:w-[360px] h-auto object-contain" />
+          </div>
         </div>
         
         <div className="px-5 py-2 rounded-full bg-[#132c1c] border border-[#1b3d27] text-[#93a89a] text-[10px] font-bold tracking-[0.2em] uppercase mb-5 flex items-center gap-2.5 shadow-inner">
-          <Shield />
+          <Shield size={14} />
           FLOWMART Admin PORTAL
         </div>
         
-        <p className="text-[#648b71] text-xs font-medium tracking-wide">
+        <p className="text-[#648b71] text-xs lg:text-sm font-medium tracking-wide text-center lg:text-left">
           Authorized access only — platform-level control
         </p>
       </div>
 
-      {/* Main Login Card */}
+      {/* Vertical Divider (Desktop Only) */}
+      <div className="hidden lg:block w-px h-[400px] bg-gradient-to-b from-transparent via-white/20 to-transparent z-10"></div>
+      
+      {/* Horizontal Divider (Mobile Only) */}
+      <div className="block lg:hidden w-[80%] h-px bg-gradient-to-r from-transparent via-white/20 to-transparent z-10 my-4"></div>
+
+      {/* Main Login Card (Right on Desktop) */}
       <div className="bg-[#effaf2] rounded-[24px] w-full max-w-[420px] p-8 sm:p-10 shadow-2xl z-10 relative">
         
         {/* Inner Card Logo */}

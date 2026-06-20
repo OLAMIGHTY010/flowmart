@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           const userData = responseData.user || responseData;
           const fetchedUser = mapApiUser(userData);
 
-          const allowedRoles = ['super_admin', 'admin', 'zone_coordinator', 'camp_logistics_coordinator'];
+          const allowedRoles = ['super_admin', 'admin', 'zone_coordinator', 'camp_logistics_coordinator', 'finance', 'auditor', 'customer_service'];
           if (!allowedRoles.includes(fetchedUser.role)) {
             throw new Error('Unauthorized role');
           }
@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             // Also verify the cached user role
             try {
               const cached = JSON.parse(savedUser);
-              const allowedRoles = ['super_admin', 'admin', 'zone_coordinator', 'camp_logistics_coordinator'];
+              const allowedRoles = ['super_admin', 'admin', 'zone_coordinator', 'camp_logistics_coordinator', 'finance', 'auditor', 'customer_service'];
               if (!allowedRoles.includes(cached.role)) {
                 setUser(null);
                 localStorage.removeItem("accessToken");
@@ -102,9 +102,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       if (responseData && responseData.token) {
         const mappedUser = mapApiUser(responseData.user);
         
-        const allowedRoles = ['super_admin', 'admin', 'zone_coordinator', 'camp_logistics_coordinator'];
+        const allowedRoles = ['super_admin', 'admin', 'zone_coordinator', 'camp_logistics_coordinator', 'finance', 'auditor', 'customer_service'];
         if (!allowedRoles.includes(mappedUser.role)) {
-          return { success: false, error: 'Access Denied: You do not have permission to access the admin portal. Please use the vendor app.' };
+          return { success: false, error: 'Access Denied: You do not have permission to access the admin portal. Please use the user or vendor app.' };
         }
 
         localStorage.setItem("accessToken", responseData.token);

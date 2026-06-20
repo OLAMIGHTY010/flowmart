@@ -1,8 +1,12 @@
 import { Request, Response } from 'express';
 import { db } from '../../db';
-import { users, vendorKyc } from '../../db/schema';
+import { users, vendorKyc, staffProfiles } from '../../db/schema';
 import { eq, or, and, sql, desc, inArray } from 'drizzle-orm';
 import { hashPassword } from '../utils/password';
+import crypto from 'crypto';
+import { emailService } from '../services/email.service';
+
+const generateSecureOTP = () => crypto.randomInt(100000, 999999).toString();
 
 
 const generateAlphanumericPassword = (length = 10) => {
@@ -61,7 +65,7 @@ export const getUsers = async (req: Request, res: Response) => {
     const statusFilter = req.query.status as string;
     const search = req.query.search as string;
 
-    let conditions = [];
+    let conditions: any[] = [];
 
     if (roleFilter && roleFilter !== 'all') {
       if (roleFilter === 'admins') {
@@ -137,14 +141,14 @@ export const createUser = async (req: Request, res: Response) => {
       return res.status(403).json({ success: false, message: "Forbidden: Only Super Admins can create new user accounts." });
     }
 
-    const { fullName, email, role, phone, dateOfBirth, gender, password } = req.body;
+    const { fullName, email, role, phone, dateOfBirth, gender, password, church, zonal, department, professionalCertification, grade } = req.body;
     
     if (!fullName || !email || !role) {
       return res.status(400).json({ success: false, message: "Missing required fields" });
     }
 
     // Only allow specific administrative roles to be created via this endpoint
-    const allowedRoles = ['admin', 'super_admin', 'zone_coordinator', 'camp_logistics_coordinator'];
+    const allowedRoles = ['admin', 'super_admin', 'zone_coordinator', 'camp_logistics_coordinator', 'finance', 'auditor', 'customer_service'];
     if (!allowedRoles.includes(role)) {
       return res.status(400).json({ success: false, message: "Invalid role selected" });
     }
@@ -157,7 +161,7 @@ export const createUser = async (req: Request, res: Response) => {
     const actualPassword = password || generateAlphanumericPassword(12);
     const hashedPassword = await hashPassword(actualPassword);
 
-    await db.insert(users).values({
+    const [newUser] = await db.insert(users).values({
       fullName,
       email,
       password: hashedPassword,
@@ -165,20 +169,37 @@ export const createUser = async (req: Request, res: Response) => {
       phone: phone || null,
       dateOfBirth: dateOfBirth || null,
       gender: gender || null,
-      isVerified: true, // Auto verified
-      forcePasswordChange: true, // Must change on first login
+      isVerified: true, 
+      profileCompleted: true,
+      forcePasswordChange: true, 
       status: 'active'
+    }).returning();
+
+    // Insert staff profile
+    await db.insert(staffProfiles).values({
+      userId: newUser.id,
+      church: church || null,
+      zonal: zonal || null,
+      department: department || null,
+      professionalCertification: professionalCertification || null,
+      grade: grade || null
     });
 
-    // In a real app, send this password via email
-    console.log(`[Email Mock] Sent to ${email}: Your account is created. Role: ${role}. Password: ${actualPassword}. Please change your password upon your first login.`);
+    const loginUrl = process.env.ADMIN_PORTAL_URL || 'http://localhost:5173/login';
+
+    // Send Onboarding Email
+    await emailService.sendStaffOnboardingEmail(email, {
+      fullName,
+      role: role as string,
+      tempPassword: actualPassword,
+      loginUrl
+    }).catch(err => {
+      console.error("Failed to send onboarding email:", err);
+    });
     
-
-
     return res.status(201).json({
       success: true,
       message: "User created successfully",
-      // Only returning password for debugging in dev mode, usually you don't return it
       tempPassword: actualPassword
     });
 
@@ -236,7 +257,7 @@ export const updateUserProfile = async (req: Request, res: Response) => {
     const { fullName, email, phone, role } = req.body;
     const currentUser = (req as any).user;
 
-    const targetUserArr = await db.select().from(users).where(eq(users.id, id)).limit(1);
+    const targetUserArr = await db.select().from(users).where(eq(users.id, id as string)).limit(1);
     if (!targetUserArr.length) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
@@ -264,7 +285,7 @@ export const updateUserProfile = async (req: Request, res: Response) => {
     }
 
     if (Object.keys(updates).length > 0) {
-      await db.update(users).set(updates).where(eq(users.id, id));
+      await db.update(users).set(updates).where(eq(users.id, id as string));
     }
 
     return res.status(200).json({ success: true, message: "User profile updated successfully" });

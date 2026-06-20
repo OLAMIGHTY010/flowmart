@@ -45,6 +45,30 @@ export const initializeTransaction = async (email: string, amount: number, order
 };
 
 /**
+ * Step 1b: Verify a transaction after user redirects back
+ * @param reference The Paystack reference
+ */
+export const verifyTransaction = async (reference: string) => {
+  try {
+    const response = await fetch(`${BASE_URL}/transaction/verify/${encodeURIComponent(reference)}`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.status) {
+      throw new Error(`Paystack Verify Error: ${data.message || 'Failed to verify transaction'}`);
+    }
+
+    return data.data; // Contains status, amount, etc.
+  } catch (error) {
+    console.error('Error in verifyTransaction:', error);
+    throw error;
+  }
+};
+
+/**
  * Step 2: Create a Transfer Recipient for the Vendor
  * This must be done before you can transfer funds to their bank account.
  * You can store the returned RCP_ code in the vendor_profiles table to avoid recreating it.
