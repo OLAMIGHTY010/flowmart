@@ -8,11 +8,11 @@ import { emailService } from "../services/email.service";
 import crypto from "crypto";
 
 // Escrow Services
-import { createTransferRecipient, initiatePayout } from "../services/paystack.service";
+import { createTransferRecipient, initiatePayout, initializeTransaction } from "../services/paystack.service";
 import { creditPendingBalance, releaseEscrowToAvailable, deductAvailableBalance } from "../services/ledger.service";
 import { PricingService } from "../services/pricing.service";
 import { globalSettings, orderDelivery } from "../../db/schema";
-import * as flutterwaveService from "../services/flutterwave.service";
+import { FlutterwaveService } from "../services/flutterwave.service";
 
 // Helper to generate FLW-YYYYMMDD-XXXX Securely
 const generateOrderRef = () => {
@@ -173,9 +173,9 @@ export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
                      const initData = await initializeTransaction(email, grandTotal, orderRef);
                      paymentUrl = initData.authorization_url;
                  } else {
-                     const initData = await flutterwaveService.initializeTransaction(
+                     const initData = await FlutterwaveService.initializeTransaction(
                          email, grandTotal, orderRef, callbackUrl, 
-                         { name: req.user?.fullName, phone: req.user?.phone }
+                         { name: (req.user as any)?.fullName || "Customer", phone: (req.user as any)?.phone || "" }
                      );
                      paymentUrl = initData.link;
                  }

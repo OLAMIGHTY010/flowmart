@@ -7,7 +7,7 @@ import { creditPendingBalance } from '../services/ledger.service';
 import { sendInAppNotification } from '../services/websocket';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import { verifyTransaction as verifyPaystack } from '../services/paystack.service';
-import { verifyTransaction as verifyFlutterwave } from '../services/flutterwave.service';
+import { FlutterwaveService } from '../services/flutterwave.service';
 
 // 1. Get Public Key for Frontend
 export const getPaystackKey = (req: Request, res: Response) => {
@@ -105,7 +105,7 @@ export const verifyPayment = async (req: AuthenticatedRequest, res: Response) =>
                 verifiedAmount = data.amount / 100; // Paystack returns Kobo
             }
         } else if (provider === 'flutterwave') {
-            const data = await verifyFlutterwave(transactionId || reference);
+            const data = await FlutterwaveService.verifyTransaction(transactionId || reference);
             if (data.status === 'successful') {
                 isVerified = true;
                 verifiedAmount = data.amount;
