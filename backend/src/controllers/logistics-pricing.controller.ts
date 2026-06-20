@@ -22,14 +22,15 @@ export class LogisticsPricingController {
       const { zoneName, baseFee, perKmFee, riderCommissionPct, platformCommissionPct, active } = req.body;
       const user = (req as any).user;
       
-      let finalBaseFee = 0;
-      let finalPerKmFee = 0;
+      // Fix: Use strings for Drizzle's decimal type fields
+      let finalBaseFee = "0";
+      let finalPerKmFee = "0";
       let finalRiderPct = 80;
       let finalPlatformPct = 20;
 
       if (user.role === 'super_admin' || user.role === 'admin') {
-        finalBaseFee = baseFee || 0;
-        finalPerKmFee = perKmFee || 0;
+        finalBaseFee = baseFee !== undefined ? String(baseFee) : "0";
+        finalPerKmFee = perKmFee !== undefined ? String(perKmFee) : "0";
         finalRiderPct = riderCommissionPct || 80;
         finalPlatformPct = platformCommissionPct || 20;
       }
@@ -59,10 +60,13 @@ export class LogisticsPricingController {
       
       if (user.role === 'super_admin' || user.role === 'admin') {
         Object.assign(filteredUpdates, updates);
+        // Fix: ensure decimals are converted to strings
+        if (filteredUpdates.baseFee !== undefined) filteredUpdates.baseFee = String(filteredUpdates.baseFee);
+        if (filteredUpdates.perKmFee !== undefined) filteredUpdates.perKmFee = String(filteredUpdates.perKmFee);
       } else if (user.role === 'finance') {
-        // Finance can only update pricing fields
-        if (updates.baseFee !== undefined) filteredUpdates.baseFee = updates.baseFee;
-        if (updates.perKmFee !== undefined) filteredUpdates.perKmFee = updates.perKmFee;
+        // Finance can only update pricing fields (Fix: string conversion)
+        if (updates.baseFee !== undefined) filteredUpdates.baseFee = String(updates.baseFee);
+        if (updates.perKmFee !== undefined) filteredUpdates.perKmFee = String(updates.perKmFee);
         if (updates.riderCommissionPct !== undefined) filteredUpdates.riderCommissionPct = updates.riderCommissionPct;
         if (updates.platformCommissionPct !== undefined) filteredUpdates.platformCommissionPct = updates.platformCommissionPct;
       } else if (user.role === 'camp_logistics_coordinator' || user.role === 'zone_coordinator') {
@@ -77,7 +81,8 @@ export class LogisticsPricingController {
 
       const [updatedZone] = await db.update(deliveryZones)
         .set({ ...filteredUpdates, updatedAt: new Date() })
-        .where(eq(deliveryZones.id, id))
+        // Fix: Explicitly cast req.params.id to string
+        .where(eq(deliveryZones.id, id as string)) 
         .returning();
       res.json({ success: true, data: updatedZone });
     } catch (error: any) {
@@ -106,7 +111,8 @@ export class LogisticsPricingController {
         ruleType,
         condition,
         valueType,
-        value,
+        // Fix: `value` is a decimal column, so it must be a string
+        value: value !== undefined ? String(value) : '0', 
         priority: priority || 0,
         active: active !== undefined ? active : true
       }).returning();
@@ -120,9 +126,16 @@ export class LogisticsPricingController {
     try {
       const { id } = req.params;
       const updates = req.body;
+      
+      // Fix: Catch any stray value update and cast to string
+      if (updates.value !== undefined) {
+         updates.value = String(updates.value);
+      }
+
       const [updatedRule] = await db.update(pricingRules)
         .set({ ...updates, updatedAt: new Date() })
-        .where(eq(pricingRules.id, id))
+        // Fix: Explicitly cast req.params.id to string
+        .where(eq(pricingRules.id, id as string)) 
         .returning();
       res.json({ success: true, data: updatedRule });
     } catch (error: any) {

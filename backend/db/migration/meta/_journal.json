@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1781936574324,
-      "tag": "0000_blushing_santa_claus",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1781941345375,
-      "tag": "0001_parallel_black_crow",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1781956489089,
-      "tag": "0002_wide_loa",
+      "when": 1781976860846,
+      "tag": "0000_flat_kulan_gath",
       "breakpoints": true
     }
   ]
