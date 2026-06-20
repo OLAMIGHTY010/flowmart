@@ -125,6 +125,26 @@ export default function FinanceDashboard() {
         </div>
       </div>
 
+      {/* Tabs */}
+      <div className="flex border-b border-slate-200 gap-6">
+        <button
+          className={`pb-3 font-medium text-sm transition-all ${
+            activeTab === 'overview' ? 'border-b-2 border-brand-primary text-brand-primary' : 'text-slate-500 hover:text-slate-700'
+          }`}
+          onClick={() => setActiveTab('overview')}
+        >
+          Financial Overview
+        </button>
+        <button
+          className={`pb-3 font-medium text-sm transition-all flex items-center gap-2 ${
+            activeTab === 'payouts' ? 'border-b-2 border-red-500 text-red-600' : 'text-slate-500 hover:text-slate-700'
+          }`}
+          onClick={() => setActiveTab('payouts')}
+        >
+          <AlertTriangle size={16} /> Failed Payouts
+        </button>
+      </div>
+
       {activeTab === 'overview' && (
         <>
           {reportData && (
