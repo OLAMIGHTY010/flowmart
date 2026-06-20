@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageSquare, X, Send, User, Bot, AlertCircle } from 'lucide-react';
+import { MessageSquare, X, Send, User, Bot } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { apiClient } from '@/services/api';
 import io, { Socket } from 'socket.io-client';
@@ -60,10 +60,10 @@ export default function ChatWidget() {
 
   const initChat = async () => {
     try {
-      const res = await apiClient.get('/support/ticket');
-      if (res.data.success) {
-        setTicketId(res.data.ticket.id);
-        fetchHistory(res.data.ticket.id);
+      const res = await apiClient.get<{ success: boolean; ticket: { id: string } }>('/support/ticket');
+      if (res.success) {
+        setTicketId(res.ticket.id);
+        fetchHistory(res.ticket.id);
       }
     } catch (err) {
       console.error("Failed to init chat", err);
@@ -72,9 +72,9 @@ export default function ChatWidget() {
 
   const fetchHistory = async (id: string) => {
     try {
-      const res = await apiClient.get(`/support/ticket/${id}/messages`);
-      if (res.data.success) {
-        setMessages(res.data.messages);
+      const res = await apiClient.get<{ success: boolean; messages: Message[] }>(`/support/ticket/${id}/messages`);
+      if (res.success) {
+        setMessages(res.messages);
       }
     } catch (err) {
       console.error("Failed to fetch chat history", err);

@@ -8,7 +8,7 @@ import { userServices } from "@/services/UserServices";
 export default function EditProfile() {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { user, login } = useAuth(); // login is often used to refresh user state in auth hook
+  const { user } = useAuth();
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");

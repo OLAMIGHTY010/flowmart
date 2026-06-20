@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, AlertTriangle, PackageSearch, CheckCircle2, Info } from "lucide-react";
+import { ArrowLeft, AlertTriangle, PackageSearch, Info } from "lucide-react";
 
 type AlertType = "order" | "promo" | "system";
 

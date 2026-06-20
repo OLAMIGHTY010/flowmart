@@ -1,4 +1,4 @@
-import React from 'react';
+// Dashboard loading skeleton component
 
 export default function DashboardSkeleton() {
   return (

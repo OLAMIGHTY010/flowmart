@@ -16,12 +16,6 @@ interface OrderResponse {
   } | null;
 }
 
-interface PlaceOrderPayload {
-  productId: string;
-  quantity: number;
-  deliveryZone: string;
-}
-
 export const orderServices = {
   getOrders: async (): Promise<Order[]> => {
     const res = await apiClient.get<OrdersResponse>("/orders");
@@ -32,7 +26,7 @@ export const orderServices = {
     return apiClient.get<OrderResponse>(`/orders/${id}`);
   },
 
-  placeOrder: async (data: FormData): Promise<{ success: boolean; order: Order }> => {
+  placeOrder: async (data: FormData): Promise<{ success: boolean; order: Order; paymentUrl?: string }> => {
     return apiClient.post("/orders", data, {
       headers: { "Content-Type": "multipart/form-data" },
     });

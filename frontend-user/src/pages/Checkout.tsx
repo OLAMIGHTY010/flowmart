@@ -16,7 +16,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { orderServices } from "@/services/OrderServices";
 import { Card } from "@/components/ui/card";
 import { UserInput } from "@/components/ui/input";
-import { apiClient } from "@/services/api";
+import type { Order } from "@/types/order";
 
 const STEPS = [
   { label: "Cart", icon: ShoppingCart },
@@ -125,7 +125,7 @@ export default function Checkout() {
     }
 
     placeOrderMutation.mutate(formData, {
-      onSuccess: (data) => {
+      onSuccess: (data: { success: boolean; order: Order; paymentUrl?: string }) => {
         if (paymentMethod === 'paystack' || paymentMethod === 'flutterwave') {
            // Redirect to secure backend-generated payment URL
            if (data.paymentUrl) {
