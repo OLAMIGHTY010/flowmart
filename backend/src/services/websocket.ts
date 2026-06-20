@@ -10,7 +10,7 @@ let io: Server;
 export const initWebSocketHub = (server: HttpServer) => {
   const allowedOrigins = process.env.ALLOWED_ORIGINS 
     ? process.env.ALLOWED_ORIGINS.split(',') 
-    : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002'];
+    : ['https://riderflowmart.vercel.app', 'https://flowmart-iota.vercel.app', 'https://userflowmart.vercel.app', 'https://flowmart-vendor.vercel.app'];
 
   io = new Server(server, {
     cors: { origin: allowedOrigins, credentials: true }
