@@ -37,7 +37,7 @@ interface VendorInputProps
   isError?: boolean;
 }
 
-function VendorInput({
+export function VendorInput({
   label = "Label",
   placeholder = "Enter value",
   icon,
@@ -106,4 +106,4 @@ function VendorInput({
   );
 }
 
-export { Input, VendorInput };
+export { Input };
