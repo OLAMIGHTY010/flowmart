@@ -4,7 +4,7 @@ import { Wallet, TrendingUp, Activity, BarChart, AlertTriangle } from 'lucide-re
 import axios from 'axios';
 import FailedPayoutsPanel from '@/components/finance/FailedPayoutsPanel';
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
+const API_URL = import.meta.env.VITE_API_URL || "https://flowmart-backend-2s2d-o0ljo79px-gbotemiojos-projects.vercel.app/api/v1";
 
 export default function FinanceDashboard() {
   const { user } = useAuth();
