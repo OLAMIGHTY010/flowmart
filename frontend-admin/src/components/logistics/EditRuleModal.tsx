@@ -238,7 +238,7 @@ export default function EditRuleModal({ isOpen, onClose, onSuccess, rule, zones 
                   type="checkbox" 
                   checked={active}
                   onChange={e => setActive(e.target.checked)}
-                  className="rounded text-brand-primary focus:ring-brand-primary"
+                  className="rounded text-[#15803d] focus:ring-[#15803d]"
                 />
                 <span className="text-sm font-medium text-slate-700">Rule is Active</span>
               </label>

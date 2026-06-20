@@ -109,8 +109,8 @@ export default function AddUserModal({ isOpen, onClose }: AddUserModalProps) {
                 
                 {/* Left Column: Core Account Details */}
                 <div className="space-y-4">
-                  <h4 className="text-xs font-bold text-brand-primary uppercase mb-4 flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-brand-primary"></span>
+                  <h4 className="text-xs font-bold text-[#15803d] uppercase mb-4 flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#15803d]"></span>
                     Account Details
                   </h4>
                   
@@ -209,8 +209,8 @@ export default function AddUserModal({ isOpen, onClose }: AddUserModalProps) {
 
                 {/* Right Column: Staff Profile */}
                 <div className="space-y-4">
-                  <h4 className="text-xs font-bold text-brand-primary uppercase mb-4 flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-brand-primary"></span>
+                  <h4 className="text-xs font-bold text-[#15803d] uppercase mb-4 flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#15803d]"></span>
                     Staff Profile Data
                   </h4>
 
