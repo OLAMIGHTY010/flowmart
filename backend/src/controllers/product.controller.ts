@@ -90,7 +90,7 @@ export const getProducts = async (req: AuthenticatedRequest, res: Response) => {
 // Newly added endpoint directly answering frontend tracker 404 gap
 export const getProductById = async (req: Request, res: Response) => {
 	try {
-		const [product] = await db.select().from(products).where(eq(products.id, req.params.id)).limit(1);
+		const [product] = await db.select().from(products).where(eq(products.id, req.params.id as string)).limit(1);
 		if (!product) return res.status(404).json({ success: false, message: "Product not found" });
 		return res.status(200).json({ success: true, product });
 	} catch (error) {
