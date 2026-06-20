@@ -100,7 +100,7 @@ export default function FinanceDashboard() {
           <select 
             value={reportPeriod} 
             onChange={(e) => setReportPeriod(e.target.value)}
-            className="border-slate-300 rounded-md text-sm p-2 shadow-sm focus:ring-brand-primary"
+            className="border-slate-300 rounded-md text-sm p-2 shadow-sm focus:ring-[#15803d]"
           >
             <option value="weekly">This Week</option>
             <option value="monthly">This Month</option>
@@ -109,14 +109,14 @@ export default function FinanceDashboard() {
           <button 
             onClick={generateReport}
             disabled={loadingReport}
-            className="bg-brand-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition flex items-center gap-2"
+            className="bg-[#15803d] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition flex items-center gap-2"
           >
             {loadingReport ? 'Generating...' : 'Generate Report'}
           </button>
           {reportData && (
             <button 
               onClick={downloadCSV}
-              className="bg-brand-primary text-white px-4 py-2 rounded shadow hover:bg-green-600 transition text-sm font-bold flex items-center gap-2"
+              className="bg-[#15803d] text-white px-4 py-2 rounded shadow hover:bg-green-600 transition text-sm font-bold flex items-center gap-2"
             >
               <BarChart size={16} />
               Download CSV
@@ -129,7 +129,7 @@ export default function FinanceDashboard() {
       <div className="flex border-b border-slate-200 gap-6">
         <button
           className={`pb-3 font-medium text-sm transition-all ${
-            activeTab === 'overview' ? 'border-b-2 border-brand-primary text-brand-primary' : 'text-slate-500 hover:text-slate-700'
+            activeTab === 'overview' ? 'border-b-2 border-[#15803d] text-[#15803d]' : 'text-slate-500 hover:text-slate-700'
           }`}
           onClick={() => setActiveTab('overview')}
         >
@@ -148,8 +148,8 @@ export default function FinanceDashboard() {
       {activeTab === 'overview' && (
         <>
           {reportData && (
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-brand-primary/30 relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-1 h-full bg-brand-primary"></div>
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-[#15803d]/30 relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-1 h-full bg-[#15803d]"></div>
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <h2 className="text-xl font-bold text-brand-navy">Visual Audit Report</h2>
@@ -226,7 +226,7 @@ function StatCard({ title, value, icon: Icon }: { title: string, value: string, 
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4">
       <div className="bg-green-100 p-3 rounded-lg">
-        <Icon size={24} className="text-brand-primary" />
+        <Icon size={24} className="text-[#15803d]" />
       </div>
       <div>
         <p className="text-sm text-slate-500 font-medium">{title}</p>

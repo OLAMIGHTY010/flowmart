@@ -9,6 +9,26 @@ import EditRuleModal from '@/components/logistics/EditRuleModal';
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
 
+const formatCondition = (cond: any) => {
+  if (!cond) return 'N/A';
+  let parsed = cond;
+  if (typeof cond === 'string') {
+    try { parsed = JSON.parse(cond); } catch (e) { return cond; }
+  }
+  
+  if (parsed.trigger === 'time') {
+    return `Time: ${parsed.startTime || 'start'} to ${parsed.endTime || 'end'}`;
+  } else if (parsed.trigger === 'weather') {
+    return `Weather: ${parsed.condition || 'any'}`;
+  } else if (parsed.trigger === 'event') {
+    return `Event: ${parsed.eventName || 'custom'}`;
+  } else {
+    const entries = Object.entries(parsed).filter(([k]) => k !== 'trigger');
+    if (entries.length === 0) return parsed.trigger || 'Custom';
+    return `${parsed.trigger || 'Rule'}: ${entries.map(([k, v]) => `${k}=${v}`).join(', ')}`;
+  }
+};
+
 export default function LogisticsPricing() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'zones' | 'rules'>('zones');
@@ -53,7 +73,7 @@ export default function LogisticsPricing() {
         {activeTab === 'zones' && canCreateZone && (
           <button 
             onClick={() => setIsZoneModalOpen(true)}
-            className="bg-brand-primary text-white px-4 py-2 rounded shadow flex items-center gap-2 hover:bg-green-600 transition"
+            className="bg-[#15803d] text-white px-4 py-2 rounded shadow flex items-center gap-2 hover:bg-green-600 transition"
           >
             <Plus size={18} />
             Create Zone
@@ -62,7 +82,7 @@ export default function LogisticsPricing() {
         {activeTab === 'rules' && canCreateRule && (
           <button 
             onClick={() => setIsRuleModalOpen(true)}
-            className="bg-brand-primary text-white px-4 py-2 rounded shadow flex items-center gap-2 hover:bg-green-600 transition"
+            className="bg-[#15803d] text-white px-4 py-2 rounded shadow flex items-center gap-2 hover:bg-green-600 transition"
           >
             <Plus size={18} />
             Create Rule
@@ -74,7 +94,7 @@ export default function LogisticsPricing() {
       <div className="flex border-b border-slate-200 gap-6">
         <button
           className={`pb-3 font-medium text-sm transition-all ${
-            activeTab === 'zones' ? 'border-b-2 border-brand-primary text-brand-primary' : 'text-slate-500 hover:text-slate-700'
+            activeTab === 'zones' ? 'border-b-2 border-[#15803d] text-[#15803d]' : 'text-slate-500 hover:text-slate-700'
           }`}
           onClick={() => setActiveTab('zones')}
         >
@@ -82,7 +102,7 @@ export default function LogisticsPricing() {
         </button>
         <button
           className={`pb-3 font-medium text-sm transition-all ${
-            activeTab === 'rules' ? 'border-b-2 border-brand-primary text-brand-primary' : 'text-slate-500 hover:text-slate-700'
+            activeTab === 'rules' ? 'border-b-2 border-[#15803d] text-[#15803d]' : 'text-slate-500 hover:text-slate-700'
           }`}
           onClick={() => setActiveTab('rules')}
         >
@@ -130,7 +150,7 @@ export default function LogisticsPricing() {
                       <td className="p-3">
                         <button 
                           onClick={() => setEditingZone(zone)}
-                          className="text-brand-primary hover:text-green-700 p-1 bg-green-50 rounded"
+                          className="text-[#15803d] hover:text-green-700 p-1 bg-green-50 rounded"
                         >
                           <Edit2 size={16} />
                         </button>
@@ -164,8 +184,8 @@ export default function LogisticsPricing() {
                 rules.map((rule) => (
                   <tr key={rule.id} className="border-b hover:bg-slate-50">
                     <td className="p-3 font-medium capitalize">{rule.ruleType.replace('_', ' ')}</td>
-                    <td className="p-3 font-mono text-xs">{JSON.stringify(rule.condition)}</td>
-                    <td className="p-3 font-medium text-brand-primary">
+                    <td className="p-3 font-mono text-xs">{formatCondition(rule.condition)}</td>
+                    <td className="p-3 font-medium text-[#15803d]">
                       {rule.valueType === 'percentage' ? `+${rule.value}%` : `+₦${rule.value}`}
                     </td>
                     <td className="p-3">{rule.priority}</td>
@@ -180,7 +200,7 @@ export default function LogisticsPricing() {
                       <td className="p-3">
                         <button 
                           onClick={() => setEditingRule(rule)}
-                          className="text-brand-primary hover:text-green-700 p-1 bg-green-50 rounded"
+                          className="text-[#15803d] hover:text-green-700 p-1 bg-green-50 rounded"
                         >
                           <Edit2 size={16} />
                         </button>

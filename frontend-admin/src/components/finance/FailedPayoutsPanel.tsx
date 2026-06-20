@@ -86,7 +86,7 @@ export default function FailedPayoutsPanel() {
       <div className="overflow-x-auto w-full">
         {loading ? (
           <div className="p-12 flex justify-center items-center">
-            <Loader2 className="animate-spin text-brand-primary" size={32} />
+            <Loader2 className="animate-spin text-[#15803d]" size={32} />
           </div>
         ) : payouts.length === 0 ? (
           <div className="p-12 text-center">
