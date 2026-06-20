@@ -74,6 +74,8 @@ export default function UserManagement() {
       case 'attendee': return <span className="px-2 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded-full">Attendee</span>;
       case 'zone_coordinator': return <span className="px-2 py-1 bg-teal-100 text-teal-700 text-[10px] font-bold rounded-full">Zone Coord</span>;
       case 'camp_logistics_coordinator': return <span className="px-2 py-1 bg-cyan-100 text-cyan-700 text-[10px] font-bold rounded-full">Logistics</span>;
+      case 'finance': return <span className="px-2 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-full">Finance</span>;
+      case 'auditor': return <span className="px-2 py-1 bg-amber-100 text-amber-700 text-[10px] font-bold rounded-full">Auditor</span>;
       default: return <span className="px-2 py-1 bg-slate-100 text-slate-700 text-[10px] font-bold rounded-full">{role}</span>;
     }
   };

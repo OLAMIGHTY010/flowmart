@@ -175,8 +175,8 @@ export default function VendorApprovals() {
             ) : filteredVendors.length === 0 ? (
               <div className="text-center py-10 text-slate-500">No vendors found matching criteria.</div>
             ) : activeStatus === 'all' || activeStatus === 'approved' ? (
-              <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-                <table className="w-full text-left text-sm whitespace-nowrap">
+              <div className="bg-white rounded-xl border border-slate-200 overflow-x-auto shadow-sm">
+                <table className="w-full text-left text-sm whitespace-nowrap min-w-[800px]">
                   <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px]">
                     <tr>
                       <th className="px-4 py-3">Vendor Name</th>

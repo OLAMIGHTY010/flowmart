@@ -8,7 +8,7 @@ dotenv.config();
 const seed = async () => {
   try {
     const fullName = "Adeyemi Olusola";
-    const email = "emarkees@email.com";
+    const email = "emarkees@gmail.com";
     const defaultPassword = "SuperAdmin2026!";
     const phone = "09012345678";
     

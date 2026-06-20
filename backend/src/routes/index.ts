@@ -14,6 +14,9 @@ import analyticsRoutes from './analytics.routes';
 import adminRoutes from './admin.routes';
 import userManagementRoutes from './user-management.routes';
 import paymentRoutes from './payment.routes'; // Dedicated Paystack/Payment routing
+import financeRoutes from './finance.routes';
+import logisticsPricingRoutes from './logistics-pricing.routes';
+import supportRoutes from './support.routes';
 
 // Controller & Middleware Imports
 import { authenticateJWT } from '../middleware/auth.middleware';
@@ -40,6 +43,9 @@ router.use('/users', userRoutes);
 router.use('/products', productRoutes);
 router.use('/orders', orderRoutes);
 router.use('/payment', paymentRoutes); 
+router.use('/finance', financeRoutes);
+router.use('/logistics', logisticsPricingRoutes);
+router.use('/support', supportRoutes);
 
 // Dashboards & Roles
 router.use('/vendors', vendorRoutes);

@@ -10,6 +10,9 @@ import crypto from "crypto";
 // Escrow Services
 import { createTransferRecipient, initiatePayout } from "../services/paystack.service";
 import { creditPendingBalance, releaseEscrowToAvailable, deductAvailableBalance } from "../services/ledger.service";
+import { PricingService } from "../services/pricing.service";
+import { globalSettings, orderDelivery } from "../../db/schema";
+import * as flutterwaveService from "../services/flutterwave.service";
 
 // Helper to generate FLW-YYYYMMDD-XXXX Securely
 const generateOrderRef = () => {
@@ -19,6 +22,26 @@ const generateOrderRef = () => {
 	const dd = String(date.getDate()).padStart(2, '0');
 	const randomSeq = crypto.randomInt(1000, 9999).toString(); 
 	return `FLW-${yyyy}${mm}${dd}-${randomSeq}`;
+};
+
+const calculateVendorNetEarnings = async (txOrDb: any, orderId: string, vendorId: string, totalAmount: number) => {
+    const [od] = await txOrDb.select().from(orderDelivery).where(eq(orderDelivery.orderId, orderId)).limit(1);
+    const deliveryFee = od ? Number(od.finalDeliveryFee) : 0;
+    const subtotal = totalAmount - deliveryFee;
+
+    let vendorCommissionPct = 5;
+    const [vendorProf] = await txOrDb.select().from(vendorProfiles).where(eq(vendorProfiles.vendorId, vendorId)).limit(1);
+    if (vendorProf?.vendorCommissionPct != null) {
+        vendorCommissionPct = vendorProf.vendorCommissionPct;
+    } else {
+        const [globalComm] = await txOrDb.select().from(globalSettings).where(eq(globalSettings.key, 'vendor_commission_pct')).limit(1);
+        if (globalComm?.value) {
+            vendorCommissionPct = Number(globalComm.value);
+        }
+    }
+    
+    const flowmartVendorShare = subtotal * (vendorCommissionPct / 100);
+    return subtotal - flowmartVendorShare;
 };
 
 // 1. Place a New Order (Attendees)
@@ -96,8 +119,33 @@ export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
 					}
 				}
 
+				let deliveryCalc: any = null;
+				try {
+					deliveryCalc = await PricingService.calculateDeliveryFee(finalZone, req.body.distanceKm || 5);
+				} catch (e) {
+					console.warn("Delivery calculation failed, defaulting to 0", e);
+					deliveryCalc = {
+					    distanceKm: req.body.distanceKm || 5,
+					    baseFee: 0, distanceFee: 0, ruleAdjustments: [], riderShare: 0, platformShare: 0, finalDeliveryFee: 0
+					};
+				}
+
+				totalAmountNum += deliveryCalc.finalDeliveryFee;
+
 				const [finalOrder] = await tx.update(orders).set({ totalAmount: totalAmountNum.toString() }).where(eq(orders.id, newOrder.id)).returning();
 				createdOrders.push(finalOrder);
+
+				// Persist delivery calculations
+				await tx.insert(orderDelivery).values({
+					orderId: finalOrder.id,
+					distanceKm: deliveryCalc.distanceKm.toString(),
+					baseFee: deliveryCalc.baseFee.toString(),
+					distanceFee: deliveryCalc.distanceFee.toString(),
+					ruleAdjustments: deliveryCalc.ruleAdjustments,
+					riderShare: deliveryCalc.riderShare.toString(),
+					platformShare: deliveryCalc.platformShare.toString(),
+					finalDeliveryFee: deliveryCalc.finalDeliveryFee.toString()
+				});
 
 				const [attendee] = await tx.select().from(users).where(eq(users.id, attendeeId!)).limit(1);
 				if (attendee) {
@@ -109,17 +157,40 @@ export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
 			}
 		});
 
-        // Paystack Initialization Endpoint Generation Check
-        if (paymentMethod === 'paystack') {
-             // In a real flow, you call initializeTransaction here.
-             // For this step, returning a mock URL to let frontend hit the webhook.
-             const paystackUrl = `https://checkout.paystack.com/mock_integration_${createdOrders[0].orderRef}`; 
-             return res.status(201).json({
-                 success: true, message: "Order logged. Proceed to payment portal",
-                 paymentUrl: paystackUrl,
-                 order: createdOrders[0], 
-                 orders: createdOrders
-             });
+        // Backend Payment Initialization
+        if (paymentMethod === 'paystack' || paymentMethod === 'flutterwave') {
+             try {
+                 const orderRef = createdOrders[0].orderRef;
+                 const email = req.user?.email || "customer@flowmart.com";
+                 
+                 // Compute grand total
+                 const grandTotal = createdOrders.reduce((sum, order) => sum + Number(order.totalAmount), 0);
+                 const callbackUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment-callback`;
+                 
+                 let paymentUrl = "";
+                 
+                 if (paymentMethod === 'paystack') {
+                     const initData = await initializeTransaction(email, grandTotal, orderRef);
+                     paymentUrl = initData.authorization_url;
+                 } else {
+                     const initData = await flutterwaveService.initializeTransaction(
+                         email, grandTotal, orderRef, callbackUrl, 
+                         { name: req.user?.fullName, phone: req.user?.phone }
+                     );
+                     paymentUrl = initData.link;
+                 }
+                 
+                 return res.status(201).json({
+                     success: true, 
+                     message: "Order logged. Redirecting to secure gateway...",
+                     paymentUrl,
+                     order: createdOrders[0], 
+                     orders: createdOrders
+                 });
+             } catch (gatewayErr: any) {
+                 console.error("Gateway Initialization Error:", gatewayErr);
+                 return res.status(500).json({ success: false, message: "Could not connect to payment gateway. Please try again." });
+             }
         }
 
 		return res.status(201).json({ success: true, message: "Order placed successfully", order: createdOrders[0], orders: createdOrders });
@@ -320,7 +391,7 @@ export const confirmOrderReceived = async (req: AuthenticatedRequest, res: Respo
 
         // Step A: Calculate Platform Deductions (E.g. 5% Total Platform + Paystack Gateway Fee)
         const totalAmountNaira = Number(existingOrder.totalAmount);
-        const vendorShare = totalAmountNaira * 0.95; 
+        const vendorShare = await calculateVendorNetEarnings(db, existingOrder.id, existingOrder.vendorId, totalAmountNaira);
 
         // Step B: Adjust Internal Ledgers
         await releaseEscrowToAvailable(existingOrder.vendorId, vendorShare);
@@ -425,9 +496,8 @@ export const paystackWebhook = async (req: Request, res: Response) => {
                 .where(eq(orders.id, order.id));
 
             // Credit the Escrow (Pending Balance) for the vendor.
-            // Deduct the 5% platform fee so the pending balance reflects exactly what the vendor will get.
             const amountInNaira = event.data.amount / 100; // Paystack payload is in Kobo
-            const vendorShare = amountInNaira * 0.95; 
+            const vendorShare = await calculateVendorNetEarnings(db, order.id, order.vendorId, amountInNaira);
 
             await creditPendingBalance(order.vendorId, vendorShare);
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { X, Save } from 'lucide-react';
 import { UserManagementServices, type User } from '@/services/UserManagementServices';
 import { useAuth } from '@/hooks/useAuth';
