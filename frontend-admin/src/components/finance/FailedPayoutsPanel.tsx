@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { RefreshCcw, AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || "https://flowmart-backend-2s2d.vercel.app/api/v1";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function FailedPayoutsPanel() {
   const [payouts, setPayouts] = useState<any[]>([]);
