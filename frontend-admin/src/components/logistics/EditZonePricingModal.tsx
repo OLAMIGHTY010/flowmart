@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || "https://flowmart-backend-2s2d.vercel.app/api/v1";
+const API_URL = import.meta.env.VITE_API_URL;
 
 interface EditZonePricingModalProps {
   isOpen: boolean;

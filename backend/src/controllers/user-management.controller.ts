@@ -185,7 +185,7 @@ export const createUser = async (req: Request, res: Response) => {
       grade: grade || null
     });
 
-    const loginUrl = process.env.ADMIN_PORTAL_URL || 'http://localhost:5173/login';
+    const loginUrl = `${process.env.ADMIN_PORTAL_URL}/login`;
 
     // Send Onboarding Email
     await emailService.sendStaffOnboardingEmail(email, {

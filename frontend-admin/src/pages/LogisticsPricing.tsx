@@ -7,7 +7,7 @@ import CreateRuleModal from '@/components/logistics/CreateRuleModal';
 import EditZonePricingModal from '@/components/logistics/EditZonePricingModal';
 import EditRuleModal from '@/components/logistics/EditRuleModal';
 
-const API_URL = import.meta.env.VITE_API_URL || "https://flowmart-backend-2s2d.vercel.app/api/v1";
+const API_URL = import.meta.env.VITE_API_URL;
 
 const formatCondition = (cond: any) => {
   if (!cond) return 'N/A';

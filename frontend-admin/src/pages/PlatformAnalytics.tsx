@@ -86,7 +86,7 @@ export default function PlatformAnalytics() {
             </button>
           </div>
           <button 
-            onClick={() => window.open(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'}/admin/analytics/export`, '_blank')}
+            onClick={() => window.open(`${import.meta.env.VITE_API_URL}/admin/analytics/export`, '_blank')}
             className="flex items-center gap-2 bg-white border border-success text-success hover:bg-green-50 px-4 py-2 rounded-lg text-sm font-bold transition-colors"
           >
             <Download size={16} /> Export CSV
