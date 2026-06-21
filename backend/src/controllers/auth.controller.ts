@@ -319,7 +319,7 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
     }).where(eq(users.id, user.id));
 
     // For production, this should be your frontend domain
-    const resetLink = `http://localhost:3000/reset-password?token=${resetToken}`;
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
 
     emailService.sendPasswordResetEmail(user.email, { 
       fullName: user.fullName, 

@@ -165,7 +165,7 @@ export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
                  
                  // Compute grand total
                  const grandTotal = createdOrders.reduce((sum, order) => sum + Number(order.totalAmount), 0);
-                 const callbackUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment-callback`;
+                 const callbackUrl = `${process.env.FRONTEND_URL}/payment-callback`;
                  
                  let paymentUrl = "";
                  
