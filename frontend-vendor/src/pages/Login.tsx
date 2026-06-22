@@ -43,6 +43,10 @@ export default function Login() {
     setLoading(false);
 
     if (!result.success) {
+      if (result.error && result.error.toLowerCase().includes('verify your email')) {
+        navigate('/otp', { state: { email } });
+        return;
+      }
       setError(result.error || 'Invalid credentials. Please try again.');
     }
   };
