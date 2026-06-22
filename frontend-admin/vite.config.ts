@@ -28,12 +28,12 @@ export default defineConfig({
 
         icons: [
           {
-            src: '/hero.png',
+            src: '/flowmart.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: '/hero.png',
+            src: '/flowmart.png',
             sizes: '512x512',
             type: 'image/png'
           }
