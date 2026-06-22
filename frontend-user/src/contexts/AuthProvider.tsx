@@ -48,7 +48,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         }
         
         try {
-          const fetchedUser = await authService.getCurrentUser();
+          const response = await authService.getCurrentUser();
+          const responseData = response.data || response;
+          const userData = responseData.user || responseData;
+          const fetchedUser = mapApiUser(userData);
           setUser(fetchedUser);
           localStorage.setItem("currentUser", JSON.stringify(fetchedUser));
         } catch (error) {
@@ -137,13 +140,29 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  // ⚡ 6. Performance Optimization
+  // 🔄 6. Refresh User Session from Server
+  const refreshUser = async () => {
+    try {
+      const response = await authService.getCurrentUser();
+      const responseData = response.data || response;
+      if (responseData && responseData.user) {
+        const fetchedUser = mapApiUser(responseData.user);
+        setUser(fetchedUser);
+        localStorage.setItem("currentUser", JSON.stringify(fetchedUser));
+      }
+    } catch (err) {
+      console.error("Failed to refresh user session:", err);
+    }
+  };
+
+  // ⚡ 7. Performance Optimization
   const contextValue = useMemo(() => ({
     user,
     isLoading,
     login,
     register,
-    logout
+    logout,
+    refreshUser
   }), [user, isLoading]);
 
   return (
