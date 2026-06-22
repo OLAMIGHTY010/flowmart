@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, Navigate } from "react-router-dom";
 import { Mail } from "lucide-react";
 
 import OtpInput from "@/components/OTPInput";
@@ -8,39 +8,49 @@ import SideBanner from "@/components/SideBanner";
 import { Button } from "@/components/ui/button";
 
 // import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function VerifyOtpPage() {
   const navigate = useNavigate();
-  // const { showToast } = useToast();
+  const location = useLocation();
+  const { user, refreshUser } = useAuth();
+  const stateEmail = (location.state as any)?.email;
 
   const [loading, setLoading] = useState(false);
 
+  // If no user and no email in state, redirect to login
+  if (!user && !stateEmail) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Already verified — send to home
+  if (user?.isVerified) {
+    return <Navigate to="/" replace />;
+  }
+
   const handleOtpComplete = async (otp: string) => {
+    const targetEmail = user?.email || stateEmail;
+    if (!targetEmail) return;
+
     setLoading(true);
 
     try {
-      const res = await authService.verifyOtp(otp);
+      const res = await authService.verifyOtp({ email: targetEmail, otp });
 
       if (res?.success) {
-        // showToast(
-        //   res.message || "OTP verified successfully",
-        //   "success"
-        // );
+        if (res.token) {
+          localStorage.setItem("accessToken", res.token);
+          if (res.user) localStorage.setItem("currentUser", JSON.stringify(res.user));
+        }
+
+        await refreshUser();
 
         setTimeout(() => {
-          navigate("/profile-setup");
+          navigate("/");
         }, 1000);
-      } else {
-        // showToast(
-        //   res?.message || "Invalid OTP",
-        //   "error"
-        // );
       }
     } catch (err: any) {
-      // showToast(
-      //   err?.message || "OTP verification failed",
-      //   "error"
-      // );
+      console.error(err);
     } finally {
       setLoading(false);
     }

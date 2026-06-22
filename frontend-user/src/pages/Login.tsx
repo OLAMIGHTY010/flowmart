@@ -21,7 +21,7 @@ export default function Login() {
 
   if (user) {
     if (!user.isVerified) {
-      return <Navigate to="/otp" replace />;
+      return <Navigate to="/verify-email" replace />;
     }
     return <Navigate to={from} replace />;
   }
@@ -43,7 +43,7 @@ export default function Login() {
 
     if (!result.success) {
       if (result.error && result.error.toLowerCase().includes('verify your email')) {
-        navigate('/otp', { state: { email } });
+        navigate('/verify-email', { state: { email } });
         return;
       }
       setError(result.error || 'Invalid credentials. Please try again.');

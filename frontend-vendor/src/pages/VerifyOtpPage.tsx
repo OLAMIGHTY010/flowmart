@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate, Navigate } from "react-router-dom";
+import { useNavigate, Navigate,useLocation } from "react-router-dom";
 import OtpInput from "@/components/OTPInput";
 import { authService } from "@/services/AuthServices";
 import SideBanner from "@/components/SideBanner";
@@ -10,32 +10,48 @@ import { useAuth } from "@/hooks/useAuth";
 export default function VerifyOtpPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const location = useLocation();
   const { user, refreshUser } = useAuth();
 
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
+  const [justVerified, setJustVerified] = useState(false);
+
+  const stateEmail = (location.state as any)?.email;
 
   // No session at all — user must register/login first
-  if (!user) {
+  if (!user && !stateEmail) {
     return <Navigate to="/" replace />;
   }
 
   // Already verified — send to login page
-  if (user.isVerified) {
+  if (user?.isVerified && !justVerified) {
     return <Navigate to="/" replace />;
   }
 
   const handleOtpComplete = async (otp: string) => {
+    const targetEmail = user?.email || stateEmail;
+    if (!targetEmail) {
+      showToast("Email address not found.", "error");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const res = await authService.verifyOtp(otp);
+      const res = await authService.verifyOtp({ email: targetEmail, otp });
 
       if (res?.success) {
+        setJustVerified(true);
         showToast(
           res.message || "OTP verified successfully",
           "success"
         );
+
+        if (res.token) {
+          localStorage.setItem("accessToken", res.token);
+          if (res.user) localStorage.setItem("currentUser", JSON.stringify(res.user));
+        }
 
         // Sync context to update verified status
         await refreshUser();
@@ -60,14 +76,15 @@ export default function VerifyOtpPage() {
   };
 
   const handleResendOtp = async () => {
-    if (!user?.email) {
+    const targetEmail = user?.email || stateEmail;
+    if (!targetEmail) {
       showToast("Email address not found. Please register or login again.", "error");
       return;
     }
 
     setResending(true);
     try {
-      const res = await authService.resendOtp(user.email);
+      const res = await authService.resendOtp(targetEmail);
       if (res?.success) {
         showToast(
           res.message || "A new verification code has been sent to your email.",
