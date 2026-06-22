@@ -119,6 +119,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         return { success: true, error: "" };
       }
 
+      if (responseData && responseData.success) {
+        return { success: true, error: "" };
+      }
+
       return { success: false, error: 'Invalid registration response' };
     } catch (err: unknown) {
       const errorMsg = (err as Record<string, unknown>)?.response

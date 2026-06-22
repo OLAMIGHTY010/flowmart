@@ -74,6 +74,8 @@ export default function Register() {
 
     if (!result.success) {
       setError(result.error || "Failed to create account. Please try again.");
+    } else {
+      navigate('/otp', { state: { email } });
     }
   };
 

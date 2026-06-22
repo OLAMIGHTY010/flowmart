@@ -20,6 +20,9 @@ export default function Login() {
   const [error, setError] = useState<string>('');
 
   if (user) {
+    if (!user.isVerified) {
+      return <Navigate to="/otp" replace />;
+    }
     return <Navigate to={from} replace />;
   }
 
@@ -39,6 +42,10 @@ export default function Login() {
     setLoading(false);
 
     if (!result.success) {
+      if (result.error && result.error.toLowerCase().includes('verify your email')) {
+        navigate('/otp', { state: { email } });
+        return;
+      }
       setError(result.error || 'Invalid credentials. Please try again.');
     }
   };
