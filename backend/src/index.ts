@@ -6,6 +6,7 @@ import http from "http";
 import { testDatabaseConnection } from "../db";
 import routes from "./routes";
 import { initWebSocketHub } from "./services/websocket";
+import { startCronJobs } from "./services/cron.service";
 
 dotenv.config();
 
@@ -44,6 +45,7 @@ const PORT = process.env.PORT || 5000;
 testDatabaseConnection()
 	.then(() => {
 		initWebSocketHub(server);
+		startCronJobs();
 
 		server.listen(PORT, () => {
 			console.log(
@@ -52,8 +54,15 @@ testDatabaseConnection()
 		});
 	})
 	.catch((error: Error) => {
-		console.error("Failed to start server:", error);
-		process.exit(1);
+		console.error("Failed to connect to database:", error.message);
+		console.warn("WARNING: Server starting without database connection. API requests will fail until DATABASE_URL is corrected.");
+		
+		initWebSocketHub(server);
+		server.listen(PORT, () => {
+			console.log(
+				`FlowMart Server & WebSocket Hub is running on port ${PORT} (NO DATABASE)`
+			);
+		});
 	});
 
 export { app };
