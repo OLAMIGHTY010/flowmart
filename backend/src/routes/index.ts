@@ -17,6 +17,11 @@ import paymentRoutes from './payment.routes'; // Dedicated Paystack/Payment rout
 import financeRoutes from './finance.routes';
 import logisticsPricingRoutes from './logistics-pricing.routes';
 import supportRoutes from './support.routes';
+import cartRoutes from './cart.routes';
+import wishlistRoutes from './wishlist.routes';
+import walletRoutes from './wallet.routes';
+import couponRoutes from './coupon.routes';
+import reviewRoutes from './review.routes';
 
 // Controller & Middleware Imports
 import { authenticateJWT } from '../middleware/auth.middleware';
@@ -42,6 +47,11 @@ router.use('/users', userRoutes);
 // Core Commerce
 router.use('/products', productRoutes);
 router.use('/orders', orderRoutes);
+router.use('/cart', cartRoutes);
+router.use('/wishlist', wishlistRoutes);
+router.use('/wallet', walletRoutes);
+router.use('/coupons', couponRoutes);
+router.use('/reviews', reviewRoutes);
 router.use('/payment', paymentRoutes); 
 router.use('/finance', financeRoutes);
 router.use('/logistics', logisticsPricingRoutes);

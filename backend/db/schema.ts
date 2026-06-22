@@ -356,3 +356,59 @@ export const payouts = pgTable('payouts', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   resolvedAt: timestamp('resolved_at'),
 });
+
+// ==========================================
+// NEW MEGA-FEATURES (Phase 1 Additions)
+// ==========================================
+
+export const reviews = pgTable('reviews', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  productId: uuid('product_id').references(() => products.id).notNull(),
+  userId: uuid('user_id').references(() => users.id).notNull(),
+  rating: integer('rating').notNull(), // 1 to 5
+  comment: text('comment'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const cartItems = pgTable('cart_items', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').references(() => users.id).notNull(),
+  productId: uuid('product_id').references(() => products.id).notNull(),
+  quantity: integer('quantity').default(1).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const wishlists = pgTable('wishlists', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').references(() => users.id).notNull(),
+  productId: uuid('product_id').references(() => products.id).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const walletTransactions = pgTable('wallet_transactions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  walletId: uuid('wallet_id').references(() => wallets.id).notNull(),
+  amount: decimal('amount', { precision: 12, scale: 2 }).notNull(),
+  type: varchar('type', { length: 50 }).notNull(), // 'deposit', 'withdrawal', 'payment'
+  status: varchar('status', { length: 50 }).default('pending').notNull(),
+  reference: varchar('reference', { length: 255 }).unique(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const coupons = pgTable('coupons', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  vendorId: uuid('vendor_id').references(() => users.id).notNull(),
+  code: varchar('code', { length: 50 }).notNull().unique(),
+  discountType: varchar('discount_type', { length: 20 }).notNull(), // 'percentage', 'fixed'
+  discountValue: decimal('discount_value', { precision: 10, scale: 2 }).notNull(),
+  minOrderValue: decimal('min_order_value', { precision: 10, scale: 2 }).default('0.00'),
+  maxUses: integer('max_uses'),
+  usesCount: integer('uses_count').default(0).notNull(),
+  validFrom: timestamp('valid_from').notNull(),
+  validUntil: timestamp('valid_until').notNull(),
+  active: boolean('active').default(true).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+
