@@ -10,7 +10,7 @@ export const createProduct = async (
 	res: Response
 ) => {
 	try {
-		const { name, description, price, stockQuantity, sku, category, brand, oldPrice, weight, images } = req.body;
+		const { name, description, price, stockQuantity, sku, category, subCategory, brand, oldPrice, weight, images } = req.body;
 		const vendorId = req.user?.id;
 
 		if (!name || !price) {
@@ -30,6 +30,7 @@ export const createProduct = async (
 				stockQuantity: stockQuantity || 0,
 				sku,
 				category,
+				subCategory,
 				brand,
 				oldPrice: oldPrice || null,
 				weight: weight || null,
@@ -50,35 +51,54 @@ export const createProduct = async (
 	}
 };
 
-// 2. Get All Available Products (For Attendees) or Vendor's Products
-export const getProducts = async (req: AuthenticatedRequest, res: Response) => {
+// 2. Get All Available Products (Public browsing) or Vendor's Own Products
+export const getProducts = async (req: Request, res: Response) => {
 	try {
         // Implement Standard Pagination 
         const page = parseInt(req.query.page as string) || 1;
         const limit = parseInt(req.query.limit as string) || 20;
         const offset = (page - 1) * limit;
+        const category = req.query.category as string | undefined;
+        const subCategory = req.query.subCategory as string | undefined;
+        const search = req.query.search as string | undefined;
 
-		if (req.user?.role === 'vendor') {
+        // Check if authenticated vendor wants their own products
+        const authReq = req as AuthenticatedRequest;
+		if (authReq.user?.role === 'vendor') {
 			const vendorProducts = await db
 				.select()
 				.from(products)
-				.where(eq(products.vendorId, req.user.id))
+				.where(eq(products.vendorId, authReq.user.id))
                 .limit(limit)
                 .offset(offset);
 			return res.status(200).json({ success: true, products: vendorProducts, meta: { page, limit } });
 		}
 
-		// Only fetch products where stockQuantity is greater than 0 to hide out-of-stock items
+		// Public browsing — only in-stock items
+        const conditions = [gt(products.stockQuantity, 0)];
+        if (category && category !== 'All') {
+            conditions.push(eq(products.category, category) as any);
+        }
+        if (subCategory && subCategory !== 'All') {
+            conditions.push(eq(products.subCategory, subCategory) as any);
+        }
+        if (search) {
+            conditions.push(sql`LOWER(${products.name}) LIKE ${`%${search.toLowerCase()}%`}` as any);
+        }
+
 		const availableProducts = await db
 			.select()
 			.from(products)
-			.where(gt(products.stockQuantity, 0))
+			.where(and(...conditions))
             .limit(limit)
             .offset(offset);
 
+        // Get total count for pagination
+        const [{ total }] = await db.select({ total: count() }).from(products).where(and(...conditions));
+
 		return res
 			.status(200)
-			.json({ success: true, products: availableProducts, meta: { page, limit } });
+			.json({ success: true, products: availableProducts, meta: { page, limit, total } });
 	} catch (error) {
 		console.error("Get Products Error:", error);
 		return res
@@ -106,7 +126,7 @@ export const updateProduct = async (
 	try {
 		const productId = req.params.id as string;
 		const vendorId = req.user?.id;
-		const { name, description, price, stockQuantity, sku, category, brand, oldPrice, weight, images } = req.body;
+		const { name, description, price, stockQuantity, sku, category, subCategory, brand, oldPrice, weight, images } = req.body;
 
 		// Verify the product belongs to the vendor requesting the update (Keeping type assertion)
 		const [existingProduct] = await db
@@ -143,6 +163,7 @@ export const updateProduct = async (
 
 				sku: sku !== undefined ? sku : existingProduct.sku,
 				category: category !== undefined ? category : existingProduct.category,
+				subCategory: subCategory !== undefined ? subCategory : existingProduct.subCategory,
 				brand: brand !== undefined ? brand : existingProduct.brand,
 				oldPrice: oldPrice !== undefined ? oldPrice : existingProduct.oldPrice,
 				weight: weight !== undefined ? weight : existingProduct.weight,

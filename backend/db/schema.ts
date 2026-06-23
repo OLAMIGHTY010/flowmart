@@ -70,6 +70,7 @@ export const products = pgTable('products', {
   price: decimal('price', { precision: 10, scale: 2 }).notNull(),
   oldPrice: decimal('old_price', { precision: 10, scale: 2 }),
   category: varchar('category', { length: 100 }),
+  subCategory: varchar('sub_category', { length: 100 }),
   brand: varchar('brand', { length: 100 }),
   weight: decimal('weight', { precision: 8, scale: 2 }),
   images: jsonb('images').default([]), 
