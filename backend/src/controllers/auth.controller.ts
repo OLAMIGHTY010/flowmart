@@ -7,10 +7,92 @@ import jwt from 'jsonwebtoken';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import { emailService } from '../services/email.service';
 import crypto from 'crypto';
+import { OAuth2Client } from 'google-auth-library';
+
+// Initialize Google Client
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // Helper to generate a secure 6-digit OTP
 const generateSecureOTP = () => crypto.randomInt(100000, 999999).toString();
 
+// ==========================================
+// GOOGLE AUTHENTICATION (Normal Users)
+// ==========================================
+export const googleAuth = async (req: Request, res: Response) => {
+  try {
+    const { idToken, role } = req.body;
+
+    if (!idToken) {
+      return res.status(400).json({ success: false, message: 'Google ID token is required' });
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    if (!payload || !payload.email) {
+      return res.status(400).json({ success: false, message: 'Invalid Google token' });
+    }
+
+    const { email, name, sub: googleId, picture } = payload;
+
+    let [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+
+    if (!user) {
+      // Create new Google User
+      const requestedRole = ['attendee', 'vendor', 'dispatch_rider'].includes(role) ? role : 'attendee';
+      
+      const [newUser] = await db.insert(users).values({
+        fullName: name || 'Google User',
+        email,
+        authProvider: 'google',
+        providerId: googleId,
+        avatar: picture,
+        role: requestedRole,
+        isVerified: true, // Google emails are already verified
+      }).returning();
+      
+      user = newUser;
+
+      emailService.sendWelcomeEmail(user.email, { fullName: user.fullName, role: user.role }).catch(console.error);
+    } else {
+      // Prevent local users from logging in with Google unexpectedly
+      if (user.authProvider === 'local') {
+         return res.status(403).json({ success: false, message: 'This email is registered with a password. Please use standard login.' });
+      }
+    }
+
+    const token = jwt.sign(
+      { id: user.id, email: user.email, role: user.role },
+      process.env.JWT_SECRET!,
+      { expiresIn: '24h' }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: 'Google Login successful',
+      token,
+      user: {
+        id: user.id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+        avatar: user.avatar,
+        isVerified: user.isVerified,
+      }
+    });
+
+  } catch (error) {
+    console.error('Google Auth Error:', error);
+    return res.status(500).json({ success: false, message: 'Authentication failed' });
+  }
+};
+
+// ==========================================
+// REGISTRATION (Admins / Staff Only)
+// ==========================================
 export const register = async (req: Request, res: Response) => {
   try {
     const { fullName, email, password, role, phoneNumber, dateOfBirth, gender } = req.body;
@@ -19,14 +101,13 @@ export const register = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: 'All fields are required' });
     }
 
-    // ✨ SECURITY FIX: Restrict public registration roles
-    const allowedPublicRoles = ['attendee', 'vendor', 'dispatch_rider'];
+    const staffRoles = ['super_admin', 'admin', 'camp_logistics_coordinator', 'zone_coordinator', 'finance', 'auditor', 'customer_service'];
     const requestedRole = role || 'attendee';
 
-    if (!allowedPublicRoles.includes(requestedRole)) {
+    if (!staffRoles.includes(requestedRole)) {
       return res.status(403).json({ 
         success: false, 
-        message: 'Forbidden: Institutional roles must be assigned by an admin' 
+        message: 'Forbidden: Normal users must sign up using Google Auth.' 
       });
     }
 
@@ -34,7 +115,6 @@ export const register = async (req: Request, res: Response) => {
     if (existingUser.length > 0) {
       const user = existingUser[0];
       
-      // Scenario A: User is registered but not verified
       if (!user.isVerified) {
         const otpCode = generateSecureOTP();
         const hashedOtp = await hashPassword(otpCode);
@@ -71,7 +151,6 @@ export const register = async (req: Request, res: Response) => {
         });
       }
 
-      // Scenario B: User is registered and verified
       return res.status(400).json({
         success: false,
         code: 'EMAIL_ALREADY_VERIFIED',
@@ -79,7 +158,6 @@ export const register = async (req: Request, res: Response) => {
       });
     }
 
-    // Hash and save new user
     const hashedPassword = await hashPassword(password);
     const otpCode = generateSecureOTP();
     const hashedOtp = await hashPassword(otpCode);
@@ -89,7 +167,8 @@ export const register = async (req: Request, res: Response) => {
       fullName,
       email,
       password: hashedPassword,
-      role: role || 'attendee', 
+      authProvider: 'local',
+      role: requestedRole, 
       phone: phoneNumber || null,
       dateOfBirth: dateOfBirth || null,
       gender: gender || null,
@@ -97,7 +176,6 @@ export const register = async (req: Request, res: Response) => {
       otpExpiry: expiresAt,
     }).returning();
 
-    // Fire & Forget Email
     emailService.sendOtpEmail(newUser.email, { fullName: newUser.fullName, otp: otpCode }).catch(console.error);
 
     return res.status(201).json({
@@ -129,13 +207,11 @@ export const verifyOtp = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: 'OTP has expired. Please request a new one.' });
     }
 
-    // Securely compare the hashed OTP
     const isValid = await comparePassword(otp, user.otp);
     if (!isValid) {
       return res.status(400).json({ success: false, message: 'Invalid OTP' });
     }
 
-    // Mark as verified and clear OTP
     const [verifiedUser] = await db.update(users).set({
       isVerified: true,
       otp: null,
@@ -143,13 +219,11 @@ export const verifyOtp = async (req: Request, res: Response) => {
       updatedAt: new Date()
     }).where(eq(users.id, user.id)).returning();
 
-    // Fire & Forget Email
     emailService.sendWelcomeEmail(verifiedUser.email, { 
       fullName: verifiedUser.fullName, 
       role: verifiedUser.role 
     }).catch(console.error);
 
-    // Generate Token
     const token = jwt.sign(
       { id: verifiedUser.id, email: verifiedUser.email, role: verifiedUser.role },
       process.env.JWT_SECRET!,
@@ -169,6 +243,9 @@ export const verifyOtp = async (req: Request, res: Response) => {
   }
 };
 
+// ==========================================
+// LOGIN (Admins / Staff Only)
+// ==========================================
 export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
@@ -180,6 +257,15 @@ export const login = async (req: Request, res: Response) => {
     const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
     if (!user) {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    }
+
+    if (user.authProvider === 'google' || !user.password) {
+      return res.status(403).json({ success: false, message: 'Please sign in with Google.' });
+    }
+
+    const staffRoles = ['super_admin', 'admin', 'camp_logistics_coordinator', 'zone_coordinator', 'finance', 'auditor', 'customer_service'];
+    if (!staffRoles.includes(user.role)) {
+      return res.status(403).json({ success: false, message: 'Access denied. Normal users must log in via Google.' });
     }
 
     if (!user.isVerified) {
@@ -224,9 +310,7 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
-// ✨ NEW: Secure Logout Gateway
 export const logout = async (req: Request, res: Response) => {
-  // Clear auth client-side
   return res.status(200).json({ success: true, message: 'Logged out successfully' });
 };
 
@@ -280,10 +364,8 @@ export const forceChangePassword = async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    // Hash the new password
     const hashedNewPassword = await hashPassword(newPassword);
 
-    // Update user record
     await db.update(users)
       .set({ 
         password: hashedNewPassword, 
@@ -309,6 +391,10 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
       return res.status(200).json({ success: true, message: 'If that email exists, a reset link has been sent.' });
     }
 
+    if (user.authProvider === 'google') {
+      return res.status(400).json({ success: false, message: 'Please sign in using Google.' });
+    }
+
     const resetToken = crypto.randomBytes(32).toString('hex');
     const resetTokenExpiry = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
 
@@ -318,7 +404,6 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
       updatedAt: new Date()
     }).where(eq(users.id, user.id));
 
-    // For production, this should be your frontend domain
     const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
 
     emailService.sendPasswordResetEmail(user.email, { 
@@ -344,6 +429,10 @@ export const resendOtp = async (req: Request, res: Response) => {
     const [userRecord] = await db.select().from(users).where(eq(users.email, email)).limit(1);
     if (!userRecord) {
       return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (userRecord.authProvider === 'google') {
+       return res.status(400).json({ success: false, message: 'Google users do not need OTPs. Please sign in with Google.' });
     }
 
     const otpCode = generateSecureOTP();
@@ -378,6 +467,10 @@ export const forgotPassword = async (req: Request, res: Response) => {
     const [userRecord] = await db.select().from(users).where(eq(users.email, email)).limit(1);
     if (!userRecord) {
       return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (userRecord.authProvider === 'google') {
+       return res.status(400).json({ success: false, message: 'Please sign in using Google.' });
     }
 
     const otpCode = generateSecureOTP();
@@ -445,7 +538,6 @@ export const resetPassword = async (req: Request, res: Response) => {
   }
 };
 
-// ✨ NEW: Secure Role Assignment Gateway
 export const assignRole = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { userId, newRole } = req.body;

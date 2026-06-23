@@ -26,7 +26,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<AppUser | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Handle browser close (clear localStorage on new browser session)
   useEffect(() => {
     const isSessionActive = document.cookie.includes('app_session_active=true');
     if (!isSessionActive) {
@@ -35,7 +34,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   }, []);
 
-  // Handle page refreshes — rehydrate user from cache then validate with API
   useEffect(() => {
     const checkActiveSession = async () => {
       const token = localStorage.getItem("accessToken");
@@ -70,7 +68,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     checkActiveSession();
   }, []);
 
-  // Synchronize with API Client global logout event
   useEffect(() => {
     const handleGlobalLogout = () => {
       setUser(null);
@@ -82,10 +79,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return () => window.removeEventListener("auth:logout", handleGlobalLogout);
   }, []);
 
-  // Google OAuth Login
-  const loginWithGoogle = async (credential: string, role: UserRole) => {
+  // UPDATED: Now receives idToken and passes it down correctly
+  const loginWithGoogle = async (idToken: string, role: UserRole) => {
     try {
-      const response = await authService.googleAuth({ credential, role });
+      const response = await authService.googleAuth({ idToken, role });
       const responseData = (response as any).data || response;
 
       if (responseData && responseData.token) {
@@ -104,7 +101,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  // Clean Logout
   const logout = async () => {
     try {
       await authService.logout();
@@ -117,7 +113,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  // Refresh User Session from Server
   const refreshUser = async () => {
     try {
       const response = await authService.getCurrentUser();
@@ -132,7 +127,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  // Performance Optimization
   const contextValue = useMemo(() => ({
     user,
     isLoading,

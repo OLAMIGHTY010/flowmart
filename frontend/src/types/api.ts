@@ -21,8 +21,9 @@ export interface AppUser {
   };
 }
 
+// UPDATED: Changed 'credential' to 'idToken' to match the backend
 export interface GoogleAuthRequest {
-  credential: string;
+  idToken: string;
   role: UserRole;
 }
 

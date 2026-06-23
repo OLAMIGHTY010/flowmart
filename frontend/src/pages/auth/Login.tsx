@@ -15,12 +15,15 @@ const Login = () => {
   const selectedRole = (localStorage.getItem("selectedRole") as UserRole) || "attendee";
 
   const handleGoogleSuccess = async (credentialResponse: any) => {
+    // Check if we actually got the token back from Google
     if (!credentialResponse.credential) {
       showToast("Google login failed — no credential received", "error");
       return;
     }
 
     setIsLoading(true);
+    
+    // UPDATED: Calling the updated provider function
     const result = await loginWithGoogle(credentialResponse.credential, selectedRole);
 
     if (result.success) {
@@ -167,7 +170,7 @@ const Login = () => {
                 <div style={{ display: "flex", justifyContent: "center", width: "100%" }}>
                   <GoogleLogin
                     onSuccess={handleGoogleSuccess}
-                    onError={() => showToast("Google login failed", "error")}
+                    onError={() => showToast("Google login failed. Please ensure cookies/pop-ups are enabled.", "error")}
                     text="continue_with"
                     shape="rectangular"
                     size="large"

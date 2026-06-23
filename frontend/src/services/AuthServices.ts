@@ -2,6 +2,7 @@ import type { ApiResponse, AuthResponse, GoogleAuthRequest } from "@/types/api";
 import { apiClient } from "./api";
 
 export const authService = {
+  // UPDATED: Now seamlessly passes the { idToken, role } payload
   googleAuth: async (data: GoogleAuthRequest): Promise<AuthResponse> => {
     return apiClient.post<AuthResponse>("/auth/google", data);
   },

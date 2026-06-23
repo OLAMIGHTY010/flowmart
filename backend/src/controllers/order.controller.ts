@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { db } from "../../db";
-import { products, orders, orderItems, users, vendorProfiles, vendorKyc, riderKyc } from "../../db/schema";
+import { products, orders, orderItems, users, vendorProfiles, vendorKyc } from "../../db/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { AuthenticatedRequest } from "../middleware/auth.middleware";
 import { sendInAppNotification } from "../services/websocket";
@@ -389,56 +389,35 @@ export const confirmOrderReceived = async (req: AuthenticatedRequest, res: Respo
             return res.status(400).json({ success: false, message: "Escrow funds have already been released for this order." });
         }
 
-        // Step A: Calculate Platform Deductions
+        // Step A: Calculate Platform Deductions (E.g. 5% Total Platform + Paystack Gateway Fee)
         const totalAmountNaira = Number(existingOrder.totalAmount);
         const vendorShare = await calculateVendorNetEarnings(db, existingOrder.id, existingOrder.vendorId, totalAmountNaira);
 
-        // Only process automated payouts if payment was made via a digital gateway (Escrowed)
-        if (existingOrder.paymentMethod === 'paystack' || existingOrder.paymentMethod === 'flutterwave') {
-            // Step B: Adjust Internal Ledgers for Vendor
-            await releaseEscrowToAvailable(existingOrder.vendorId, vendorShare);
-            await deductAvailableBalance(existingOrder.vendorId, vendorShare);
+        // Step B: Adjust Internal Ledgers
+        await releaseEscrowToAvailable(existingOrder.vendorId, vendorShare);
+        await deductAvailableBalance(existingOrder.vendorId, vendorShare);
 
-            // Step C: Fetch Vendor KYC Bank Info for External Transfer
-            const [vendorBankInfo] = await db.select().from(vendorKyc).where(eq(vendorKyc.vendorId, existingOrder.vendorId)).limit(1);
-            
-            if (!vendorBankInfo || !vendorBankInfo.bankName || !vendorBankInfo.accountNumber) {
-                return res.status(400).json({ success: false, message: "Vendor has incomplete bank details. Payout aborted." });
-            }
-
-            // Step D: Hit Paystack APIs for Recipient & Vendor Payout
-            const recipientData = await createTransferRecipient(vendorBankInfo.bankName, vendorBankInfo.accountNumber, vendorBankInfo.accountName);
-            await initiatePayout(recipientData.recipient_code, vendorShare, existingOrder.orderRef);
-
-            // Step E: Rider Payout (if a rider was assigned)
-            if (existingOrder.riderId) {
-                const [od] = await db.select().from(orderDelivery).where(eq(orderDelivery.orderId, existingOrder.id)).limit(1);
-                if (od && Number(od.riderShare) > 0) {
-                    const riderShare = Number(od.riderShare);
-                    const [riderBankInfo] = await db.select().from(riderKyc).where(eq(riderKyc.riderId, existingOrder.riderId)).limit(1);
-                    
-                    if (riderBankInfo && riderBankInfo.bankName && riderBankInfo.accountNumber) {
-                        try {
-                            const riderRecipientData = await createTransferRecipient(riderBankInfo.bankName, riderBankInfo.accountNumber, riderBankInfo.accountName);
-                            await initiatePayout(riderRecipientData.recipient_code, riderShare, `${existingOrder.orderRef}-RIDER`);
-                        } catch (e) {
-                            console.error("Rider Payout Failed:", e);
-                        }
-                    } else {
-                        console.warn(`Rider ${existingOrder.riderId} missing bank details. Rider payout skipped.`);
-                    }
-                }
-            }
+        // Step C: Fetch Vendor KYC Bank Info for External Transfer
+        const [vendorBankInfo] = await db.select().from(vendorKyc).where(eq(vendorKyc.vendorId, existingOrder.vendorId)).limit(1);
+        
+        if (!vendorBankInfo || !vendorBankInfo.bankName || !vendorBankInfo.accountNumber) {
+            return res.status(400).json({ success: false, message: "Vendor has incomplete bank details. Payout aborted." });
         }
 
-        // Step F: Update Final Order State
+        // Step D: Hit Paystack APIs for Recipient & Payout
+        const recipientData = await createTransferRecipient(vendorBankInfo.bankName, vendorBankInfo.accountNumber, vendorBankInfo.accountName);
+        
+        // Pass the strict unique orderRef to prevent duplicate network retries
+        await initiatePayout(recipientData.recipient_code, vendorShare, existingOrder.orderRef);
+
+        // Step E: Update Final Order State
 		const [updatedOrder] = await db
 			.update(orders)
-			.set({ paymentProofUrl: existingOrder.paymentMethod === 'pay_on_delivery' ? 'pod_complete' : "payout_complete", updatedAt: new Date() })
+			.set({ paymentProofUrl: "payout_complete", updatedAt: new Date() })
 			.where(eq(orders.id, orderId))
 			.returning();
 
-		// Notify vendor of successful payout/completion
+		// Notify vendor of successful payout
 		sendInAppNotification(existingOrder.vendorId, "order:statusUpdate", {
 			orderId,
 			status: "received_and_paid",

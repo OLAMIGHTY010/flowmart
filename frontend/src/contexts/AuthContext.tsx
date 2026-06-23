@@ -4,7 +4,8 @@ import type { AppUser, UserRole } from "@/types/api";
 export interface AuthContextType {
   user: AppUser | null;
   isLoading: boolean;
-  loginWithGoogle: (credential: string, role: UserRole) => Promise<{
+  // UPDATED: Changed parameter name for clarity
+  loginWithGoogle: (idToken: string, role: UserRole) => Promise<{
     success: boolean;
     error: string;
   }>;

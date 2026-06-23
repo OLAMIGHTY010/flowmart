@@ -5,29 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1781936574324,
-      "tag": "0000_blushing_santa_claus",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1781941345375,
-      "tag": "0001_parallel_black_crow",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1781956489089,
-      "tag": "0002_wide_loa",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1782069744265,
-      "tag": "0003_wide_gorgon",
+      "when": 1782217497383,
+      "tag": "0000_brave_switch",
       "breakpoints": true
     }
   ]

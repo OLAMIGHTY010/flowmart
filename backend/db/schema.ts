@@ -15,12 +15,17 @@ export const roleEnum = pgEnum('role', [
 
 export const paymentMethodEnum = pgEnum('payment_method', ['bank_transfer', 'pay_on_delivery', 'paystack', 'flutterwave']);
 export const kycStatusEnum = pgEnum('kyc_status', ['unsubmitted', 'pending', 'under_review', 'approved', 'rejected']);
+export const authProviderEnum = pgEnum('auth_provider', ['local', 'google']);
 
 export const users = pgTable('users', {
   id: uuid('id').defaultRandom().primaryKey(),
   fullName: varchar('full_name', { length: 255 }).notNull(),
   email: varchar('email', { length: 255 }).notNull().unique(),
-  password: varchar('password', { length: 255 }).notNull(), 
+  
+  password: varchar('password', { length: 255 }), // Nullable for Google users
+  authProvider: authProviderEnum('auth_provider').default('local').notNull(),
+  providerId: varchar('provider_id', { length: 255 }), // Stores Google ID
+  
   role: roleEnum('role').default('attendee').notNull(),
   phone: varchar('phone', { length: 50 }),
   dateOfBirth: varchar('date_of_birth', { length: 50 }),
@@ -70,7 +75,6 @@ export const products = pgTable('products', {
   price: decimal('price', { precision: 10, scale: 2 }).notNull(),
   oldPrice: decimal('old_price', { precision: 10, scale: 2 }),
   category: varchar('category', { length: 100 }),
-  subCategory: varchar('sub_category', { length: 100 }),
   brand: varchar('brand', { length: 100 }),
   weight: decimal('weight', { precision: 8, scale: 2 }),
   images: jsonb('images').default([]), 
@@ -336,7 +340,6 @@ export const staffProfiles = pgTable('staff_profiles', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-// Finance & Ledger Tables
 export const wallets = pgTable('wallets', {
   id: uuid('id').defaultRandom().primaryKey(),
   userId: uuid('user_id').references(() => users.id).notNull().unique(),
@@ -357,10 +360,6 @@ export const payouts = pgTable('payouts', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   resolvedAt: timestamp('resolved_at'),
 });
-
-// ==========================================
-// NEW MEGA-FEATURES (Phase 1 Additions)
-// ==========================================
 
 export const reviews = pgTable('reviews', {
   id: uuid('id').defaultRandom().primaryKey(),
