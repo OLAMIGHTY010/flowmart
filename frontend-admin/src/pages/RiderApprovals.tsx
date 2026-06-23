@@ -330,9 +330,9 @@ function RiderDetailsPanel({ riderId, onClose }: { riderId: string, onClose: () 
               <p className="text-xs text-slate-500">{user.email}</p>
             </div>
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Business Details</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Rider Details</p>
               <p className="text-sm font-bold text-slate-800">{profile?.category || 'Logistics'}</p>
-              <p className="text-xs text-slate-500 mt-1">RC - {kyc.vehicleType || 'N/A'}</p>
+              <p className="text-xs text-slate-500 mt-1">Vehicle - {kyc.vehicleType || 'N/A'}</p>
               <p className="text-xs text-slate-500">{profile?.city || 'N/A'}, {profile?.stateRegion || 'N/A'}</p>
             </div>
           </div>

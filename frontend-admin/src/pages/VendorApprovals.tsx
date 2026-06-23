@@ -322,10 +322,10 @@ function VendorCard({ vendor, isSelected, onClick }: { vendor: VendorListItem, i
       </div>
 
       <div className="mt-4 flex items-center gap-4 text-xs font-medium">
-        <span className="flex items-center gap-1 text-success"><Check size={14} /> CAC</span>
-        <span className="flex items-center gap-1 text-success"><Check size={14} /> Tax</span>
-        <span className="flex items-center gap-1 text-red-500"><X size={14} /> Insurance</span>
-        <span className="flex items-center gap-1 text-orange-500"><Clock size={14} /> Health/Safety</span>
+        <span className="flex items-center gap-1 text-slate-600"><Check size={14} className="text-success" /> CAC</span>
+        <span className="flex items-center gap-1 text-slate-600"><Check size={14} className="text-success" /> ID</span>
+        <span className="flex items-center gap-1 text-slate-600"><Check size={14} className="text-success" /> Bank</span>
+        <span className="flex items-center gap-1 text-slate-600"><Check size={14} className="text-success" /> Guarantor</span>
       </div>
 
       <div className="mt-4 pt-4 border-t border-slate-100 flex justify-between items-center">
@@ -420,12 +420,10 @@ function VendorDetailsPanel({ vendorId, onClose }: { vendorId: string, onClose: 
 
             <div className="space-y-3">
               <ChecklistItem label="CAC Certificate" checked={!!kyc.cacNo} fileUrl={kyc.cacNo} />
-              <ChecklistItem label="Tax Clearance" checked={false} />
-              <ChecklistItem label="NAFDAC License" checked={!!kyc.nafdacCertificateCode} fileUrl={kyc.nafdacCertificateFile} />
-              <ChecklistItem label="Insurance" checked={false} />
+              <ChecklistItem label="Government ID" checked={!!kyc.governmentIdFile} fileUrl={kyc.governmentIdFile} />
+              <ChecklistItem label="Bank Details" checked={!!(kyc.bankName && kyc.accountNumber)} />
               <ChecklistItem label="CAMP Certificate" checked={!!kyc.campCertificateFile} fileUrl={kyc.campCertificateFile} />
               <ChecklistItem label="Guarantor ID" checked={!!kyc.guarantorIdFile} fileUrl={kyc.guarantorIdFile} />
-              <ChecklistItem label="Vendor Logo/Image" checked={!!profile?.avatar} fileUrl={profile?.avatar} />
             </div>
           </div>
 
