@@ -53,16 +53,18 @@ const Footer = () => {
               marginBottom: 16,
               color: "var(--color-text-inverse)",
             }}>
-              Categories
+              Quick Links
             </h4>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {["Groceries", "Electronics", "Fashion", "Home & Kitchen", "Health & Beauty"].map((item) => (
-                <Link key={item} to="/" style={footerLinkStyle}>{item}</Link>
-              ))}
+              <Link to="/" style={footerLinkStyle}>Home</Link>
+              <Link to="/products" style={footerLinkStyle}>All Products</Link>
+              <Link to="/cart" style={footerLinkStyle}>My Cart</Link>
+              <Link to="/orders" style={footerLinkStyle}>My Orders</Link>
+              <Link to="/profile" style={footerLinkStyle}>My Profile</Link>
             </div>
           </div>
 
-          {/* Support */}
+          {/* For Business */}
           <div>
             <h4 style={{
               fontSize: "0.875rem",
@@ -70,12 +72,13 @@ const Footer = () => {
               marginBottom: 16,
               color: "var(--color-text-inverse)",
             }}>
-              Support
+              For Business
             </h4>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {["Help Center", "Delivery Info", "Returns Policy", "Terms of Service", "Privacy Policy"].map((item) => (
-                <Link key={item} to="/" style={footerLinkStyle}>{item}</Link>
-              ))}
+              <Link to="/get-started" style={footerLinkStyle}>Sell on FlowMart</Link>
+              <Link to="/get-started" style={footerLinkStyle}>Become a Rider</Link>
+              <Link to="/vendor/dashboard" style={footerLinkStyle}>Vendor Dashboard</Link>
+              <Link to="/rider/dashboard" style={footerLinkStyle}>Rider Dashboard</Link>
             </div>
           </div>
 
@@ -90,14 +93,14 @@ const Footer = () => {
               Contact Us
             </h4>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <a href="mailto:support@flowmart.com" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
                 <Mail size={16} style={{ color: "var(--color-primary-light)", flexShrink: 0 }} />
                 <span style={footerLinkStyle}>support@flowmart.com</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              </a>
+              <a href="tel:+2348000000000" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
                 <Phone size={16} style={{ color: "var(--color-primary-light)", flexShrink: 0 }} />
                 <span style={footerLinkStyle}>+234 800 000 0000</span>
-              </div>
+              </a>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <MapPin size={16} style={{ color: "var(--color-primary-light)", flexShrink: 0 }} />
                 <span style={footerLinkStyle}>Lagos, Nigeria</span>
@@ -119,9 +122,9 @@ const Footer = () => {
             © {new Date().getFullYear()} FlowMart. All rights reserved.
           </p>
           <div style={{ display: "flex", gap: 20 }}>
-            <Link to="/" style={{ fontSize: "0.75rem", color: "var(--color-text-light)" }}>Terms</Link>
-            <Link to="/" style={{ fontSize: "0.75rem", color: "var(--color-text-light)" }}>Privacy</Link>
-            <Link to="/" style={{ fontSize: "0.75rem", color: "var(--color-text-light)" }}>Cookies</Link>
+            <Link to="/terms" style={{ fontSize: "0.75rem", color: "var(--color-text-light)", textDecoration: "none" }}>Terms</Link>
+            <Link to="/privacy" style={{ fontSize: "0.75rem", color: "var(--color-text-light)", textDecoration: "none" }}>Privacy</Link>
+            <Link to="/cookies" style={{ fontSize: "0.75rem", color: "var(--color-text-light)", textDecoration: "none" }}>Cookies</Link>
           </div>
         </div>
       </div>
@@ -133,6 +136,7 @@ const footerLinkStyle: React.CSSProperties = {
   fontSize: "0.813rem",
   color: "var(--color-text-light)",
   transition: "color 200ms ease",
+  textDecoration: "none",
 };
 
 export default Footer;

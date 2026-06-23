@@ -2,12 +2,14 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Search, ShoppingCart, User, Menu, X, Leaf } from "lucide-react";
+import { useCartStore } from "@/stores/cartStore";
 
 const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const cartCount = useCartStore((s) => s.getCartCount());
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -130,6 +132,25 @@ const Navbar = () => {
             }}
           >
             <ShoppingCart size={20} />
+            {cartCount > 0 && (
+              <span style={{
+                position: "absolute",
+                top: 2,
+                right: 2,
+                width: 18,
+                height: 18,
+                borderRadius: "50%",
+                backgroundColor: "var(--color-accent-red)",
+                color: "#fff",
+                fontSize: "0.625rem",
+                fontWeight: 700,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}>
+                {cartCount > 9 ? "9+" : cartCount}
+              </span>
+            )}
           </Link>
 
           {/* User / Login */}
