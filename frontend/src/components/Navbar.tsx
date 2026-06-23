@@ -1,0 +1,291 @@
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { Search, ShoppingCart, User, Menu, X, Leaf } from "lucide-react";
+
+const Navbar = () => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+    }
+  };
+
+  return (
+    <nav style={{
+      backgroundColor: "var(--color-dark)",
+      position: "sticky",
+      top: 0,
+      zIndex: "var(--z-sticky)" as any,
+    }}>
+      <div className="container" style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 20,
+        height: 64,
+      }}>
+        {/* Logo */}
+        <Link to="/" style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          flexShrink: 0,
+        }}>
+          <div style={{
+            width: 32,
+            height: 32,
+            borderRadius: "var(--radius-sm)",
+            backgroundColor: "var(--color-primary)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}>
+            <Leaf size={18} style={{ color: "var(--color-text-inverse)" }} />
+          </div>
+          <span style={{
+            fontSize: "1.125rem",
+            fontWeight: 700,
+            color: "var(--color-primary-light)",
+          }}>
+            Flow<span style={{ color: "var(--color-text-inverse)" }}>Mart</span>
+          </span>
+        </Link>
+
+        {/* Search Bar (Desktop) */}
+        <form
+          onSubmit={handleSearch}
+          style={{
+            flex: 1,
+            maxWidth: 520,
+            display: "flex",
+          }}
+          className="desktop-only"
+        >
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            width: "100%",
+            backgroundColor: "var(--color-bg-primary)",
+            borderRadius: "var(--radius-full)",
+            padding: "0 4px 0 16px",
+            height: 40,
+          }}>
+            <input
+              type="text"
+              placeholder="Search products, vendors..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                flex: 1,
+                border: "none",
+                outline: "none",
+                fontSize: "0.875rem",
+                color: "var(--color-text-primary)",
+                backgroundColor: "transparent",
+              }}
+            />
+            <button
+              type="submit"
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: "50%",
+                backgroundColor: "var(--color-primary)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              <Search size={16} style={{ color: "var(--color-text-inverse)" }} />
+            </button>
+          </div>
+        </form>
+
+        {/* Right Actions */}
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+        }}>
+          {/* Cart */}
+          <Link
+            to="/cart"
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "var(--color-text-inverse)",
+              transition: "background-color var(--transition-fast)",
+              position: "relative",
+            }}
+          >
+            <ShoppingCart size={20} />
+          </Link>
+
+          {/* User / Login */}
+          {user ? (
+            <button
+              onClick={() => navigate("/profile")}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: "50%",
+                backgroundColor: "var(--color-primary)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--color-text-inverse)",
+                fontSize: "0.875rem",
+                fontWeight: 600,
+              }}
+            >
+              {user.fullName?.charAt(0)?.toUpperCase() || "U"}
+            </button>
+          ) : (
+            <Link
+              to="/login"
+              className="desktop-only"
+              style={{
+                padding: "8px 20px",
+                backgroundColor: "var(--color-primary)",
+                color: "var(--color-text-inverse)",
+                borderRadius: "var(--radius-full)",
+                fontSize: "0.875rem",
+                fontWeight: 600,
+                transition: "background-color var(--transition-fast)",
+              }}
+            >
+              Sign In
+            </Link>
+          )}
+
+          {/* Mobile Menu Toggle */}
+          <button
+            className="mobile-only"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "var(--color-text-inverse)",
+            }}
+          >
+            {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Search */}
+      <div className="mobile-only" style={{
+        padding: "0 16px 12px",
+      }}>
+        <form onSubmit={handleSearch}>
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            backgroundColor: "var(--color-bg-primary)",
+            borderRadius: "var(--radius-full)",
+            padding: "0 4px 0 14px",
+            height: 38,
+          }}>
+            <Search size={16} style={{ color: "var(--color-text-light)", flexShrink: 0 }} />
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                flex: 1,
+                border: "none",
+                outline: "none",
+                fontSize: "0.813rem",
+                color: "var(--color-text-primary)",
+                backgroundColor: "transparent",
+                padding: "0 10px",
+              }}
+            />
+          </div>
+        </form>
+      </div>
+
+      {/* Mobile Menu Overlay */}
+      {mobileMenuOpen && (
+        <div className="mobile-only animate-fade-in" style={{
+          position: "fixed",
+          top: 64,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: "var(--color-bg-primary)",
+          padding: 24,
+          zIndex: "var(--z-modal)" as any,
+        }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <Link to="/" onClick={() => setMobileMenuOpen(false)} style={menuLinkStyle}>Home</Link>
+            <Link to="/cart" onClick={() => setMobileMenuOpen(false)} style={menuLinkStyle}>Cart</Link>
+            <Link to="/orders" onClick={() => setMobileMenuOpen(false)} style={menuLinkStyle}>Orders</Link>
+            <Link to="/profile" onClick={() => setMobileMenuOpen(false)} style={menuLinkStyle}>Profile</Link>
+
+            <div style={{ height: 1, backgroundColor: "var(--color-border)", margin: "12px 0" }} />
+
+            {user ? (
+              <button
+                onClick={() => { logout(); setMobileMenuOpen(false); }}
+                style={{
+                  ...menuLinkStyle,
+                  color: "var(--color-accent-red)",
+                  textAlign: "left",
+                }}
+              >
+                Log Out
+              </button>
+            ) : (
+              <Link
+                to="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="btn-primary"
+                style={{ textAlign: "center" }}
+              >
+                Sign In
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Responsive CSS */}
+      <style>{`
+        .desktop-only { display: flex; }
+        .mobile-only { display: none; }
+
+        @media (max-width: 768px) {
+          .desktop-only { display: none !important; }
+          .mobile-only { display: flex !important; }
+        }
+      `}</style>
+    </nav>
+  );
+};
+
+const menuLinkStyle: React.CSSProperties = {
+  padding: "14px 0",
+  fontSize: "1rem",
+  fontWeight: 500,
+  color: "var(--color-text-primary)",
+  borderBottom: "1px solid var(--color-border-light)",
+};
+
+export default Navbar;
