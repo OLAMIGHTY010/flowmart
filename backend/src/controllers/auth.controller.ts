@@ -36,11 +36,18 @@ export const googleAuth = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: 'Invalid Google token' });
     }
 
-    const { email, name, sub: googleId, picture } = payload;
+    const { email, name, sub: googleId, picture, gender, birthdate } = payload as any;
 
     let [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
 
     if (!user) {
+      if (!role) {
+         return res.status(403).json({ 
+           success: false, 
+           message: 'Account not found. Please click "Get Started" to register a new account.' 
+         });
+      }
+      
       // Create new Google User
       const requestedRole = ['attendee', 'vendor', 'dispatch_rider'].includes(role) ? role : 'attendee';
       
@@ -51,7 +58,9 @@ export const googleAuth = async (req: Request, res: Response) => {
         providerId: googleId,
         avatar: picture,
         role: requestedRole,
-        isVerified: true, // Google emails are already verified
+        gender: gender || null,
+        dateOfBirth: birthdate ? new Date(birthdate) : null,
+        isVerified: requestedRole === 'attendee', // Attendees are verified automatically; Vendors/Riders need admin approval
       }).returning();
       
       user = newUser;
@@ -61,6 +70,14 @@ export const googleAuth = async (req: Request, res: Response) => {
       // Prevent local users from logging in with Google unexpectedly
       if (user.authProvider === 'local') {
          return res.status(403).json({ success: false, message: 'This email is registered with a password. Please use standard login.' });
+      }
+      
+      // Enforce strict role matching: an email cannot be used for a different role
+      if (role && user.role !== role && ['attendee', 'vendor', 'dispatch_rider'].includes(role)) {
+         return res.status(403).json({ 
+           success: false, 
+           message: `This email is already registered as a ${user.role}. Please log in with the correct role.` 
+         });
       }
     }
 
