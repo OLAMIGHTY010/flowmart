@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.flowmart.app",
+      "sha256_cert_fingerprints": [
+        "FA:2A:03:CB:38:9C:F3:BE:28:E3:6B:04:81:64:39:41:DB:CC:50:56:12:8B:AB:3E:96:42:3E:30:19:D8:17:F1"
+      ]
+    }
+  }
+]

@@ -5,6 +5,7 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 // Layouts
 import AppLayout from "@/components/AppLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import AIChatWidget from "@/components/AIChatWidget";
 
 // Auth Pages
 import RoleSelector from "@/pages/auth/RoleSelector";
@@ -56,6 +57,7 @@ function App() {
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
+          <AIChatWidget />
           <Routes>
             {/* ═══ PUBLIC AUTH ROUTES ═══ */}
             <Route path="/get-started" element={<RoleSelector />} />
