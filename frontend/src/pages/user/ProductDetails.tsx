@@ -54,7 +54,7 @@ const ProductDetails = () => {
       price: product.price,
       imageUrl: firstImage || "",
       category: product.category || "",
-    }, quantity);
+    } as any, quantity);
     showToast(`${product.name} added to cart`, "success");
   };
 

@@ -1,20 +1,17 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { Product } from "@/types/product";
 
-export interface CartItem {
-  id: string;
-  vendorId: string;
-  name: string;
-  price: number;
-  imageUrl: string;
+export interface CartItem extends Product {
   qty: number;
-  category?: string;
+  imageUrl: string;
 }
 
 interface CartStore {
   cart: CartItem[];
+  
 
-  addToCart: (item: Omit<CartItem, "qty">, quantity?: number) => void;
+  addToCart: (product: Product, quantity?: number) => void;
   increaseQty: (id: string) => void;
   decreaseQty: (id: string) => void;
   removeFromCart: (id: string) => void;
@@ -26,41 +23,67 @@ interface CartStore {
   getCartTotal: () => number;
 }
 
+// helper
+const calculateTotals = (cart: CartItem[]) => {
+  const subtotal = cart.reduce(
+    (sum, item) => sum + Number(item.price) * item.qty,
+    0
+  );
+
+  const shippingFee = subtotal >= 50000 ? 0 : 2500;
+
+  return {
+    subtotal,
+    shippingFee,
+    total: subtotal + shippingFee,
+  };
+};
+
 export const useCartStore = create<CartStore>()(
   persist(
     (set, get) => ({
       cart: [],
 
-      addToCart: (item, qty = 1) =>
+      addToCart: (product, qty = 1) =>
         set((state) => {
-          const exists = state.cart.find((c) => c.id === item.id);
-          if (exists) {
-            return {
-              cart: state.cart.map((c) =>
-                c.id === item.id ? { ...c, qty: c.qty + qty } : c
-              ),
-            };
-          }
-          return { cart: [...state.cart, { ...item, qty }] };
+          const exists = state.cart.find(
+            (item) => item.id === product.id
+          );
+
+          const cart = exists
+            ? state.cart.map((item) =>
+                item.id === product.id
+                  ? { ...item, qty: item.qty + qty }
+                  : item
+              )
+            : [...state.cart, { ...product as any, qty }];
+
+          return { cart };
         }),
 
       increaseQty: (id) =>
         set((state) => ({
-          cart: state.cart.map((c) =>
-            c.id === id ? { ...c, qty: c.qty + 1 } : c
+          cart: state.cart.map((item) =>
+            item.id === id
+              ? { ...item, qty: item.qty + 1 }
+              : item
           ),
         })),
 
       decreaseQty: (id) =>
         set((state) => ({
           cart: state.cart
-            .map((c) => (c.id === id ? { ...c, qty: c.qty - 1 } : c))
-            .filter((c) => c.qty > 0),
+            .map((item) =>
+              item.id === id
+                ? { ...item, qty: item.qty - 1 }
+                : item
+            )
+            .filter((item) => item.qty > 0),
         })),
 
       removeFromCart: (id) =>
         set((state) => ({
-          cart: state.cart.filter((c) => c.id !== id),
+          cart: state.cart.filter((item) => item.id !== id),
         })),
 
       clearCart: () => set({ cart: [] }),
@@ -68,25 +91,23 @@ export const useCartStore = create<CartStore>()(
       getCartCount: () =>
         get().cart.reduce((sum, item) => sum + item.qty, 0),
 
-      getCartSubtotal: () =>
-        get().cart.reduce((sum, item) => sum + Number(item.price) * item.qty, 0),
+      getCartSubtotal: () => {
+        const { subtotal } = calculateTotals(get().cart);
+        return subtotal;
+      },
 
       getShippingFee: () => {
-        const subtotal = get().cart.reduce(
-          (sum, item) => sum + Number(item.price) * item.qty,
-          0
-        );
-        return subtotal >= 50000 ? 0 : 2500;
+        const { shippingFee } = calculateTotals(get().cart);
+        return shippingFee;
       },
 
       getCartTotal: () => {
-        const subtotal = get().getCartSubtotal();
-        const shipping = get().getShippingFee();
-        return subtotal + shipping;
+        const { total } = calculateTotals(get().cart);
+        return total;
       },
     }),
     {
-      name: "flowmart-cart",
+      name: "cart-storage",
       partialize: (state) => ({ cart: state.cart }),
     }
   )

@@ -1,6 +1,7 @@
 import { Outlet } from "react-router-dom";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
+import BottomNav from "./user/BottomNav";
 
 const AppLayout = () => {
   return (
@@ -10,10 +11,11 @@ const AppLayout = () => {
       minHeight: "100vh",
     }}>
       <Navbar />
-      <main style={{ flex: 1 }}>
+      <main style={{ flex: 1, paddingBottom: "70px" }}>
         <Outlet />
       </main>
       <Footer />
+      <BottomNav />
     </div>
   );
 };

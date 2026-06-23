@@ -202,7 +202,7 @@ const RoleSelector = () => {
                           {role.label}
                         </span>
                         {role.badge && (
-                          <span className={`badge ${role.key === "attendee" ? "badge-orange" : "badge-green"}`}>
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[0.75rem] font-bold ${role.key === "attendee" ? "bg-orange-500 text-white" : "bg-[#e6f4ea] text-brand-primary"}`}>
                             {role.badge}
                           </span>
                         )}
@@ -244,9 +244,8 @@ const RoleSelector = () => {
             </div>
 
             <button
-              className="btn-primary"
+              className="w-full py-4 px-7 text-[1.063rem] rounded-xl flex items-center justify-center gap-2 bg-brand-primary text-white hover:bg-green-700 transition-colors"
               onClick={handleContinue}
-              style={{ width: "100%", padding: "16px 28px", fontSize: "1.063rem", borderRadius: "var(--radius-xl)" }}
             >
               Continue as {roleLabels[selectedRole]} <ArrowRight size={18} />
             </button>
@@ -307,6 +306,7 @@ const RoleSelector = () => {
           padding: 40px 24px;
           display: flex;
           flex-direction: column;
+          justify-content: center;
           min-height: 100vh;
         }
 
@@ -324,7 +324,6 @@ const RoleSelector = () => {
           }
           
           .form-wrapper {
-            justify-content: center;
             min-height: auto;
             padding: 60px;
           }

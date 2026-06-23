@@ -10,6 +10,7 @@ export interface AppUser {
   avatar?: string;
   status?: string;
   dateOfBirth?: string;
+  dob?: string;
   isVerified?: boolean;
   profileCompleted?: boolean;
   forcePasswordChange?: boolean;
@@ -64,4 +65,100 @@ export interface CheckoutPayload {
   payment_method: PaymentMethod;
   transaction_reference?: string;
   payment_proof?: File | null;
+}
+
+
+export interface ProfileSetupRequest {
+  displayName: string;
+  businessName?: string;
+  businessPhone?: string;
+  phone?: string;
+  stateRegion: string;
+  city: string;
+  bio: string;
+  avatar?: string; // Base64 or URL
+}
+
+export interface DashboardStatsResponse {
+  newOrders: number;
+  inProgress: number;
+  revenueToday: string;
+  availableStock: number;
+  weeklyRevenue: { day: string; h: number }[];
+  totalRevenue: string;
+  avgOrder: string;
+  pendingTips?: string;
+  deliveriesCount?: number;
+  payouts?: { date: string; type: string; amount: string; status: string }[];
+}
+
+export interface KYCInfoRequest {
+  fullName: string;
+  dob: string;
+  gender: string;
+  businessName: string;
+  cacNo: string;
+  campCertificateId: string;
+  bankName: string;
+  accountNumber: string;
+  accountName: string;
+  vehicleType?: string;
+  licenseNumber?: string;
+}
+
+export interface KYCSubmitRequest {
+  governmentIdType: 'national_id' | 'passport' | 'drivers_license';
+  guarantorName: string;
+  guarantorPhone: string;
+  guarantorRelationship: string;
+}
+
+
+export interface KYCSubmitPayload {
+  // Profile Setup fields
+  displayName: string;
+  businessName?: string;
+  businessPhone?: string;
+  phone?: string;
+  stateRegion: string;
+  city: string;
+  bio: string;
+  avatar?: string;
+
+  // KYC Info fields
+  fullName?: string;
+  dob?: string;
+  gender?: string;
+  cacNo?: string;
+  campCertificateId?: string;
+  bankName: string;
+  accountNumber: string;
+  accountName: string;
+  
+  // KYC Submit fields
+  govIdType: string;
+  guarantorName: string;
+  guarantorPhone: string;
+  guarantorRelationship: string;
+  governmentIdFile?: string;
+  campCertificateFile?: string;
+  guarantorIdFile?: string;
+  riderImageFile?: string;
+}
+
+export interface KYCStatusResponse {
+  status: 'unsubmitted' | 'pending' | 'under_review' | 'approved' | 'rejected';
+  referenceId: string;
+  steps: {
+    label: string;
+    time: string;
+    status: 'done' | 'active' | 'pending';
+  }[];
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  message?: string;
+  error?: string;
 }
