@@ -1,42 +1,74 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import {
   ShoppingBag, Truck, Apple, Shirt, Home as HomeIcon,
   Heart, Sparkles, Monitor, ArrowRight, Star, ChevronRight,
-  Store, Users, Package, Zap
+  Store, Users, Package, Zap, Loader2
 } from "lucide-react";
+import { apiClient } from "@/services/api";
 
 /* ═══════════════════════════════════════════════════════
    FlowMart Homepage
    Sections: Hero → Categories → Featured Products →
-   Promo Banner → Delivery CTA → Top Vendors → Sell CTA
+   Promo Banner → Delivery CTA → Sell CTA
    ═══════════════════════════════════════════════════════ */
 
-const categories = [
-  { name: "Groceries", icon: Apple, color: "var(--color-primary)" },
-  { name: "Electronics", icon: Monitor, color: "var(--color-accent-blue)" },
-  { name: "Fashion", icon: Shirt, color: "var(--color-accent-orange)" },
-  { name: "Home", icon: HomeIcon, color: "var(--color-primary-hover)" },
-  { name: "Health", icon: Heart, color: "var(--color-accent-red)" },
-  { name: "Beauty", icon: Sparkles, color: "var(--color-accent-amber)" },
-];
+// Icon mapping for categories that come from the backend
+const categoryIconMap: Record<string, any> = {
+  "groceries": Apple,
+  "electronics": Monitor,
+  "phones & tablets": Monitor, // adding specific fallback
+  "fashion": Shirt,
+  "home, furniture and appliances": HomeIcon,
+  "health": Heart,
+  "beauty": Sparkles,
+};
 
-const featuredProducts = [
-  { id: "1", name: "Fresh Tomatoes", price: 1200, rating: 4.5, image: "🍅", vendor: "Farm Fresh NG" },
-  { id: "2", name: "Organic Peppers", price: 800, rating: 4.8, image: "🌶️", vendor: "Green Basket" },
-  { id: "3", name: "Premium Rice 5kg", price: 7500, rating: 4.6, image: "🍚", vendor: "Grain Master" },
-  { id: "4", name: "Fresh Avocados", price: 2000, rating: 4.7, image: "🥑", vendor: "Fruit Palace" },
-  { id: "5", name: "Local Honey 500ml", price: 3500, rating: 4.9, image: "🍯", vendor: "Bee Natural" },
-  { id: "6", name: "Plantain Bunch", price: 1500, rating: 4.4, image: "🍌", vendor: "Farm Fresh NG" },
-];
-
-const topVendors = [
-  { name: "Farm Fresh NG", category: "Groceries & Produce", rating: 4.8, products: 156 },
-  { name: "TechZone", category: "Electronics & Gadgets", rating: 4.7, products: 89 },
-  { name: "Style Hub", category: "Fashion & Apparel", rating: 4.6, products: 234 },
-  { name: "Green Basket", category: "Organic Foods", rating: 4.9, products: 67 },
-];
+const categoryColorMap: Record<string, string> = {
+  "groceries": "#15803d",
+  "electronics": "#2563eb",
+  "phones & tablets": "#2563eb",
+  "fashion": "#ea580c",
+  "home, furniture and appliances": "#0d9488",
+  "health": "#dc2626",
+  "beauty": "#d97706",
+};
 
 const Homepage = () => {
+  const [activeCategory, setActiveCategory] = useState<string>("All");
+  const [page, setPage] = useState(1);
+  const LIMIT = 20;
+
+  // Fetch products from backend — filtered by category, paginated
+  const { data: productsData, isLoading: productsLoading, isFetching } = useQuery({
+    queryKey: ["homepage-products", activeCategory, page],
+    queryFn: () => {
+      const params = new URLSearchParams({ limit: String(LIMIT), page: String(page) });
+      if (activeCategory && activeCategory !== "All") {
+        params.set("category", activeCategory);
+      }
+      return apiClient.get<{ success: boolean; products: any[]; meta: any }>(`/products?${params.toString()}`);
+    },
+    placeholderData: (prev) => prev, // keep previous data while loading next page
+  });
+
+  // Fetch categories from backend
+  const { data: categoriesData } = useQuery({
+    queryKey: ["homepage-categories"],
+    queryFn: () => apiClient.get<{ success: boolean; categories: string[] }>("/products/categories"),
+  });
+
+  const products = productsData?.products || [];
+  const totalProducts = productsData?.meta?.total || 0;
+  const hasMore = products.length >= LIMIT && (page * LIMIT) < totalProducts;
+  const categories = (categoriesData?.categories || []).filter((c: string) => c !== "All");
+
+  const handleCategoryClick = (cat: string) => {
+    setActiveCategory(cat);
+    setPage(1); // Reset to page 1 when switching categories
+  };
+
   return (
     <div>
       {/* ═══ HERO SECTION ═══ */}
@@ -140,69 +172,70 @@ const Homepage = () => {
         </div>
       </section>
 
-      {/* ═══ CATEGORIES ═══ */}
+      {/* ═══ CATEGORIES — Jiji-style horizontal strip ═══ */}
       <section style={{
-        backgroundColor: "var(--color-bg-primary)",
+        backgroundColor: "#fff",
         borderBottom: "1px solid var(--color-border-light)",
+        position: "sticky",
+        top: 0,
+        zIndex: 40,
+        boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
       }}>
-        <div className="container" style={{ padding: "28px 24px" }}>
-          <p style={{
-            fontSize: "0.813rem",
-            color: "var(--color-text-muted)",
-            marginBottom: 16,
-            fontWeight: 500,
-          }}>
-            Shop by Category
-          </p>
+        <div className="container" style={{ padding: "0 24px" }}>
           <div style={{
             display: "flex",
-            gap: 12,
+            gap: 0,
             overflowX: "auto",
-            paddingBottom: 4,
+            scrollbarWidth: "none",
           }}>
-            {categories.map((cat) => {
-              const IconComp = cat.icon;
+            {["All", ...(categories.length > 0 ? categories : ["Groceries", "Phones & Tablets", "Electronics", "Fashion", "Home, Furniture and Appliances", "Health", "Beauty"])].map((cat: string) => {
+              const key = cat.toLowerCase();
+              const IconComp = key === "all" ? ShoppingBag : categoryIconMap[key] || ShoppingBag;
+              const color = key === "all" ? "#475569" : categoryColorMap[key] || "#15803d";
+              const isActive = activeCategory === cat;
               return (
-                <Link
-                  key={cat.name}
-                  to="/"
+                <button
+                  key={cat}
+                  onClick={() => handleCategoryClick(cat)}
                   style={{
                     display: "flex",
-                    flexDirection: "column",
                     alignItems: "center",
                     gap: 8,
-                    minWidth: 80,
-                    padding: "14px 8px",
-                    borderRadius: "var(--radius-lg)",
-                    border: "1px solid var(--color-border)",
-                    backgroundColor: "var(--color-bg-primary)",
-                    transition: "all var(--transition-base)",
-                    textAlign: "center",
+                    padding: "14px 20px",
+                    whiteSpace: "nowrap",
+                    fontSize: "0.8125rem",
+                    fontWeight: 600,
+                    color: isActive ? color : "#475569",
+                    background: "none",
+                    border: "none",
+                    borderBottom: `2px solid ${isActive ? color : "transparent"}`,
+                    transition: "all 0.2s",
+                    cursor: "pointer",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.color = color;
+                      e.currentTarget.style.borderBottomColor = color;
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.color = "#475569";
+                      e.currentTarget.style.borderBottomColor = "transparent";
+                    }
                   }}
                 >
-                  <div style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: "var(--radius-md)",
-                    backgroundColor: "var(--color-bg-tertiary)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}>
-                    <IconComp size={22} style={{ color: cat.color }} />
-                  </div>
-                  <span style={{ fontSize: "0.75rem", fontWeight: 500, color: "var(--color-text-secondary)" }}>
-                    {cat.name}
-                  </span>
-                </Link>
+                  <IconComp size={16} style={{ color: isActive ? color : "#475569" }} />
+                  {cat}
+                </button>
               );
             })}
           </div>
         </div>
       </section>
 
-      {/* ═══ FEATURED PRODUCTS ═══ */}
-      <section className="section" style={{ backgroundColor: "var(--color-bg-secondary)" }}>
+      {/* ═══ ALL PRODUCTS (from backend) ═══ */}
+      <section className="section" id="products-section" style={{ backgroundColor: "var(--color-bg-secondary)", minHeight: "60vh" }}>
         <div className="container">
           <div style={{
             display: "flex",
@@ -212,97 +245,151 @@ const Homepage = () => {
           }}>
             <div>
               <h2 style={{ fontSize: "1.375rem", fontWeight: 700, color: "var(--color-text-primary)" }}>
-                Featured Products
+                {activeCategory === "All" ? "All Products" : `${activeCategory} Products`}
               </h2>
               <p style={{ fontSize: "0.813rem", color: "var(--color-text-muted)", marginTop: 2 }}>
-                Popular items from top vendors
+                Shop the best items from our vendors
               </p>
             </div>
-            <Link to="/" style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 4,
-              fontSize: "0.875rem",
-              fontWeight: 600,
-              color: "var(--color-primary)",
-            }}>
-              See all <ChevronRight size={16} />
-            </Link>
           </div>
 
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
-            gap: 16,
-          }}>
-            {featuredProducts.map((product) => (
-              <Link
-                key={product.id}
-                to={`/products/${product.id}`}
-                className="card"
-                style={{
-                  overflow: "hidden",
-                  textDecoration: "none",
-                }}
-              >
-                {/* Image placeholder */}
-                <div style={{
-                  height: 140,
-                  backgroundColor: "var(--color-bg-tertiary)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "3rem",
-                }}>
-                  {product.image}
-                </div>
-                <div style={{ padding: "12px" }}>
-                  <p style={{
-                    fontSize: "0.813rem",
-                    color: "var(--color-text-muted)",
-                    marginBottom: 2,
-                  }}>
-                    {product.vendor}
-                  </p>
-                  <h3 style={{
-                    fontSize: "0.875rem",
-                    fontWeight: 600,
-                    color: "var(--color-text-primary)",
-                    marginBottom: 6,
-                  }}>
-                    {product.name}
-                  </h3>
-                  <div style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}>
-                    <span style={{
-                      fontSize: "0.938rem",
-                      fontWeight: 700,
-                      color: "var(--color-primary)",
-                    }}>
-                      ₦{product.price.toLocaleString()}
-                    </span>
+          {productsLoading ? (
+            <div style={{ display: "flex", justifyContent: "center", padding: 60 }}>
+              <Loader2 size={32} style={{ color: "var(--color-primary)", animation: "spin 1s linear infinite" }} />
+            </div>
+          ) : products.length === 0 ? (
+            <div style={{
+              textAlign: "center",
+              padding: "48px 24px",
+              backgroundColor: "var(--color-bg-primary)",
+              borderRadius: "var(--radius-xl)",
+              border: "1px solid var(--color-border)",
+            }}>
+              <Store size={40} style={{ color: "var(--color-text-muted)", marginBottom: 12 }} />
+              <h3 style={{ fontSize: "1.125rem", fontWeight: 600, color: "var(--color-text-primary)", marginBottom: 4 }}>
+                No Products Yet
+              </h3>
+              <p style={{ fontSize: "0.875rem", color: "var(--color-text-muted)", marginBottom: 16 }}>
+                Vendors are setting up shop. Check back soon!
+              </p>
+              <Link to="/get-started" className="btn-primary" style={{ padding: "10px 24px" }}>
+                Become a Vendor <ArrowRight size={16} />
+              </Link>
+            </div>
+          ) : (
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
+              gap: 16,
+            }}>
+              {products.map((product: any) => {
+                const firstImage = product.images?.split(",")[0];
+                return (
+                  <Link
+                    key={product.id}
+                    to={`/products/${product.id}`}
+                    className="card"
+                    style={{
+                      overflow: "hidden",
+                      textDecoration: "none",
+                    }}
+                  >
+                    {/* Product image */}
                     <div style={{
+                      height: 140,
+                      backgroundColor: "var(--color-bg-tertiary)",
                       display: "flex",
                       alignItems: "center",
-                      gap: 3,
+                      justifyContent: "center",
+                      overflow: "hidden",
                     }}>
-                      <Star size={13} style={{ color: "var(--color-accent-amber)", fill: "var(--color-accent-amber)" }} />
-                      <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
-                        {product.rating}
-                      </span>
+                      {firstImage ? (
+                        <img
+                          src={firstImage.startsWith("http") ? firstImage : `https://flowmart-bucket.s3.amazonaws.com/${firstImage}`}
+                          alt={product.name}
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                          loading="lazy"
+                        />
+                      ) : (
+                        <ShoppingBag size={32} style={{ color: "var(--color-text-muted)" }} />
+                      )}
                     </div>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+                    <div style={{ padding: "12px" }}>
+                      {product.category && (
+                        <p style={{
+                          fontSize: "0.6875rem",
+                          color: "var(--color-primary)",
+                          marginBottom: 2,
+                          fontWeight: 600,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.03em",
+                        }}>
+                          {product.category}
+                        </p>
+                      )}
+                      <h3 style={{
+                        fontSize: "0.875rem",
+                        fontWeight: 600,
+                        color: "var(--color-text-primary)",
+                        marginBottom: 6,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}>
+                        {product.name}
+                      </h3>
+                      <div style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}>
+                        <span style={{
+                          fontSize: "0.938rem",
+                          fontWeight: 700,
+                          color: "var(--color-primary)",
+                        }}>
+                          ₦{Number(product.price).toLocaleString()}
+                        </span>
+                        {product.oldPrice && (
+                          <span style={{
+                            fontSize: "0.75rem",
+                            color: "var(--color-text-muted)",
+                            textDecoration: "line-through",
+                          }}>
+                            ₦{Number(product.oldPrice).toLocaleString()}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+
+          {hasMore && (
+            <div style={{ display: "flex", justifyContent: "center", marginTop: 40 }}>
+              <button
+                onClick={() => setPage((p) => p + 1)}
+                disabled={isFetching}
+                className="btn-secondary"
+                style={{ padding: "12px 32px", borderRadius: "var(--radius-full)", display: "flex", alignItems: "center", gap: 8 }}
+              >
+                {isFetching ? (
+                  <>
+                    <Loader2 size={18} style={{ animation: "spin 1s linear infinite" }} />
+                    Loading...
+                  </>
+                ) : (
+                  "Load More"
+                )}
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
-      {/* ═══ PROMO BANNER — 30% OFF ═══ */}
+      {/* ═══ PROMO BANNER ═══ */}
       <section style={{
         backgroundColor: "var(--color-primary)",
         padding: "40px 0",
@@ -335,11 +422,12 @@ const Homepage = () => {
           }}>
             Limited time offers on groceries, electronics, and more
           </p>
-          <Link to="/" className="btn-primary" style={{
+          <Link to="/products" className="btn-primary" style={{
             backgroundColor: "var(--color-text-inverse)",
             color: "var(--color-primary)",
             padding: "12px 28px",
             borderRadius: "var(--radius-full)",
+            textDecoration: "none",
           }}>
             Shop Now <ArrowRight size={16} />
           </Link>
@@ -409,88 +497,6 @@ const Homepage = () => {
         </div>
       </section>
 
-      {/* ═══ TOP VENDORS ═══ */}
-      <section className="section">
-        <div className="container">
-          <div style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 24,
-          }}>
-            <h2 style={{ fontSize: "1.375rem", fontWeight: 700, color: "var(--color-text-primary)" }}>
-              Top Vendors
-            </h2>
-            <Link to="/" style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 4,
-              fontSize: "0.875rem",
-              fontWeight: 600,
-              color: "var(--color-primary)",
-            }}>
-              View all <ChevronRight size={16} />
-            </Link>
-          </div>
-
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
-            gap: 16,
-          }}>
-            {topVendors.map((vendor) => (
-              <div key={vendor.name} className="card" style={{ padding: 20 }}>
-                {/* Vendor avatar */}
-                <div style={{
-                  width: 52,
-                  height: 52,
-                  borderRadius: "var(--radius-lg)",
-                  backgroundColor: "var(--color-primary-surface)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: 14,
-                }}>
-                  <Store size={24} style={{ color: "var(--color-primary)" }} />
-                </div>
-
-                <h3 style={{
-                  fontSize: "1rem",
-                  fontWeight: 600,
-                  color: "var(--color-text-primary)",
-                  marginBottom: 2,
-                }}>
-                  {vendor.name}
-                </h3>
-                <p style={{
-                  fontSize: "0.75rem",
-                  color: "var(--color-text-muted)",
-                  marginBottom: 12,
-                }}>
-                  {vendor.category}
-                </p>
-
-                <div style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                    <Star size={14} style={{ color: "var(--color-accent-amber)", fill: "var(--color-accent-amber)" }} />
-                    <span style={{ fontSize: "0.813rem", fontWeight: 600, color: "var(--color-text-primary)" }}>
-                      {vendor.rating}
-                    </span>
-                  </div>
-                  <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
-                    {vendor.products} products
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ═══ SELL ON FLOWMART CTA ═══ */}
       <section style={{
         backgroundColor: "var(--color-bg-secondary)",
@@ -531,18 +537,22 @@ const Homepage = () => {
                 fontSize: "0.875rem",
                 color: "var(--color-text-muted)",
               }}>
-                Reach 2,000,000+ buyers across Nigeria
+                Reach thousands of buyers across Nigeria
               </p>
             </div>
             <Link to="/get-started" className="btn-primary" style={{
               padding: "14px 32px",
               borderRadius: "var(--radius-xl)",
+              textDecoration: "none",
             }}>
               Get Started <ArrowRight size={16} />
             </Link>
           </div>
         </div>
       </section>
+
+      {/* Spin keyframe for loader */}
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 };

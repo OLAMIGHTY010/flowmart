@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/contexts/ToastContext";
-import { ShieldCheck, Upload, Building, FileText, CheckCircle2 } from "lucide-react";
+import { ShieldCheck, Upload, Building, FileText, CheckCircle2, User, Phone, MapPin, Landmark } from "lucide-react";
+import { apiClient } from "@/services/api";
 
 const VendorKYC = () => {
   const { user, refreshUser } = useAuth();
@@ -10,18 +11,34 @@ const VendorKYC = () => {
   const [kycStatus, setKycStatus] = useState<"pending" | "submitted" | "approved">(
     user?.isVerified ? "approved" : "pending"
   );
+  const [formData, setFormData] = useState({
+    businessName: "",
+    businessPhone: "",
+    stateRegion: "",
+    city: "",
+    bankName: "",
+    accountNumber: "",
+    accountName: "",
+    govIdType: "NIN",
+    guarantorName: "",
+    guarantorPhone: "",
+    guarantorRelationship: "Relative",
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      await apiClient.post("/vendors/kyc/submit", formData);
       setKycStatus("submitted");
       showToast("KYC documents submitted successfully. Pending review.", "success");
-      refreshUser(); // In a real app this would refresh the user context to reflect the submitted state
-    }, 1500);
+      refreshUser();
+    } catch (error: any) {
+      showToast(error.response?.data?.message || "Failed to submit KYC", "error");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (kycStatus === "approved") {
@@ -60,19 +77,73 @@ const VendorKYC = () => {
       <div className="card" style={{ padding: 32 }}>
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 32 }}>
           
-          {/* Business Info */}
+          {/* Business & Contact Info */}
           <div>
             <h3 style={{ fontSize: "1.125rem", fontWeight: 600, display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
               <Building size={20} style={{ color: "var(--color-primary)" }} /> Business Information
             </h3>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
               <div style={{ gridColumn: "1 / -1" }}>
-                <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, marginBottom: 8 }}>Store Name</label>
-                <input required type="text" className="input-field" placeholder="E.g., TechZone Gadgets" />
+                <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, marginBottom: 8 }}>Business / Store Name</label>
+                <input required type="text" className="input-field" value={formData.businessName} onChange={e => setFormData({...formData, businessName: e.target.value})} placeholder="E.g., TechZone Gadgets" />
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, marginBottom: 8 }}>Business Phone</label>
+                <input required type="text" className="input-field" value={formData.businessPhone} onChange={e => setFormData({...formData, businessPhone: e.target.value})} placeholder="08012345678" />
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, marginBottom: 8 }}>State / Region</label>
+                <input required type="text" className="input-field" value={formData.stateRegion} onChange={e => setFormData({...formData, stateRegion: e.target.value})} placeholder="Lagos" />
               </div>
               <div style={{ gridColumn: "1 / -1" }}>
-                <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, marginBottom: 8 }}>Business Address</label>
-                <textarea required className="input-field" rows={3} placeholder="Full operational address..." />
+                <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, marginBottom: 8 }}>City</label>
+                <input required type="text" className="input-field" value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} placeholder="Ikeja" />
+              </div>
+            </div>
+          </div>
+
+          <div style={{ height: 1, backgroundColor: "var(--color-border)" }} />
+
+          {/* Financial Info */}
+          <div>
+            <h3 style={{ fontSize: "1.125rem", fontWeight: 600, display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
+              <Landmark size={20} style={{ color: "var(--color-primary)" }} /> Financial Information
+            </h3>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+              <div>
+                <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, marginBottom: 8 }}>Bank Name</label>
+                <input required type="text" className="input-field" value={formData.bankName} onChange={e => setFormData({...formData, bankName: e.target.value})} placeholder="GTBank" />
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, marginBottom: 8 }}>Account Number</label>
+                <input required type="text" className="input-field" value={formData.accountNumber} onChange={e => setFormData({...formData, accountNumber: e.target.value})} placeholder="0123456789" />
+              </div>
+              <div style={{ gridColumn: "1 / -1" }}>
+                <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, marginBottom: 8 }}>Account Name</label>
+                <input required type="text" className="input-field" value={formData.accountName} onChange={e => setFormData({...formData, accountName: e.target.value})} placeholder="TechZone Gadgets LTD" />
+              </div>
+            </div>
+          </div>
+
+          <div style={{ height: 1, backgroundColor: "var(--color-border)" }} />
+
+          {/* Guarantor Info */}
+          <div>
+            <h3 style={{ fontSize: "1.125rem", fontWeight: 600, display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
+              <User size={20} style={{ color: "var(--color-primary)" }} /> Guarantor Information
+            </h3>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+              <div style={{ gridColumn: "1 / -1" }}>
+                <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, marginBottom: 8 }}>Guarantor Name</label>
+                <input required type="text" className="input-field" value={formData.guarantorName} onChange={e => setFormData({...formData, guarantorName: e.target.value})} placeholder="John Doe" />
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, marginBottom: 8 }}>Guarantor Phone</label>
+                <input required type="text" className="input-field" value={formData.guarantorPhone} onChange={e => setFormData({...formData, guarantorPhone: e.target.value})} placeholder="08087654321" />
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, marginBottom: 8 }}>Relationship</label>
+                <input required type="text" className="input-field" value={formData.guarantorRelationship} onChange={e => setFormData({...formData, guarantorRelationship: e.target.value})} placeholder="Brother" />
               </div>
             </div>
           </div>

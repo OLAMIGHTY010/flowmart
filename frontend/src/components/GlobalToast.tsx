@@ -32,8 +32,8 @@ export const GlobalToast = () => {
       maxWidth: 380,
     }}>
       {toasts.map((toast) => {
-        const IconComponent = iconMap[toast.type];
-        const colors = colorMap[toast.type];
+        const IconComponent = iconMap[toast.type as keyof typeof iconMap] || Info;
+        const colors = colorMap[toast.type as keyof typeof colorMap] || colorMap.info;
 
         return (
           <div
@@ -52,7 +52,7 @@ export const GlobalToast = () => {
           >
             <IconComponent size={20} style={{ color: colors.icon, flexShrink: 0 }} />
             <span style={{ flex: 1, fontSize: "0.875rem", fontWeight: 500, color: "var(--color-text-primary)" }}>
-              {toast.message}
+              {typeof toast.message === 'object' ? JSON.stringify(toast.message) : toast.message}
             </span>
             <button
               onClick={() => removeToast(toast.id)}

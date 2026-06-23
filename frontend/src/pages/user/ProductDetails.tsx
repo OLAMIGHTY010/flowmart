@@ -1,38 +1,76 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Star, ShieldCheck, Truck, Minus, Plus, ShoppingCart, Heart } from "lucide-react";
-
-// Mock data for initial UI
-const mockProduct = {
-  id: "1",
-  name: "Fresh Organic Tomatoes (1kg)",
-  price: 1200,
-  oldPrice: 1500,
-  rating: 4.8,
-  reviews: 124,
-  description: "Farm-fresh organic tomatoes sourced directly from local farmers. Perfect for salads, stews, and sauces. Handpicked daily to ensure the highest quality and freshness.",
-  vendor: { name: "Farm Fresh NG", rating: 4.9, verified: true },
-  images: ["🍅"], // Placeholder for real image URLs
-  stock: 50,
-  category: "Groceries",
-};
+import { useQuery } from "@tanstack/react-query";
+import { Star, ShieldCheck, Truck, Minus, Plus, ShoppingCart, Heart, Loader2, ArrowLeft, ShoppingBag } from "lucide-react";
+import { apiClient } from "@/services/api";
+import { useCartStore } from "@/stores/cartStore";
+import { useToast } from "@/contexts/ToastContext";
 
 const ProductDetails = () => {
   const { id } = useParams();
   const [quantity, setQuantity] = useState(1);
   const [isLiked, setIsLiked] = useState(false);
+  const addToCart = useCartStore((s) => s.addToCart);
+  const { showToast } = useToast();
 
-  // In a real app, you would fetch the product using React Query here based on the `id`
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["product", id],
+    queryFn: () => apiClient.get<{ success: boolean; product: any }>(`/products/${id}`),
+    enabled: !!id,
+  });
+
+  const product = data?.product;
+
+  if (isLoading) {
+    return (
+      <div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <Loader2 size={32} style={{ color: "var(--color-primary)", animation: "spin 1s linear infinite" }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
+  if (error || !product) {
+    return (
+      <div style={{ minHeight: "60vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24 }}>
+        <ShoppingBag size={48} style={{ color: "var(--color-text-muted)", marginBottom: 16 }} />
+        <h2 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: 8 }}>Product not found</h2>
+        <Link to="/" className="btn-primary" style={{ marginTop: 16 }}>
+          <ArrowLeft size={16} /> Back to Shop
+        </Link>
+      </div>
+    );
+  }
+
+  const images = product.images ? product.images.split(",").filter(Boolean) : [];
+  const firstImage = images[0];
+  const inStock = product.stockQuantity > 0;
+
+  const handleAddToCart = () => {
+    addToCart({
+      id: product.id,
+      vendorId: product.vendorId,
+      name: product.name,
+      price: product.price,
+      imageUrl: firstImage || "",
+      category: product.category || "",
+    }, quantity);
+    showToast(`${product.name} added to cart`, "success");
+  };
 
   return (
     <div className="container" style={{ padding: "32px 24px" }}>
       {/* Breadcrumb */}
       <div style={{ fontSize: "0.875rem", color: "var(--color-text-muted)", marginBottom: 24 }}>
-        <Link to="/" style={{ color: "var(--color-primary)" }}>Home</Link>
+        <Link to="/" style={{ color: "var(--color-primary)", textDecoration: "none" }}>Home</Link>
         <span style={{ margin: "0 8px" }}>/</span>
-        <Link to={`/category/${mockProduct.category}`} style={{ color: "var(--color-primary)" }}>{mockProduct.category}</Link>
-        <span style={{ margin: "0 8px" }}>/</span>
-        <span style={{ color: "var(--color-text-primary)" }}>{mockProduct.name}</span>
+        {product.category && (
+          <>
+            <Link to={`/?category=${encodeURIComponent(product.category)}`} style={{ color: "var(--color-primary)", textDecoration: "none" }}>{product.category}</Link>
+            <span style={{ margin: "0 8px" }}>/</span>
+          </>
+        )}
+        <span style={{ color: "var(--color-text-primary)" }}>{product.name}</span>
       </div>
 
       <div style={{
@@ -51,10 +89,18 @@ const ProductDetails = () => {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: "8rem",
             position: "relative",
+            overflow: "hidden",
           }}>
-            {mockProduct.images[0]}
+            {firstImage ? (
+              <img
+                src={firstImage.startsWith("http") ? firstImage : `https://flowmart-bucket.s3.amazonaws.com/${firstImage}`}
+                alt={product.name}
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            ) : (
+              <ShoppingBag size={80} style={{ color: "var(--color-text-muted)" }} />
+            )}
             
             {/* Wishlist Button */}
             <button 
@@ -71,6 +117,8 @@ const ProductDetails = () => {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                border: "none",
+                cursor: "pointer",
                 transition: "transform var(--transition-fast)",
               }}
             >
@@ -80,72 +128,65 @@ const ProductDetails = () => {
               }} />
             </button>
           </div>
+
+          {/* Thumbnail strip */}
+          {images.length > 1 && (
+            <div style={{ display: "flex", gap: 8 }}>
+              {images.slice(0, 4).map((img: string, idx: number) => (
+                <div key={idx} style={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: "var(--radius-md)",
+                  overflow: "hidden",
+                  border: idx === 0 ? "2px solid var(--color-primary)" : "1px solid var(--color-border)",
+                }}>
+                  <img
+                    src={img.startsWith("http") ? img : `https://flowmart-bucket.s3.amazonaws.com/${img}`}
+                    alt={`${product.name} ${idx + 1}`}
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    loading="lazy"
+                  />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Right: Details */}
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-            <span className="badge badge-green">In Stock</span>
-            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <Star size={16} style={{ color: "var(--color-accent-amber)", fill: "var(--color-accent-amber)" }} />
-              <span style={{ fontSize: "0.875rem", fontWeight: 600 }}>{mockProduct.rating}</span>
-              <span style={{ fontSize: "0.875rem", color: "var(--color-text-muted)" }}>({mockProduct.reviews} reviews)</span>
-            </div>
+            <span className={inStock ? "badge badge-green" : "badge badge-red"}>
+              {inStock ? "In Stock" : "Out of Stock"}
+            </span>
+            {product.category && (
+              <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--color-text-muted)", textTransform: "uppercase" }}>
+                {product.category}
+              </span>
+            )}
           </div>
 
           <h1 style={{ fontSize: "2rem", fontWeight: 700, color: "var(--color-text-primary)", marginBottom: 8, lineHeight: 1.2 }}>
-            {mockProduct.name}
+            {product.name}
           </h1>
 
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
             <span style={{ fontSize: "2rem", fontWeight: 800, color: "var(--color-primary)" }}>
-              ₦{mockProduct.price.toLocaleString()}
+              ₦{Number(product.price).toLocaleString()}
             </span>
-            <span style={{ fontSize: "1.25rem", color: "var(--color-text-muted)", textDecoration: "line-through" }}>
-              ₦{mockProduct.oldPrice.toLocaleString()}
-            </span>
+            {product.oldPrice && (
+              <span style={{ fontSize: "1.25rem", color: "var(--color-text-muted)", textDecoration: "line-through" }}>
+                ₦{Number(product.oldPrice).toLocaleString()}
+              </span>
+            )}
           </div>
 
-          <p style={{ fontSize: "1rem", color: "var(--color-text-secondary)", lineHeight: 1.6, marginBottom: 32 }}>
-            {mockProduct.description}
-          </p>
+          {product.description && (
+            <p style={{ fontSize: "1rem", color: "var(--color-text-secondary)", lineHeight: 1.6, marginBottom: 32 }}>
+              {product.description}
+            </p>
+          )}
 
           <div style={{ height: 1, backgroundColor: "var(--color-border)", marginBottom: 32 }} />
-
-          {/* Vendor Info */}
-          <div style={{ 
-            display: "flex", 
-            alignItems: "center", 
-            gap: 16, 
-            padding: "16px", 
-            backgroundColor: "var(--color-bg-secondary)", 
-            borderRadius: "var(--radius-lg)",
-            marginBottom: 32
-          }}>
-            <div style={{
-              width: 48,
-              height: 48,
-              borderRadius: "var(--radius-full)",
-              backgroundColor: "var(--color-primary-surface)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "1.25rem",
-              fontWeight: 700,
-              color: "var(--color-primary)"
-            }}>
-              {mockProduct.vendor.name.charAt(0)}
-            </div>
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <h3 style={{ fontSize: "1rem", fontWeight: 600 }}>{mockProduct.vendor.name}</h3>
-                {mockProduct.vendor.verified && <ShieldCheck size={16} style={{ color: "var(--color-primary-light)" }} />}
-              </div>
-              <p style={{ fontSize: "0.813rem", color: "var(--color-text-muted)" }}>
-                Vendor Rating: {mockProduct.vendor.rating} / 5.0
-              </p>
-            </div>
-          </div>
 
           {/* Add to Cart Actions */}
           <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 32, flexWrap: "wrap" }}>
@@ -159,7 +200,7 @@ const ProductDetails = () => {
             }}>
               <button 
                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                style={{ width: 48, height: "100%", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "var(--color-bg-secondary)" }}
+                style={{ width: 48, height: "100%", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "var(--color-bg-secondary)", border: "none", cursor: "pointer" }}
               >
                 <Minus size={18} />
               </button>
@@ -167,14 +208,19 @@ const ProductDetails = () => {
                 {quantity}
               </div>
               <button 
-                onClick={() => setQuantity(Math.min(mockProduct.stock, quantity + 1))}
-                style={{ width: 48, height: "100%", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "var(--color-bg-secondary)" }}
+                onClick={() => setQuantity(Math.min(product.stockQuantity || 99, quantity + 1))}
+                style={{ width: 48, height: "100%", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "var(--color-bg-secondary)", border: "none", cursor: "pointer" }}
               >
                 <Plus size={18} />
               </button>
             </div>
 
-            <button className="btn-primary" style={{ flex: 1, minWidth: 200, height: 52, fontSize: "1.063rem" }}>
+            <button
+              onClick={handleAddToCart}
+              disabled={!inStock}
+              className="btn-primary"
+              style={{ flex: 1, minWidth: 200, height: 52, fontSize: "1.063rem", opacity: inStock ? 1 : 0.5, cursor: inStock ? "pointer" : "not-allowed" }}
+            >
               <ShoppingCart size={20} />
               Add to Cart
             </button>
@@ -201,6 +247,7 @@ const ProductDetails = () => {
             grid-template-columns: 1fr 1fr !important;
           }
         }
+        @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
     </div>
   );

@@ -2,21 +2,43 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/contexts/ToastContext";
 import { User, Mail, Phone, Save, Bike } from "lucide-react";
+import { apiClient } from "@/services/api";
 
 const RiderProfile = () => {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const { showToast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [formData, setFormData] = useState({
     fullName: user?.fullName || "",
     phone: user?.phone || "",
     vehicleType: "motorcycle",
     licensePlate: "LAG-123-XY",
+    bankName: "",
+    accountNumber: "",
+    accountName: "",
   });
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    showToast("Profile updated successfully", "success");
+    setIsSubmitting(true);
+    try {
+      await apiClient.post("/rider/kyc/submit", {
+        displayName: formData.fullName,
+        phone: formData.phone,
+        vehicleType: formData.vehicleType,
+        plateNumber: formData.licensePlate,
+        bankName: formData.bankName,
+        accountNumber: formData.accountNumber,
+        accountName: formData.accountName,
+      });
+      showToast("Profile & KYC updated successfully. Pending Admin review.", "success");
+      refreshUser();
+    } catch (error: any) {
+      showToast(error.response?.data?.message || "Failed to update profile", "error");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -115,10 +137,52 @@ const RiderProfile = () => {
             />
           </div>
 
+          <div style={{ height: 1, backgroundColor: "var(--color-border)", margin: "8px 0" }} />
+          <h3 style={{ fontSize: "1.125rem", fontWeight: 600, marginBottom: 8 }}>Payout Details</h3>
+
+          <div>
+            <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 600, marginBottom: 8, color: "var(--color-text-secondary)" }}>
+              Bank Name
+            </label>
+            <input 
+              type="text" 
+              className="input-field" 
+              value={formData.bankName}
+              onChange={(e) => setFormData({ ...formData, bankName: e.target.value })}
+              placeholder="E.g. GTBank"
+            />
+          </div>
+
+          <div>
+            <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 600, marginBottom: 8, color: "var(--color-text-secondary)" }}>
+              Account Number
+            </label>
+            <input 
+              type="text" 
+              className="input-field" 
+              value={formData.accountNumber}
+              onChange={(e) => setFormData({ ...formData, accountNumber: e.target.value })}
+              placeholder="0123456789"
+            />
+          </div>
+
+          <div>
+            <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 600, marginBottom: 8, color: "var(--color-text-secondary)" }}>
+              Account Name
+            </label>
+            <input 
+              type="text" 
+              className="input-field" 
+              value={formData.accountName}
+              onChange={(e) => setFormData({ ...formData, accountName: e.target.value })}
+              placeholder="John Doe"
+            />
+          </div>
+
           <div style={{ marginTop: 16 }}>
-            <button type="submit" className="btn-primary" style={{ width: "100%" }}>
+            <button type="submit" className="btn-primary" style={{ width: "100%" }} disabled={isSubmitting}>
               <Save size={18} />
-              Save Changes
+              {isSubmitting ? "Saving..." : "Save Changes"}
             </button>
           </div>
         </form>
