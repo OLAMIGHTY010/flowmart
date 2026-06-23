@@ -1,15 +1,22 @@
 import { Link } from "react-router-dom";
 import { Package, ShoppingCart, DollarSign, TrendingUp, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useQuery } from "@tanstack/react-query";
+import { apiClient } from "@/services/api";
 
 const VendorDashboard = () => {
   const { user } = useAuth();
 
+  const { data: statsData, isLoading } = useQuery({
+    queryKey: ["vendorStats"],
+    queryFn: () => apiClient.get<any>("/vendors/dashboard/stats"),
+  });
+
   const stats = [
-    { label: "Total Revenue", value: "₦450,000", icon: DollarSign, color: "var(--color-primary)" },
-    { label: "Active Orders", value: "12", icon: ShoppingCart, color: "var(--color-accent-blue)" },
-    { label: "Total Products", value: "45", icon: Package, color: "var(--color-accent-amber)" },
-    { label: "Growth", value: "+14.5%", icon: TrendingUp, color: "var(--color-primary-lighter)" },
+    { label: "Total Revenue", value: statsData?.totalRevenue || "₦0", icon: DollarSign, color: "var(--color-primary)" },
+    { label: "New Orders", value: statsData?.newOrders || "0", icon: ShoppingCart, color: "var(--color-accent-blue)" },
+    { label: "Available Stock", value: statsData?.availableStock || "0", icon: Package, color: "var(--color-accent-amber)" },
+    { label: "Avg Order", value: statsData?.avgOrder || "₦0", icon: TrendingUp, color: "var(--color-primary-lighter)" },
   ];
 
   return (

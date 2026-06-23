@@ -1,7 +1,9 @@
 import { Link } from "react-router-dom";
-import { Package, Navigation, MapPin, CheckCircle2, AlertTriangle, ArrowRight } from "lucide-react";
+import { Package, Navigation, MapPin, CheckCircle2, AlertTriangle, ArrowRight, Loader2, Zap } from "lucide-react";
 import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/contexts/ToastContext";
+import { apiClient } from "@/services/api";
 
 const mockActiveDelivery = {
   id: "DEL-9082",
@@ -14,7 +16,30 @@ const mockActiveDelivery = {
 
 const RiderDashboard = () => {
   const { showToast } = useToast();
+  const queryClient = useQueryClient();
   const [isOnline, setIsOnline] = useState(true);
+
+  // Fetch available broadcasts (Phase 3 - no hardcoding)
+  const { data: broadcastsData, isLoading: loadingBroadcasts } = useQuery({
+    queryKey: ["delivery-broadcasts"],
+    queryFn: () => apiClient.get<{ success: boolean; broadcasts: any[] }>("/delivery/broadcasts"),
+    enabled: isOnline, // only fetch if online
+    refetchInterval: 5000, // poll every 5s until websocket is fully ready
+  });
+
+  const broadcasts = broadcastsData?.broadcasts || [];
+
+  const claimMutation = useMutation({
+    mutationFn: (orderId: string) => apiClient.post(`/delivery/${orderId}/claim`),
+    onSuccess: () => {
+      showToast("Delivery claimed successfully!", "success");
+      queryClient.invalidateQueries({ queryKey: ["delivery-broadcasts"] });
+      // In a real app, also invalidate the active delivery query
+    },
+    onError: () => {
+      showToast("Failed to claim delivery. Another rider might have taken it.", "error");
+    }
+  });
 
   const toggleStatus = () => {
     setIsOnline(!isOnline);
@@ -87,6 +112,58 @@ const RiderDashboard = () => {
 
       {isOnline && (
         <>
+          {/* AVAILABLE DELIVERIES (BROADCASTS) */}
+          <div style={{ marginBottom: 32 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <h2 style={{ fontSize: "1.125rem", fontWeight: 700 }}>Available Jobs</h2>
+              {loadingBroadcasts && <Loader2 size={16} style={{ color: "var(--color-primary)", animation: "spin 1s linear infinite" }} />}
+            </div>
+
+            {broadcasts.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "32px 16px", backgroundColor: "var(--color-bg-primary)", border: "1px dashed var(--color-border)", borderRadius: "var(--radius-lg)" }}>
+                <Zap size={24} style={{ color: "var(--color-text-muted)", margin: "0 auto 8px" }} />
+                <p style={{ fontSize: "0.875rem", color: "var(--color-text-muted)" }}>No deliveries available right now. Keep checking!</p>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                {broadcasts.map((job) => (
+                  <div key={job.id} className="card" style={{ padding: 16, borderLeft: "4px solid var(--color-primary)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                      <div>
+                        <span className="badge badge-green" style={{ fontSize: "0.6875rem", marginBottom: 8, display: "inline-block" }}>New Broadcast</span>
+                        <h3 style={{ fontSize: "1rem", fontWeight: 600 }}>{job.pickupName || "Vendor Shop"}</h3>
+                        <p style={{ fontSize: "0.8125rem", color: "var(--color-text-muted)" }}>{job.pickupAddress}</p>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <span style={{ fontSize: "1.125rem", fontWeight: 700, color: "var(--color-primary)" }}>₦{job.payout || 0}</span>
+                        <p style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>{job.distance || "~ km"}</p>
+                      </div>
+                    </div>
+                    
+                    <div style={{ display: "flex", gap: 8, alignItems: "flex-start", padding: "12px", backgroundColor: "var(--color-bg-secondary)", borderRadius: "var(--radius-sm)", marginBottom: 16 }}>
+                      <MapPin size={16} style={{ color: "var(--color-text-muted)", flexShrink: 0, marginTop: 2 }} />
+                      <div>
+                        <p style={{ fontSize: "0.75rem", textTransform: "uppercase", color: "var(--color-text-muted)", fontWeight: 600 }}>Drop-off</p>
+                        <p style={{ fontSize: "0.8125rem" }}>{job.dropoffAddress}</p>
+                      </div>
+                    </div>
+
+                    <button 
+                      onClick={() => claimMutation.mutate(job.id)}
+                      disabled={claimMutation.isPending}
+                      className="btn-primary" 
+                      style={{ width: "100%", padding: "12px" }}
+                    >
+                      {claimMutation.isPending ? "Claiming..." : "Swipe / Tap to Claim"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div style={{ height: 1, backgroundColor: "var(--color-border)", margin: "24px 0" }} />
+
           {/* Active Delivery Card */}
           <h2 style={{ fontSize: "1.125rem", fontWeight: 700, marginBottom: 16 }}>Current Delivery</h2>
           
@@ -136,6 +213,8 @@ const RiderDashboard = () => {
             <span style={{ fontWeight: 600 }}>View Delivery History</span>
             <ArrowRight size={18} style={{ color: "var(--color-text-muted)" }} />
           </Link>
+          
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </>
       )}
     </div>
