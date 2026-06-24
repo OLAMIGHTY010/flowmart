@@ -92,6 +92,8 @@ export const submitKYC = async (req: AuthenticatedRequest, res: Response) => {
       fullName,
       dob,
       gender,
+      vendorType,
+      tin,
       businessName,
       cacNo,
       campCertificateId,
@@ -105,6 +107,8 @@ export const submitKYC = async (req: AuthenticatedRequest, res: Response) => {
       governmentIdFile,
       campCertificateFile,
       guarantorIdFile,
+      bankReferenceFile,
+      cacDocumentFile,
     } = req.body;
 
     if (!businessName || !bankName || !accountNumber || !accountName || !govIdType || !guarantorName || !guarantorPhone || !businessPhone || !stateRegion || !city) {
@@ -150,6 +154,8 @@ export const submitKYC = async (req: AuthenticatedRequest, res: Response) => {
       .update(users)
       .set({ 
         fullName: fullName || displayName, 
+        dateOfBirth: dob || undefined,
+        gender: gender || undefined,
         profileCompleted: true, 
         updatedAt: new Date() 
       })
@@ -164,8 +170,10 @@ export const submitKYC = async (req: AuthenticatedRequest, res: Response) => {
 
     const kycData = {
       vendorId,
+      vendorType: vendorType || 'individual',
       businessName,
       cacNo: cacNo || null,
+      tin: tin || null,
       campCertificateId: campCertificateId || null,
       bankName,
       accountNumber,
@@ -177,6 +185,8 @@ export const submitKYC = async (req: AuthenticatedRequest, res: Response) => {
       governmentIdFile: governmentIdFile || null,
       campCertificateFile: campCertificateFile || null,
       guarantorIdFile: guarantorIdFile || null,
+      bankReferenceFile: bankReferenceFile || null,
+      cacDocumentFile: cacDocumentFile || null,
       status: "under_review", // Change to under review on submission
       updatedAt: new Date(),
     };

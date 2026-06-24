@@ -8,6 +8,7 @@ export interface AuthContextType {
   loginWithGoogle: (idToken: string, role: UserRole) => Promise<{
     success: boolean;
     error: string;
+    user?: AppUser;
   }>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;

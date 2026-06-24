@@ -1,17 +1,27 @@
 import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Star, ShieldCheck, Truck, Minus, Plus, ShoppingCart, Heart, Loader2, ArrowLeft, ShoppingBag } from "lucide-react";
 import { apiClient } from "@/services/api";
 import { useCartStore } from "@/stores/cartStore";
 import { useToast } from "@/contexts/ToastContext";
+import { useEffect } from "react";
+import { useRecentlyViewedStore } from "@/stores/recentlyViewedStore";
+import RecentlyViewed from "@/components/user/RecentlyViewed";
+import CustomersAlsoViewed from "@/components/user/CustomersAlsoViewed";
+import ProductReviews from "@/components/user/product/ProductReviews";
 
 const ProductDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [quantity, setQuantity] = useState(1);
   const [isLiked, setIsLiked] = useState(false);
   const addToCart = useCartStore((s) => s.addToCart);
   const { showToast } = useToast();
+
+  // Selected Option States
+  const [selectedVariant, setSelectedVariant] = useState<any>(null);
+  const [selectedModifiers, setSelectedModifiers] = useState<Record<string, any>>({});
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["product", id],
@@ -20,6 +30,43 @@ const ProductDetails = () => {
   });
 
   const product = data?.product;
+
+  const addViewedProduct = useRecentlyViewedStore((state) => state.addViewedProduct);
+
+  useEffect(() => {
+    if (product) {
+      // Safely get the first image
+      let firstImg = product.imageUrl;
+      if (Array.isArray(product.images) && product.images.length > 0) {
+        firstImg = product.images[0];
+      } else if (typeof product.images === "string") {
+        try {
+          const parsed = JSON.parse(product.images as any);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            firstImg = parsed[0];
+          } else {
+            firstImg = (product.images as any).split(",")[0];
+          }
+        } catch {
+          firstImg = (product.images as any).split(",")[0];
+        }
+      }
+
+      if (typeof firstImg === "string") {
+        firstImg = firstImg.replace(/[\[\]"]/g, "");
+      }
+
+      addViewedProduct({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        oldPrice: product.oldPrice,
+        imageUrl: firstImg,
+        stockQuantity: product.stockQuantity,
+        productType: product.productType
+      } as any);
+    }
+  }, [product, addViewedProduct]);
 
   if (isLoading) {
     return (
@@ -42,19 +89,64 @@ const ProductDetails = () => {
     );
   }
 
-  const images = product.images ? product.images.split(",").filter(Boolean) : [];
+  let images = product.imageUrl ? [product.imageUrl] : [];
+  if (Array.isArray(product.images)) {
+    images = product.images;
+  } else if (typeof product.images === "string") {
+    try {
+      const parsed = JSON.parse(product.images as any);
+      if (Array.isArray(parsed)) {
+        images = parsed;
+      } else {
+        images = (product.images as any).split(",").filter(Boolean);
+      }
+    } catch {
+      images = (product.images as any).split(",").filter(Boolean);
+    }
+  }
+
+  // Clean up any stray quotes/brackets in image array strings
+  images = images.map((img: string) => typeof img === "string" ? img.replace(/[\[\]"]/g, "") : img);
+  
   const firstImage = images[0];
-  const inStock = product.stockQuantity > 0;
+
+  // Auto-generate SKU fallback if missing for retail items
+  const displaySku = product.sku || `SKU-${product.id?.slice(0, 8).toUpperCase()}`;
+
+  // Food vs Retail Stock check
+  const inStock = product.productType === 'food' || product.stockQuantity > 0;
+
+  // Calculate pricing based on selections
+  const basePrice = parseFloat(product.price || "0");
+  const variantDiff = selectedVariant ? parseFloat(selectedVariant.price || "0") : 0;
+  const modifierSum = Object.values(selectedModifiers).reduce((sum, item) => {
+    if (Array.isArray(item)) {
+      return sum + item.reduce((sub, opt) => sub + parseFloat(opt.price || "0"), 0);
+    }
+    return sum + parseFloat((item as any).price || "0");
+  }, 0);
+  const totalPrice = basePrice + variantDiff + modifierSum;
 
   const handleAddToCart = () => {
+    // Generate an ID incorporating selections
+    const modifierString = Object.keys(selectedModifiers).length > 0 
+      ? `-${JSON.stringify(selectedModifiers)}` 
+      : '';
+    const variantString = selectedVariant 
+      ? `-${selectedVariant.name}-${selectedVariant.value}` 
+      : '';
+    
     addToCart({
-      id: product.id,
+      id: `${product.id}${variantString}${modifierString}`,
+      originalProductId: product.id,
       vendorId: product.vendorId,
-      name: product.name,
-      price: product.price,
+      name: `${product.name}${selectedVariant ? ` (${selectedVariant.value})` : ''}`,
+      price: totalPrice,
       imageUrl: firstImage || "",
       category: product.category || "",
-    }, quantity);
+      selectedVariant,
+      selectedModifiers
+    } as any, quantity);
     showToast(`${product.name} added to cart`, "success");
   };
 
@@ -163,15 +255,18 @@ const ProductDetails = () => {
                 {product.category}
               </span>
             )}
+            <span style={{ fontSize: "0.75rem", fontWeight: 600, padding: "2px 8px", borderRadius: 4, backgroundColor: "var(--color-bg-secondary)", color: "var(--color-text-secondary)" }}>
+              {product.productType === 'food' ? '🍔 Food' : '🛍️ Retail'}
+            </span>
           </div>
 
           <h1 style={{ fontSize: "2rem", fontWeight: 700, color: "var(--color-text-primary)", marginBottom: 8, lineHeight: 1.2 }}>
             {product.name}
           </h1>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
             <span style={{ fontSize: "2rem", fontWeight: 800, color: "var(--color-primary)" }}>
-              ₦{Number(product.price).toLocaleString()}
+              ₦{totalPrice.toLocaleString()}
             </span>
             {product.oldPrice && (
               <span style={{ fontSize: "1.25rem", color: "var(--color-text-muted)", textDecoration: "line-through" }}>
@@ -180,10 +275,133 @@ const ProductDetails = () => {
             )}
           </div>
 
+          {/* Prep Time or SKU/Brand */}
+          {product.productType === 'food' ? (
+            product.preparationTime && (
+              <div style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)", marginBottom: 16 }}>
+                🕒 <strong>Prep Time:</strong> {product.preparationTime} minutes
+              </div>
+            )
+          ) : (
+            <div style={{ display: "flex", gap: 16, fontSize: "0.875rem", color: "var(--color-text-secondary)", marginBottom: 16 }}>
+              {product.brand && <span><strong>Brand:</strong> {product.brand}</span>}
+              <span><strong>SKU:</strong> {displaySku}</span>
+              {product.weight && <span><strong>Weight:</strong> {product.weight} kg</span>}
+            </div>
+          )}
+
+          {/* Dietary Tags */}
+          {product.productType === 'food' && Array.isArray(product.dietaryTags) && product.dietaryTags.length > 0 && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
+              {product.dietaryTags.map((tag: string) => (
+                <span key={tag} style={{
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  backgroundColor: "rgba(6, 78, 59, 0.08)",
+                  color: "#064e3b",
+                  padding: "4px 10px",
+                  borderRadius: 100,
+                  border: "1px solid rgba(6, 78, 59, 0.15)"
+                }}>
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+
           {product.description && (
-            <p style={{ fontSize: "1rem", color: "var(--color-text-secondary)", lineHeight: 1.6, marginBottom: 32 }}>
+            <p style={{ fontSize: "1rem", color: "var(--color-text-secondary)", lineHeight: 1.6, marginBottom: 24 }}>
               {product.description}
             </p>
+          )}
+
+          {/* Variants Selector */}
+          {product.productType === 'retail' && Array.isArray(product.variants) && product.variants.length > 0 && (
+            <div style={{ marginBottom: 24 }}>
+              <h3 style={{ fontSize: "0.875rem", fontWeight: 700, marginBottom: 10, color: "var(--color-text-primary)" }}>Available Options:</h3>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {product.variants.map((v: any, idx: number) => {
+                  const isSelected = selectedVariant?.name === v.name && selectedVariant?.value === v.value;
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setSelectedVariant(isSelected ? null : v)}
+                      style={{
+                        padding: "8px 16px",
+                        borderRadius: "var(--radius-md)",
+                        fontSize: "0.875rem",
+                        fontWeight: 600,
+                        border: isSelected ? "2px solid var(--color-primary)" : "1px solid var(--color-border)",
+                        backgroundColor: isSelected ? "rgba(6, 78, 59, 0.05)" : "transparent",
+                        color: isSelected ? "var(--color-primary)" : "var(--color-text-primary)",
+                        cursor: "pointer",
+                        transition: "all var(--transition-fast)"
+                      }}
+                    >
+                      {v.name}: {v.value} {parseFloat(v.price) > 0 ? `(+₦${parseFloat(v.price).toLocaleString()})` : ''}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Modifiers Selector */}
+          {product.productType === 'food' && Array.isArray(product.modifiers) && product.modifiers.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 20, marginBottom: 24 }}>
+              {product.modifiers.map((group: any, gIdx: number) => (
+                <div key={gIdx} style={{ padding: 12, borderRadius: "var(--radius-lg)", border: "1px solid var(--color-border)", backgroundColor: "var(--color-bg-secondary)" }}>
+                  <h4 style={{ fontSize: "0.875rem", fontWeight: 700, color: "var(--color-text-primary)", marginBottom: 8 }}>
+                    {group.name} {group.required && <span style={{ color: "var(--color-accent-red)" }}>*</span>}
+                    <span style={{ fontSize: "0.75rem", fontWeight: 400, color: "var(--color-text-muted)", marginLeft: 6 }}>
+                      ({group.type === 'single' ? 'Select one' : 'Select multiple'})
+                    </span>
+                  </h4>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {group.options.map((opt: any, oIdx: number) => {
+                      const selectedList = selectedModifiers[group.name] || [];
+                      const isSelected = selectedList.some((o: any) => o.name === opt.name);
+                      
+                      const handleSelect = () => {
+                        if (group.type === 'single') {
+                          setSelectedModifiers({
+                            ...selectedModifiers,
+                            [group.name]: isSelected ? [] : [opt]
+                          });
+                        } else {
+                          const newList = isSelected
+                            ? selectedList.filter((o: any) => o.name !== opt.name)
+                            : [...selectedList, opt];
+                          setSelectedModifiers({
+                            ...selectedModifiers,
+                            [group.name]: newList
+                          });
+                        }
+                      };
+
+                      return (
+                        <label key={oIdx} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.875rem", color: "var(--color-text-primary)", cursor: "pointer" }}>
+                          <input
+                            type={group.type === 'single' ? "radio" : "checkbox"}
+                            name={group.name}
+                            checked={isSelected}
+                            onChange={handleSelect}
+                            style={{ accentColor: "var(--color-primary)" }}
+                          />
+                          <span>{opt.name}</span>
+                          {parseFloat(opt.price) > 0 && (
+                            <span style={{ color: "var(--color-text-muted)", marginLeft: "auto" }}>
+                              +₦{parseFloat(opt.price).toLocaleString()}
+                            </span>
+                          )}
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
 
           <div style={{ height: 1, backgroundColor: "var(--color-border)", marginBottom: 32 }} />
@@ -208,7 +426,7 @@ const ProductDetails = () => {
                 {quantity}
               </div>
               <button 
-                onClick={() => setQuantity(Math.min(product.stockQuantity || 99, quantity + 1))}
+                onClick={() => setQuantity(Math.min(product.productType === 'food' ? 99 : (product.stockQuantity || 99), quantity + 1))}
                 style={{ width: 48, height: "100%", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "var(--color-bg-secondary)", border: "none", cursor: "pointer" }}
               >
                 <Plus size={18} />
@@ -218,20 +436,29 @@ const ProductDetails = () => {
             <button
               onClick={handleAddToCart}
               disabled={!inStock}
-              className="btn-primary"
-              style={{ flex: 1, minWidth: 200, height: 52, fontSize: "1.063rem", opacity: inStock ? 1 : 0.5, cursor: inStock ? "pointer" : "not-allowed" }}
+              className="btn-secondary"
+              style={{ flex: 1, minWidth: 160, height: 52, fontSize: "1.063rem", opacity: inStock ? 1 : 0.5, cursor: inStock ? "pointer" : "not-allowed", backgroundColor: "var(--color-bg-tertiary)", color: "var(--color-text-primary)", border: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, borderRadius: "var(--radius-lg)", fontWeight: 600 }}
             >
               <ShoppingCart size={20} />
               Add to Cart
+            </button>
+
+            <button
+              onClick={() => {
+                handleAddToCart();
+                navigate("/checkout");
+              }}
+              disabled={!inStock}
+              className="btn-primary"
+              style={{ flex: 1, minWidth: 160, height: 52, fontSize: "1.063rem", opacity: inStock ? 1 : 0.5, cursor: inStock ? "pointer" : "not-allowed" }}
+            >
+              <ShieldCheck size={20} />
+              Checkout Now
             </button>
           </div>
 
           {/* Trust Badges */}
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, color: "var(--color-text-secondary)" }}>
-              <Truck size={20} style={{ color: "var(--color-primary)" }} />
-              <span style={{ fontSize: "0.875rem" }}>Delivery usually within 24-48 hours</span>
-            </div>
             <div style={{ display: "flex", alignItems: "center", gap: 12, color: "var(--color-text-secondary)" }}>
               <ShieldCheck size={20} style={{ color: "var(--color-primary)" }} />
               <span style={{ fontSize: "0.875rem" }}>Secure payment and money-back guarantee</span>
@@ -239,6 +466,18 @@ const ProductDetails = () => {
           </div>
 
         </div>
+      </div>
+
+      <div style={{ marginTop: 40 }}>
+        <RecentlyViewed />
+      </div>
+
+      <div style={{ height: 1, backgroundColor: "var(--color-border)", margin: "32px 0" }} />
+
+      <CustomersAlsoViewed currentProduct={product} />
+
+      <div style={{ marginTop: 32 }}>
+        <ProductReviews productId={product.id} />
       </div>
 
       <style>{`

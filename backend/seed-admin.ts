@@ -8,7 +8,7 @@ dotenv.config();
 const seed = async () => {
   try {
     const fullName = "Adeyemi Olusola";
-    const email = "emarkees@gmail.com";
+    const email = "admin@flowmart.com";
     const defaultPassword = "SuperAdmin2026!";
     const phone = "09012345678";
     
@@ -17,9 +17,17 @@ const seed = async () => {
     const existing = await db.select().from(users).where(eq(users.email, email)).limit(1);
     
     if (existing.length > 0) {
-      console.log(`User ${email} already exists! Updating role to super_admin...`);
-      await db.update(users).set({ role: 'super_admin' }).where(eq(users.email, email));
-      console.log('Role updated successfully.');
+      console.log(`User ${email} already exists! Updating role, status, verification, and resetting password to default...`);
+      const hashedPassword = await hashPassword(defaultPassword);
+      await db.update(users).set({ 
+        role: 'super_admin',
+        password: hashedPassword,
+        isVerified: true,
+        profileCompleted: true,
+        status: 'active',
+        forcePasswordChange: true
+      }).where(eq(users.email, email));
+      console.log('Admin user updated and password reset successfully.');
       process.exit(0);
     }
 

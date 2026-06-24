@@ -7,6 +7,7 @@ import {
   Store, Users, Package, Zap, Loader2
 } from "lucide-react";
 import { apiClient } from "@/services/api";
+import { useAuth } from "@/hooks/useAuth";
 
 /* ═══════════════════════════════════════════════════════
    FlowMart Homepage
@@ -36,6 +37,7 @@ const categoryColorMap: Record<string, string> = {
 };
 
 const Homepage = () => {
+  const { user } = useAuth();
   const [activeCategory, setActiveCategory] = useState<string>("All");
   const [page, setPage] = useState(1);
   const LIMIT = 20;
@@ -125,26 +127,22 @@ const Homepage = () => {
 
           {/* CTA Buttons */}
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <Link to="/get-started" className="btn-primary" style={{
-              padding: "14px 32px",
-              fontSize: "1rem",
-              borderRadius: "var(--radius-xl)",
-              backgroundColor: "var(--color-primary-light)",
-            }}>
+            <Link to="/get-started" className="inline-flex items-center justify-center gap-2 py-3.5 px-8 text-base font-semibold rounded-xl bg-green-500 text-white hover:bg-green-600 transition-colors">
               <ShoppingBag size={18} />
               Start Shopping
             </Link>
-            <Link to="/get-started" className="btn-secondary" style={{
-              padding: "14px 32px",
-              fontSize: "1rem",
-              borderRadius: "var(--radius-xl)",
-              backgroundColor: "transparent",
-              color: "var(--color-text-inverse)",
-              borderColor: "rgba(255,255,255,0.4)",
-            }}>
-              <Truck size={18} />
-              Become a Rider
-            </Link>
+            {!user && (
+              <>
+                <Link to="/get-started" className="inline-flex items-center justify-center gap-2 py-3.5 px-8 text-base font-semibold rounded-xl bg-transparent text-white border border-white/40 hover:bg-white/10 transition-colors">
+                  <Truck size={18} />
+                  Become a Rider
+                </Link>
+                <Link to="/get-started" className="inline-flex items-center justify-center gap-2 py-3.5 px-8 text-base font-semibold rounded-xl bg-transparent text-white border border-white/40 hover:bg-white/10 transition-colors">
+                  <Store size={18} />
+                  Become a Vendor
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Stats */}
@@ -283,7 +281,7 @@ const Homepage = () => {
               gap: 16,
             }}>
               {products.map((product: any) => {
-                const firstImage = product.images?.split(",")[0];
+                const firstImage = product.imageUrl || (product.images ? product.images.split(",")[0] : null);
                 return (
                   <Link
                     key={product.id}

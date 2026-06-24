@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { ShoppingBag, Bike, Store, Leaf, CheckCircle2, ArrowRight } from "lucide-react";
+import { ShoppingBag, Bike, Store, CheckCircle2, ArrowRight } from "lucide-react";
+import logo from "@/assets/logo.png";
 
 type RoleOption = "attendee" | "dispatch_rider" | "vendor";
 
@@ -28,7 +29,7 @@ const roles: { key: RoleOption; label: string; description: string; icon: typeof
 ];
 
 const RoleSelector = () => {
-  const [selectedRole, setSelectedRole] = useState<RoleOption>("attendee");
+  const [selectedRole, setSelectedRole] = useState<RoleOption | null>(null);
   const navigate = useNavigate();
 
   const handleContinue = () => {
@@ -49,19 +50,18 @@ const RoleSelector = () => {
         <div className="overlay" />
         
         <div className="content">
-          <Link to="/" style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 60 }}>
-            <div style={{
-              width: 40,
-              height: 40,
-              borderRadius: "var(--radius-md)",
-              backgroundColor: "var(--color-primary)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}>
-              <Leaf size={24} style={{ color: "var(--color-text-inverse)" }} />
-            </div>
-            <span style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--color-text-inverse)" }}>
+          <Link to="/" style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 60, textDecoration: "none" }}>
+            <img 
+              src={logo} 
+              alt="FlowMart Logo" 
+              style={{
+                width: 48,
+                height: 48,
+                objectFit: "contain",
+                borderRadius: "var(--radius-sm)"
+              }}
+            />
+            <span style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--color-text-inverse)", letterSpacing: "-0.5px" }}>
               Flow<span style={{ color: "var(--color-primary-lighter)" }}>Mart</span>
             </span>
           </Link>
@@ -111,22 +111,21 @@ const RoleSelector = () => {
           </div>
 
           {/* Mobile Logo (Only visible on small screens) */}
-          <div className="mobile-logo" style={{ display: "none", alignItems: "center", gap: 8, marginBottom: 32 }}>
-            <div style={{
-              width: 36,
-              height: 36,
-              borderRadius: "var(--radius-md)",
-              backgroundColor: "var(--color-primary)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}>
-              <Leaf size={20} style={{ color: "var(--color-text-inverse)" }} />
-            </div>
-            <span style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--color-text-primary)" }}>
+          <Link to="/" className="mobile-logo" style={{ display: "none", alignItems: "center", gap: 8, marginBottom: 32, textDecoration: "none" }}>
+            <img 
+              src={logo} 
+              alt="FlowMart Logo" 
+              style={{
+                width: 40,
+                height: 40,
+                objectFit: "contain",
+                borderRadius: "var(--radius-sm)"
+              }}
+            />
+            <span style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--color-text-primary)", letterSpacing: "-0.5px" }}>
               FlowMart
             </span>
-          </div>
+          </Link>
 
           <div>
             <h2 style={{
@@ -202,7 +201,7 @@ const RoleSelector = () => {
                           {role.label}
                         </span>
                         {role.badge && (
-                          <span className={`badge ${role.key === "attendee" ? "badge-orange" : "badge-green"}`}>
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[0.75rem] font-bold ${role.key === "attendee" ? "bg-orange-500 text-white" : "bg-[#e6f4ea] text-brand-primary"}`}>
                             {role.badge}
                           </span>
                         )}
@@ -244,11 +243,15 @@ const RoleSelector = () => {
             </div>
 
             <button
-              className="btn-primary"
+              disabled={!selectedRole}
+              className={`w-full py-4 px-7 text-[1.063rem] rounded-xl flex items-center justify-center gap-2 transition-all ${
+                !selectedRole
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "border-2 border-gray-200 bg-white text-gray-700 hover:bg-brand-primary hover:border-brand-primary hover:text-white"
+              }`}
               onClick={handleContinue}
-              style={{ width: "100%", padding: "16px 28px", fontSize: "1.063rem", borderRadius: "var(--radius-xl)" }}
             >
-              Continue as {roleLabels[selectedRole]} <ArrowRight size={18} />
+              {selectedRole ? `Continue as ${roleLabels[selectedRole]}` : "Select a role to continue"} <ArrowRight size={18} />
             </button>
           </div>
           
@@ -307,6 +310,7 @@ const RoleSelector = () => {
           padding: 40px 24px;
           display: flex;
           flex-direction: column;
+          justify-content: center;
           min-height: 100vh;
         }
 
@@ -324,7 +328,6 @@ const RoleSelector = () => {
           }
           
           .form-wrapper {
-            justify-content: center;
             min-height: auto;
             padding: 60px;
           }

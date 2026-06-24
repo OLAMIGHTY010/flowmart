@@ -155,4 +155,10 @@ export const emitOrderStatusUpdate = (orderId: string, status: string) => {
   }
 };
 
+export const broadcastNewDelivery = (payload: any) => {
+  if (io) {
+    io.emit('delivery:available', payload);
+  }
+};
+
 export const getIO = () => io;

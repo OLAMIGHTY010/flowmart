@@ -9,15 +9,15 @@ const buildDynamicLogsQuery = (search: string, filter: string, dateRange: string
     WITH dynamic_logs AS (
       SELECT id::text as id, event_id, actor_id::text as actor_id, actor_name, action, module, description, ip_address, status, metadata, created_at FROM audit_logs
       UNION ALL
-      SELECT id::text, 'AUT-' || substring(id::text from 1 for 4), id::text, full_name, 'Registered', 'Auth', 'New user registered: ' || full_name, 'N/A', 'Success', '{}'::jsonb, created_at FROM users
+      SELECT id::text, 'AUT-' || substring(id::text from 1 for 4), id::text, full_name, 'Registered'::text, 'Auth'::text, 'New user registered: ' || full_name, 'N/A'::text, 'Success'::text, '{}'::jsonb, created_at FROM users
       UNION ALL
-      SELECT id::text, 'ORD-' || order_ref, attendee_id::text, 'System', status, 'Delivery', 'Order ' || order_ref || ' status changed to ' || status, 'N/A', 'Success', '{}'::jsonb, updated_at FROM orders
+      SELECT id::text, 'ORD-' || order_ref, attendee_id::text, 'System'::text, status::text, 'Delivery'::text, 'Order ' || order_ref || ' status changed to ' || status::text, 'N/A'::text, 'Success'::text, '{}'::jsonb, updated_at FROM orders
       UNION ALL
-      SELECT id::text, 'VEN-' || substring(id::text from 1 for 4), vendor_id::text, business_name, status, 'Vendor', 'Vendor KYC status: ' || status, 'N/A', 'Success', '{}'::jsonb, updated_at FROM vendor_kyc
+      SELECT id::text, 'VEN-' || substring(id::text from 1 for 4), vendor_id::text, business_name, status::text, 'Vendor'::text, 'Vendor KYC status: ' || status::text, 'N/A'::text, 'Success'::text, '{}'::jsonb, updated_at FROM vendor_kyc
       UNION ALL
-      SELECT id::text, 'RID-' || substring(id::text from 1 for 4), rider_id::text, 'System', status, 'Rider', 'Rider KYC status: ' || status, 'N/A', 'Success', '{}'::jsonb, updated_at FROM rider_kyc
+      SELECT id::text, 'RID-' || substring(id::text from 1 for 4), rider_id::text, 'System'::text, status::text, 'Rider'::text, 'Rider KYC status: ' || status::text, 'N/A'::text, 'Success'::text, '{}'::jsonb, updated_at FROM rider_kyc
       UNION ALL
-      SELECT id::text, 'WEL-' || substring(id::text from 1 for 4), created_by::text, 'System', status, 'Welfare', 'Welfare event ' || name || ' created', 'N/A', 'Success', '{}'::jsonb, created_at FROM welfare_events
+      SELECT id::text, 'WEL-' || substring(id::text from 1 for 4), created_by::text, 'System'::text, status::text, 'Welfare'::text, 'Welfare event ' || name || ' created', 'N/A'::text, 'Success'::text, '{}'::jsonb, created_at FROM welfare_events
     )
     SELECT * FROM dynamic_logs WHERE 1=1
   `;

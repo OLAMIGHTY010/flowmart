@@ -16,7 +16,8 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim())
   : [
       'https://flowmart-iota.vercel.app',
-      'https://flowmart-opal.vercel.app'
+      'https://flowmart-opal.vercel.app',
+      'http://localhost:5174'
     ];
 
 app.use(cors({

@@ -26,19 +26,27 @@ const Login = () => {
     // UPDATED: Calling the updated provider function
     const result = await loginWithGoogle(credentialResponse.credential, selectedRole);
 
-    if (result.success) {
+    if (result.success && result.user) {
       showToast("Welcome to FlowMart!", "success");
 
       // Role-based redirect
-      switch (selectedRole) {
+      switch (result.user.role) {
         case "vendor":
-          navigate("/vendor/dashboard");
+          if (!result.user.profileCompleted) {
+            navigate("/profile-setup");
+          } else {
+            navigate("/vendor/dashboard");
+          }
           break;
         case "dispatch_rider":
-          navigate("/rider/dashboard");
+          if (!result.user.profileCompleted) {
+            navigate("/rider/profile-setup");
+          } else {
+            navigate("/rider/dashboard");
+          }
           break;
         default:
-          navigate("/");
+          navigate("/products");
       }
     } else {
       showToast(result.error || "Login failed. Please try again.", "error");
@@ -257,17 +265,18 @@ const Login = () => {
         .login-form-panel {
           display: flex;
           flex-direction: column;
+          align-items: center;
+          justify-content: center;
           background-color: var(--color-bg-primary);
+          min-height: 100vh;
         }
 
         .form-wrapper {
           width: 100%;
           max-width: 480px;
-          margin: auto;
           padding: 40px 24px;
           display: flex;
           flex-direction: column;
-          min-height: 100vh;
         }
 
         .back-link:hover {

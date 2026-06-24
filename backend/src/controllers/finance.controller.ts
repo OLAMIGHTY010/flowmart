@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { db } from '../../db';
 import { orderDelivery, vendorProfiles, globalSettings, orders, payouts, users } from '../../db/schema';
 import { sql, eq, and, gte, or, desc } from 'drizzle-orm';
-import { FlutterwaveService } from '../services/flutterwave.service';
+import { createTransferRecipient, initiatePayout } from '../services/paystack.service';
 
 export class FinanceController {
   
@@ -163,16 +163,21 @@ export class FinanceController {
       // Generate a new unique reference for the retry
       const retryReference = `RETRY-${Date.now()}-${payout.id.substring(0, 8)}`;
 
-      // 1. Initiate transfer via Flutterwave API
-      await FlutterwaveService.initiateTransfer(
-        Number(payout.amount),
-        payout.bankCode,
-        payout.accountNumber,
-        retryReference,
-        "FlowMart Payout Retry"
+      // 1. Initiate transfer via Paystack API
+      // First we need a recipient code
+      const recipientData = await createTransferRecipient(
+        payout.bankCode, 
+        payout.accountNumber, 
+        "Account Name Not Stored" // We should really pass the actual name if available, but Paystack can resolve it for NUBAN
       );
 
-      // 2. If successful initiation, update status to pending (Flutterwave processes asynchronously)
+      await initiatePayout(
+        recipientData.recipient_code,
+        Number(payout.amount),
+        retryReference
+      );
+
+      // 2. If successful initiation, update status to pending (Paystack processes asynchronously)
       await db.update(payouts)
         .set({ 
           status: 'pending', 

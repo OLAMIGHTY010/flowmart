@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { Search, ShoppingCart, User, Menu, X, Leaf } from "lucide-react";
+import { Search, ShoppingCart, User, Menu, X } from "lucide-react";
 import { useCartStore } from "@/stores/cartStore";
+import logo from "@/assets/logo.png";
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -33,31 +34,45 @@ const Navbar = () => {
         height: 64,
       }}>
         {/* Logo */}
-        <Link to="/" style={{
+        <Link to="/products" style={{
           display: "flex",
           alignItems: "center",
           gap: 8,
           flexShrink: 0,
+          textDecoration: "none"
         }}>
-          <div style={{
-            width: 32,
-            height: 32,
-            borderRadius: "var(--radius-sm)",
-            backgroundColor: "var(--color-primary)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}>
-            <Leaf size={18} style={{ color: "var(--color-text-inverse)" }} />
-          </div>
+          <img 
+            src={logo} 
+            alt="FlowMart Logo" 
+            style={{
+              width: 36,
+              height: 36,
+              objectFit: "contain",
+              borderRadius: "var(--radius-sm)"
+            }}
+          />
           <span style={{
             fontSize: "1.125rem",
-            fontWeight: 700,
+            fontWeight: 800,
             color: "var(--color-primary-light)",
+            letterSpacing: "-0.5px"
           }}>
             Flow<span style={{ color: "var(--color-text-inverse)" }}>Mart</span>
           </span>
         </Link>
+
+        {/* Desktop Navigation Links */}
+        <div className="desktop-only" style={{
+          display: "flex",
+          gap: 24,
+          alignItems: "center",
+          marginLeft: 24,
+          marginRight: "auto"
+        }}>
+          <Link to="/" style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--color-text-inverse)", textDecoration: "none" }}>Home</Link>
+          <Link to="/products" style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--color-text-inverse)", textDecoration: "none" }}>Products</Link>
+          <Link to="/orders" style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--color-text-inverse)", textDecoration: "none" }}>Orders</Link>
+        </div>
 
         {/* Search Bar (Desktop) */}
         <form
@@ -155,23 +170,41 @@ const Navbar = () => {
 
           {/* User / Login */}
           {user ? (
-            <button
-              onClick={() => navigate("/profile")}
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: "50%",
-                backgroundColor: "var(--color-primary)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "var(--color-text-inverse)",
-                fontSize: "0.875rem",
-                fontWeight: 600,
-              }}
-            >
-              {user.fullName?.charAt(0)?.toUpperCase() || "U"}
-            </button>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <button
+                onClick={() => navigate("/profile")}
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: "50%",
+                  backgroundColor: "var(--color-primary)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "var(--color-text-inverse)",
+                  fontSize: "0.875rem",
+                  fontWeight: 600,
+                }}
+              >
+                {user.fullName?.charAt(0)?.toUpperCase() || "U"}
+              </button>
+              <button
+                onClick={() => logout()}
+                className="desktop-only"
+                style={{
+                  padding: "8px 20px",
+                  backgroundColor: "transparent",
+                  color: "var(--color-text-primary)",
+                  border: "1px solid var(--color-border)",
+                  borderRadius: "var(--radius-full)",
+                  fontSize: "0.875rem",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                Log Out
+              </button>
+            </div>
           ) : (
             <Link
               to="/login"
@@ -189,23 +222,6 @@ const Navbar = () => {
               Sign In
             </Link>
           )}
-
-          {/* Mobile Menu Toggle */}
-          <button
-            className="mobile-only"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: "50%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "var(--color-text-inverse)",
-            }}
-          >
-            {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
-          </button>
         </div>
       </div>
 
@@ -242,50 +258,6 @@ const Navbar = () => {
         </form>
       </div>
 
-      {/* Mobile Menu Overlay */}
-      {mobileMenuOpen && (
-        <div className="mobile-only animate-fade-in" style={{
-          position: "fixed",
-          top: 64,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: "var(--color-bg-primary)",
-          padding: 24,
-          zIndex: "var(--z-modal)" as any,
-        }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <Link to="/" onClick={() => setMobileMenuOpen(false)} style={menuLinkStyle}>Home</Link>
-            <Link to="/cart" onClick={() => setMobileMenuOpen(false)} style={menuLinkStyle}>Cart</Link>
-            <Link to="/orders" onClick={() => setMobileMenuOpen(false)} style={menuLinkStyle}>Orders</Link>
-            <Link to="/profile" onClick={() => setMobileMenuOpen(false)} style={menuLinkStyle}>Profile</Link>
-
-            <div style={{ height: 1, backgroundColor: "var(--color-border)", margin: "12px 0" }} />
-
-            {user ? (
-              <button
-                onClick={() => { logout(); setMobileMenuOpen(false); }}
-                style={{
-                  ...menuLinkStyle,
-                  color: "var(--color-accent-red)",
-                  textAlign: "left",
-                }}
-              >
-                Log Out
-              </button>
-            ) : (
-              <Link
-                to="/login"
-                onClick={() => setMobileMenuOpen(false)}
-                className="btn-primary"
-                style={{ textAlign: "center" }}
-              >
-                Sign In
-              </Link>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Responsive CSS */}
       <style>{`

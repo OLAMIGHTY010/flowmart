@@ -3,7 +3,7 @@ import { db } from "../../db";
 import { products, orders, orderItems, users, vendorProfiles, vendorKyc } from "../../db/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { AuthenticatedRequest } from "../middleware/auth.middleware";
-import { sendInAppNotification } from "../services/websocket";
+import { sendInAppNotification, broadcastNewDelivery } from "../services/websocket";
 import { emailService } from "../services/email.service";
 import crypto from "crypto";
 
@@ -12,7 +12,6 @@ import { createTransferRecipient, initiatePayout, initializeTransaction } from "
 import { creditPendingBalance, releaseEscrowToAvailable, deductAvailableBalance } from "../services/ledger.service";
 import { PricingService } from "../services/pricing.service";
 import { globalSettings, orderDelivery } from "../../db/schema";
-import { FlutterwaveService } from "../services/flutterwave.service";
 
 // Helper to generate FLW-YYYYMMDD-XXXX Securely
 const generateOrderRef = () => {
@@ -42,6 +41,24 @@ const calculateVendorNetEarnings = async (txOrDb: any, orderId: string, vendorId
     
     const flowmartVendorShare = subtotal * (vendorCommissionPct / 100);
     return subtotal - flowmartVendorShare;
+};
+
+// 0. Calculate Delivery Fee
+export const calculateDelivery = async (req: Request, res: Response) => {
+	try {
+		const { zone, distanceKm } = req.body;
+		if (!zone) return res.status(400).json({ success: false, message: "Zone is required" });
+		
+		const deliveryCalc = await PricingService.calculateDeliveryFee(zone, distanceKm || 5);
+		return res.status(200).json({ success: true, deliveryCalc });
+	} catch (error: any) {
+		console.error("Calculate Delivery Error:", error);
+		// Return fallback default so checkout doesn't break entirely if zone lacks config
+		return res.status(200).json({ 
+			success: true, 
+			deliveryCalc: { finalDeliveryFee: 1500, baseFee: 1500, distanceFee: 0, ruleAdjustments: [] }
+		});
+	}
 };
 
 // 1. Place a New Order (Attendees)
@@ -158,27 +175,18 @@ export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
 		});
 
         // Backend Payment Initialization
-        if (paymentMethod === 'paystack' || paymentMethod === 'flutterwave') {
+        if (paymentMethod === 'paystack') {
              try {
                  const orderRef = createdOrders[0].orderRef;
                  const email = req.user?.email || "customer@flowmart.com";
                  
                  // Compute grand total
                  const grandTotal = createdOrders.reduce((sum, order) => sum + Number(order.totalAmount), 0);
-                 const callbackUrl = `${process.env.FRONTEND_URL}/payment-callback`;
                  
                  let paymentUrl = "";
                  
-                 if (paymentMethod === 'paystack') {
-                     const initData = await initializeTransaction(email, grandTotal, orderRef);
-                     paymentUrl = initData.authorization_url;
-                 } else {
-                     const initData = await FlutterwaveService.initializeTransaction(
-                         email, grandTotal, orderRef, callbackUrl, 
-                         { name: (req.user as any)?.fullName || "Customer", phone: (req.user as any)?.phone || "" }
-                     );
-                     paymentUrl = initData.link;
-                 }
+                 const initData = await initializeTransaction(email, grandTotal, orderRef);
+                 paymentUrl = initData.authorization_url;
                  
                  return res.status(201).json({
                      success: true, 
@@ -334,7 +342,6 @@ export const updateOrderStatus = async (req: AuthenticatedRequest, res: Response
 		if (!existingOrder) {
 			return res.status(404).json({ success: false, message: "Order not found or unauthorized" });
 		}
-
 		const [updatedOrder] = await db.update(orders).set({
 			status,
 			updatedAt: new Date(),
@@ -344,6 +351,16 @@ export const updateOrderStatus = async (req: AuthenticatedRequest, res: Response
 			orderId,
 			status,
 		});
+
+        // Broadcast to riders if the vendor just published it for delivery
+        if (status === "ready_for_delivery") {
+            broadcastNewDelivery({
+                orderId,
+                zone: existingOrder.deliveryZone,
+                vendorId: existingOrder.vendorId,
+                totalAmount: existingOrder.totalAmount
+            });
+        }
 
 		return res.status(200).json({
 			success: true,
