@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, MapPin, ShieldCheck, Star, Users, CheckCircle2 } from "lucide-react";
 import { useVendorProducts, useVendorProfile } from "@/hooks/useVendorProducts";
-import ProductCard from "@/components/user/product/PurchaseCard";
+import ProductCard from "@/components/user/product/ProductCard";
 import { useVendorStore } from "@/stores/vendorStore";
 
 export default function VendorProfile() {

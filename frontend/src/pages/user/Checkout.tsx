@@ -58,9 +58,10 @@ const Checkout = () => {
   const { user } = useAuth();
   
   const [paymentMethod, setPaymentMethod] = useState<"card" | "bank_transfer" | "pay_on_delivery">("card");
-  const [paymentGateway, setPaymentGateway] = useState<"paystack" | "flutterwave">("paystack");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [deliveryFee, setDeliveryFee] = useState(1500);
+  const [isCalculatingDelivery, setIsCalculatingDelivery] = useState(false);
   
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
@@ -115,8 +116,29 @@ const Checkout = () => {
   const clearCart = useCartStore((s) => s.clearCart);
 
   const subtotal = cart.reduce((sum, item) => sum + (Number(item.price) * item.qty), 0);
-  const deliveryFee = 1500; // Hardcoded for now
   const totalAmount = subtotal + deliveryFee;
+
+  useEffect(() => {
+    const fetchDeliveryFee = async () => {
+      setIsCalculatingDelivery(true);
+      try {
+        const res = await apiClient.post<{ success: boolean; deliveryCalc?: any }>("/orders/calculate-delivery", { zone: address || "default", distanceKm: 5 });
+        if (res.deliveryCalc && res.deliveryCalc.finalDeliveryFee !== undefined) {
+          setDeliveryFee(res.deliveryCalc.finalDeliveryFee);
+        }
+      } catch (err) {
+        console.error("Failed to calculate delivery fee", err);
+      } finally {
+        setIsCalculatingDelivery(false);
+      }
+    };
+
+    const debounceTimer = setTimeout(() => {
+      fetchDeliveryFee();
+    }, 1000); // 1s debounce
+
+    return () => clearTimeout(debounceTimer);
+  }, [address]);
 
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,7 +153,7 @@ const Checkout = () => {
           productId: (item as any).originalProductId || item.id.substring(0, 36), 
           quantity: item.qty 
         })),
-        payment_method: paymentMethod === "card" ? paymentGateway : paymentMethod,
+        payment_method: paymentMethod === "card" ? "paystack" : paymentMethod,
         zone: address, // address or location is sent as the zone
         phone: phone,
       };
@@ -139,7 +161,7 @@ const Checkout = () => {
       const res = await apiClient.post<{ success: boolean; paymentUrl?: string }>("/orders", payload);
       
       if (res.paymentUrl) {
-        // Redirect to Paystack/Flutterwave
+        // Redirect to Paystack
         window.location.href = res.paymentUrl;
       } else {
         showToast("Order placed successfully!", "success");
@@ -229,7 +251,7 @@ const Checkout = () => {
 
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {[
-                { id: "card", label: "Credit/Debit Card", desc: "Pay securely via Paystack or Flutterwave" },
+                { id: "card", label: "Credit/Debit Card", desc: "Pay securely via Paystack" },
                 { id: "bank_transfer", label: "Bank Transfer", desc: "Direct transfer to our bank account" },
                 { id: "pay_on_delivery", label: "Pay on Delivery", desc: "Pay via POS or cash when your order arrives" },
               ].map((method) => (
@@ -254,20 +276,7 @@ const Checkout = () => {
                       <div style={{ fontSize: "0.813rem", color: "var(--color-text-muted)" }}>{method.desc}</div>
                     </div>
                   </label>
-                  
-                  {/* Card Gateway Dropdown */}
-                  {method.id === "card" && paymentMethod === "card" && (
-                    <div style={{ marginLeft: 36, display: "flex", flexDirection: "column", gap: 8 }}>
-                      <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
-                        <input type="radio" name="gateway" checked={paymentGateway === "paystack"} onChange={() => setPaymentGateway("paystack")} style={{ accentColor: "var(--color-primary)" }} />
-                        <span style={{ fontSize: "0.875rem", fontWeight: 500 }}>Pay with Paystack</span>
-                      </label>
-                      <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
-                        <input type="radio" name="gateway" checked={paymentGateway === "flutterwave"} onChange={() => setPaymentGateway("flutterwave")} style={{ accentColor: "var(--color-primary)" }} />
-                        <span style={{ fontSize: "0.875rem", fontWeight: 500 }}>Pay with Flutterwave</span>
-                      </label>
-                    </div>
-                  )}
+                  {/* Card Gateway Dropdown removed - Paystack is default */}
                 </div>
               ))}
             </div>
@@ -297,7 +306,7 @@ const Checkout = () => {
                 <span style={{ fontWeight: 600, color: "var(--color-text-primary)" }}>₦{subtotal.toLocaleString()}</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.938rem", color: "var(--color-text-secondary)" }}>
-                <span>Delivery Fee</span>
+                <span>Delivery Fee {isCalculatingDelivery && <span className="text-primary text-xs ml-2">(calculating...)</span>}</span>
                 <span style={{ fontWeight: 600, color: "var(--color-text-primary)" }}>₦{deliveryFee.toLocaleString()}</span>
               </div>
             </div>

@@ -35,13 +35,33 @@ const ProductDetails = () => {
 
   useEffect(() => {
     if (product) {
-      // Map product to what the store expects if needed, or just pass product
+      // Safely get the first image
+      let firstImg = product.imageUrl;
+      if (Array.isArray(product.images) && product.images.length > 0) {
+        firstImg = product.images[0];
+      } else if (typeof product.images === "string") {
+        try {
+          const parsed = JSON.parse(product.images as any);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            firstImg = parsed[0];
+          } else {
+            firstImg = (product.images as any).split(",")[0];
+          }
+        } catch {
+          firstImg = (product.images as any).split(",")[0];
+        }
+      }
+
+      if (typeof firstImg === "string") {
+        firstImg = firstImg.replace(/[\[\]"]/g, "");
+      }
+
       addViewedProduct({
         id: product.id,
         name: product.name,
         price: product.price,
         oldPrice: product.oldPrice,
-        imageUrl: product.images ? product.images.split(",")[0] : product.imageUrl,
+        imageUrl: firstImg,
         stockQuantity: product.stockQuantity,
         productType: product.productType
       } as any);
@@ -69,9 +89,24 @@ const ProductDetails = () => {
     );
   }
 
-  const images = product.images 
-    ? (Array.isArray(product.images) ? product.images : product.images.split(",").filter(Boolean)) 
-    : (product.imageUrl ? [product.imageUrl] : []);
+  let images = product.imageUrl ? [product.imageUrl] : [];
+  if (Array.isArray(product.images)) {
+    images = product.images;
+  } else if (typeof product.images === "string") {
+    try {
+      const parsed = JSON.parse(product.images as any);
+      if (Array.isArray(parsed)) {
+        images = parsed;
+      } else {
+        images = (product.images as any).split(",").filter(Boolean);
+      }
+    } catch {
+      images = (product.images as any).split(",").filter(Boolean);
+    }
+  }
+
+  // Clean up any stray quotes/brackets in image array strings
+  images = images.map((img: string) => typeof img === "string" ? img.replace(/[\[\]"]/g, "") : img);
   
   const firstImage = images[0];
 
@@ -424,10 +459,6 @@ const ProductDetails = () => {
 
           {/* Trust Badges */}
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, color: "var(--color-text-secondary)" }}>
-              <Truck size={20} style={{ color: "var(--color-primary)" }} />
-              <span style={{ fontSize: "0.875rem" }}>Delivery usually within 24-48 hours</span>
-            </div>
             <div style={{ display: "flex", alignItems: "center", gap: 12, color: "var(--color-text-secondary)" }}>
               <ShieldCheck size={20} style={{ color: "var(--color-primary)" }} />
               <span style={{ fontSize: "0.875rem" }}>Secure payment and money-back guarantee</span>

@@ -46,7 +46,7 @@ const Login = () => {
           }
           break;
         default:
-          navigate("/");
+          navigate("/products");
       }
     } else {
       showToast(result.error || "Login failed. Please try again.", "error");

@@ -8,12 +8,19 @@ export class PricingService {
    */
   static async calculateDeliveryFee(zoneName: string, distanceKm: number) {
     // 1. Fetch zone
-    const zoneRecord = await db.query.deliveryZones.findFirst({
+    let zoneRecord = await db.query.deliveryZones.findFirst({
       where: eq(deliveryZones.zoneName, zoneName),
     });
 
     if (!zoneRecord) {
-      throw new Error(`Delivery zone not found: ${zoneName}`);
+      // Fallback to the first active zone if exact name is not found
+      const fallbackZone = await db.query.deliveryZones.findFirst({
+        where: eq(deliveryZones.active, true),
+      });
+      if (!fallbackZone) {
+         throw new Error(`No active delivery zones available`);
+      }
+      zoneRecord = fallbackZone;
     }
 
     const baseFee = parseFloat(zoneRecord.baseFee.toString());

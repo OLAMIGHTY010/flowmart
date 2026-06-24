@@ -132,10 +132,16 @@ const Homepage = () => {
               Start Shopping
             </Link>
             {!user && (
-              <Link to="/get-started" className="inline-flex items-center justify-center gap-2 py-3.5 px-8 text-base font-semibold rounded-xl bg-transparent text-white border border-white/40 hover:bg-white/10 transition-colors">
-                <Truck size={18} />
-                Become a Rider
-              </Link>
+              <>
+                <Link to="/get-started" className="inline-flex items-center justify-center gap-2 py-3.5 px-8 text-base font-semibold rounded-xl bg-transparent text-white border border-white/40 hover:bg-white/10 transition-colors">
+                  <Truck size={18} />
+                  Become a Rider
+                </Link>
+                <Link to="/get-started" className="inline-flex items-center justify-center gap-2 py-3.5 px-8 text-base font-semibold rounded-xl bg-transparent text-white border border-white/40 hover:bg-white/10 transition-colors">
+                  <Store size={18} />
+                  Become a Vendor
+                </Link>
+              </>
             )}
           </div>
 

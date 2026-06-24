@@ -13,6 +13,7 @@ import Login from "@/pages/auth/Login";
 
 // Shopper (User) Pages
 import Homepage from "@/pages/user/Homepage";
+import Marketplace from "@/pages/user/Marketplace";
 import ProductDetails from "@/pages/user/ProductDetails";
 import Cart from "@/pages/user/Cart";
 import Checkout from "@/pages/user/Checkout";
@@ -94,6 +95,7 @@ function App() {
             {/* ═══ SHOPPER ROUTES (with Navbar + Footer) ═══ */}
             <Route element={<AppLayout />}>
               <Route index element={<Homepage />} />
+              <Route path="products" element={<Marketplace />} />
               <Route path="products/:id" element={<ProductDetails />} />
               <Route path="cart" element={<Cart />} />
 

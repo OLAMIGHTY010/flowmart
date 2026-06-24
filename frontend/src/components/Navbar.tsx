@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { Search, ShoppingCart, User, Menu, X, Leaf } from "lucide-react";
+import { Search, ShoppingCart, User, Menu, X } from "lucide-react";
 import { useCartStore } from "@/stores/cartStore";
+import logo from "@/assets/logo.png";
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -33,27 +34,28 @@ const Navbar = () => {
         height: 64,
       }}>
         {/* Logo */}
-        <Link to="/" style={{
+        <Link to="/products" style={{
           display: "flex",
           alignItems: "center",
           gap: 8,
           flexShrink: 0,
+          textDecoration: "none"
         }}>
-          <div style={{
-            width: 32,
-            height: 32,
-            borderRadius: "var(--radius-sm)",
-            backgroundColor: "var(--color-primary)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}>
-            <Leaf size={18} style={{ color: "var(--color-text-inverse)" }} />
-          </div>
+          <img 
+            src={logo} 
+            alt="FlowMart Logo" 
+            style={{
+              width: 36,
+              height: 36,
+              objectFit: "contain",
+              borderRadius: "var(--radius-sm)"
+            }}
+          />
           <span style={{
             fontSize: "1.125rem",
-            fontWeight: 700,
+            fontWeight: 800,
             color: "var(--color-primary-light)",
+            letterSpacing: "-0.5px"
           }}>
             Flow<span style={{ color: "var(--color-text-inverse)" }}>Mart</span>
           </span>

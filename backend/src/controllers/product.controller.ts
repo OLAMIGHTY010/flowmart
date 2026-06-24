@@ -3,6 +3,7 @@ import { db } from "../../db";
 import { products, vendorProfiles, users, vendorKyc } from "../../db/schema";
 import { eq, and, gt, sql, count, or, isNull } from "drizzle-orm";
 import { AuthenticatedRequest } from "../middleware/auth.middleware";
+import { deliveryZones } from "../../db/schema";
 
 // 1. Create a Product (Vendors Only)
 export const createProduct = async (
@@ -20,13 +21,34 @@ export const createProduct = async (
 			});
 		}
 
+		// Calculate Final Price
+		const vendorPrice = Number(price);
+		let commissionPct = 5; // Default 5%
+		let riderBasePrice = 0;
+
+		// Fetch Vendor Commission
+		const [vendorProfile] = await db.select().from(vendorProfiles).where(eq(vendorProfiles.vendorId, vendorId!)).limit(1);
+		if (vendorProfile?.vendorCommissionPct) {
+			commissionPct = vendorProfile.vendorCommissionPct;
+		}
+
+		// Fetch Default Logistics Base Fee
+		// Assuming the first active zone represents the default base fee
+		const [defaultZone] = await db.select().from(deliveryZones).where(eq(deliveryZones.active, true)).limit(1);
+		if (defaultZone?.baseFee) {
+			riderBasePrice = Number(defaultZone.baseFee);
+		}
+
+		const appCommission = vendorPrice * (commissionPct / 100);
+		const finalPrice = vendorPrice + riderBasePrice + appCommission;
+
 		const [newProduct] = await db
 			.insert(products)
 			.values({
 				vendorId: vendorId!,
 				name,
 				description,
-				price,
+				price: finalPrice.toString(),
 				stockQuantity: stockQuantity !== undefined ? stockQuantity : (productType === 'food' ? null : 0),
 				sku,
 				category,
@@ -132,6 +154,26 @@ export const updateProduct = async (
 			});
 		}
 
+		let finalPrice = existingProduct.price;
+		if (price !== undefined) {
+			const vendorPrice = Number(price);
+			let commissionPct = 5;
+			let riderBasePrice = 0;
+
+			const [vendorProfile] = await db.select().from(vendorProfiles).where(eq(vendorProfiles.vendorId, vendorId!)).limit(1);
+			if (vendorProfile?.vendorCommissionPct) {
+				commissionPct = vendorProfile.vendorCommissionPct;
+			}
+
+			const [defaultZone] = await db.select().from(deliveryZones).where(eq(deliveryZones.active, true)).limit(1);
+			if (defaultZone?.baseFee) {
+				riderBasePrice = Number(defaultZone.baseFee);
+			}
+
+			const appCommission = vendorPrice * (commissionPct / 100);
+			finalPrice = (vendorPrice + riderBasePrice + appCommission).toString();
+		}
+
 		const [updatedProduct] = await db
 			.update(products)
 			.set({
@@ -140,7 +182,7 @@ export const updateProduct = async (
 					description !== undefined
 						? description
 						: existingProduct.description,
-				price: price || existingProduct.price,
+				price: finalPrice,
 				stockQuantity:
 					stockQuantity !== undefined
 						? stockQuantity

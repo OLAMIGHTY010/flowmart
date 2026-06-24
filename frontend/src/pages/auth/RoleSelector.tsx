@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { ShoppingBag, Bike, Store, Leaf, CheckCircle2, ArrowRight } from "lucide-react";
+import { ShoppingBag, Bike, Store, CheckCircle2, ArrowRight } from "lucide-react";
+import logo from "@/assets/logo.png";
 
 type RoleOption = "attendee" | "dispatch_rider" | "vendor";
 
@@ -49,19 +50,18 @@ const RoleSelector = () => {
         <div className="overlay" />
         
         <div className="content">
-          <Link to="/" style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 60 }}>
-            <div style={{
-              width: 40,
-              height: 40,
-              borderRadius: "var(--radius-md)",
-              backgroundColor: "var(--color-primary)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}>
-              <Leaf size={24} style={{ color: "var(--color-text-inverse)" }} />
-            </div>
-            <span style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--color-text-inverse)" }}>
+          <Link to="/" style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 60, textDecoration: "none" }}>
+            <img 
+              src={logo} 
+              alt="FlowMart Logo" 
+              style={{
+                width: 48,
+                height: 48,
+                objectFit: "contain",
+                borderRadius: "var(--radius-sm)"
+              }}
+            />
+            <span style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--color-text-inverse)", letterSpacing: "-0.5px" }}>
               Flow<span style={{ color: "var(--color-primary-lighter)" }}>Mart</span>
             </span>
           </Link>
@@ -111,22 +111,21 @@ const RoleSelector = () => {
           </div>
 
           {/* Mobile Logo (Only visible on small screens) */}
-          <div className="mobile-logo" style={{ display: "none", alignItems: "center", gap: 8, marginBottom: 32 }}>
-            <div style={{
-              width: 36,
-              height: 36,
-              borderRadius: "var(--radius-md)",
-              backgroundColor: "var(--color-primary)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}>
-              <Leaf size={20} style={{ color: "var(--color-text-inverse)" }} />
-            </div>
-            <span style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--color-text-primary)" }}>
+          <Link to="/" className="mobile-logo" style={{ display: "none", alignItems: "center", gap: 8, marginBottom: 32, textDecoration: "none" }}>
+            <img 
+              src={logo} 
+              alt="FlowMart Logo" 
+              style={{
+                width: 40,
+                height: 40,
+                objectFit: "contain",
+                borderRadius: "var(--radius-sm)"
+              }}
+            />
+            <span style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--color-text-primary)", letterSpacing: "-0.5px" }}>
               FlowMart
             </span>
-          </div>
+          </Link>
 
           <div>
             <h2 style={{
