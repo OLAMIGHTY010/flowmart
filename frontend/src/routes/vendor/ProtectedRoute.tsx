@@ -40,12 +40,20 @@ const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
     // Redirect to their own portal
     switch (user.role) {
       case "vendor":
+        if (!user.profileCompleted) return <Navigate to="/profile-setup" replace />;
         return <Navigate to="/vendor/dashboard" replace />;
       case "dispatch_rider":
+        if (!user.profileCompleted) return <Navigate to="/rider/profile-setup" replace />;
         return <Navigate to="/rider/dashboard" replace />;
       default:
         return <Navigate to="/" replace />;
     }
+  }
+
+  // Prevent vendors and riders from accessing protected routes if their profile is not completed
+  if (!user.profileCompleted && allowedRoles) {
+    if (user.role === 'vendor') return <Navigate to="/profile-setup" replace />;
+    if (user.role === 'dispatch_rider') return <Navigate to="/rider/profile-setup" replace />;
   }
 
   return children ? <>{children}</> : <Outlet />;

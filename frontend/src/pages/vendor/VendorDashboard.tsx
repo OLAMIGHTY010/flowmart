@@ -7,6 +7,7 @@ import Icon from '@/components/Icon';
 import ProductsTab from '@/components/vendor/ProductsTab';
 import OrdersTab from '@/components/vendor/OrdersTab';
 import StoreTab from '@/components/vendor/StoreTab';
+import Profile from '@/pages/user/Profile';
 
 
 export default function VendorDashboard() {
@@ -61,6 +62,7 @@ export default function VendorDashboard() {
     { id: 'products', icon: 'package', label: 'Products' },
     { id: 'orders', icon: 'shopping-bag', label: 'Orders' },
     { id: 'store', icon: 'settings', label: 'Store' },
+    { id: 'profile', icon: 'user', label: 'Profile' },
   ];
 
   const renderActiveTab = () => {
@@ -71,6 +73,8 @@ export default function VendorDashboard() {
         return <OrdersTab />;
       case 'store':
         return <StoreTab />;
+      case 'profile':
+        return <Profile />;
       case 'dashboard':
       default:
         return (
@@ -226,18 +230,7 @@ export default function VendorDashboard() {
     <div className="bg-background flex flex-col lg:flex-row font-body min-h-screen">
       {/* ── DESKTOP SIDEBAR ── */}
       <aside className="hidden lg:flex flex-col w-64 bg-[#090d16] text-white p-6 border-r border-border/10 fixed h-screen z-50">
-        {/* Brand/Logo */}
-        <div className="flex items-center gap-3 mb-8">
-          <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center text-primary-foreground font-headings font-extrabold text-lg">
-            F
-          </div>
-          <div>
-            <h2 className="font-headings font-extrabold text-lg leading-none">Flowmart</h2>
-            <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Vendor Portal</span>
-          </div>
-        </div>
-
-        {/* User profile section */}
+          {/* User profile section */}
         <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-6 flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center font-bold text-sm text-primary-foreground border border-white/20 shadow-inner flex-shrink-0">
             {firstName.substring(0, 2).toUpperCase()}
@@ -245,6 +238,7 @@ export default function VendorDashboard() {
           <div className="flex-1 min-w-0">
             <h4 className="text-sm font-bold truncate">{user?.fullName || 'Vendor'}</h4>
             <p className="text-[10px] text-muted-foreground truncate">{user?.email}</p>
+            <p className="text-[10px] text-primary mt-0.5 font-bold truncate">ID: #{user?.id?.substring(0, 8) || 'N/A'}</p>
           </div>
         </div>
 

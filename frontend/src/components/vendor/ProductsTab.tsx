@@ -4,6 +4,7 @@ import { useCreateProduct, useUpdateProduct, useDeleteProduct } from '@/hooks/ve
 import { Loader2, Plus, Edit2, Trash2, Search, X } from 'lucide-react';
 import { VendorInput } from '@/components/ui/input';
 import { VendorButton } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function ProductsTab() {
   const { data: products = [], isLoading } = useVendorProducts();
@@ -32,6 +33,13 @@ export default function ProductsTab() {
   const [oldPrice, setOldPrice] = useState('');
   const [images, setImages] = useState('');
 
+  // Food vs Non-Consumable Specific State
+  const [productType, setProductType] = useState<'food' | 'retail'>('retail');
+  const [preparationTime, setPreparationTime] = useState('');
+  const [modifiers, setModifiers] = useState<any[]>([]);
+  const [variants, setVariants] = useState<any[]>([]);
+  const [dietaryTags, setDietaryTags] = useState<string[]>([]);
+
   const openAddModal = () => {
     setEditingProduct(null);
     setName('');
@@ -45,6 +53,11 @@ export default function ProductsTab() {
     setWeight('');
     setOldPrice('');
     setImages('');
+    setProductType('retail');
+    setPreparationTime('');
+    setModifiers([]);
+    setVariants([]);
+    setDietaryTags([]);
     setIsModalOpen(true);
   };
 
@@ -85,7 +98,7 @@ export default function ProductsTab() {
     setName(prod.name);
     setCategory(prod.category || 'Food & Catering');
     setPrice(prod.price);
-    setStockQuantity(prod.stockQuantity.toString());
+    setStockQuantity(prod.stockQuantity ? prod.stockQuantity.toString() : '0');
     setDescription(prod.description || '');
     setImageUrl(prod.imageUrl || '');
     setSku(prod.sku || '');
@@ -93,6 +106,11 @@ export default function ProductsTab() {
     setWeight(prod.weight ? prod.weight.toString() : '');
     setOldPrice(prod.oldPrice ? prod.oldPrice.toString() : '');
     setImages(Array.isArray(prod.images) ? prod.images.join(', ') : (prod.images || ''));
+    setProductType(prod.productType || 'retail');
+    setPreparationTime(prod.preparationTime ? prod.preparationTime.toString() : '');
+    setModifiers(Array.isArray(prod.modifiers) ? prod.modifiers : []);
+    setVariants(Array.isArray(prod.variants) ? prod.variants : []);
+    setDietaryTags(Array.isArray(prod.dietaryTags) ? prod.dietaryTags : []);
     setIsModalOpen(true);
   };
 
@@ -112,14 +130,30 @@ export default function ProductsTab() {
       name,
       category,
       price,
-      stockQuantity: parseInt(stockQuantity) || 0,
+      stockQuantity: productType === 'food' ? undefined : (parseInt(stockQuantity) || 0),
       description,
       imageUrl: imageUrl || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=150&auto=format&fit=crop&q=60', // Default beautiful fallback food image
-      sku: sku || undefined,
-      brand: brand || undefined,
-      weight: weight ? parseFloat(weight) : undefined,
+      sku: productType === 'food' ? undefined : (sku || undefined),
+      brand: productType === 'food' ? undefined : (brand || undefined),
+      weight: productType === 'food' ? undefined : (weight ? parseFloat(weight) : undefined),
       oldPrice: oldPrice ? parseFloat(oldPrice) : undefined,
-      images: images ? images.split(',').map(s => s.trim()).filter(Boolean) : undefined
+      images: images ? images.split(',').map(s => s.trim()).filter(Boolean) : undefined,
+      productType,
+      preparationTime: productType === 'food' ? (parseInt(preparationTime) || undefined) : undefined,
+      modifiers: productType === 'food' ? modifiers.map(m => ({
+        ...m,
+        options: m.options.map((o: any) => ({
+          name: o.name,
+          price: o.price ? parseFloat(o.price) : 0
+        }))
+      })) : undefined,
+      variants: productType === 'retail' ? variants.map(v => ({
+        name: v.name,
+        value: v.value,
+        price: v.price ? parseFloat(v.price) : 0,
+        stock: v.stock ? parseInt(v.stock) : 0
+      })) : undefined,
+      dietaryTags: productType === 'food' ? dietaryTags : undefined
     };
 
     try {
@@ -204,8 +238,8 @@ export default function ProductsTab() {
           </div>
         ) : filteredProducts.length > 0 ? (
           filteredProducts.map((p: any) => {
-            const isOut = p.stockQuantity === 0;
-            const isLow = p.stockQuantity > 0 && p.stockQuantity <= 10;
+            const isOut = p.productType !== 'food' && p.stockQuantity === 0;
+            const isLow = p.productType !== 'food' && p.stockQuantity > 0 && p.stockQuantity <= 10;
             
             // stock badge styles
             let badgeClass = 'bg-[#dcfce7] text-[#15803d]'; // in stock
@@ -229,8 +263,13 @@ export default function ProductsTab() {
                 {/* Details */}
                 <div className="flex-grow min-w-0">
                   <h3 className="text-sm font-semibold text-foreground truncate">{p.name}</h3>
-                  <p className="text-xs text-muted-foreground truncate">{p.category || 'Food & Catering'}</p>
-                  <p className="text-sm font-bold text-foreground mt-1">₦{parseFloat(p.price).toLocaleString()}</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-xs text-muted-foreground truncate">{p.category || 'Food & Catering'}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted/60 font-semibold uppercase text-muted-foreground">
+                      {p.productType === 'food' ? '🍔 Food' : '🛍️ Retail'}
+                    </span>
+                  </div>
+                  <p className="text-sm font-bold text-foreground mt-1.5">₦{parseFloat(p.price).toLocaleString()}</p>
                 </div>
 
                 {/* Actions and Stock */}
@@ -250,7 +289,7 @@ export default function ProductsTab() {
                     </button>
                   </div>
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${badgeClass}`}>
-                    {p.stockQuantity} units
+                    {p.productType === 'food' ? 'Unlimited' : `${p.stockQuantity} units`}
                   </span>
                 </div>
               </div>
@@ -290,34 +329,39 @@ export default function ProductsTab() {
                 required
               />
 
+              {/* Product Type Selector */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-foreground">Category</label>
-                <select 
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="w-full rounded-xl border border-border bg-input px-4 py-3 text-sm text-foreground outline-none transition focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                >
-                  <option value="Food & Catering">Food & Catering</option>
-                  <option value="Beverages">Beverages</option>
-                  <option value="Merchandise">Merchandise</option>
-                  <option value="Snacks">Snacks</option>
-                  <option value="Others">Others</option>
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <VendorInput 
-                  label="SKU (Optional)"
-                  placeholder="e.g. JOL-RICE-01"
-                  value={sku}
-                  onChange={(e) => setSku(e.target.value)}
-                />
-                <VendorInput 
-                  label="Brand (Optional)"
-                  placeholder="e.g. Flowmart"
-                  value={brand}
-                  onChange={(e) => setBrand(e.target.value)}
-                />
+                <label className="text-xs font-semibold text-foreground">Product Type</label>
+                <div className="grid grid-cols-2 gap-2 bg-[#f3f4f6] p-1 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setProductType('food');
+                      setCategory('Food & Catering');
+                    }}
+                    className={`py-2 rounded-lg text-xs font-bold transition-all ${
+                      productType === 'food'
+                        ? 'bg-[#064e3b] text-white shadow-xs'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    🍔 Prepared Food
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setProductType('retail');
+                      setCategory('Merchandise');
+                    }}
+                    className={`py-2 rounded-lg text-xs font-bold transition-all ${
+                      productType === 'retail'
+                        ? 'bg-[#064e3b] text-white shadow-xs'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    🛍️ Retail & Groceries
+                  </button>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -338,24 +382,348 @@ export default function ProductsTab() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <VendorInput 
-                  label="Stock Quantity"
-                  placeholder="50"
-                  type="number"
-                  value={stockQuantity}
-                  onChange={(e) => setStockQuantity(e.target.value)}
-                  required
-                />
-                <VendorInput 
-                  label="Weight (kg)"
-                  placeholder="0.5"
-                  type="number"
-                  step="0.01"
-                  value={weight}
-                  onChange={(e) => setWeight(e.target.value)}
-                />
-              </div>
+              {/* Dynamic Content: Food vs Retail */}
+              {productType === 'food' ? (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <VendorInput 
+                      label="Prep Time (mins)"
+                      placeholder="e.g. 15"
+                      type="number"
+                      value={preparationTime}
+                      onChange={(e) => setPreparationTime(e.target.value)}
+                    />
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-foreground">Category</label>
+                      <Select value={category} onValueChange={setCategory}>
+                        <SelectTrigger className="w-full h-12 bg-input border-border rounded-xl">
+                          <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Food & Catering">Food & Catering</SelectItem>
+                          <SelectItem value="Beverages">Beverages</SelectItem>
+                          <SelectItem value="Snacks">Snacks</SelectItem>
+                          <SelectItem value="Others">Others</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Dietary Tags */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-foreground">Dietary Tags</label>
+                    <div className="flex flex-wrap gap-2">
+                      {['Vegan', 'Vegetarian', 'Gluten-Free', 'Halal', 'Contains Nuts'].map((tag) => {
+                        const isSelected = dietaryTags.includes(tag);
+                        return (
+                          <button
+                            key={tag}
+                            type="button"
+                            onClick={() => {
+                              if (isSelected) {
+                                setDietaryTags(dietaryTags.filter(t => t !== tag));
+                              } else {
+                                setDietaryTags([...dietaryTags, tag]);
+                              }
+                            }}
+                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                              isSelected
+                                ? 'bg-[#064e3b]/10 border-[#064e3b] text-[#064e3b]'
+                                : 'border-border text-muted-foreground hover:bg-[#f3f4f6]'
+                            }`}
+                          >
+                            {tag}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Modifiers Builder */}
+                  <div className="flex flex-col gap-2 border border-border/80 rounded-xl p-3 bg-[#f9fafb]">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-foreground">Modifiers & Add-ons</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setModifiers([
+                            ...modifiers,
+                            { name: '', type: 'single', required: false, options: [{ name: '', price: '' }] }
+                          ]);
+                        }}
+                        className="text-xs text-[#064e3b] font-bold flex items-center gap-1 hover:underline"
+                      >
+                        <Plus size={14} className="inline mr-1" /> Add Group
+                      </button>
+                    </div>
+
+                    {modifiers.map((group, gIdx) => (
+                      <div key={gIdx} className="border border-border/70 rounded-xl p-3 bg-white flex flex-col gap-3 relative">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setModifiers(modifiers.filter((_, idx) => idx !== gIdx));
+                          }}
+                          className="absolute top-2 right-2 text-destructive hover:bg-destructive/10 p-1 rounded-lg transition-all"
+                        >
+                          <X size={14} />
+                        </button>
+
+                        <div className="grid grid-cols-2 gap-2 mt-1">
+                          <div className="flex flex-col gap-1">
+                            <label className="text-[10px] font-bold text-muted-foreground">Group Name</label>
+                            <input
+                              type="text"
+                              placeholder="e.g. Choose Protein"
+                              value={group.name}
+                              onChange={(e) => {
+                                const newMods = [...modifiers];
+                                newMods[gIdx].name = e.target.value;
+                                setModifiers(newMods);
+                              }}
+                              className="border border-border rounded-lg px-2.5 py-1.5 text-xs outline-none focus:border-primary"
+                              required
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-1">
+                            <div className="flex flex-col gap-1">
+                              <label className="text-[10px] font-bold text-muted-foreground">Selection</label>
+                              <select
+                                value={group.type}
+                                onChange={(e) => {
+                                  const newMods = [...modifiers];
+                                  newMods[gIdx].type = e.target.value;
+                                  setModifiers(newMods);
+                                }}
+                                className="border border-border rounded-lg px-2 py-1.5 text-xs bg-white outline-none focus:border-primary"
+                              >
+                                <option value="single">Single</option>
+                                <option value="multiple">Multiple</option>
+                              </select>
+                            </div>
+                            <div className="flex flex-col gap-1 items-center justify-center pt-4">
+                              <label className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground cursor-pointer select-none">
+                                <input
+                                  type="checkbox"
+                                  checked={group.required}
+                                  onChange={(e) => {
+                                    const newMods = [...modifiers];
+                                    newMods[gIdx].required = e.target.checked;
+                                    setModifiers(newMods);
+                                  }}
+                                  className="rounded border-border text-primary focus:ring-primary/20"
+                                />
+                                Required
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col gap-2 mt-1">
+                          <span className="text-[10px] font-bold text-muted-foreground">Options</span>
+                          {group.options.map((opt: any, oIdx: number) => (
+                            <div key={oIdx} className="flex gap-2 items-center">
+                              <input
+                                type="text"
+                                placeholder="Option name (e.g. Chicken)"
+                                value={opt.name}
+                                onChange={(e) => {
+                                  const newMods = [...modifiers];
+                                  newMods[gIdx].options[oIdx].name = e.target.value;
+                                  setModifiers(newMods);
+                                }}
+                                className="flex-grow border border-border rounded-lg px-2.5 py-1 text-xs outline-none focus:border-primary"
+                                required
+                              />
+                              <input
+                                type="number"
+                                placeholder="+ Price (₦)"
+                                value={opt.price}
+                                onChange={(e) => {
+                                  const newMods = [...modifiers];
+                                  newMods[gIdx].options[oIdx].price = e.target.value;
+                                  setModifiers(newMods);
+                                }}
+                                className="w-24 border border-border rounded-lg px-2.5 py-1 text-xs outline-none focus:border-primary"
+                              />
+                              {group.options.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const newMods = [...modifiers];
+                                    newMods[gIdx].options = newMods[gIdx].options.filter((_: any, idx: number) => idx !== oIdx);
+                                    setModifiers(newMods);
+                                  }}
+                                  className="text-muted-foreground hover:text-destructive transition-all"
+                                >
+                                  <X size={14} />
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newMods = [...modifiers];
+                              newMods[gIdx].options.push({ name: '', price: '' });
+                              setModifiers(newMods);
+                            }}
+                            className="text-[10px] text-[#064e3b] font-bold self-start flex items-center gap-1 hover:underline mt-0.5"
+                          >
+                            <Plus size={10} className="inline" /> Add Option
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-foreground">Category</label>
+                    <Select value={category} onValueChange={setCategory}>
+                      <SelectTrigger className="w-full h-12 bg-input border-border rounded-xl">
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Food & Catering">Food & Catering</SelectItem>
+                        <SelectItem value="Beverages">Beverages</SelectItem>
+                        <SelectItem value="Merchandise">Merchandise</SelectItem>
+                        <SelectItem value="Snacks">Snacks</SelectItem>
+                        <SelectItem value="Others">Others</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <VendorInput 
+                      label="SKU (Optional)"
+                      placeholder="e.g. JOL-RICE-01"
+                      value={sku}
+                      onChange={(e) => setSku(e.target.value)}
+                    />
+                    <VendorInput 
+                      label="Brand (Optional)"
+                      placeholder="e.g. Flowmart"
+                      value={brand}
+                      onChange={(e) => setBrand(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <VendorInput 
+                      label="Stock Quantity"
+                      placeholder="50"
+                      type="number"
+                      value={stockQuantity}
+                      onChange={(e) => setStockQuantity(e.target.value)}
+                      required
+                    />
+                    <VendorInput 
+                      label="Weight (kg)"
+                      placeholder="0.5"
+                      type="number"
+                      step="0.01"
+                      value={weight}
+                      onChange={(e) => setWeight(e.target.value)}
+                    />
+                  </div>
+
+                  {/* Variants Builder */}
+                  <div className="flex flex-col gap-2 border border-border/80 rounded-xl p-3 bg-[#f9fafb]">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-foreground">Product Variants</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setVariants([
+                            ...variants,
+                            { name: '', value: '', price: '', stock: '' }
+                          ]);
+                        }}
+                        className="text-xs text-[#064e3b] font-bold flex items-center gap-1 hover:underline"
+                      >
+                        <Plus size={14} className="inline mr-1" /> Add Variant
+                      </button>
+                    </div>
+
+                    {variants.map((v, vIdx) => (
+                      <div key={vIdx} className="border border-border/70 rounded-xl p-2 bg-white flex gap-2 items-center relative pr-8">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setVariants(variants.filter((_, idx) => idx !== vIdx));
+                          }}
+                          className="absolute top-2 right-2 text-destructive hover:bg-destructive/10 p-1 rounded-lg transition-all"
+                        >
+                          <X size={14} />
+                        </button>
+
+                        <div className="grid grid-cols-4 gap-1.5 flex-grow">
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-[9px] font-bold text-muted-foreground">Type</span>
+                            <input
+                              type="text"
+                              placeholder="Size"
+                              value={v.name}
+                              onChange={(e) => {
+                                const newVars = [...variants];
+                                newVars[vIdx].name = e.target.value;
+                                setVariants(newVars);
+                              }}
+                              className="border border-border rounded px-1.5 py-1 text-xs outline-none"
+                              required
+                            />
+                          </div>
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-[9px] font-bold text-muted-foreground">Value</span>
+                            <input
+                              type="text"
+                              placeholder="XL"
+                              value={v.value}
+                              onChange={(e) => {
+                                const newVars = [...variants];
+                                newVars[vIdx].value = e.target.value;
+                                setVariants(newVars);
+                              }}
+                              className="border border-border rounded px-1.5 py-1 text-xs outline-none"
+                              required
+                            />
+                          </div>
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-[9px] font-bold text-muted-foreground">Price (₦)</span>
+                            <input
+                              type="number"
+                              placeholder="Price"
+                              value={v.price}
+                              onChange={(e) => {
+                                const newVars = [...variants];
+                                newVars[vIdx].price = e.target.value;
+                                setVariants(newVars);
+                              }}
+                              className="border border-border rounded px-1.5 py-1 text-xs outline-none"
+                            />
+                          </div>
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-[9px] font-bold text-muted-foreground">Stock</span>
+                            <input
+                              type="number"
+                              placeholder="Stock"
+                              value={v.stock}
+                              onChange={(e) => {
+                                const newVars = [...variants];
+                                newVars[vIdx].stock = e.target.value;
+                                setVariants(newVars);
+                              }}
+                              className="border border-border rounded px-1.5 py-1 text-xs outline-none"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-semibold text-foreground">Description</label>

@@ -18,7 +18,7 @@ export default function PurchaseCard({
   );
 
   const handleIncrement = () => {
-    if (qty < product.stockQuantity) {
+    if (product.productType === 'food' || qty < product.stockQuantity) {
       setQty((prev) => prev + 1);
     }
   };
@@ -33,7 +33,7 @@ export default function PurchaseCard({
     addToCart(product, qty);
   };
 
-  const isOutOfStock = product.stockQuantity === 0;
+  const isOutOfStock = product.productType !== 'food' && product.stockQuantity === 0;
 
   return (
     <div className="sticky top-24 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
@@ -46,15 +46,15 @@ export default function PurchaseCard({
           className={`mt-1 inline-flex items-center gap-1.5 text-sm font-semibold ${
             isOutOfStock
               ? "text-red-500"
-              : product.stockQuantity < 10
+              : product.productType !== 'food' && product.stockQuantity < 10
               ? "text-amber-500"
               : "text-green-600"
           }`}
         >
-          <span className={`h-2 w-2 rounded-full ${isOutOfStock ? 'bg-red-500' : product.stockQuantity < 10 ? 'bg-amber-500' : 'bg-green-500'}`} />
+          <span className={`h-2 w-2 rounded-full ${isOutOfStock ? 'bg-red-500' : (product.productType !== 'food' && product.stockQuantity < 10) ? 'bg-amber-500' : 'bg-green-500'}`} />
           {isOutOfStock
             ? "Out of Stock"
-            : product.stockQuantity < 10
+            : product.productType !== 'food' && product.stockQuantity < 10
             ? `Low Stock: Only ${product.stockQuantity} left!`
             : "In Stock"}
         </span>
@@ -79,7 +79,7 @@ export default function PurchaseCard({
             </span>
             <button
               onClick={handleIncrement}
-              disabled={qty >= product.stockQuantity}
+              disabled={product.productType !== 'food' && qty >= product.stockQuantity}
               className="flex items-center justify-center w-10 h-10 hover:bg-gray-50 text-gray-600 disabled:text-gray-300 disabled:hover:bg-transparent transition cursor-pointer"
             >
               <Plus size={16} />

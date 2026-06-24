@@ -43,9 +43,9 @@ export default function KYCReview() {
         avatar: profileData.avatar,
 
         // Identity & Bank
-        fullName: user?.fullName,
-        dob: user?.dateOfBirth,
-        gender: user?.gender,
+        fullName: profileData.displayName || user?.fullName || '',
+        dob: profileData.dob || user?.dateOfBirth,
+        gender: profileData.gender || user?.gender,
         bankName: kycInfo.bankName,
         accountNumber: kycInfo.accountNumber,
         accountName: kycInfo.accountName,
@@ -119,8 +119,8 @@ export default function KYCReview() {
               </button>
             </div>
             <CardContent className="p-5 grid grid-cols-2 sm:grid-cols-3 gap-4">
-              <DetailItem label="Full Name" value={user?.fullName || '—'} />
-              <DetailItem label="Date of Birth" value={user?.dateOfBirth || '—'} />
+              <DetailItem label="Full Name" value={profileData.displayName || user?.fullName || '—'} />
+              <DetailItem label="Date of Birth" value={profileData.dob || user?.dateOfBirth || '—'} />
               <DetailItem label="Bank Name" value={kycInfo.bankName || '—'} />
               <DetailItem label="Account Number" value={kycInfo.accountNumber || '—'} />
               <DetailItem label="Account Name" value={kycInfo.accountName || '—'} />

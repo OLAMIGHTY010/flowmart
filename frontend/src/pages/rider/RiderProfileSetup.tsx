@@ -9,6 +9,7 @@ import { VendorInput } from '@/components/ui/input';
 import OnboardingStepIndicator from '@/components/OnboardingStepIndicator';
 import Icon from '@/components/Icon';
 import { Card, CardContent } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import SideBanner from '@/components/SideBanner';
 
 interface ProfileSetupProps {
@@ -31,14 +32,16 @@ export default function ProfileSetup({ onNext }: ProfileSetupProps) {
   const [city, setCity] = useState(formData.city || '');
   const [bio, setBio] = useState(formData.bio || '');
   
+  const [dob, setDob] = useState(formData.dob || user?.dateOfBirth || '');
+  const [gender, setGender] = useState(formData.gender || user?.gender || '');
+  
   React.useEffect(() => {
-    updateForm({ phone, stateRegion, city, bio, avatar: profileImage || '' });
-  }, [phone, stateRegion, city, bio, profileImage]);
+    updateForm({ phone, stateRegion, city, bio, avatar: profileImage || '', dob, gender });
+  }, [phone, stateRegion, city, bio, profileImage, dob, gender]);
 
   // Read-only personal info from registration
+  // Read-only personal info from registration
   const fullName = user?.fullName || '';
-  const dob = user?.dateOfBirth || '';
-  const gender = user?.gender || '';
 
   const formatDob = (dateStr: string) => {
     if (!dateStr) return '—';
@@ -157,9 +160,6 @@ export default function ProfileSetup({ onNext }: ProfileSetupProps) {
                 <span className="text-sm sm:text-base font-bold text-foreground">
                   Personal Information
                 </span>
-                <span className="ml-auto text-[10px] font-bold uppercase tracking-wider text-[#16a34a] bg-[#dcfce7] px-2 py-0.5 rounded-full">
-                  From Registration
-                </span>
               </div>
 
               <div className="flex flex-col md:flex-row items-center gap-6 pb-2">
@@ -208,20 +208,32 @@ export default function ProfileSetup({ onNext }: ProfileSetupProps) {
 
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Date of Birth</label>
-                  <div className="flex items-center gap-2 bg-[#f9fafb] border border-border/60 rounded-xl px-3.5 py-3">
-                    <Icon i="calendar" size={14} className="text-[#16a34a] flex-shrink-0" />
-                    <span className="text-sm font-semibold text-foreground truncate">{formatDob(dob)}</span>
-                    <Icon i="check-circle" size={14} className="text-[#16a34a] ml-auto flex-shrink-0" />
+                  <div className="flex items-center gap-2 bg-input border border-border rounded-xl px-3.5 py-3 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all">
+                    <Icon i="calendar" size={14} className="text-muted-foreground flex-shrink-0" />
+                    <input 
+                      type="date" 
+                      value={dob} 
+                      onChange={(e) => setDob(e.target.value)} 
+                      className="w-full bg-transparent border-none outline-none text-sm font-semibold text-foreground"
+                      required
+                    />
                   </div>
                 </div>
 
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Gender</label>
-                  <div className="flex items-center gap-2 bg-[#f9fafb] border border-border/60 rounded-xl px-3.5 py-3">
-                    <Icon i="users" size={14} className="text-[#16a34a] flex-shrink-0" />
-                    <span className="text-sm font-semibold text-foreground">{gender}</span>
-                    <Icon i="check-circle" size={14} className="text-[#16a34a] ml-auto flex-shrink-0" />
-                  </div>
+                  <Select value={gender} onValueChange={setGender} required>
+                    <SelectTrigger className="w-full bg-input border-border rounded-xl px-3.5 h-[46px] focus:ring-primary/20">
+                      <div className="flex items-center gap-2">
+                        <Icon i="users" size={14} className="text-muted-foreground flex-shrink-0" />
+                        <SelectValue placeholder="Select Gender" />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Male">Male</SelectItem>
+                      <SelectItem value="Female">Female</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </CardContent>

@@ -93,11 +93,13 @@ export interface DashboardStatsResponse {
 }
 
 export interface KYCInfoRequest {
+  vendorType?: string;
   fullName: string;
   dob: string;
   gender: string;
-  businessName: string;
-  cacNo: string;
+  businessName?: string;
+  tin?: string;
+  cacNo?: string;
   campCertificateId: string;
   bankName: string;
   accountNumber: string;
@@ -126,9 +128,11 @@ export interface KYCSubmitPayload {
   avatar?: string;
 
   // KYC Info fields
+  vendorType?: string;
   fullName?: string;
   dob?: string;
   gender?: string;
+  tin?: string;
   cacNo?: string;
   campCertificateId?: string;
   bankName: string;
@@ -143,6 +147,8 @@ export interface KYCSubmitPayload {
   governmentIdFile?: string;
   campCertificateFile?: string;
   guarantorIdFile?: string;
+  bankReferenceFile?: string;
+  cacDocumentFile?: string;
   riderImageFile?: string;
 }
 

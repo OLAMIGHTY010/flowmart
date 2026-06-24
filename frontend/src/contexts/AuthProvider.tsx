@@ -26,13 +26,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<AppUser | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  useEffect(() => {
-    const isSessionActive = document.cookie.includes('app_session_active=true');
-    if (!isSessionActive) {
-      localStorage.clear();
-      document.cookie = "app_session_active=true; path=/";
-    }
-  }, []);
+
 
   useEffect(() => {
     const checkActiveSession = async () => {
@@ -91,7 +85,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setUser(mappedUser);
         localStorage.setItem("currentUser", JSON.stringify(mappedUser));
 
-        return { success: true, error: "" };
+        return { success: true, error: "", user: mappedUser };
       }
 
       return { success: false, error: "Invalid server response" };

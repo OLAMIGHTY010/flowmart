@@ -28,7 +28,7 @@ const roles: { key: RoleOption; label: string; description: string; icon: typeof
 ];
 
 const RoleSelector = () => {
-  const [selectedRole, setSelectedRole] = useState<RoleOption>("attendee");
+  const [selectedRole, setSelectedRole] = useState<RoleOption | null>(null);
   const navigate = useNavigate();
 
   const handleContinue = () => {
@@ -244,10 +244,15 @@ const RoleSelector = () => {
             </div>
 
             <button
-              className="w-full py-4 px-7 text-[1.063rem] rounded-xl flex items-center justify-center gap-2 bg-brand-primary text-white hover:bg-green-700 transition-colors"
+              disabled={!selectedRole}
+              className={`w-full py-4 px-7 text-[1.063rem] rounded-xl flex items-center justify-center gap-2 transition-all ${
+                !selectedRole
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "border-2 border-gray-200 bg-white text-gray-700 hover:bg-brand-primary hover:border-brand-primary hover:text-white"
+              }`}
               onClick={handleContinue}
             >
-              Continue as {roleLabels[selectedRole]} <ArrowRight size={18} />
+              {selectedRole ? `Continue as ${roleLabels[selectedRole]}` : "Select a role to continue"} <ArrowRight size={18} />
             </button>
           </div>
           

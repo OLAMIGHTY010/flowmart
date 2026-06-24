@@ -17,6 +17,8 @@ export interface ProfileSetupFormData {
   city: string;
   bio: string;
   avatar: string;
+  dob?: string;
+  gender?: string;
 }
 
 const PROFILE_SETUP_KEY = ["profileSetupForm"] as const;
@@ -35,6 +37,8 @@ function loadProfileSetupFromStorage(): ProfileSetupFormData {
     city: '',
     bio: '',
     avatar: '',
+    dob: '',
+    gender: '',
   };
 }
 
@@ -66,6 +70,8 @@ export function useProfileSetupFormCache() {
 
 // ── KYCInfo Form Cache ──
 export interface KYCInfoFormData {
+  vendorType: 'individual' | 'business';
+  tin: string;
   businessName: string;
   cacNo: string;
   campCertificateId: string;
@@ -83,6 +89,8 @@ function loadKYCInfoFromStorage(): KYCInfoFormData {
     if (stored) return JSON.parse(stored);
   } catch { /* ignore */ }
   return {
+    vendorType: 'individual',
+    tin: '',
     businessName: '',
     cacNo: '',
     campCertificateId: '',
@@ -140,22 +148,7 @@ const KYC_SUBMIT_KEY = ["kycSubmitForm"] as const;
 const KYC_SUBMIT_STORAGE_KEY = "vendor_kyc_submit_form";
 
 function loadKYCSubmitFromStorage(): KYCSubmitFormData {
-  try {
-    const stored = localStorage.getItem(KYC_SUBMIT_STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      // filePreviewUrl won't survive localStorage (blob URLs are session-scoped)
-      // so mark uploaded docs as uploaded but without preview
-      if (parsed.documents) {
-        parsed.documents = parsed.documents.map((d: any) => ({
-          ...d,
-          filePreviewUrl: undefined,  // Blob URLs don't persist
-        }));
-      }
-      return parsed;
-    }
-  } catch { /* ignore */ }
-  return {
+  const defaultState: KYCSubmitFormData = {
     govIdType: 'national_id',
     guarantorName: '',
     guarantorPhone: '',
@@ -164,8 +157,36 @@ function loadKYCSubmitFromStorage(): KYCSubmitFormData {
       { id: 'government_id', title: 'Government ID', subtitle: 'Upload a valid government-issued ID', status: 'upload' },
       { id: 'camp_certificate', title: 'Camp Certificate', subtitle: 'Upload your camp certificate document', status: 'upload' },
       { id: 'guarantor_id', title: 'Guarantor ID', subtitle: "Upload guarantor's government-issued ID", status: 'upload' },
+      { id: 'bank_reference', title: 'Bank Reference / Statement', subtitle: "Upload stamped bank reference letter or statement", status: 'upload' },
+      { id: 'cac_document', title: 'CAC Registration Document', subtitle: "Upload CAC 1.1 or Status Report", status: 'upload' },
     ],
   };
+
+  try {
+    const stored = localStorage.getItem(KYC_SUBMIT_STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      // filePreviewUrl won't survive localStorage (blob URLs are session-scoped)
+      if (parsed.documents && Array.isArray(parsed.documents)) {
+        const storedDocsMap = new Map<string, any>(parsed.documents.map((d: any) => [d.id, d]));
+        
+        parsed.documents = defaultState.documents.map(defaultDoc => {
+          const storedDoc = storedDocsMap.get(defaultDoc.id);
+          if (storedDoc) {
+            return {
+              ...storedDoc,
+              filePreviewUrl: undefined,
+            };
+          }
+          return defaultDoc;
+        });
+      } else {
+        parsed.documents = defaultState.documents;
+      }
+      return { ...defaultState, ...parsed, documents: parsed.documents };
+    }
+  } catch { /* ignore */ }
+  return defaultState;
 }
 
 export function useKYCSubmitFormCache() {
@@ -188,9 +209,13 @@ export function useKYCSubmitFormCache() {
     // Save to localStorage (strip blob URLs which are session-only)
     const toStore = {
       ...next,
-      documents: next.documents.map(d => ({ ...d, filePreviewUrl: undefined })),
+      documents: next.documents.map(d => ({ ...d, filePreviewUrl: undefined, base64: undefined })),
     };
-    localStorage.setItem(KYC_SUBMIT_STORAGE_KEY, JSON.stringify(toStore));
+    try {
+      localStorage.setItem(KYC_SUBMIT_STORAGE_KEY, JSON.stringify(toStore));
+    } catch (e) {
+      console.warn("localStorage quota exceeded for kyc submit", e);
+    }
   };
 
   return {

@@ -98,7 +98,9 @@ export default function CustomersAlsoViewed({
       >
         {products.map((product: Product) => {
           const stockStatus =
-            product.stockQuantity === 0
+            product.productType === 'food'
+              ? "In Stock"
+              : product.stockQuantity === 0
               ? "Out of Stock"
               : product.stockQuantity < 10
               ? "Low Stock"

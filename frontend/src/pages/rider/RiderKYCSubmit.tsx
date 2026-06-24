@@ -7,6 +7,7 @@ import { useKYCSubmitFormCache } from '@/hooks/useKYCFormCache';
 import { RiderButton } from '@/components/ui/button';
 import { VendorInput } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Icon from '@/components/Icon';
 import SideBanner from '@/components/SideBanner';
 import OnboardingStepIndicator from '@/components/OnboardingStepIndicator';
@@ -257,22 +258,21 @@ export default function KYCSubmitScreen() {
 
                 <div className="flex flex-col gap-1.5 w-full">
                   <label className="text-sm font-body text-foreground font-semibold">Relationship</label>
-                  <div className="flex items-center gap-2 bg-input border border-border rounded-xl px-3.5 py-3 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all">
-                    <Icon i="heart" size={16} className="text-muted-foreground" />
-                    <select
-                      value={guarantorRelationship}
-                      onChange={(e) => setGuarantorRelationship(e.target.value)}
-                      className="w-full bg-transparent border-none outline-none text-sm font-body p-0 focus:ring-0 focus:outline-none text-foreground font-semibold cursor-pointer"
-                      required
-                    >
-                      <option value="" disabled>Select relationship</option>
+                  <Select value={guarantorRelationship} onValueChange={setGuarantorRelationship} required>
+                    <SelectTrigger className="w-full bg-input border-border rounded-xl px-3.5 h-[46px] focus:ring-primary/20">
+                      <div className="flex items-center gap-2">
+                        <Icon i="heart" size={16} className="text-muted-foreground flex-shrink-0" />
+                        <SelectValue placeholder="Select relationship" />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent>
                       {RELATIONSHIPS.map((rel) => (
-                        <option key={rel} value={rel} className="text-foreground font-medium">
+                        <SelectItem key={rel} value={rel}>
                           {rel}
-                        </option>
+                        </SelectItem>
                       ))}
-                    </select>
-                  </div>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 

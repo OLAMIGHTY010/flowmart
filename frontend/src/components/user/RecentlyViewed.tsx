@@ -30,9 +30,10 @@ export default function RecentlyViewed() {
         ref={scrollRef}
         className="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
       >
-        {products.map((product) => {
           const stockStatus =
-            product.stockQuantity === 0
+            product.productType === 'food'
+              ? "In Stock"
+              : product.stockQuantity === 0
               ? "Out of Stock"
               : product.stockQuantity < 10
               ? "Low Stock"

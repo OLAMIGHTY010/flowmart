@@ -1,52 +1,83 @@
 import { NavLink } from "react-router-dom";
-import { Home, Package, ShoppingBag, ShoppingCart } from "lucide-react";
+import { Home, Package, ShoppingBag, Truck, Bell, User } from "lucide-react";
 import { useCartStore } from "@/stores/cartStore";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function BottomNav() {
   const cartCount = useCartStore((s) => s.getCartCount());
+  const { user } = useAuth();
+
+  const getNavItems = () => {
+    const role = user?.role;
+    
+    // Default / Shopper items
+    let items = [
+      { label: "Home", icon: Home, path: "/" },
+      { label: "Orders", icon: Package, path: "/orders" },
+      { label: "Marketplace", icon: ShoppingBag, path: "/products" },
+    ];
+
+    if (role === "dispatch_rider") {
+      items = [
+        { label: "Home", icon: Home, path: "/rider/dashboard" },
+        { label: "Deliveries", icon: Truck, path: "/rider/deliveries" },
+        { label: "Marketplace", icon: ShoppingBag, path: "/products" },
+      ];
+    } else if (role === "vendor") {
+      items = [
+        { label: "Home", icon: Home, path: "/vendor/dashboard" },
+        { label: "Orders", icon: Package, path: "/vendor/orders" },
+        { label: "Marketplace", icon: ShoppingBag, path: "/products" },
+      ];
+    }
+
+    // Add Alerts and Profile for all roles
+    items.push({ label: "Alerts", icon: Bell, path: "/alerts" });
+    items.push({ label: "Profile", icon: User, path: "/profile" });
+
+    return items;
+  };
+
+  const navItems = getNavItems();
 
   return (
     <nav className="mobile-only" style={{
       position: "fixed",
-      bottom: 0,
-      left: 0,
-      right: 0,
+      bottom: "16px",
+      left: "16px",
+      right: "16px",
       backgroundColor: "var(--color-bg-primary)",
-      borderTop: "1px solid var(--color-border)",
       display: "flex",
-      justifyContent: "space-around",
+      justifyContent: "space-between",
       alignItems: "center",
-      padding: "8px 12px",
-      paddingBottom: "max(8px, env(safe-area-inset-bottom))",
-      zIndex: "var(--z-sticky)" as any,
-      boxShadow: "0 -4px 12px rgba(0,0,0,0.05)"
+      padding: "12px 20px",
+      zIndex: "var(--z-sticky)" as unknown as number,
+      boxShadow: "0 8px 32px rgba(0,0,0,0.08)",
+      borderRadius: "24px",
+      border: "1px solid var(--color-border)",
     }}>
-      <NavLink to="/" className={({ isActive }) => `bottom-nav-item ${isActive ? "active" : ""}`}>
-        <Home size={22} />
-        <span>HOME</span>
-      </NavLink>
+      {navItems.map((item, index) => {
+        const Icon = item.icon;
+        const isCart = item.label === "Cart";
 
-      <NavLink to="/products" className={({ isActive }) => `bottom-nav-item ${isActive ? "active" : ""}`}>
-        <Package size={22} />
-        <span>PRODUCTS</span>
-      </NavLink>
-
-      <NavLink to="/orders" className={({ isActive }) => `bottom-nav-item ${isActive ? "active" : ""}`}>
-        <ShoppingBag size={22} />
-        <span>ORDERS</span>
-      </NavLink>
-
-      <NavLink to="/cart" className="bottom-nav-fab">
-        <div className="fab-button">
-          <ShoppingCart size={24} style={{ color: "white" }} />
-          {cartCount > 0 && (
-            <span className="fab-badge">
-              {cartCount > 9 ? "9+" : cartCount}
-            </span>
-          )}
-        </div>
-        <span>CART</span>
-      </NavLink>
+        return (
+          <NavLink 
+            key={index} 
+            to={item.path} 
+            className={({ isActive }) => `bottom-nav-item ${isActive ? "active" : ""}`}
+          >
+            <div style={{ position: "relative" }}>
+              <Icon size={24} />
+              {isCart && cartCount > 0 && (
+                <span className="badge-indicator">
+                  {cartCount > 9 ? "9+" : cartCount}
+                </span>
+              )}
+            </div>
+            <span>{item.label}</span>
+          </NavLink>
+        );
+      })}
 
       <style>{`
         .bottom-nav-item {
@@ -58,51 +89,28 @@ export default function BottomNav() {
           color: var(--color-text-muted);
           font-size: 0.625rem;
           font-weight: 700;
-          letter-spacing: 0.5px;
-          transition: color var(--transition-fast);
+          letter-spacing: 0.3px;
+          transition: color var(--transition-fast), transform var(--transition-fast);
         }
         .bottom-nav-item.active {
           color: var(--color-primary);
+          transform: translateY(-2px);
         }
-        .bottom-nav-fab {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 4px;
-          text-decoration: none;
-          color: var(--color-text-muted);
-          font-size: 0.625rem;
-          font-weight: 700;
-          letter-spacing: 0.5px;
-          position: relative;
-        }
-        .fab-button {
-          width: 52px;
-          height: 52px;
-          border-radius: 50%;
-          background-color: var(--color-primary);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-top: -24px;
-          box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
-          position: relative;
-        }
-        .fab-badge {
+        .badge-indicator {
           position: absolute;
-          top: -2px;
-          right: -2px;
+          top: -4px;
+          right: -8px;
           background-color: var(--color-accent-red);
           color: white;
-          font-size: 0.625rem;
+          font-size: 0.55rem;
           font-weight: 800;
-          width: 20px;
-          height: 20px;
-          border-radius: 50%;
+          padding: 2px 4px;
+          border-radius: 10px;
           display: flex;
           align-items: center;
           justify-content: center;
           border: 2px solid var(--color-bg-primary);
+          min-width: 16px;
         }
         @media (min-width: 769px) {
           .mobile-only { display: none !important; }

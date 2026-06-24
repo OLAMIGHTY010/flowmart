@@ -140,10 +140,8 @@ const AIChatWidget = () => {
       <button
         onClick={() => setIsOpen(true)}
         aria-label="Open chat"
+        className="fixed bottom-[90px] lg:bottom-6 right-4 lg:right-6"
         style={{
-          position: "fixed",
-          bottom: 24,
-          right: 24,
           width: 56,
           height: 56,
           borderRadius: "50%",
@@ -166,11 +164,8 @@ const AIChatWidget = () => {
 
       {/* ── Chat Window ── */}
       <div
+        className="fixed bottom-[90px] lg:bottom-6 right-4 lg:right-6 w-[calc(100vw-32px)] sm:w-[370px]"
         style={{
-          position: "fixed",
-          bottom: 24,
-          right: 24,
-          width: 370,
           height: 560,
           borderRadius: 20,
           overflow: "hidden",

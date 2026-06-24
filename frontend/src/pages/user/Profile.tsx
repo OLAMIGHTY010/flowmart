@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/contexts/ToastContext";
-import { User, Mail, Phone, LogOut, Save } from "lucide-react";
+import { User, Mail, Phone, LogOut, Save, Calendar, Users } from "lucide-react";
 
 const Profile = () => {
   const { user, logout } = useAuth();
@@ -50,7 +50,7 @@ const Profile = () => {
             </div>
             <div>
               <h2 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: 4 }}>{user?.fullName}</h2>
-              <span className="badge badge-green" style={{ textTransform: "capitalize" }}>{user?.role.replace("_", " ")} Account</span>
+              <span className="badge badge-green" style={{ textTransform: "capitalize" }}>{user?.role?.replace("_", " ") || "User"} Account</span>
             </div>
           </div>
 
@@ -90,6 +90,34 @@ const Profile = () => {
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 placeholder="+234..."
+              />
+            </div>
+
+            {/* Gender Field */}
+            <div>
+              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.875rem", fontWeight: 600, marginBottom: 8, color: "var(--color-text-secondary)" }}>
+                <Users size={16} /> Gender <span style={{ fontSize: "0.75rem", color: "var(--color-text-light)", fontWeight: 400 }}>(via Google)</span>
+              </label>
+              <input 
+                type="text" 
+                className="input-field" 
+                value={user?.gender || "Not specified"}
+                disabled
+                style={{ backgroundColor: "var(--color-bg-tertiary)", cursor: "not-allowed", color: "var(--color-text-muted)", textTransform: "capitalize" }}
+              />
+            </div>
+
+            {/* Date of Birth Field */}
+            <div>
+              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.875rem", fontWeight: 600, marginBottom: 8, color: "var(--color-text-secondary)" }}>
+                <Calendar size={16} /> Date of Birth <span style={{ fontSize: "0.75rem", color: "var(--color-text-light)", fontWeight: 400 }}>(via Google)</span>
+              </label>
+              <input 
+                type="text" 
+                className="input-field" 
+                value={user?.dateOfBirth || "Not specified"}
+                disabled
+                style={{ backgroundColor: "var(--color-bg-tertiary)", cursor: "not-allowed", color: "var(--color-text-muted)" }}
               />
             </div>
 

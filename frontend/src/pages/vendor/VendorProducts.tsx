@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Plus, Search, Edit2, Trash2, MoreVertical, EyeOff, Eye } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const mockProducts = [
   { id: "1", name: "Fresh Tomatoes (1kg)", category: "Groceries", price: 1200, stock: 45, status: "active", sales: 12 },
@@ -28,15 +29,25 @@ const VendorProducts = () => {
             <input type="text" placeholder="Search products..." style={{ border: "none", backgroundColor: "transparent", padding: "10px", width: "100%", outline: "none", fontSize: "0.875rem" }} />
           </div>
           <div style={{ display: "flex", gap: 12 }}>
-            <select className="input-field" style={{ width: "auto", padding: "8px 16px" }}>
-              <option value="all">All Categories</option>
-              <option value="groceries">Groceries</option>
-            </select>
-            <select className="input-field" style={{ width: "auto", padding: "8px 16px" }}>
-              <option value="all">Status: All</option>
-              <option value="active">Active</option>
-              <option value="out_of_stock">Out of Stock</option>
-            </select>
+            <Select defaultValue="all">
+              <SelectTrigger className="w-[150px] bg-input border-border rounded-xl">
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="groceries">Groceries</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select defaultValue="all">
+              <SelectTrigger className="w-[150px] bg-input border-border rounded-xl">
+                <SelectValue placeholder="Status: All" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Status: All</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="out_of_stock">Out of Stock</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 

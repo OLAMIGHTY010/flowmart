@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/contexts/ToastContext";
 import { User, Mail, Phone, Save, Bike } from "lucide-react";
 import { apiClient } from "@/services/api";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const RiderProfile = () => {
   const { user, refreshUser } = useAuth();
@@ -114,15 +115,16 @@ const RiderProfile = () => {
             <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.875rem", fontWeight: 600, marginBottom: 8, color: "var(--color-text-secondary)" }}>
               <Bike size={16} /> Vehicle Type
             </label>
-            <select 
-              className="input-field"
-              value={formData.vehicleType}
-              onChange={(e) => setFormData({ ...formData, vehicleType: e.target.value })}
-            >
-              <option value="motorcycle">Motorcycle</option>
-              <option value="bicycle">Bicycle</option>
-              <option value="car">Car</option>
-            </select>
+            <Select value={formData.vehicleType} onValueChange={(val) => setFormData({ ...formData, vehicleType: val })}>
+              <SelectTrigger className="w-full bg-input border-border rounded-xl px-4 py-3 h-[46px]">
+                <SelectValue placeholder="Select Vehicle Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="motorcycle">Motorcycle</SelectItem>
+                <SelectItem value="bicycle">Bicycle</SelectItem>
+                <SelectItem value="car">Car</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div>

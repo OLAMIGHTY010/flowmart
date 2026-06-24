@@ -61,8 +61,9 @@ function VendorInput({
       <div
         className={cn(
           "flex items-center w-full gap-[10px]",
-          isError ? "border-red-500 ring-2 ring-red-500/10" : "border-gray-300",
-          "rounded-lg",
+          "border",
+          isError ? "border-red-500 ring-2 ring-red-500/10" : "border-border",
+          "rounded-xl",
           "px-3 py-[14px]",
           "bg-background",
           "transition",

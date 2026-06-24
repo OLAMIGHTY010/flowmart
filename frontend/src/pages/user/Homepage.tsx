@@ -275,7 +275,7 @@ const Homepage = () => {
               gap: 16,
             }}>
               {products.map((product: any) => {
-                const firstImage = product.images?.split(",")[0];
+                const firstImage = product.imageUrl || (product.images ? product.images.split(",")[0] : null);
                 return (
                   <Link
                     key={product.id}

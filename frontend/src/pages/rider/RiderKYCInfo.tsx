@@ -9,6 +9,7 @@ import { RiderButton } from '@/components/ui/button';
 import { VendorInput } from '@/components/ui/input';
 import Icon from '@/components/Icon';
 import { Card, CardContent } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import SideBanner from '@/components/SideBanner';
 import OnboardingStepIndicator from '@/components/OnboardingStepIndicator';
 
@@ -279,22 +280,21 @@ export default function KYCInfo() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 <div className="flex flex-col gap-1.5 w-full">
                   <label className="text-sm font-body text-foreground font-semibold">Bank Name</label>
-                  <div className="flex items-center gap-2 bg-input border border-border rounded-xl px-3.5 py-3 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all">
-                    <Icon i="landmark" size={16} className="text-muted-foreground" />
-                    <select
-                      value={bankName}
-                      onChange={(e) => setBankName(e.target.value)}
-                      className="w-full bg-transparent border-none outline-none text-sm font-body p-0 focus:ring-0 focus:outline-none text-foreground font-semibold cursor-pointer"
-                      required
-                    >
-                      <option value="" disabled>Select bank</option>
+                  <Select value={bankName} onValueChange={setBankName} required>
+                    <SelectTrigger className="w-full bg-input border-border rounded-xl px-3.5 h-[46px] focus:ring-primary/20">
+                      <div className="flex items-center gap-2">
+                        <Icon i="landmark" size={16} className="text-muted-foreground flex-shrink-0" />
+                        <SelectValue placeholder="Select bank" />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent>
                       {NIGERIAN_BANKS.map((bank) => (
-                        <option key={bank} value={bank} className="text-foreground font-medium">
+                        <SelectItem key={bank} value={bank}>
                           {bank}
-                        </option>
+                        </SelectItem>
                       ))}
-                    </select>
-                  </div>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <VendorInput
@@ -332,19 +332,18 @@ export default function KYCInfo() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div className="flex flex-col gap-1.5 w-full">
                   <label className="text-sm font-body text-foreground font-semibold">Vehicle Type</label>
-                  <div className="flex items-center gap-2 bg-input border border-border rounded-xl px-3.5 py-3.5 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all">
-                    <select
-                      value={vehicleType}
-                      onChange={(e) => setVehicleType(e.target.value)}
-                      className="w-full bg-transparent border-none outline-none text-sm font-body p-0 focus:ring-0 focus:outline-none text-foreground font-semibold cursor-pointer"
-                    >
+                  <Select value={vehicleType} onValueChange={setVehicleType} required>
+                    <SelectTrigger className="w-full bg-input border-border rounded-xl px-3.5 h-[46px] focus:ring-primary/20">
+                      <SelectValue placeholder="Select Vehicle Type" />
+                    </SelectTrigger>
+                    <SelectContent>
                       {VEHICLE_TYPES.map((type) => (
-                        <option key={type} value={type} className="text-foreground font-medium">
+                        <SelectItem key={type} value={type}>
                           {type}
-                        </option>
+                        </SelectItem>
                       ))}
-                    </select>
-                  </div>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <VendorInput

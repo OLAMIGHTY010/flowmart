@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router';
 import { Loader2 } from 'lucide-react';
 import { useKYCDocUpload } from '@/hooks/vendor/useVendorMutations';
 import { useKYCStatus } from '@/hooks/vendor/useVendorQueries';
-import { useKYCSubmitFormCache } from '@/hooks/vendor/useKYCFormCache';
+import { useKYCSubmitFormCache, useKYCInfoFormCache } from '@/hooks/vendor/useKYCFormCache';
 import { VendorButton } from '@/components/ui/button';
 import { VendorInput } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Icon from '@/components/Icon';
 import SideBanner from '@/components/SideBanner';
 import OnboardingStepIndicator from '@/components/vendor/OnboardingStepIndicator';
@@ -62,7 +63,9 @@ export default function VendorKYCSubmit() {
   }, [kycStatus, navigate]);
 
   // TanStack-cached form data (persists on back navigation)
+  const { formData: infoData } = useKYCInfoFormCache();
   const { formData, updateForm } = useKYCSubmitFormCache();
+  const vendorType = infoData.vendorType || 'individual';
 
   const [govIdType, setGovIdType] = useState(formData.govIdType);
   const [guarantorName, setGuarantorName] = useState(formData.guarantorName);
@@ -136,7 +139,17 @@ export default function VendorKYCSubmit() {
     );
   };
 
-  const allDocsUploaded = documents.every(doc => doc.status === 'uploaded');
+  // Determine which documents are required based on vendorType
+  const requiredDocIds = ['government_id', 'camp_certificate', 'guarantor_id', 'bank_reference'];
+  if (vendorType === 'business') {
+    requiredDocIds.push('cac_document');
+  }
+
+  const allDocsUploaded = requiredDocIds.every(reqId => {
+    const doc = documents.find(d => d.id === reqId);
+    return doc?.status === 'uploaded';
+  });
+
   const guarantorComplete = guarantorName.trim() && guarantorPhone.trim() && guarantorRelationship;
   const canProceed = allDocsUploaded && guarantorComplete;
 
@@ -246,6 +259,44 @@ export default function VendorKYCSubmit() {
             </CardContent>
           </Card>
 
+          {/* ─── Business & Bank Documents ─── */}
+          <Card className="bg-surface p-4 sm:p-6 rounded-2xl border border-border/70 shadow-xs">
+            <CardContent className="p-0 flex flex-col gap-4 sm:gap-5">
+              <div className="flex items-center gap-2 border-b border-border/50 pb-2.5">
+                <div className="w-6 h-6 bg-primary rounded-md flex items-center justify-center">
+                  <Icon i="briefcase" size={13} className="text-primary-foreground" />
+                </div>
+                <span className="text-sm sm:text-base font-bold text-foreground">
+                  Business & Bank Documents
+                </span>
+              </div>
+
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-foreground">Bank Reference / Statement</label>
+                  {renderUploadCard(
+                    documents.find(d => d.id === 'bank_reference')!,
+                    uploadingId,
+                    handleCardClick,
+                    handleRemoveFile
+                  )}
+                </div>
+
+                {vendorType === 'business' && (
+                  <div className="flex flex-col gap-2 mt-2 pt-4 border-t border-border/50">
+                    <label className="text-sm font-semibold text-foreground">CAC Registration Document</label>
+                    {renderUploadCard(
+                      documents.find(d => d.id === 'cac_document')!,
+                      uploadingId,
+                      handleCardClick,
+                      handleRemoveFile
+                    )}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
           {/* ─── Guarantor Details Section ─── */}
           <Card className="bg-surface p-4 sm:p-6 rounded-2xl border border-border/70 shadow-xs">
             <CardContent className="p-0 flex flex-col gap-4 sm:gap-5">
@@ -279,22 +330,21 @@ export default function VendorKYCSubmit() {
 
                 <div className="flex flex-col gap-1.5 w-full">
                   <label className="text-sm font-body text-foreground font-semibold">Relationship</label>
-                  <div className="flex items-center gap-2 bg-input border border-border rounded-xl px-3.5 py-3 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all">
-                    <Icon i="heart" size={16} className="text-muted-foreground" />
-                    <select
-                      value={guarantorRelationship}
-                      onChange={(e) => setGuarantorRelationship(e.target.value)}
-                      className="w-full bg-transparent border-none outline-none text-sm font-body p-0 focus:ring-0 focus:outline-none text-foreground font-semibold cursor-pointer"
-                      required
-                    >
-                      <option value="" disabled>Select relationship</option>
+                  <Select value={guarantorRelationship} onValueChange={setGuarantorRelationship} required>
+                    <SelectTrigger className="w-full bg-input border-border rounded-xl px-3.5 h-[46px] focus:ring-primary/20">
+                      <div className="flex items-center gap-2">
+                        <Icon i="heart" size={16} className="text-muted-foreground flex-shrink-0" />
+                        <SelectValue placeholder="Select relationship" />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent>
                       {RELATIONSHIPS.map((rel) => (
-                        <option key={rel} value={rel} className="text-foreground font-medium">
+                        <SelectItem key={rel} value={rel}>
                           {rel}
-                        </option>
+                        </SelectItem>
                       ))}
-                    </select>
-                  </div>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 

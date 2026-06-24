@@ -2,8 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 /**
  * KYC Form Data cache using TanStack Query.
- * 
- * Stores form state in the query cache so navigating back/forward
+ * * Stores form state in the query cache so navigating back/forward
  * between KYC pages preserves all user input without re-fetching.
  * Data is also persisted to sessionStorage for cross-session durability.
  */
@@ -16,6 +15,8 @@ export interface ProfileSetupFormData {
   city: string;
   bio: string;
   avatar: string;
+  dob?: string;
+  gender?: string;
 }
 
 const PROFILE_SETUP_KEY = ["profileSetupForm"] as const;
@@ -33,6 +34,8 @@ function loadProfileSetupFromStorage(): ProfileSetupFormData {
     city: '',
     bio: '',
     avatar: '',
+    dob: '',
+    gender: '',
   };
 }
 
@@ -42,6 +45,7 @@ export function useProfileSetupFormCache() {
   const { data } = useQuery<ProfileSetupFormData>({
     queryKey: PROFILE_SETUP_KEY,
     queryFn: () => loadProfileSetupFromStorage(),
+    initialData: () => loadProfileSetupFromStorage(),
     staleTime: Infinity,
     gcTime: 1000 * 60 * 60,
     refetchOnMount: false,
@@ -62,7 +66,7 @@ export function useProfileSetupFormCache() {
   };
 
   return {
-    formData: data || loadProfileSetupFromStorage(),
+    formData: data, // Guaranteed to be defined due to initialData
     updateForm,
   };
 }
@@ -113,16 +117,31 @@ function loadKYCInfoFromStorage(): KYCInfoFormData {
     if (stored) {
       const parsed = JSON.parse(stored);
       if (parsed.documents && Array.isArray(parsed.documents)) {
-        parsed.documents = parsed.documents.map((d: any) => {
-          if (d.status === 'uploaded' && !d.base64) {
-            return { ...d, status: 'upload', fileName: undefined, filePreviewUrl: undefined };
+        const storedDocsMap = new Map<string, any>(parsed.documents.map((d: any) => [d.id, d]));
+
+        parsed.documents = defaultState.documents.map(defaultDoc => {
+          const storedDoc = storedDocsMap.get(defaultDoc.id);
+          if (storedDoc) {
+            let status = storedDoc.status;
+            let fileName = storedDoc.fileName;
+            const filePreviewUrl = undefined;
+            if (status === 'uploaded' && !storedDoc.base64) {
+              status = 'upload';
+              fileName = undefined;
+            }
+            return {
+              ...storedDoc,
+              status,
+              fileName,
+              filePreviewUrl,
+            };
           }
-          return { ...d, filePreviewUrl: undefined };
+          return defaultDoc;
         });
       } else {
         parsed.documents = defaultState.documents;
       }
-      return { ...defaultState, ...parsed };
+      return { ...defaultState, ...parsed, documents: parsed.documents };
     }
   } catch { /* ignore */ }
   return defaultState;
@@ -134,8 +153,9 @@ export function useKYCInfoFormCache() {
   const { data } = useQuery<KYCInfoFormData>({
     queryKey: KYC_INFO_KEY,
     queryFn: () => loadKYCInfoFromStorage(),
-    staleTime: Infinity,       // Never auto-refetch
-    gcTime: 1000 * 60 * 60,   // Keep in cache for 1 hour
+    initialData: () => loadKYCInfoFromStorage(),
+    staleTime: Infinity,       
+    gcTime: 1000 * 60 * 60,   
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
@@ -147,7 +167,7 @@ export function useKYCInfoFormCache() {
     queryClient.setQueryData(KYC_INFO_KEY, next);
     const toStore = {
       ...next,
-      documents: next.documents.map(d => ({ ...d, filePreviewUrl: undefined })),
+      documents: next.documents.map(d => ({ ...d, filePreviewUrl: undefined, base64: undefined })),
     };
     try {
       sessionStorage.setItem(KYC_INFO_STORAGE_KEY, JSON.stringify(toStore));
@@ -157,14 +177,10 @@ export function useKYCInfoFormCache() {
   };
 
   return {
-    formData: data || loadKYCInfoFromStorage(),
+    formData: data, // Guaranteed to be defined due to initialData
     updateForm,
   };
 }
-
-
-
-
 
 // ── KYCSubmit Form Cache ──
 export interface KYCSubmitFormData {
@@ -187,24 +203,7 @@ const KYC_SUBMIT_KEY = ["kycSubmitForm"] as const;
 const KYC_SUBMIT_STORAGE_KEY = "rider_kyc_submit_form";
 
 function loadKYCSubmitFromStorage(): KYCSubmitFormData {
-  try {
-    const stored = sessionStorage.getItem(KYC_SUBMIT_STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      // filePreviewUrl won't survive sessionStorage (blob URLs are session-scoped)
-      // so mark uploaded docs as uploaded but without preview
-      if (parsed.documents) {
-        parsed.documents = parsed.documents.map((d: any) => {
-          if (d.status === 'uploaded' && !d.base64) {
-            return { ...d, status: 'upload', fileName: undefined, filePreviewUrl: undefined };
-          }
-          return { ...d, filePreviewUrl: undefined };
-        });
-      }
-      return parsed;
-    }
-  } catch { /* ignore */ }
-  return {
+  const defaultState: KYCSubmitFormData = {
     govIdType: 'national_id',
     guarantorName: '',
     guarantorPhone: '',
@@ -215,6 +214,40 @@ function loadKYCSubmitFromStorage(): KYCSubmitFormData {
       { id: 'rider_image', title: 'Rider Image/Logo', subtitle: "Clear photo of yourself for your rider profile", status: 'upload' },
     ],
   };
+
+  try {
+    const stored = sessionStorage.getItem(KYC_SUBMIT_STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (parsed.documents && Array.isArray(parsed.documents)) {
+        const storedDocsMap = new Map<string, any>(parsed.documents.map((d: any) => [d.id, d]));
+
+        parsed.documents = defaultState.documents.map(defaultDoc => {
+          const storedDoc = storedDocsMap.get(defaultDoc.id);
+          if (storedDoc) {
+            let status = storedDoc.status;
+            let fileName = storedDoc.fileName;
+            const filePreviewUrl = undefined;
+            if (status === 'uploaded' && !storedDoc.base64) {
+              status = 'upload';
+              fileName = undefined;
+            }
+            return {
+              ...storedDoc,
+              status,
+              fileName,
+              filePreviewUrl,
+            };
+          }
+          return defaultDoc;
+        });
+      } else {
+        parsed.documents = defaultState.documents;
+      }
+      return { ...defaultState, ...parsed, documents: parsed.documents };
+    }
+  } catch { /* ignore */ }
+  return defaultState;
 }
 
 export function useKYCSubmitFormCache() {
@@ -223,6 +256,7 @@ export function useKYCSubmitFormCache() {
   const { data } = useQuery<KYCSubmitFormData>({
     queryKey: KYC_SUBMIT_KEY,
     queryFn: () => loadKYCSubmitFromStorage(),
+    initialData: () => loadKYCSubmitFromStorage(),
     staleTime: Infinity,
     gcTime: 1000 * 60 * 60,
     refetchOnMount: false,
@@ -234,10 +268,9 @@ export function useKYCSubmitFormCache() {
     const current = queryClient.getQueryData<KYCSubmitFormData>(KYC_SUBMIT_KEY) || loadKYCSubmitFromStorage();
     const next = { ...current, ...updates };
     queryClient.setQueryData(KYC_SUBMIT_KEY, next);
-    // Save to sessionStorage (strip blob URLs which are session-only)
     const toStore = {
       ...next,
-      documents: next.documents.map(d => ({ ...d, filePreviewUrl: undefined })),
+      documents: next.documents.map(d => ({ ...d, filePreviewUrl: undefined, base64: undefined })),
     };
     try {
       sessionStorage.setItem(KYC_SUBMIT_STORAGE_KEY, JSON.stringify(toStore));
@@ -247,7 +280,7 @@ export function useKYCSubmitFormCache() {
   };
 
   return {
-    formData: data || loadKYCSubmitFromStorage(),
+    formData: data, // Guaranteed to be defined due to initialData
     updateForm,
   };
 }

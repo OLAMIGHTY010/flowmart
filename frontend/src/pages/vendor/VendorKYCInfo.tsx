@@ -9,6 +9,7 @@ import { VendorButton } from '@/components/ui/button';
 import { VendorInput } from '@/components/ui/input';
 import Icon from '@/components/Icon';
 import { Card, CardContent } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import SideBanner from '@/components/SideBanner';
 import OnboardingStepIndicator from '@/components/vendor/OnboardingStepIndicator';
 
@@ -66,6 +67,8 @@ export default function VendorKYCInfo() {
   // TanStack-cached form data (persists on back navigation)
   const { formData, updateForm } = useKYCInfoFormCache();
 
+  const [vendorType, setVendorType] = useState<'individual' | 'business'>(formData.vendorType || 'individual');
+  const [tin, setTin] = useState(formData.tin || '');
   const [businessName, setBusinessName] = useState(formData.businessName);
   const [cacNo, setCacNo] = useState(formData.cacNo);
   const [campCertificateId, setCampCertificateId] = useState(formData.campCertificateId);
@@ -78,8 +81,8 @@ export default function VendorKYCInfo() {
 
   // Persist form changes to TanStack cache on every update
   useEffect(() => {
-    updateForm({ businessName, cacNo, campCertificateId, bankName, accountNumber, accountName });
-  }, [businessName, cacNo, campCertificateId, bankName, accountNumber, accountName]);
+    updateForm({ vendorType, tin, businessName, cacNo, campCertificateId, bankName, accountNumber, accountName });
+  }, [vendorType, tin, businessName, cacNo, campCertificateId, bankName, accountNumber, accountName]);
 
   // const formatDob = (dateStr: string) => {
   //   if (!dateStr) return '—';
@@ -98,11 +101,13 @@ export default function VendorKYCInfo() {
 
     try {
       await saveKYCInfo({
+        vendorType,
         fullName,
         dob,
         gender,
         businessName,
-        cacNo,
+        tin: vendorType === 'business' ? tin : undefined,
+        cacNo: vendorType === 'business' ? cacNo : undefined,
         campCertificateId,
         bankName,
         accountNumber,
@@ -193,22 +198,43 @@ export default function VendorKYCInfo() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                <VendorInput
-                  label="Business Name"
-                  placeholder="Registered business name"
-                  value={businessName}
-                  onChange={(e) => setBusinessName(e.target.value)}
-                  required
-                />
+                <div className="flex flex-col gap-1.5 w-full">
+                  <label className="text-sm font-body text-foreground font-semibold">Vendor Type</label>
+                  <Select value={vendorType} onValueChange={(v) => setVendorType(v as 'individual' | 'business')} required>
+                    <SelectTrigger className="w-full bg-input border-border rounded-xl px-3.5 h-[46px] focus:ring-primary/20">
+                      <div className="flex items-center gap-2">
+                        <Icon i="briefcase" size={16} className="text-muted-foreground flex-shrink-0" />
+                        <SelectValue placeholder="Select vendor type" />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="individual">Individual Seller</SelectItem>
+                      <SelectItem value="business">Registered Business</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                <VendorInput
-                  label="CAC Registration No."
-                  placeholder="RC000000"
-                  icon="hash"
-                  value={cacNo}
-                  onChange={(e) => setCacNo(e.target.value)}
-                  required
-                />
+                {vendorType === 'business' && (
+                  <>
+                    <VendorInput
+                      label="CAC Registration No."
+                      placeholder="RC000000"
+                      icon="hash"
+                      value={cacNo}
+                      onChange={(e) => setCacNo(e.target.value)}
+                      required
+                    />
+                    
+                    <VendorInput
+                      label="Tax ID Number (TIN)"
+                      placeholder="Enter TIN"
+                      icon="hash"
+                      value={tin}
+                      onChange={(e) => setTin(e.target.value)}
+                      required
+                    />
+                  </>
+                )}
 
                 <VendorInput
                   label="Camp Certificate ID"
@@ -237,22 +263,21 @@ export default function VendorKYCInfo() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 <div className="flex flex-col gap-1.5 w-full">
                   <label className="text-sm font-body text-foreground font-semibold">Bank Name</label>
-                  <div className="flex items-center gap-2 bg-input border border-border rounded-xl px-3.5 py-3 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all">
-                    <Icon i="landmark" size={16} className="text-muted-foreground" />
-                    <select
-                      value={bankName}
-                      onChange={(e) => setBankName(e.target.value)}
-                      className="w-full bg-transparent border-none outline-none text-sm font-body p-0 focus:ring-0 focus:outline-none text-foreground font-semibold cursor-pointer"
-                      required
-                    >
-                      <option value="" disabled>Select bank</option>
+                  <Select value={bankName} onValueChange={setBankName} required>
+                    <SelectTrigger className="w-full bg-input border-border rounded-xl px-3.5 h-[46px] focus:ring-primary/20">
+                      <div className="flex items-center gap-2">
+                        <Icon i="landmark" size={16} className="text-muted-foreground flex-shrink-0" />
+                        <SelectValue placeholder="Select bank" />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent>
                       {NIGERIAN_BANKS.map((bank) => (
-                        <option key={bank} value={bank} className="text-foreground font-medium">
+                        <SelectItem key={bank} value={bank}>
                           {bank}
-                        </option>
+                        </SelectItem>
                       ))}
-                    </select>
-                  </div>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <VendorInput

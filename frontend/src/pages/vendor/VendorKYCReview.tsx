@@ -65,11 +65,11 @@ export default function VendorKYCReview() {
   const { formData: submitData } = useKYCSubmitFormCache();
   const { formData: profileData } = useProfileSetupFormCache();
 
-  // Personal Info from Auth Context
+  // Personal Info from Auth Context & Form Cache
   const personalInfo = {
     fullName: user?.fullName || '',
-    dob: user?.dob || '',
-    gender: user?.gender || '',
+    dob: profileData.dob || user?.dob || '',
+    gender: profileData.gender || user?.gender || '',
   };
 
   const formatDob = (dateStr: string) => {
@@ -99,10 +99,16 @@ export default function VendorKYCReview() {
       icon: 'briefcase',
       path: '/profile-setup',
       items: [
+        { label: 'Vendor Type', value: infoData.vendorType === 'business' ? 'Registered Business' : 'Individual Seller' },
         { label: 'Business Name', value: profileData.businessName || infoData.businessName || '—' },
         { label: 'Business Phone', value: profileData.businessPhone || '—' },
         { label: 'State / City', value: `${profileData.stateRegion || ''} / ${profileData.city || ''}` },
-        { label: 'CAC Reg. No.', value: infoData.cacNo || '—' },
+        ...(infoData.vendorType === 'business' 
+          ? [
+              { label: 'CAC Reg. No.', value: infoData.cacNo || '—' },
+              { label: 'TIN', value: infoData.tin || '—' }
+            ] 
+          : []),
         { label: 'Camp Certificate ID', value: infoData.campCertificateId || '—' },
       ],
     },
@@ -148,10 +154,15 @@ export default function VendorKYCReview() {
       let guarantorIdFile = submitData.documents.find(d => d.id === 'guarantor_id')?.base64;
       let avatarFile = profileData.avatar;
 
+      let bankReferenceFile = submitData.documents.find(d => d.id === 'bank_reference')?.base64;
+      let cacDocumentFile = submitData.documents.find(d => d.id === 'cac_document')?.base64;
+
       if (governmentIdFile) governmentIdFile = await compressBase64Image(governmentIdFile);
       if (campCertificateFile) campCertificateFile = await compressBase64Image(campCertificateFile);
       if (guarantorIdFile) guarantorIdFile = await compressBase64Image(guarantorIdFile);
       if (avatarFile) avatarFile = await compressBase64Image(avatarFile);
+      if (bankReferenceFile) bankReferenceFile = await compressBase64Image(bankReferenceFile);
+      if (cacDocumentFile) cacDocumentFile = await compressBase64Image(cacDocumentFile);
 
       await submitKYC({
         // Profile Setup Fields
@@ -164,9 +175,11 @@ export default function VendorKYCReview() {
         avatar: avatarFile,
         
         // KYC Info Fields
+        vendorType: infoData.vendorType,
         fullName: personalInfo.fullName,
         dob: personalInfo.dob,
         gender: personalInfo.gender,
+        tin: infoData.tin,
         cacNo: infoData.cacNo,
         campCertificateId: infoData.campCertificateId,
         bankName: infoData.bankName,
@@ -181,6 +194,8 @@ export default function VendorKYCReview() {
         governmentIdFile,
         campCertificateFile,
         guarantorIdFile,
+        bankReferenceFile,
+        cacDocumentFile,
       });
 
       await refreshUser();

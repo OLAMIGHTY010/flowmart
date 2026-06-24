@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
 // Layouts
@@ -60,6 +60,7 @@ import VendorKYCInfo from "./pages/vendor/VendorKYCInfo";
 import VendorKYCSubmit from "./pages/vendor/VendorKYCSubmit";
 import VendorKYCReview from "./pages/vendor/VendorKYCReview";
 import VendorKYCVerification from "./pages/vendor/VendorKYCVerification";
+import ProfileLayout from "./components/user/ProfileLayout";
 
 // React Query
 const queryClient = new QueryClient({
@@ -98,18 +99,24 @@ function App() {
 
               <Route element={<ProtectedRoute />}>
                 <Route path="checkout" element={<Checkout />} />
-                <Route path="orders" element={<Orders />} />
                 <Route path="orders/:id/track" element={<OrderTracking />} />
-                <Route path="profile" element={<Profile />} />
-                <Route path="profile/edit" element={<EditProfile />} />
-                <Route path="profile/sessions" element={<ActiveSessions />} />
-                <Route path="profile/alerts" element={<Alerts />} />
-                <Route path="profile/password" element={<ChangePassword />} />
-                <Route path="profile/security" element={<PrivacySecurity />} />
-                <Route path="profile/2fa" element={<TwoFactorAuth />} />
               </Route>
-              
-              <Route path="checkout/success" element={<OrderConfirmation />} />
+
+              <Route element={<ProtectedRoute><ProfileLayout /></ProtectedRoute>}>
+                <Route path="profile" element={<Profile />} />
+                <Route path="edit-profile" element={<EditProfile />} />
+                <Route path="privacy-security" element={<PrivacySecurity />} />
+                <Route path="change-password" element={<ChangePassword />} />
+                <Route path="two-factor-auth" element={<TwoFactorAuth />} />
+                <Route path="active-sessions" element={<ActiveSessions />} />
+
+                <Route path="help-support" element={<HelpSupport />} />
+                <Route path="terms" element={<Terms />} />
+                <Route path="alerts" element={<Alerts />} />
+                <Route path="orders" element={<Orders />} />
+              </Route>
+
+              <Route path="order-confirmation/:id" element={<OrderConfirmation />} />
               <Route path="payment/callback" element={<PaymentCallback />} />
               <Route path="help" element={<HelpSupport />} />
               <Route path="terms" element={<Terms />} />
@@ -120,12 +127,12 @@ function App() {
             <Route path="/profile-setup" element={<VendorProfileSetup />} />
             <Route path="/kyc" element={<VendorKYCInfo />} />
             <Route path="/kyc/submit" element={<VendorKYCSubmit />} />
-            <Route path="/kyc/review" element={<VendorKYCReview/>} />
+            <Route path="/kyc/review" element={<VendorKYCReview />} />
             <Route path="/kyc/verification" element={<VendorKYCVerification />} />
             {/* ═══ VENDOR ROUTES ═══ */}
             <Route path="/vendor" element={
               <ProtectedRoute allowedRoles={["vendor"]}>
-                <VendorLayout />
+                <Outlet />
               </ProtectedRoute>
             }>
               <Route path="dashboard" element={<VendorDashboard />} />
@@ -150,7 +157,7 @@ function App() {
               <Route path="earnings" element={<RiderEarnings />} />
               <Route path="profile" element={<RiderProfile />} />
             </Route>
-            
+
             <Route path="/rider/profile-setup" element={<RiderProfileSetup />} />
             <Route path="/rider/kyc" element={<RiderKYCInfo />} />
             <Route path="/rider/kyc/submit" element={<RiderKYCSubmit />} />
