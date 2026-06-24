@@ -53,10 +53,9 @@ export const calculateDelivery = async (req: Request, res: Response) => {
 		return res.status(200).json({ success: true, deliveryCalc });
 	} catch (error: any) {
 		console.error("Calculate Delivery Error:", error);
-		// Return fallback default so checkout doesn't break entirely if zone lacks config
-		return res.status(200).json({ 
-			success: true, 
-			deliveryCalc: { finalDeliveryFee: 1500, baseFee: 1500, distanceFee: 0, ruleAdjustments: [] }
+		return res.status(400).json({ 
+			success: false, 
+			message: "Delivery pricing is not configured for this zone. Please contact support." 
 		});
 	}
 };
@@ -79,6 +78,7 @@ export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
 
 		const createdOrders: any[] = [];
 		const paymentMethod = payment_method || 'pay_on_delivery';
+		const sessionTxRef = `SESSION-${Date.now()}-${crypto.randomInt(1000, 9999)}`;
 
 		await db.transaction(async (tx) => {
 			const vendorItemsMap = new Map<string, any[]>();
@@ -106,6 +106,7 @@ export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
 					totalAmount: "0", 
                     deliveryPin, 
                     paymentMethod, 
+                    transactionReference: sessionTxRef,
                     status: "pending",
 				}).returning();
 
@@ -139,12 +140,9 @@ export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
 				let deliveryCalc: any = null;
 				try {
 					deliveryCalc = await PricingService.calculateDeliveryFee(finalZone, req.body.distanceKm || 5);
-				} catch (e) {
-					console.warn("Delivery calculation failed, defaulting to 0", e);
-					deliveryCalc = {
-					    distanceKm: req.body.distanceKm || 5,
-					    baseFee: 0, distanceFee: 0, ruleAdjustments: [], riderShare: 0, platformShare: 0, finalDeliveryFee: 0
-					};
+				} catch (e: any) {
+					console.error("Delivery calculation failed:", e);
+					throw new Error("Delivery pricing is not configured for this zone. Please contact support.");
 				}
 
 				totalAmountNum += deliveryCalc.finalDeliveryFee;
@@ -185,7 +183,7 @@ export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
                  
                  let paymentUrl = "";
                  
-                 const initData = await initializeTransaction(email, grandTotal, orderRef);
+                 const initData = await initializeTransaction(email, grandTotal, sessionTxRef);
                  paymentUrl = initData.authorization_url;
                  
                  return res.status(201).json({
@@ -224,16 +222,27 @@ const enrichOrderWithItems = async (order: any) => {
 		.leftJoin(products, eq(orderItems.productId, products.id))
 		.where(eq(orderItems.orderId, order.id));
 
+	const [attendee] = await db
+		.select({ fullName: users.fullName, phone: users.phone })
+		.from(users)
+		.where(eq(users.id, order.attendeeId))
+		.limit(1);
+
 	return {
 		...order,
+		attendeeName: attendee?.fullName,
+		attendeePhone: attendee?.phone,
 		items: items.map(item => ({
 			id: item.id,
 			productId: item.productId,
-			name: item.productName || "Unknown Product",
-			imageUrl: item.productImage || "",
-			category: item.productCategory || "",
+			name: item.productName,
+			productName: item.productName,
+			imageUrl: item.productImage,
+			category: item.productCategory,
 			qty: item.quantity,
+			quantity: item.quantity,
 			price: item.unitPrice,
+			unitPrice: item.unitPrice,
 		})),
 	};
 };
@@ -353,7 +362,7 @@ export const updateOrderStatus = async (req: AuthenticatedRequest, res: Response
 		});
 
         // Broadcast to riders if the vendor just published it for delivery
-        if (status === "ready_for_delivery") {
+        if (status === "confirmed") {
             broadcastNewDelivery({
                 orderId,
                 zone: existingOrder.deliveryZone,
@@ -493,36 +502,38 @@ export const paystackWebhook = async (req: Request, res: Response) => {
         const event = req.body;
 
         if (event.event === 'charge.success') {
-            const orderRef = event.data.reference;
+            const sessionTxRef = event.data.reference;
 
-            // Find matching order
-            const [order] = await db.select().from(orders).where(eq(orders.orderRef, orderRef)).limit(1);
+            // Find matching orders for this session
+            const sessionOrders = await db.select().from(orders).where(eq(orders.transactionReference, sessionTxRef));
             
-            if (!order) {
+            if (!sessionOrders || sessionOrders.length === 0) {
                 return res.status(200).send('Webhook unhandled: Order not found');
             }
 
-            // Idempotency: Prevent re-processing the same success event
-            if (order.status !== 'pending') {
-                return res.status(200).send('Webhook ignored: Order already confirmed');
+            for (const order of sessionOrders) {
+                // Idempotency: Prevent re-processing the same success event
+                if (order.status !== 'pending') {
+                    continue;
+                }
+
+                // Update order status
+                await db.update(orders)
+                    .set({ status: 'confirmed', paymentProofUrl: 'paystack_cleared', updatedAt: new Date() })
+                    .where(eq(orders.id, order.id));
+
+                // Credit the Escrow (Pending Balance) for the vendor.
+                const amountInNaira = Number(order.totalAmount); // Paystack payload is total, but we credit per order
+                const vendorShare = await calculateVendorNetEarnings(db, order.id, order.vendorId, amountInNaira);
+
+                await creditPendingBalance(order.vendorId, vendorShare);
+
+                // Real-time Notification
+                sendInAppNotification(order.attendeeId, "order:statusUpdate", {
+                    orderId: order.orderRef,
+                    status: "confirmed",
+                });
             }
-
-            // Update order status
-            await db.update(orders)
-                .set({ status: 'confirmed', paymentProofUrl: 'paystack_cleared', updatedAt: new Date() })
-                .where(eq(orders.id, order.id));
-
-            // Credit the Escrow (Pending Balance) for the vendor.
-            const amountInNaira = event.data.amount / 100; // Paystack payload is in Kobo
-            const vendorShare = await calculateVendorNetEarnings(db, order.id, order.vendorId, amountInNaira);
-
-            await creditPendingBalance(order.vendorId, vendorShare);
-
-            // Real-time Notification
-            sendInAppNotification(order.attendeeId, "order:statusUpdate", {
-                orderId: orderRef,
-                status: "confirmed",
-            });
         }
 
         return res.status(200).send('OK');

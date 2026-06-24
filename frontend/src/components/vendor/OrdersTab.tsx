@@ -32,13 +32,15 @@ export default function OrdersTab() {
   // Filter orders
   const filteredOrders = orders.filter((o: any) => {
     if (filter === 'all') return true;
+    if (filter === 'processing') return ['confirmed', 'assigned', 'picked_up'].includes(o.status);
+    if (filter === 'completed') return o.status === 'delivered';
     return o.status === filter;
   });
 
   // Calculate stats from orders
   const totalOrdersCount = orders.length;
   const totalRevenueAmount = orders
-    .filter((o: any) => o.status === 'completed' || o.status === 'confirmed' || o.status === 'processing')
+    .filter((o: any) => o.status === 'delivered' || o.status === 'confirmed' || o.status === 'assigned' || o.status === 'picked_up')
     .reduce((acc: number, o: any) => acc + (parseFloat(o.totalAmount) || 0), 0);
 
   return (
@@ -98,9 +100,11 @@ export default function OrdersTab() {
             
             // Format status pills
             let statusPill = 'bg-[#fef9c3] text-[#a16207]'; // pending
-            if (order.status === 'processing') statusPill = 'bg-[#dbeafe] text-[#1e40af]'; // processing
-            if (order.status === 'completed') statusPill = 'bg-[#dcfce7] text-[#15803d]'; // completed
+            if (['confirmed', 'assigned', 'picked_up'].includes(order.status)) statusPill = 'bg-[#dbeafe] text-[#1e40af]'; // processing
+            if (order.status === 'delivered') statusPill = 'bg-[#dcfce7] text-[#15803d]'; // completed
             if (order.status === 'cancelled') statusPill = 'bg-[#fee2e2] text-[#b91c1c]'; // cancelled
+
+            const displayStatus = ['confirmed', 'assigned', 'picked_up'].includes(order.status) ? 'processing' : order.status === 'delivered' ? 'completed' : order.status;
 
             // Format items text
             const itemsText = order.items
@@ -119,9 +123,9 @@ export default function OrdersTab() {
                 >
                   <div className="flex-grow min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-primary font-bold">#{order.id}</span>
+                      <span className="text-xs text-primary font-bold">#{order.orderRef || `ORD${order.id.substring(0,6).toUpperCase()}`}</span>
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${statusPill}`}>
-                        {order.status}
+                        {displayStatus}
                       </span>
                     </div>
                     <h3 className="text-sm font-semibold text-foreground mt-1.5">{order.attendeeName || 'Unknown Attendee'}</h3>
@@ -161,9 +165,12 @@ export default function OrdersTab() {
                     {/* Address & Payment Info */}
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <h4 className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Address</h4>
-                        <p className="text-xs text-foreground mt-0.5 leading-relaxed">
-                          {order.deliveryAddress || 'Fulfillment Center'}
+                        <h4 className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Delivery Details</h4>
+                        <p className="text-xs text-foreground mt-0.5 leading-relaxed font-medium">
+                          Zone: {order.deliveryZone || 'Fulfillment Center'}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Phone: {order.attendeePhone || 'N/A'}
                         </p>
                       </div>
                       <div>
@@ -174,16 +181,16 @@ export default function OrdersTab() {
                       </div>
                     </div>
 
-                    {/* Action buttons (only for active orders) */}
-                    {(order.status === 'pending' || order.status === 'processing') && (
+                    {/* Action buttons (only for pending orders) */}
+                    {(order.status === 'pending') && (
                       <div className="flex gap-2.5 mt-2">
                         <button
-                          onClick={() => handleUpdateStatus(order.id, order.status === 'pending' ? 'processing' : 'completed')}
+                          onClick={() => handleUpdateStatus(order.id, 'confirmed')}
                           disabled={updateStatusMutation.isPending}
                           className="flex-1 bg-[#16a34a] hover:bg-[#15803d] text-white py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95"
                         >
                           <Check size={14} />
-                          {order.status === 'pending' ? 'Accept Order' : 'Mark as Ready'}
+                          Accept Order
                         </button>
                         <button
                           onClick={() => handleUpdateStatus(order.id, 'cancelled')}

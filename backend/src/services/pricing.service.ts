@@ -13,14 +13,7 @@ export class PricingService {
     });
 
     if (!zoneRecord) {
-      // Fallback to the first active zone if exact name is not found
-      const fallbackZone = await db.query.deliveryZones.findFirst({
-        where: eq(deliveryZones.active, true),
-      });
-      if (!fallbackZone) {
-         throw new Error(`No active delivery zones available`);
-      }
-      zoneRecord = fallbackZone;
+      throw new Error(`Delivery zone '${zoneName}' is not configured. Please contact logistics.`);
     }
 
     const baseFee = parseFloat(zoneRecord.baseFee.toString());
@@ -53,6 +46,9 @@ export class PricingService {
         if (hour >= 21 || hour < 6) applies = true;
       } else if (rule.ruleType === 'distance_multiplier') {
         if (distanceKm > (condition?.minDistance || 0)) applies = true;
+      } else if (rule.ruleType === 'surge_pricing') {
+        // Logistics-configured surge pricing
+        applies = true;
       } else {
         applies = true;
       }
