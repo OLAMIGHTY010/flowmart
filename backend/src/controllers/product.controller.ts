@@ -10,7 +10,7 @@ export const createProduct = async (
 	res: Response
 ) => {
 	try {
-		const { name, description, price, stockQuantity, sku, category, brand, oldPrice, weight, images } = req.body;
+		const { name, description, price, stockQuantity, sku, category, brand, oldPrice, weight, images, productType, preparationTime, modifiers, variants, dietaryTags } = req.body;
 		const vendorId = req.user?.id;
 
 		if (!name || !price) {
@@ -27,13 +27,18 @@ export const createProduct = async (
 				name,
 				description,
 				price,
-				stockQuantity: stockQuantity || 0,
+				stockQuantity: stockQuantity !== undefined ? stockQuantity : (productType === 'food' ? null : 0),
 				sku,
 				category,
 				brand,
 				oldPrice: oldPrice || null,
 				weight: weight || null,
 				images: Array.isArray(images) ? images.join(',') : (images || null),
+				productType: productType || 'retail',
+				preparationTime: preparationTime ? parseInt(preparationTime) : null,
+				modifiers: modifiers || [],
+				variants: variants || [],
+				dietaryTags: dietaryTags || [],
 			})
 			.returning();
 
@@ -106,7 +111,7 @@ export const updateProduct = async (
 	try {
 		const productId = req.params.id as string;
 		const vendorId = req.user?.id;
-		const { name, description, price, stockQuantity, sku, category, brand, oldPrice, weight, images } = req.body;
+		const { name, description, price, stockQuantity, sku, category, brand, oldPrice, weight, images, productType, preparationTime, modifiers, variants, dietaryTags } = req.body;
 
 		// Verify the product belongs to the vendor requesting the update (Keeping type assertion)
 		const [existingProduct] = await db
@@ -149,6 +154,13 @@ export const updateProduct = async (
 				images: images !== undefined 
 					? (Array.isArray(images) ? images.join(',') : images) 
 					: existingProduct.images,
+				productType: productType !== undefined ? productType : existingProduct.productType,
+				preparationTime: preparationTime !== undefined 
+					? (preparationTime ? parseInt(preparationTime) : null) 
+					: existingProduct.preparationTime,
+				modifiers: modifiers !== undefined ? modifiers : existingProduct.modifiers,
+				variants: variants !== undefined ? variants : existingProduct.variants,
+				dietaryTags: dietaryTags !== undefined ? dietaryTags : existingProduct.dietaryTags,
 				updatedAt: new Date(),
 			})
 			.where(eq(products.id, productId as string))

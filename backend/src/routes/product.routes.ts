@@ -4,9 +4,9 @@ import { authenticateJWT, authorizeRoles } from '../middleware/auth.middleware';
 
 const router = Router();
 
-router.get('/categories', authenticateJWT, getCategories);
-router.get('/', authenticateJWT, getProducts);
-router.get('/:id', authenticateJWT, getProductById); 
+router.get('/categories', getCategories);
+router.get('/', getProducts);
+router.get('/:id', getProductById); 
 router.post('/', authenticateJWT, authorizeRoles('vendor', 'super_admin'), createProduct);
 router.put('/:id', authenticateJWT, authorizeRoles('vendor', 'super_admin'), updateProduct);
 router.delete('/:id', authenticateJWT, authorizeRoles('vendor', 'super_admin'), deleteProduct);

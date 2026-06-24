@@ -59,6 +59,7 @@ router.use('/support', supportRoutes);
 
 // Dashboards & Roles
 router.use('/vendors', vendorRoutes);
+router.use('/vendor', vendorRoutes); // Alias for safety
 router.use('/rider', riderRoutes); 
 router.use('/riders', riderRoutes); // Alias for safety
 router.use('/welfare', welfareRoutes);

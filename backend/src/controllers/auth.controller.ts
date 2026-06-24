@@ -59,8 +59,8 @@ export const googleAuth = async (req: Request, res: Response) => {
         avatar: picture,
         role: requestedRole,
         gender: gender || null,
-        dateOfBirth: birthdate ? new Date(birthdate) : null,
-        isVerified: requestedRole === 'attendee', // Attendees are verified automatically; Vendors/Riders need admin approval
+        dateOfBirth: birthdate ? new Date(birthdate).toISOString().split('T')[0] : null,
+        isVerified: requestedRole === 'attendee',
       }).returning();
       
       user = newUser;

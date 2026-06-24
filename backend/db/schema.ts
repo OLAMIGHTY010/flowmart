@@ -16,6 +16,7 @@ export const roleEnum = pgEnum('role', [
 export const paymentMethodEnum = pgEnum('payment_method', ['bank_transfer', 'pay_on_delivery', 'paystack', 'flutterwave']);
 export const kycStatusEnum = pgEnum('kyc_status', ['unsubmitted', 'pending', 'under_review', 'approved', 'rejected']);
 export const authProviderEnum = pgEnum('auth_provider', ['local', 'google']);
+export const productTypeEnum = pgEnum('product_type', ['food', 'retail']);
 
 export const users = pgTable('users', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -78,7 +79,12 @@ export const products = pgTable('products', {
   brand: varchar('brand', { length: 100 }),
   weight: decimal('weight', { precision: 8, scale: 2 }),
   images: jsonb('images').default([]), 
-  stockQuantity: integer('stock_quantity').default(0).notNull(),
+  stockQuantity: integer('stock_quantity').default(0),
+  productType: productTypeEnum('product_type').default('retail').notNull(),
+  preparationTime: integer('preparation_time'),
+  modifiers: jsonb('modifiers').default([]),
+  variants: jsonb('variants').default([]),
+  dietaryTags: jsonb('dietary_tags').default([]),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -162,8 +168,10 @@ export const vendorProfiles = pgTable('vendor_profiles', {
 export const vendorKyc = pgTable('vendor_kyc', {
   id: uuid('id').defaultRandom().primaryKey(),
   vendorId: uuid('vendor_id').references(() => users.id).notNull().unique(),
+  vendorType: varchar('vendor_type', { length: 50 }).default('individual').notNull(),
   businessName: varchar('business_name', { length: 255 }).notNull(),
   cacNo: varchar('cac_no', { length: 255 }),
+  tin: varchar('tin', { length: 255 }),
   campCertificateId: varchar('camp_certificate_id', { length: 255 }),
   bankName: varchar('bank_name', { length: 255 }).notNull(),
   accountNumber: varchar('account_number', { length: 20 }).notNull(),
@@ -175,6 +183,8 @@ export const vendorKyc = pgTable('vendor_kyc', {
   governmentIdFile: text('government_id_file'), 
   campCertificateFile: text('camp_certificate_file'), 
   guarantorIdFile: text('guarantor_id_file'), 
+  bankReferenceFile: text('bank_reference_file'),
+  cacDocumentFile: text('cac_document_file'),
   nafdacCertificateCode: varchar('nafdac_certificate_code', { length: 255 }),
   nafdacCertificateFile: text('nafdac_certificate_file'),
   status: varchar('status', { length: 50 }).default('pending').notNull(),
