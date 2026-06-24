@@ -57,7 +57,8 @@ const Checkout = () => {
   const { showToast } = useToast();
   const { user } = useAuth();
   
-  const [paymentMethod, setPaymentMethod] = useState<"paystack" | "flutterwave" | "pay_on_delivery">("paystack");
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "bank_transfer" | "pay_on_delivery">("card");
+  const [paymentGateway, setPaymentGateway] = useState<"paystack" | "flutterwave">("paystack");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   
@@ -130,7 +131,7 @@ const Checkout = () => {
           productId: (item as any).originalProductId || item.id.substring(0, 36), 
           quantity: item.qty 
         })),
-        payment_method: paymentMethod,
+        payment_method: paymentMethod === "card" ? paymentGateway : paymentMethod,
         zone: address, // address or location is sent as the zone
         phone: phone,
       };
@@ -229,29 +230,45 @@ const Checkout = () => {
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {[
                 { id: "card", label: "Credit/Debit Card", desc: "Pay securely via Paystack or Flutterwave" },
-                { id: "transfer", label: "Bank Transfer", desc: "Direct transfer to our bank account" },
-                { id: "delivery", label: "Pay on Delivery", desc: "Pay via POS or cash when your order arrives" },
+                { id: "bank_transfer", label: "Bank Transfer", desc: "Direct transfer to our bank account" },
+                { id: "pay_on_delivery", label: "Pay on Delivery", desc: "Pay via POS or cash when your order arrives" },
               ].map((method) => (
-                <label key={method.id} style={{
-                  display: "flex", alignItems: "flex-start", gap: 16, padding: 16, 
-                  border: `1.5px solid ${paymentMethod === method.id ? "var(--color-primary)" : "var(--color-border)"}`,
-                  borderRadius: "var(--radius-lg)",
-                  backgroundColor: paymentMethod === method.id ? "var(--color-primary-surface)" : "var(--color-bg-primary)",
-                  cursor: "pointer", transition: "all var(--transition-fast)"
-                }}>
-                  <input 
-                    type="radio" 
-                    name="payment" 
-                    value={method.id} 
-                    checked={paymentMethod === method.id}
-                    onChange={(e) => setPaymentMethod(e.target.value as any)}
-                    style={{ marginTop: 4, accentColor: "var(--color-primary)" }} 
-                  />
-                  <div>
-                    <div style={{ fontWeight: 600, fontSize: "1rem" }}>{method.label}</div>
-                    <div style={{ fontSize: "0.813rem", color: "var(--color-text-muted)" }}>{method.desc}</div>
-                  </div>
-                </label>
+                <div key={method.id} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <label style={{
+                    display: "flex", alignItems: "flex-start", gap: 16, padding: 16, 
+                    border: `1.5px solid ${paymentMethod === method.id ? "var(--color-primary)" : "var(--color-border)"}`,
+                    borderRadius: "var(--radius-lg)",
+                    backgroundColor: paymentMethod === method.id ? "var(--color-primary-surface)" : "var(--color-bg-primary)",
+                    cursor: "pointer", transition: "all var(--transition-fast)"
+                  }}>
+                    <input 
+                      type="radio" 
+                      name="payment" 
+                      value={method.id} 
+                      checked={paymentMethod === method.id}
+                      onChange={(e) => setPaymentMethod(e.target.value as any)}
+                      style={{ marginTop: 4, accentColor: "var(--color-primary)" }} 
+                    />
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: "1rem" }}>{method.label}</div>
+                      <div style={{ fontSize: "0.813rem", color: "var(--color-text-muted)" }}>{method.desc}</div>
+                    </div>
+                  </label>
+                  
+                  {/* Card Gateway Dropdown */}
+                  {method.id === "card" && paymentMethod === "card" && (
+                    <div style={{ marginLeft: 36, display: "flex", flexDirection: "column", gap: 8 }}>
+                      <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+                        <input type="radio" name="gateway" checked={paymentGateway === "paystack"} onChange={() => setPaymentGateway("paystack")} style={{ accentColor: "var(--color-primary)" }} />
+                        <span style={{ fontSize: "0.875rem", fontWeight: 500 }}>Pay with Paystack</span>
+                      </label>
+                      <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+                        <input type="radio" name="gateway" checked={paymentGateway === "flutterwave"} onChange={() => setPaymentGateway("flutterwave")} style={{ accentColor: "var(--color-primary)" }} />
+                        <span style={{ fontSize: "0.875rem", fontWeight: 500 }}>Pay with Flutterwave</span>
+                      </label>
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           </div>
