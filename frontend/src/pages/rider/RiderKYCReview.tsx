@@ -74,7 +74,7 @@ export default function KYCReview() {
 
       await submitKYC(payload);
       await refreshUser();
-      navigate('/kyc/verification');
+      navigate('/rider/kyc/verification');
     } catch (err: any) {
       setErrorMsg(err.message || 'Failed to submit KYC application. Please try again.');
     }
@@ -88,7 +88,7 @@ export default function KYCReview() {
         <div className="space-y-5 sm:space-y-6">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => navigate('/kyc/submit')}
+              onClick={() => navigate('/rider/kyc/submit')}
               className="w-9 h-9 rounded-full bg-input flex items-center justify-center cursor-pointer hover:bg-border/60 transition-colors"
             >
               <Icon i="arrow-left" size={16} />
@@ -114,7 +114,7 @@ export default function KYCReview() {
                 <Icon i="user" size={15} className="text-primary" />
                 Personal & Bank Details
               </span>
-              <button onClick={() => navigate('/kyc')} className="text-primary text-xs font-bold hover:underline cursor-pointer">
+              <button onClick={() => navigate('/rider/kyc')} className="text-primary text-xs font-bold hover:underline cursor-pointer">
                 Edit
               </button>
             </div>
@@ -134,7 +134,7 @@ export default function KYCReview() {
                 <Icon i="truck" size={15} className="text-primary" />
                 Vehicle Details
               </span>
-              <button onClick={() => navigate('/kyc')} className="text-primary text-xs font-bold hover:underline cursor-pointer">
+              <button onClick={() => navigate('/rider/kyc')} className="text-primary text-xs font-bold hover:underline cursor-pointer">
                 Edit
               </button>
             </div>
@@ -154,7 +154,7 @@ export default function KYCReview() {
                 <Icon i="users" size={15} className="text-primary" />
                 Guarantor Details
               </span>
-              <button onClick={() => navigate('/kyc/submit')} className="text-primary text-xs font-bold hover:underline cursor-pointer">
+              <button onClick={() => navigate('/rider/kyc/submit')} className="text-primary text-xs font-bold hover:underline cursor-pointer">
                 Edit
               </button>
             </div>

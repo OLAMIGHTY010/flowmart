@@ -21,6 +21,9 @@ import { RiderButton } from "@/components/ui/button";
 import { useOrder } from "@/hooks/useRiderQueries";
 import { useLiveTracking } from "@/hooks/useLiveTracking";
 import { DeliveryChat } from "@/components/rider/DeliveryChat";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { riderService } from "@/services/RiderServices";
+import { useToast } from "@/contexts/ToastContext";
 
 // Custom marker icons
 const riderIcon = new L.Icon({
@@ -51,8 +54,9 @@ export default function DeliveryDetails() {
   const navigate = useNavigate();
   const { id } = useParams();
   const { data: order } = useOrder(id || "");
+  const { showToast } = useToast();
+  const queryClient = useQueryClient();
   
-  const [isConfirming, setIsConfirming] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [activeTab, setActiveTab] = useState<'details' | 'map'>('map');
   
@@ -67,12 +71,30 @@ export default function DeliveryDetails() {
   // Mock destination
   const destPos: [number, number] = [6.4322, 3.4219]; // Victoria Island
 
-  const handleConfirmDelivery = () => {
-    setIsConfirming(true);
-    setTimeout(() => {
-      setIsConfirming(false);
-      navigate("/dashboard");
-    }, 1500);
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ orderId, status }: { orderId: string, status: string }) => 
+      riderService.updateOrderStatus(orderId, status),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["riderOrders"] });
+      queryClient.invalidateQueries({ queryKey: ["riderOrder", id] });
+      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
+      showToast(`Delivery status updated to ${variables.status}!`, "success");
+      if (variables.status === 'delivered') {
+        navigate("/rider/dashboard");
+      }
+    },
+    onError: (error: any) => {
+      showToast(error.message || "Failed to update delivery status", "error");
+    }
+  });
+
+  const handleAction = () => {
+    if (!id || !order) return;
+    const nextStatus = order.status === 'assigned' || order.status === 'confirmed' || order.status === 'pending'
+      ? 'picked_up'
+      : 'delivered';
+      
+    updateStatusMutation.mutate({ orderId: id, status: nextStatus });
   };
 
   return (
@@ -150,14 +172,15 @@ export default function DeliveryDetails() {
                     <p className="text-sm font-bold text-[#006837]">{order?.distance || "0 km"}</p>
                     <p className="text-[10px] font-bold text-slate-400">~{order?.estimatedTime || "0 min"}</p>
                   </div>
-                </div>
-
-                <div className="flex gap-3 mb-2">
+                </div>                 <div className="flex gap-3 mb-2">
                   <RiderButton 
-                    onClick={handleConfirmDelivery}
-                    className="flex-1 bg-[#006837] hover:bg-[#00522b] text-white py-3.5 rounded-xl text-sm font-bold shadow-xs"
+                    onClick={handleAction}
+                    disabled={updateStatusMutation.isPending}
+                    className="flex-1 bg-[#006837] hover:bg-[#00522b] text-white py-3.5 rounded-xl text-sm font-bold shadow-xs border-none"
                   >
-                    Slide to Arrive →
+                    {order?.status === 'assigned' || order?.status === 'confirmed' || order?.status === 'pending'
+                      ? 'Confirm Pickup / Arrive →'
+                      : 'Confirm Delivery'}
                   </RiderButton>
                 </div>
               </div>
@@ -186,10 +209,10 @@ export default function DeliveryDetails() {
                     <h2 className="text-sm font-bold text-foreground">{order?.customerName || "Customer"}</h2>
                     <span className="text-xs text-muted-foreground">Recipient</span>
                   </div>
-                  <button onClick={() => setShowChat(true)} className="w-10 h-10 rounded-full bg-[#f0fdf4] text-[#15803d] flex items-center justify-center">
+                  <button onClick={() => setShowChat(true)} className="w-10 h-10 rounded-full bg-[#f0fdf4] text-[#15803d] flex items-center justify-center border-none cursor-pointer">
                     <MessageSquare size={18} />
                   </button>
-                  <button className="w-10 h-10 rounded-full bg-[#f0fdf4] text-[#15803d] flex items-center justify-center">
+                  <button className="w-10 h-10 rounded-full bg-[#f0fdf4] text-[#15803d] flex items-center justify-center border-none cursor-pointer">
                     <Phone size={18} />
                   </button>
                 </div>
@@ -222,17 +245,21 @@ export default function DeliveryDetails() {
               {/* Bottom Form Actions */}
               <div className="flex flex-col gap-2.5 pt-2">
                 <button
-                  onClick={() => navigate(`/delivery/${id}/report`)}
+                  onClick={() => navigate(`/rider/deliveries/${id}/shortage`)}
                   className="w-full bg-white text-destructive border border-destructive/30 hover:bg-destructive/5 py-3.5 rounded-xl text-xs font-bold transition cursor-pointer"
                 >
                   Report Issue
                 </button>
                 <RiderButton
-                  onClick={handleConfirmDelivery}
-                  disabled={isConfirming}
-                  className="w-full bg-[#006837] hover:bg-[#00522b] text-white py-3.5 rounded-xl text-sm font-bold shadow-xs"
+                  onClick={handleAction}
+                  disabled={updateStatusMutation.isPending}
+                  className="w-full bg-[#006837] hover:bg-[#00522b] text-white py-3.5 rounded-xl text-sm font-bold shadow-xs border-none"
                 >
-                  {isConfirming ? "Processing..." : "Confirm Delivery"}
+                  {updateStatusMutation.isPending 
+                    ? "Processing..." 
+                    : (order?.status === 'assigned' || order?.status === 'confirmed' || order?.status === 'pending' 
+                      ? "Confirm Pickup" 
+                      : "Confirm Delivery")}
                 </RiderButton>
               </div>
             </div>

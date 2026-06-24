@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useRecommendationStore } from "@/stores/recommendationStore";
 import { useProducts } from "@/hooks/useProducts";
 import type { Product } from "@/types/product";
-import { Card } from "./ui/card";
+import { Card } from "@/components/ui/card";
 
 interface Props {
   currentProduct?: Product;

@@ -93,7 +93,7 @@ export default function ProfileSetup({ onNext }: ProfileSetupProps) {
         if (onNext) {
           onNext();
         } else {
-          navigate('/kyc');
+          navigate('/rider/kyc');
         }
       }, 500);
     } catch (err) {

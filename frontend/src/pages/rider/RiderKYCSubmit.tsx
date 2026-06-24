@@ -55,9 +55,9 @@ export default function KYCSubmitScreen() {
   useEffect(() => {
     if (kycStatus && kycStatus.status !== 'unsubmitted' && kycStatus.status !== 'rejected') {
       if (kycStatus.status === 'approved') {
-        navigate('/dashboard', { replace: true });
+        navigate('/rider/dashboard', { replace: true });
       } else {
-        navigate('/kyc/verification', { replace: true });
+        navigate('/rider/kyc/verification', { replace: true });
       }
     }
   }, [kycStatus, navigate]);
@@ -158,7 +158,7 @@ export default function KYCSubmitScreen() {
         <div className="space-y-5 sm:space-y-6">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => navigate('/kyc/vehicle')}
+              onClick={() => navigate('/rider/kyc')}
               className="w-9 h-9 rounded-full bg-input flex items-center justify-center cursor-pointer hover:bg-border/60 transition-colors"
             >
               <Icon i="arrow-left" size={16} />
@@ -314,7 +314,7 @@ export default function KYCSubmitScreen() {
           </div>
 
           <RiderButton
-            onClick={() => navigate('/kyc/review')}
+            onClick={() => navigate('/rider/kyc/review')}
             disabled={!canProceed}
             className={!canProceed ? 'opacity-60 cursor-not-allowed' : ''}
           >

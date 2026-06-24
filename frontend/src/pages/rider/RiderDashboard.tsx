@@ -1,224 +1,247 @@
-import { Link } from "react-router-dom";
-import { Package, Navigation, MapPin, CheckCircle2, AlertTriangle, ArrowRight, Loader2, Zap } from "lucide-react";
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import { useDashboardStats, useOrders } from '@/hooks/useRiderQueries';
 import { useToast } from "@/contexts/ToastContext";
-import { apiClient } from "@/services/api";
+import StatCard from '@/components/vendor/StatCard';
+import Icon from '@/components/Icon';
 
-const mockActiveDelivery = {
-  id: "DEL-9082",
-  pickup: "Farm Fresh NG, 12 Broad St, Lagos",
-  dropoff: "John Doe, 8 Allen Ave, Ikeja",
-  distance: "4.2 km",
-  earnings: 850,
-  status: "picking_up", // picking_up, delivering
-};
-
-const RiderDashboard = () => {
+export default function RiderDashboard() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const { showToast } = useToast();
-  const queryClient = useQueryClient();
+
+  const { data: stats, isLoading: statsLoading } = useDashboardStats();
+  const { data: orders, isLoading: ordersLoading } = useOrders();
+
   const [isOnline, setIsOnline] = useState(true);
 
-  // Fetch available broadcasts (Phase 3 - no hardcoding)
-  const { data: broadcastsData, isLoading: loadingBroadcasts } = useQuery({
-    queryKey: ["delivery-broadcasts"],
-    queryFn: () => apiClient.get<{ success: boolean; broadcasts: any[] }>("/delivery/broadcasts"),
-    enabled: isOnline, // only fetch if online
-    refetchInterval: 5000, // poll every 5s until websocket is fully ready
-  });
+  const firstName = user?.fullName ? user.fullName.split(' ')[0] : 'Rider';
 
-  const broadcasts = broadcastsData?.broadcasts || [];
+  const assignedOrders = orders?.filter(
+    o => o.status === 'pending' || o.status === 'picked_up' || o.status === 'assigned'
+  ) || [];
 
-  const claimMutation = useMutation({
-    mutationFn: (orderId: string) => apiClient.post(`/delivery/${orderId}/claim`),
-    onSuccess: () => {
-      showToast("Delivery claimed successfully!", "success");
-      queryClient.invalidateQueries({ queryKey: ["delivery-broadcasts"] });
-      // In a real app, also invalidate the active delivery query
-    },
-    onError: () => {
-      showToast("Failed to claim delivery. Another rider might have taken it.", "error");
-    }
-  });
+  const inTransitOrder = assignedOrders.find(
+    o => o.status === 'picked_up' || o.status === 'assigned'
+  );
+
+  const formatCurrency = (val: string | number) => {
+    const num = typeof val === 'string' ? parseFloat(val) : val;
+    if (isNaN(num)) return '₦0';
+    return `₦${num.toLocaleString()}`;
+  };
 
   const toggleStatus = () => {
     setIsOnline(!isOnline);
-    showToast(isOnline ? "You are now Offline" : "You are now Online and receiving requests", isOnline ? "warning" : "success");
+    showToast(
+      isOnline ? "You are now Offline" : "You are now Online and receiving requests",
+      isOnline ? "warning" : "success"
+    );
   };
 
   return (
-    <div>
-      {/* Status Toggle Header */}
-      <div className="card" style={{ padding: "20px 16px", marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: isOnline ? "var(--color-primary-surface)" : "var(--color-bg-primary)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ width: 12, height: 12, borderRadius: "50%", backgroundColor: isOnline ? "var(--color-primary)" : "var(--color-text-muted)" }} />
+    <div className="flex-1 lg:mt-0 bg-background flex flex-col gap-6 pt-2 pb-24 lg:pb-8">
+      {/* Online / Offline Status Toggle Bar */}
+      <div className="bg-surface border border-border rounded-2xl p-4 flex items-center justify-between shadow-xs">
+        <div className="flex items-center gap-3">
+          <span className={`w-3 h-3 rounded-full ${isOnline ? 'bg-emerald-600 animate-pulse' : 'bg-slate-400'}`} />
           <div>
-            <h2 style={{ fontSize: "1.125rem", fontWeight: 700, color: "var(--color-text-primary)" }}>
-              {isOnline ? "Online" : "Offline"}
-            </h2>
-            <p style={{ fontSize: "0.813rem", color: "var(--color-text-muted)" }}>
-              {isOnline ? "Searching for requests..." : "Go online to start earning"}
+            <h3 className="text-sm font-bold text-foreground">
+              Rider Status: {isOnline ? 'Online' : 'Offline'}
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              {isOnline ? 'You are visible to dispatch and receiving assignments.' : 'Go online to receive new jobs.'}
             </p>
           </div>
         </div>
-
-        {/* Toggle Switch */}
-        <button 
+        <button
           onClick={toggleStatus}
-          style={{
-            width: 52,
-            height: 28,
-            borderRadius: "var(--radius-full)",
-            backgroundColor: isOnline ? "var(--color-primary)" : "var(--color-border)",
-            position: "relative",
-            transition: "all var(--transition-fast)",
-          }}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            isOnline ? 'bg-emerald-700 hover:bg-emerald-800 text-white border-none' : 'bg-secondary hover:bg-secondary/80 text-foreground border-none'
+          }`}
         >
-          <div style={{
-            position: "absolute",
-            top: 2,
-            left: isOnline ? 26 : 2,
-            width: 24,
-            height: 24,
-            borderRadius: "50%",
-            backgroundColor: "white",
-            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-            transition: "all var(--transition-fast)",
-          }} />
+          {isOnline ? 'Go Offline' : 'Go Online'}
         </button>
       </div>
 
-      {/* Daily Stats Summary */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
-        <div className="card" style={{ padding: 16 }}>
-          <p style={{ fontSize: "0.813rem", color: "var(--color-text-muted)", marginBottom: 4 }}>Today's Earnings</p>
-          <h3 style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--color-text-primary)" }}>₦4,250</h3>
+      {/* Stats grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5">
+        <StatCard
+          label="New Deliveries"
+          value={statsLoading ? '...' : (assignedOrders.filter(o => o.status === 'pending' || o.status === 'assigned').length.toString())}
+          icon="bell"
+          sub="Pending jobs"
+        />
+        <StatCard
+          label="In Progress"
+          value={statsLoading ? '...' : (assignedOrders.filter(o => o.status === 'picked_up').length.toString())}
+          icon="loader"
+          sub="Active delivery"
+        />
+        <StatCard
+          label="Revenue Today"
+          value={statsLoading ? '...' : (stats?.revenueToday || '₦0')}
+          icon="trending-up"
+          accent
+          sub="Today's payouts"
+        />
+        <StatCard
+          label="Completed"
+          value={statsLoading ? '...' : ((stats?.deliveriesCount || orders?.filter(o => o.status === 'delivered').length || 0).toString())}
+          icon="package"
+          sub="Total trips"
+        />
+      </div>
+
+      {/* Layout Split: Left (Deliveries & Quick Actions) | Right (Weekly Revenue Chart) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 flex flex-col gap-6">
+          {/* Active / Assigned Deliveries list */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-base font-headings font-extrabold text-foreground" style={{ fontWeight: 800 }}>
+                Assigned Deliveries
+              </h2>
+              <button
+                onClick={() => navigate('/rider/deliveries')}
+                className="text-xs text-primary font-semibold hover:underline cursor-pointer bg-transparent border-none"
+              >
+                View history
+              </button>
+            </div>
+            <div className="flex flex-col gap-3">
+              {ordersLoading ? (
+                <div className="text-center py-6 text-sm text-muted-foreground">Loading deliveries...</div>
+              ) : assignedOrders.length > 0 ? (
+                assignedOrders.slice(0, 3).map((order, i) => (
+                  <div 
+                    key={i} 
+                    onClick={() => navigate(`/rider/deliveries/${order.id}`)}
+                    className="bg-surface border border-border rounded-2xl px-4 py-3.5 flex items-center gap-3 shadow-xs hover:border-primary cursor-pointer transition-all"
+                  >
+                    <div className="w-10 h-10 bg-secondary rounded-xl flex items-center justify-center flex-shrink-0">
+                      <Icon i="truck" size={18} className="text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-primary font-bold">#{order.id.substring(0, 8).toUpperCase()}</span>
+                        <span className="text-xs text-muted-foreground">
+                          Zone {order.deliveryZone}
+                        </span>
+                      </div>
+                      <p className="text-sm text-foreground font-semibold mt-0.5">
+                        {order.customerName || `Customer #${order.attendeeId.substring(0, 5)}`}
+                      </p>
+                    </div>
+                    <div className="flex flex-col items-end gap-1.5">
+                      <span className="text-sm text-foreground font-bold">{formatCurrency(order.totalAmount)}</span>
+                      <div className="flex items-center gap-1 bg-yellow-50 px-2 py-0.5 rounded-full">
+                        <div className="w-1.5 h-1.5 rounded-full bg-warning" />
+                        <span className="text-[10px] text-warning font-bold uppercase tracking-wider">{order.status}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-6 text-sm text-muted-foreground bg-surface border border-dashed border-border rounded-2xl">
+                  No active or assigned deliveries at the moment.
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div>
+            <h2 className="text-base font-headings font-extrabold text-foreground mb-3" style={{ fontWeight: 800 }}>
+              Quick Actions
+            </h2>
+            <div className="flex gap-3">
+              {[
+                { icon: 'camera', label: 'Scan QR', action: () => showToast("Camera scanner coming soon!", "info") },
+                { icon: 'alert-circle', label: 'Report', action: () => showToast("Support ticket interface coming soon!", "info") },
+                { icon: 'trending-up', label: 'Earnings', action: () => navigate('/rider/earnings') }
+              ].map((a, i) => (
+                <button
+                  key={i}
+                  onClick={a.action}
+                  className="flex-1 bg-surface border border-border rounded-2xl py-3.5 flex flex-col items-center gap-1.5 hover:bg-muted/30 active:scale-95 transition-all cursor-pointer shadow-sm"
+                >
+                  <Icon i={a.icon} size={20} className="text-primary" />
+                  <span className="text-xs font-body font-semibold text-foreground">{a.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
-        <div className="card" style={{ padding: 16 }}>
-          <p style={{ fontSize: "0.813rem", color: "var(--color-text-muted)", marginBottom: 4 }}>Completed</p>
-          <h3 style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--color-text-primary)" }}>5 trips</h3>
+
+        {/* Weekly Earnings Chart (Right Side) */}
+        <div className="bg-surface border border-border rounded-2xl px-4 py-4 shadow-sm h-fit">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base font-headings font-extrabold text-foreground" style={{ fontWeight: 800 }}>Weekly Earnings</h2>
+            <span className="text-xs text-primary bg-secondary px-2.5 py-1 rounded-full font-bold">This week</span>
+          </div>
+          {/* Bar chart */}
+          <div className="flex items-end gap-2.5 h-28 pt-2">
+            {(stats?.weeklyRevenue || []).map((bar: any, i: number) => (
+              <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
+                <div
+                  className={`w-full rounded-t-md transition-all duration-500 ${i === 5 ? 'bg-primary' : 'bg-secondary'}`}
+                  style={{ height: `${bar.h}%`, minHeight: '10%' }}
+                />
+                <span className="text-[10px] text-muted-foreground font-semibold">{bar.day}</span>
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-between mt-4 pt-3 border-t border-border">
+            <div>
+              <p className="text-[10px] text-muted-foreground uppercase font-bold">Total Earnings</p>
+              <p className="text-lg font-headings font-extrabold text-foreground" style={{ fontWeight: 800 }}>
+                {statsLoading ? '...' : (stats?.totalRevenue || '₦0')}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] text-muted-foreground uppercase font-bold">Avg payout</p>
+              <p className="text-lg font-headings font-extrabold text-foreground" style={{ fontWeight: 800 }}>
+                {statsLoading ? '...' : (stats?.avgOrder || '₦0')}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
-      {!isOnline && (
-        <div style={{ textAlign: "center", padding: "40px 20px" }}>
-          <div style={{ width: 64, height: 64, borderRadius: "50%", backgroundColor: "var(--color-bg-tertiary)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
-            <AlertTriangle size={32} style={{ color: "var(--color-text-muted)" }} />
+      {/* Currently Delivering Sticky Card */}
+      {inTransitOrder && (
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-white via-white/95 to-transparent pb-8 z-50 lg:pl-64">
+          <div className="max-w-md mx-auto bg-surface rounded-3xl p-5 shadow-[0_-8px_30px_rgb(0,0,0,0.06)] border border-border">
+            <div className="flex items-center gap-1.5 mb-3">
+              <span className="w-2 h-2 rounded-full bg-primary animate-ping"></span>
+              <p className="text-[10px] font-bold text-primary tracking-widest uppercase">
+                Active Job in Progress
+              </p>
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <div className="min-w-0">
+                <h4 className="font-extrabold text-foreground truncate">
+                  {inTransitOrder.customerName || `Customer #${inTransitOrder.attendeeId.substring(0, 5)}`}
+                </h4>
+                <div className="flex items-center gap-1 mt-1 text-muted-foreground">
+                  <Icon i="map-pin" size={12} className="shrink-0" />
+                  <p className="text-xs font-semibold truncate">
+                    Zone {inTransitOrder.deliveryZone}
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => navigate(`/rider/deliveries/${inTransitOrder.id}`)}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground px-5 py-3 rounded-2xl text-xs font-bold whitespace-nowrap transition-colors shadow-sm cursor-pointer border-none"
+              >
+                Go to Navigation
+              </button>
+            </div>
           </div>
-          <h3 style={{ fontSize: "1.125rem", fontWeight: 600, marginBottom: 8 }}>You're currently offline</h3>
-          <p style={{ fontSize: "0.875rem", color: "var(--color-text-muted)" }}>Toggle your status to online to start receiving delivery requests near you.</p>
         </div>
-      )}
-
-      {isOnline && (
-        <>
-          {/* AVAILABLE DELIVERIES (BROADCASTS) */}
-          <div style={{ marginBottom: 32 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <h2 style={{ fontSize: "1.125rem", fontWeight: 700 }}>Available Jobs</h2>
-              {loadingBroadcasts && <Loader2 size={16} style={{ color: "var(--color-primary)", animation: "spin 1s linear infinite" }} />}
-            </div>
-
-            {broadcasts.length === 0 ? (
-              <div style={{ textAlign: "center", padding: "32px 16px", backgroundColor: "var(--color-bg-primary)", border: "1px dashed var(--color-border)", borderRadius: "var(--radius-lg)" }}>
-                <Zap size={24} style={{ color: "var(--color-text-muted)", margin: "0 auto 8px" }} />
-                <p style={{ fontSize: "0.875rem", color: "var(--color-text-muted)" }}>No deliveries available right now. Keep checking!</p>
-              </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                {broadcasts.map((job) => (
-                  <div key={job.id} className="card" style={{ padding: 16, borderLeft: "4px solid var(--color-primary)" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
-                      <div>
-                        <span className="badge badge-green" style={{ fontSize: "0.6875rem", marginBottom: 8, display: "inline-block" }}>New Broadcast</span>
-                        <h3 style={{ fontSize: "1rem", fontWeight: 600 }}>{job.pickupName || "Vendor Shop"}</h3>
-                        <p style={{ fontSize: "0.8125rem", color: "var(--color-text-muted)" }}>{job.pickupAddress}</p>
-                      </div>
-                      <div style={{ textAlign: "right" }}>
-                        <span style={{ fontSize: "1.125rem", fontWeight: 700, color: "var(--color-primary)" }}>₦{job.payout || 0}</span>
-                        <p style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>{job.distance || "~ km"}</p>
-                      </div>
-                    </div>
-                    
-                    <div style={{ display: "flex", gap: 8, alignItems: "flex-start", padding: "12px", backgroundColor: "var(--color-bg-secondary)", borderRadius: "var(--radius-sm)", marginBottom: 16 }}>
-                      <MapPin size={16} style={{ color: "var(--color-text-muted)", flexShrink: 0, marginTop: 2 }} />
-                      <div>
-                        <p style={{ fontSize: "0.75rem", textTransform: "uppercase", color: "var(--color-text-muted)", fontWeight: 600 }}>Drop-off</p>
-                        <p style={{ fontSize: "0.8125rem" }}>{job.dropoffAddress}</p>
-                      </div>
-                    </div>
-
-                    <button 
-                      onClick={() => claimMutation.mutate(job.id)}
-                      disabled={claimMutation.isPending}
-                      className="btn-primary" 
-                      style={{ width: "100%", padding: "12px" }}
-                    >
-                      {claimMutation.isPending ? "Claiming..." : "Swipe / Tap to Claim"}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div style={{ height: 1, backgroundColor: "var(--color-border)", margin: "24px 0" }} />
-
-          {/* Active Delivery Card */}
-          <h2 style={{ fontSize: "1.125rem", fontWeight: 700, marginBottom: 16 }}>Current Delivery</h2>
-          
-          <div className="card" style={{ padding: 20, border: "2px solid var(--color-primary)", position: "relative", overflow: "hidden", marginBottom: 24 }}>
-            <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: 4, backgroundColor: "var(--color-primary)" }} />
-            
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <span className="badge badge-orange" style={{ fontSize: "0.75rem", padding: "4px 8px" }}>
-                {mockActiveDelivery.status === "picking_up" ? "Pick Up Needed" : "Delivering"}
-              </span>
-              <span style={{ fontWeight: 700, color: "var(--color-primary)" }}>₦{mockActiveDelivery.earnings}</span>
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: 16, position: "relative" }}>
-              {/* Vertical line connecting dots */}
-              <div style={{ position: "absolute", left: 11, top: 16, bottom: 20, width: 2, backgroundColor: "var(--color-border-light)", zIndex: 0 }} />
-
-              <div style={{ display: "flex", gap: 12, position: "relative", zIndex: 1 }}>
-                <div style={{ width: 24, height: 24, borderRadius: "50%", backgroundColor: "var(--color-primary-surface)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <Package size={14} style={{ color: "var(--color-primary)" }} />
-                </div>
-                <div>
-                  <p style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", textTransform: "uppercase", letterSpacing: 0.5 }}>Pickup</p>
-                  <p style={{ fontSize: "0.875rem", fontWeight: 600 }}>{mockActiveDelivery.pickup}</p>
-                </div>
-              </div>
-
-              <div style={{ display: "flex", gap: 12, position: "relative", zIndex: 1 }}>
-                <div style={{ width: 24, height: 24, borderRadius: "50%", backgroundColor: "var(--color-bg-secondary)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <MapPin size={14} style={{ color: "var(--color-text-muted)" }} />
-                </div>
-                <div>
-                  <p style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", textTransform: "uppercase", letterSpacing: 0.5 }}>Drop-off</p>
-                  <p style={{ fontSize: "0.875rem", fontWeight: 600 }}>{mockActiveDelivery.dropoff}</p>
-                </div>
-              </div>
-            </div>
-
-            <div style={{ height: 1, backgroundColor: "var(--color-border)", margin: "20px 0" }} />
-
-            <Link to={`/rider/deliveries/${mockActiveDelivery.id}`} className="btn-primary" style={{ width: "100%", padding: 14 }}>
-              <Navigation size={18} /> View Navigation
-            </Link>
-          </div>
-
-          <Link to="/rider/deliveries" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: 16, backgroundColor: "var(--color-bg-primary)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-lg)" }}>
-            <span style={{ fontWeight: 600 }}>View Delivery History</span>
-            <ArrowRight size={18} style={{ color: "var(--color-text-muted)" }} />
-          </Link>
-          
-          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        </>
       )}
     </div>
   );
-};
-
-export default RiderDashboard;
+}

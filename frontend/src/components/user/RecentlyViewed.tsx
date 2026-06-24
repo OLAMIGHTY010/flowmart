@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { Link } from "react-router-dom";
 import { useRecentlyViewedStore } from "@/stores/recentlyViewedStore";
-import { Card } from "./ui/card";
+import { Card } from "@/components/ui/card";
 
 export default function RecentlyViewed() {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -30,6 +30,7 @@ export default function RecentlyViewed() {
         ref={scrollRef}
         className="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
       >
+        {products.map((product) => {
           const stockStatus =
             product.productType === 'food'
               ? "In Stock"

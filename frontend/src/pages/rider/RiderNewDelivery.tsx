@@ -31,7 +31,7 @@ export default function DeliveryRequest() {
     if (!id) return;
     try {
       await acceptMutation.mutateAsync(id);
-      navigate("/dashboard"); 
+      navigate("/rider/dashboard"); 
     } catch (error) {
       console.error("Accept error:", error);
     }

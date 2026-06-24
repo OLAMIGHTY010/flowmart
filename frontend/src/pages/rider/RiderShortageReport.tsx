@@ -29,7 +29,7 @@ export default function ShortageReport() {
     try {
       await submitMutation.mutateAsync({ id, data: { status: 'shortage_reported' } });
       setShowSubmitSheet(false);
-      navigate("/dashboard");
+      navigate("/rider/dashboard");
     } catch (error) {
       console.error("Failed to submit shortage report", error);
     }

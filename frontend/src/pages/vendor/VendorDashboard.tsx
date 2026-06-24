@@ -30,8 +30,8 @@ export default function VendorDashboard() {
     }
   }, [kycStatus, kycLoading, user, navigate]);
 
-  // Tab State: 'dashboard' | 'products' | 'orders' | 'store'
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'orders' | 'store'>('dashboard');
+  // Tab State: 'dashboard' | 'products' | 'orders' | 'store' | 'profile'
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'orders' | 'store' | 'profile'>('dashboard');
 
   // Fetch dashboard queries
   const { data: stats, isLoading: statsLoading } = useDashboardStats();

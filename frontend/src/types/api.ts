@@ -100,12 +100,16 @@ export interface KYCInfoRequest {
   businessName?: string;
   tin?: string;
   cacNo?: string;
-  campCertificateId: string;
+  campCertificateId?: string;
   bankName: string;
   accountNumber: string;
   accountName: string;
   vehicleType?: string;
   licenseNumber?: string;
+  makeModel?: string;
+  year?: string;
+  plateNumber?: string;
+  color?: string;
 }
 
 export interface KYCSubmitRequest {
@@ -138,6 +142,13 @@ export interface KYCSubmitPayload {
   bankName: string;
   accountNumber: string;
   accountName: string;
+
+  // Vehicle details
+  vehicleType?: string;
+  makeModel?: string;
+  year?: string;
+  plateNumber?: string;
+  color?: string;
   
   // KYC Submit fields
   govIdType: string;
@@ -150,6 +161,9 @@ export interface KYCSubmitPayload {
   bankReferenceFile?: string;
   cacDocumentFile?: string;
   riderImageFile?: string;
+  insuranceFile?: string;
+  roadWorthinessFile?: string;
+  carImageFile?: string;
 }
 
 export interface KYCStatusResponse {

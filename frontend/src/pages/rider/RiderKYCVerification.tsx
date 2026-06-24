@@ -18,7 +18,7 @@ export default function KYCVerification() {
     if (status === 'approved') {
       // Small delay for UI smoothness
       const t = setTimeout(() => {
-        navigate('/dashboard');
+        navigate('/rider/dashboard');
       }, 3000);
       return () => clearTimeout(t);
     }
@@ -125,14 +125,14 @@ export default function KYCVerification() {
           <div className="w-full flex flex-col items-center gap-4">
             {status === 'approved' ? (
               <RiderButton 
-                onClick={() => navigate('/dashboard')} 
+                onClick={() => navigate('/rider/dashboard')} 
                 className="w-full py-6 text-base font-bold bg-[#15803d] hover:bg-[#166534] text-white rounded-[16px]"
               >
                 Go to Dashboard
               </RiderButton>
             ) : status === 'rejected' ? (
               <RiderButton 
-                onClick={() => navigate('/profile-setup')} 
+                onClick={() => navigate('/rider/profile-setup')} 
                 className="w-full py-6 text-base font-bold bg-[#ef4444] hover:bg-[#dc2626] text-white rounded-[16px]"
               >
                 Complete Your Profile Setup

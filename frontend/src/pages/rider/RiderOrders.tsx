@@ -49,7 +49,7 @@ export default function Orders() {
           filteredOrders.map((order: any, i: number) => (
             <div 
               key={order.id || i}
-              onClick={() => navigate(`/delivery/${order.id}`)}
+              onClick={() => navigate(`/rider/deliveries/${order.id}`)}
               className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-start gap-3 cursor-pointer hover:border-emerald-200 transition"
             >
               <div className="w-10 h-10 rounded-xl bg-[#dcfce7] flex items-center justify-center shrink-0 mt-1">

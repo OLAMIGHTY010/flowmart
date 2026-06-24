@@ -78,9 +78,9 @@ export default function KYCInfo() {
   useEffect(() => {
     if (kycStatus && kycStatus.status !== 'unsubmitted' && kycStatus.status !== 'rejected') {
       if (kycStatus.status === 'approved') {
-        navigate('/dashboard', { replace: true });
+        navigate('/rider/dashboard', { replace: true });
       } else {
-        navigate('/kyc/verification', { replace: true });
+        navigate('/rider/kyc/verification', { replace: true });
       }
     }
   }, [kycStatus, navigate]);
@@ -203,7 +203,7 @@ export default function KYCInfo() {
       setShowToast(true);
       setTimeout(() => {
         setShowToast(false);
-        navigate('/kyc/submit');
+        navigate('/rider/kyc/submit');
       }, 500);
     } catch (err: any) {
       setErrorMsg(err.message || 'Failed to save KYC details. Please try again.');
@@ -226,14 +226,14 @@ export default function KYCInfo() {
 
       <div className="flex-1 p-4 sm:p-6 lg:p-12 overflow-y-auto max-w-4xl mx-auto w-full">
         <div className="mb-6 sm:mb-8 border-b border-border/80 pb-4">
-          <OnboardingStepIndicator currentStep={3} />
+          <OnboardingStepIndicator currentStep={4} />
         </div>
 
         <div className="flex items-center justify-between mb-6 sm:mb-8">
           <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={() => navigate('/profile-setup')}
+              onClick={() => navigate('/rider/profile-setup')}
               className="w-9 h-9 rounded-full bg-input flex items-center justify-center hover:bg-border/60 transition-colors cursor-pointer"
             >
               <ArrowLeft size={16} />
@@ -243,7 +243,7 @@ export default function KYCInfo() {
                 KYC Details
               </h2>
               <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-                Step 3 of 4 — Bank & Vehicle Details
+                Step 4 of 6 — Bank & Vehicle Details
               </p>
             </div>
           </div>

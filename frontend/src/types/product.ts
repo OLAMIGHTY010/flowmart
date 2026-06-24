@@ -8,8 +8,8 @@ export interface Vendor {
 }
 
 export interface Product {
-  id: string;
-  vendorId: string;
+  id?: string;
+  vendorId?: string;
   sku: string;
   name: string;
   description: string;
@@ -26,4 +26,9 @@ export interface Product {
   updatedAt?: string;
   isNew?: boolean;
   rating?: number;
+  productType?: 'food' | 'retail';
+  preparationTime?: number;
+  modifiers?: any[];
+  variants?: any[];
+  dietaryTags?: string[];
 }

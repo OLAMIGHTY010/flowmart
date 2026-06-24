@@ -1,4 +1,4 @@
-import Icon from './Icon';
+import Icon from '@/components/Icon';
 
 interface MobileStatusBarProps {
   dark?: boolean;

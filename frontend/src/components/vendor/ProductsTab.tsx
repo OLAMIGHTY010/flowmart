@@ -129,7 +129,7 @@ export default function ProductsTab() {
     const data = {
       name,
       category,
-      price,
+      price: parseFloat(price) || 0,
       stockQuantity: productType === 'food' ? undefined : (parseInt(stockQuantity) || 0),
       description,
       imageUrl: imageUrl || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=150&auto=format&fit=crop&q=60', // Default beautiful fallback food image
