@@ -1,13 +1,19 @@
 import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Star, ShieldCheck, Truck, Minus, Plus, ShoppingCart, Heart, Loader2, ArrowLeft, ShoppingBag } from "lucide-react";
 import { apiClient } from "@/services/api";
 import { useCartStore } from "@/stores/cartStore";
 import { useToast } from "@/contexts/ToastContext";
+import { useEffect } from "react";
+import { useRecentlyViewedStore } from "@/stores/recentlyViewedStore";
+import RecentlyViewed from "@/components/user/RecentlyViewed";
+import CustomersAlsoViewed from "@/components/user/CustomersAlsoViewed";
+import ProductReviews from "@/components/user/product/ProductReviews";
 
 const ProductDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [quantity, setQuantity] = useState(1);
   const [isLiked, setIsLiked] = useState(false);
   const addToCart = useCartStore((s) => s.addToCart);
@@ -24,6 +30,23 @@ const ProductDetails = () => {
   });
 
   const product = data?.product;
+
+  const addViewedProduct = useRecentlyViewedStore((state) => state.addViewedProduct);
+
+  useEffect(() => {
+    if (product) {
+      // Map product to what the store expects if needed, or just pass product
+      addViewedProduct({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        oldPrice: product.oldPrice,
+        imageUrl: product.images ? product.images.split(",")[0] : product.imageUrl,
+        stockQuantity: product.stockQuantity,
+        productType: product.productType
+      } as any);
+    }
+  }, [product, addViewedProduct]);
 
   if (isLoading) {
     return (
@@ -46,8 +69,14 @@ const ProductDetails = () => {
     );
   }
 
-  const images = product.images ? product.images.split(",").filter(Boolean) : [];
+  const images = product.images 
+    ? (Array.isArray(product.images) ? product.images : product.images.split(",").filter(Boolean)) 
+    : (product.imageUrl ? [product.imageUrl] : []);
+  
   const firstImage = images[0];
+
+  // Auto-generate SKU fallback if missing for retail items
+  const displaySku = product.sku || `SKU-${product.id?.slice(0, 8).toUpperCase()}`;
 
   // Food vs Retail Stock check
   const inStock = product.productType === 'food' || product.stockQuantity > 0;
@@ -74,6 +103,7 @@ const ProductDetails = () => {
     
     addToCart({
       id: `${product.id}${variantString}${modifierString}`,
+      originalProductId: product.id,
       vendorId: product.vendorId,
       name: `${product.name}${selectedVariant ? ` (${selectedVariant.value})` : ''}`,
       price: totalPrice,
@@ -218,13 +248,11 @@ const ProductDetails = () => {
               </div>
             )
           ) : (
-            (product.brand || product.sku || product.weight) && (
-              <div style={{ display: "flex", gap: 16, fontSize: "0.875rem", color: "var(--color-text-secondary)", marginBottom: 16 }}>
-                {product.brand && <span><strong>Brand:</strong> {product.brand}</span>}
-                {product.sku && <span><strong>SKU:</strong> {product.sku}</span>}
-                {product.weight && <span><strong>Weight:</strong> {product.weight} kg</span>}
-              </div>
-            )
+            <div style={{ display: "flex", gap: 16, fontSize: "0.875rem", color: "var(--color-text-secondary)", marginBottom: 16 }}>
+              {product.brand && <span><strong>Brand:</strong> {product.brand}</span>}
+              <span><strong>SKU:</strong> {displaySku}</span>
+              {product.weight && <span><strong>Weight:</strong> {product.weight} kg</span>}
+            </div>
           )}
 
           {/* Dietary Tags */}
@@ -373,11 +401,24 @@ const ProductDetails = () => {
             <button
               onClick={handleAddToCart}
               disabled={!inStock}
-              className="btn-primary"
-              style={{ flex: 1, minWidth: 200, height: 52, fontSize: "1.063rem", opacity: inStock ? 1 : 0.5, cursor: inStock ? "pointer" : "not-allowed" }}
+              className="btn-secondary"
+              style={{ flex: 1, minWidth: 160, height: 52, fontSize: "1.063rem", opacity: inStock ? 1 : 0.5, cursor: inStock ? "pointer" : "not-allowed", backgroundColor: "var(--color-bg-tertiary)", color: "var(--color-text-primary)", border: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, borderRadius: "var(--radius-lg)", fontWeight: 600 }}
             >
               <ShoppingCart size={20} />
               Add to Cart
+            </button>
+
+            <button
+              onClick={() => {
+                handleAddToCart();
+                navigate("/checkout");
+              }}
+              disabled={!inStock}
+              className="btn-primary"
+              style={{ flex: 1, minWidth: 160, height: 52, fontSize: "1.063rem", opacity: inStock ? 1 : 0.5, cursor: inStock ? "pointer" : "not-allowed" }}
+            >
+              <ShieldCheck size={20} />
+              Checkout Now
             </button>
           </div>
 
@@ -394,6 +435,18 @@ const ProductDetails = () => {
           </div>
 
         </div>
+      </div>
+
+      <div style={{ marginTop: 40 }}>
+        <RecentlyViewed />
+      </div>
+
+      <div style={{ height: 1, backgroundColor: "var(--color-border)", margin: "32px 0" }} />
+
+      <CustomersAlsoViewed currentProduct={product} />
+
+      <div style={{ marginTop: 32 }}>
+        <ProductReviews productId={product.id} />
       </div>
 
       <style>{`

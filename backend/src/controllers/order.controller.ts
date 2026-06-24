@@ -3,7 +3,7 @@ import { db } from "../../db";
 import { products, orders, orderItems, users, vendorProfiles, vendorKyc } from "../../db/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { AuthenticatedRequest } from "../middleware/auth.middleware";
-import { sendInAppNotification } from "../services/websocket";
+import { sendInAppNotification, broadcastNewDelivery } from "../services/websocket";
 import { emailService } from "../services/email.service";
 import crypto from "crypto";
 
@@ -334,7 +334,6 @@ export const updateOrderStatus = async (req: AuthenticatedRequest, res: Response
 		if (!existingOrder) {
 			return res.status(404).json({ success: false, message: "Order not found or unauthorized" });
 		}
-
 		const [updatedOrder] = await db.update(orders).set({
 			status,
 			updatedAt: new Date(),
@@ -344,6 +343,16 @@ export const updateOrderStatus = async (req: AuthenticatedRequest, res: Response
 			orderId,
 			status,
 		});
+
+        // Broadcast to riders if the vendor just published it for delivery
+        if (status === "ready_for_delivery") {
+            broadcastNewDelivery({
+                orderId,
+                zone: existingOrder.deliveryZone,
+                vendorId: existingOrder.vendorId,
+                totalAmount: existingOrder.totalAmount
+            });
+        }
 
 		return res.status(200).json({
 			success: true,

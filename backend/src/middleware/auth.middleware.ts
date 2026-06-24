@@ -43,7 +43,32 @@ export const authenticateJWT = async (req: AuthenticatedRequest, res: Response, 
   }
 };
 
-// 2. Role-Based Access Control (RBAC) Guard
+// 2. Optional JWT - parses token if present, but does NOT reject unauthenticated requests
+export const optionalAuthenticateJWT = async (req: AuthenticatedRequest, _res: Response, next: NextFunction) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return next(); // No token — continue as public/guest
+  }
+
+  const token = authHeader.split(' ')[1];
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as AuthenticatedRequest['user'];
+    if (decoded && decoded.id) {
+      const [user] = await db.select().from(users).where(eq(users.id, decoded.id)).limit(1);
+      if (user) {
+        req.user = decoded;
+      }
+    }
+  } catch (_error) {
+    // Token is invalid/expired — just continue as guest
+  }
+
+  next();
+};
+
+// 3. Role-Based Access Control (RBAC) Guard
 export const authorizeRoles = (...allowedRoles: string[]) => {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     if (!req.user || !allowedRoles.includes(req.user.role)) {

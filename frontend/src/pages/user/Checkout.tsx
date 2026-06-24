@@ -1,17 +1,155 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { MapPin, CreditCard, ShieldCheck } from "lucide-react";
+import { MapPin, CreditCard, ShieldCheck, Navigation } from "lucide-react";
+import { useCartStore } from "@/stores/cartStore";
 import { useToast } from "@/contexts/ToastContext";
+import { apiClient } from "@/services/api";
+import { useAuth } from "@/hooks/useAuth";
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+
+// Fix for default Leaflet icon in React
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+const DefaultIcon = L.icon({
+    iconUrl: icon,
+    shadowUrl: iconShadow,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41]
+});
+L.Marker.prototype.options.icon = DefaultIcon;
+
+const LocationPicker = ({ position, setPosition, setAddress }: any) => {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (position) {
+      map.flyTo(position, 15);
+    }
+  }, [position, map]);
+
+  useMapEvents({
+    async click(e) {
+      const { lat, lng } = e.latlng;
+      setPosition([lat, lng]);
+      setAddress("Fetching location details...");
+      
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
+        const data = await res.json();
+        if (data && data.display_name) {
+          setAddress(data.display_name);
+        } else {
+          setAddress(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+        }
+      } catch (err) {
+        setAddress(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+      }
+    }
+  });
+
+  return position ? <Marker position={position as [number, number]} /> : null;
+};
 
 const Checkout = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const [paymentMethod, setPaymentMethod] = useState<"card" | "transfer" | "delivery">("card");
+  const { user } = useAuth();
+  
+  const [paymentMethod, setPaymentMethod] = useState<"paystack" | "flutterwave" | "pay_on_delivery">("paystack");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [mapPosition, setMapPosition] = useState<[number, number] | null>(null);
 
-  const handlePlaceOrder = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (user) {
+      setFullName(user.fullName || "");
+      if (user.phone) setPhone(user.phone);
+    }
+  }, [user]);
+
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      showToast("Geolocation is not supported by your browser", "error");
+      return;
+    }
+    setIsLoadingLocation(true);
+    setAddress("Fetching your current location...");
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        setMapPosition([lat, lng]);
+        
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
+          const data = await res.json();
+          if (data && data.display_name) {
+            setAddress(data.display_name);
+          } else {
+            setAddress(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+          }
+        } catch (err) {
+          setAddress(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+        }
+
+        setIsLoadingLocation(false);
+        showToast("Location captured successfully", "success");
+      },
+      () => {
+        setIsLoadingLocation(false);
+        showToast("Unable to retrieve your location", "error");
+        setAddress("");
+      },
+      { enableHighAccuracy: true }
+    );
+  };
+
+  const cart = useCartStore((s) => s.cart);
+  const clearCart = useCartStore((s) => s.clearCart);
+
+  const subtotal = cart.reduce((sum, item) => sum + (Number(item.price) * item.qty), 0);
+  const deliveryFee = 1500; // Hardcoded for now
+  const totalAmount = subtotal + deliveryFee;
+
+  const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
-    showToast("Order placed successfully!", "success");
-    navigate("/orders");
+    if (cart.length === 0) {
+      return showToast("Your cart is empty", "error");
+    }
+    
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        items: cart.map(item => ({ 
+          productId: (item as any).originalProductId || item.id.substring(0, 36), 
+          quantity: item.qty 
+        })),
+        payment_method: paymentMethod,
+        zone: address, // address or location is sent as the zone
+        phone: phone,
+      };
+      
+      const res = await apiClient.post<{ success: boolean; paymentUrl?: string }>("/orders", payload);
+      
+      if (res.paymentUrl) {
+        // Redirect to Paystack/Flutterwave
+        window.location.href = res.paymentUrl;
+      } else {
+        showToast("Order placed successfully!", "success");
+        clearCart();
+        navigate("/orders");
+      }
+    } catch (err) {
+      showToast("Error placing order. Please try again.", "error");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -31,25 +169,50 @@ const Checkout = () => {
           
           {/* Section: Delivery Details */}
           <div className="card" style={{ padding: 24 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-              <div style={{ width: 32, height: 32, borderRadius: "50%", backgroundColor: "var(--color-primary-surface)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <MapPin size={16} style={{ color: "var(--color-primary)" }} />
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ width: 32, height: 32, borderRadius: "50%", backgroundColor: "var(--color-primary-surface)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <MapPin size={16} style={{ color: "var(--color-primary)" }} />
+                </div>
+                <h2 style={{ fontSize: "1.25rem", fontWeight: 600 }}>Delivery Address</h2>
               </div>
-              <h2 style={{ fontSize: "1.25rem", fontWeight: 600 }}>Delivery Address</h2>
+              <button 
+                type="button" 
+                onClick={handleGetLocation} 
+                disabled={isLoadingLocation}
+                className="btn-secondary" 
+                style={{ fontSize: "0.75rem", padding: "8px 12px", height: "auto", display: "flex", gap: 6, alignItems: "center", borderRadius: "var(--radius-md)" }}
+              >
+                {isLoadingLocation ? <span className="animate-spin text-primary">⌛</span> : <Navigation size={14} />}
+                Use Current Location
+              </button>
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
               <div style={{ gridColumn: "1 / -1" }}>
                 <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, marginBottom: 8 }}>Full Name</label>
-                <input required type="text" className="input-field" placeholder="John Doe" />
+                <input required type="text" className="input-field" value={fullName} readOnly style={{ backgroundColor: "var(--color-bg-secondary)", opacity: 0.8 }} />
               </div>
               <div style={{ gridColumn: "1 / -1" }}>
                 <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, marginBottom: 8 }}>Phone Number</label>
-                <input required type="tel" className="input-field" placeholder="+234..." />
+                <input required type="tel" className="input-field" placeholder="+234..." value={phone} onChange={(e) => setPhone(e.target.value)} />
               </div>
               <div style={{ gridColumn: "1 / -1" }}>
                 <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, marginBottom: 8 }}>Delivery Address</label>
-                <textarea required className="input-field" rows={3} placeholder="123 Main Street..." />
+                <textarea required className="input-field" rows={3} placeholder="123 Main Street..." value={address} onChange={(e) => setAddress(e.target.value)} />
+                <div style={{ marginTop: 16, height: 250, borderRadius: "var(--radius-lg)", overflow: "hidden", border: "1px solid var(--color-border)" }}>
+                  <MapContainer 
+                    center={mapPosition || [9.0820, 8.6753]} 
+                    zoom={mapPosition ? 15 : 6} 
+                    style={{ width: "100%", height: "100%", zIndex: 0 }}
+                  >
+                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                    <LocationPicker position={mapPosition} setPosition={setMapPosition} setAddress={setAddress} />
+                  </MapContainer>
+                </div>
+                <p style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", marginTop: 8 }}>
+                  Click on the map to pin your exact location, or type it manually.
+                </p>
               </div>
             </div>
           </div>
@@ -101,14 +264,12 @@ const Checkout = () => {
             
             {/* Items mini list */}
             <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 24 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>2x Tomatoes (1kg)</span>
-                <span style={{ fontSize: "0.875rem", fontWeight: 600 }}>₦2,400</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>1x Premium Rice 5kg</span>
-                <span style={{ fontSize: "0.875rem", fontWeight: 600 }}>₦7,500</span>
-              </div>
+              {cart.map((item) => (
+                <div key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>{item.qty}x {item.name}</span>
+                  <span style={{ fontSize: "0.875rem", fontWeight: 600 }}>₦{(Number(item.price) * item.qty).toLocaleString()}</span>
+                </div>
+              ))}
             </div>
 
             <div style={{ height: 1, backgroundColor: "var(--color-border)", marginBottom: 20 }} />
@@ -116,11 +277,11 @@ const Checkout = () => {
             <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 24 }}>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.938rem", color: "var(--color-text-secondary)" }}>
                 <span>Subtotal</span>
-                <span style={{ fontWeight: 600, color: "var(--color-text-primary)" }}>₦9,900</span>
+                <span style={{ fontWeight: 600, color: "var(--color-text-primary)" }}>₦{subtotal.toLocaleString()}</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.938rem", color: "var(--color-text-secondary)" }}>
                 <span>Delivery Fee</span>
-                <span style={{ fontWeight: 600, color: "var(--color-text-primary)" }}>₦1,500</span>
+                <span style={{ fontWeight: 600, color: "var(--color-text-primary)" }}>₦{deliveryFee.toLocaleString()}</span>
               </div>
             </div>
 
@@ -128,12 +289,12 @@ const Checkout = () => {
 
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28 }}>
               <span style={{ fontSize: "1.125rem", fontWeight: 600 }}>Total to Pay</span>
-              <span style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--color-primary)" }}>₦11,400</span>
+              <span style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--color-primary)" }}>₦{totalAmount.toLocaleString()}</span>
             </div>
 
-            <button type="submit" className="btn-primary" style={{ width: "100%", padding: "16px 24px" }}>
+            <button type="submit" disabled={isSubmitting} className="btn-primary" style={{ width: "100%", padding: "16px 24px", opacity: isSubmitting ? 0.7 : 1 }}>
               <ShieldCheck size={20} />
-              Place Order securely
+              {isSubmitting ? "Processing..." : "Place Order securely"}
             </button>
             <p style={{ textAlign: "center", fontSize: "0.75rem", color: "var(--color-text-muted)", marginTop: 12 }}>
               Your personal data will be used to process your order, support your experience throughout this website, and for other purposes described in our privacy policy.

@@ -137,7 +137,9 @@ export default function ProductsTab() {
       brand: productType === 'food' ? undefined : (brand || undefined),
       weight: productType === 'food' ? undefined : (weight ? parseFloat(weight) : undefined),
       oldPrice: oldPrice ? parseFloat(oldPrice) : undefined,
-      images: images ? images.split(',').map(s => s.trim()).filter(Boolean) : undefined,
+      images: images 
+        ? images.split(',').map(s => s.trim()).filter(Boolean) 
+        : (imageUrl ? [imageUrl] : ['https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=150&auto=format&fit=crop&q=60']),
       productType,
       preparationTime: productType === 'food' ? (parseInt(preparationTime) || undefined) : undefined,
       modifiers: productType === 'food' ? modifiers.map(m => ({

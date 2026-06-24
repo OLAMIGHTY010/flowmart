@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { db } from "../../db";
 import { products, vendorProfiles, users, vendorKyc } from "../../db/schema";
-import { eq, and, gt, sql, count } from "drizzle-orm";
+import { eq, and, gt, sql, count, or, isNull } from "drizzle-orm";
 import { AuthenticatedRequest } from "../middleware/auth.middleware";
 
 // 1. Create a Product (Vendors Only)
@@ -73,11 +73,11 @@ export const getProducts = async (req: AuthenticatedRequest, res: Response) => {
 			return res.status(200).json({ success: true, products: vendorProducts, meta: { page, limit } });
 		}
 
-		// Only fetch products where stockQuantity is greater than 0 to hide out-of-stock items
+		// Only fetch products where stockQuantity is greater than 0 OR is null (unlimited stock for food)
 		const availableProducts = await db
 			.select()
 			.from(products)
-			.where(gt(products.stockQuantity, 0))
+			.where(or(gt(products.stockQuantity, 0), isNull(products.stockQuantity)))
             .limit(limit)
             .offset(offset);
 
