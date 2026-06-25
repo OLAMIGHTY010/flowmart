@@ -21,18 +21,27 @@ const AIChatWidget = () => {
   const [ticketId, setTicketId] = useState<string | null>(null);
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isTyping, setIsTyping] = useState(false);
+  const [isLiveSupport, setIsLiveSupport] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Unauthenticated local fallback bot
+  // Local fallback bot (used before connecting to live agent)
   const handleLocalBot = (msg: string) => {
     setMessages(prev => [...prev, { id: Date.now().toString(), message: msg, isBot: false }]);
     setInputValue("");
     setIsTyping(true);
     
     setTimeout(() => {
-      let reply = "Please log in to speak to our live agents or to get detailed help regarding your orders and accounts.";
+      let reply = "I'm your AI assistant! Try asking me about selling on FlowMart, delivery fees, or tracking your order. Type 'talk to agent' if you need human support.";
       const lower = msg.toLowerCase();
-      if (lower.includes("vendor") || lower.includes("sell")) {
+
+      if (lower.includes("agent") || lower.includes("human") || lower.includes("support")) {
+        if (user) {
+          reply = "Connecting you to a live support agent...";
+          setIsLiveSupport(true);
+        } else {
+          reply = "Please log in to speak to a live agent.";
+        }
+      } else if (lower.includes("vendor") || lower.includes("sell")) {
         reply = "To become a vendor, click 'Get Started' and select the Vendor role. You'll need to complete our KYC verification before you can start selling.";
       } else if (lower.includes("delivery") || lower.includes("fee")) {
         reply = "Delivery fees vary by zone. Log in and add items to your cart to see exact delivery fees to your location.";
@@ -58,7 +67,7 @@ const AIChatWidget = () => {
   }, [messages, isOpen, isTyping]);
 
   useEffect(() => {
-    if (isOpen && user && !ticketId) {
+    if (isOpen && user && isLiveSupport && !ticketId) {
       const initTicket = async () => {
         try {
           const res: any = await apiClient.get("/support/ticket");
@@ -74,14 +83,14 @@ const AIChatWidget = () => {
         }
       };
       initTicket();
-    } else if (isOpen && !user && messages.length === 0) {
+    } else if (isOpen && messages.length === 0) {
       setMessages([{
         id: 'welcome',
         message: "Hi there! 👋 I'm FlowMart's AI assistant. I can help with general questions about our platform. What would you like to know?",
         isBot: true
       }]);
     }
-  }, [isOpen, user, ticketId]);
+  }, [isOpen, user, ticketId, isLiveSupport]);
 
   useEffect(() => {
     if (ticketId && user) {
@@ -112,7 +121,7 @@ const AIChatWidget = () => {
     e.preventDefault();
     if (!inputValue.trim()) return;
 
-    if (!user) {
+    if (!user || !isLiveSupport) {
       handleLocalBot(inputValue);
       return;
     }
@@ -128,10 +137,11 @@ const AIChatWidget = () => {
     }
   };
 
-  const quickReplies = !user ? [
+  const quickReplies = !isLiveSupport ? [
     "How to sell?",
     "Delivery fees",
     "Track order",
+    "Talk to agent"
   ] : [];
 
   return (
@@ -216,7 +226,7 @@ const AIChatWidget = () => {
               <h3 style={{ fontWeight: 700, fontSize: "0.9375rem", letterSpacing: "0.01em", margin: 0 }}>FlowMart Assistant</h3>
               <p style={{ fontSize: "0.6875rem", color: "rgba(255,255,255,0.75)", margin: "2px 0 0", display: "flex", alignItems: "center", gap: 5, fontWeight: 500 }}>
                 <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#86efac", display: "inline-block", animation: "pulse 2s infinite" }} />
-                {user ? "Live Support Connected" : "AI Assistant • Online"}
+                {(user && isLiveSupport) ? "Live Support Connected" : "AI Assistant • Online"}
               </p>
             </div>
           </div>
@@ -344,7 +354,7 @@ const AIChatWidget = () => {
           )}
 
           {/* Quick Replies (Guest Mode only, only show after welcome) */}
-          {!user && messages.length === 1 && quickReplies.length > 0 && (
+          {!isLiveSupport && messages.length === 1 && quickReplies.length > 0 && (
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 4 }}>
               {quickReplies.map((q) => (
                 <button
@@ -433,6 +443,11 @@ const AIChatWidget = () => {
           {!user && (
             <p style={{ textAlign: "center", fontSize: "0.625rem", color: "#94a3b8", marginTop: 10, fontWeight: 500, letterSpacing: "0.02em" }}>
               🔒 Log in to connect with live agents
+            </p>
+          )}
+          {user && !isLiveSupport && (
+            <p style={{ textAlign: "center", fontSize: "0.625rem", color: "#94a3b8", marginTop: 10, fontWeight: 500, letterSpacing: "0.02em" }}>
+              Type <strong>"talk to agent"</strong> for human support
             </p>
           )}
         </div>
