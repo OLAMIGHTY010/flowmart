@@ -30,7 +30,9 @@ const calculateTotals = (cart: CartItem[]) => {
     0
   );
 
-  const shippingFee = subtotal >= 50000 ? 0 : 2500;
+  // Shipping fee is now calculated dynamically during checkout based on the zone
+  // We set it to 0 here to prevent mismatches between Cart and Checkout
+  const shippingFee = 0;
 
   return {
     subtotal,

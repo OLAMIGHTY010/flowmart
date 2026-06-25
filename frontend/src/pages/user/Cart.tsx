@@ -146,8 +146,8 @@ const Cart = () => {
                 
                 <div className="flex justify-between mb-2">
                   <span className="text-base text-gray-600">Delivery Fee</span>
-                  <span className={`text-base font-semibold ${shippingFee === 0 ? 'text-green-600' : 'text-gray-800'}`}>
-                    {shippingFee === 0 ? "Free" : `₦${shippingFee.toLocaleString()}`}
+                  <span className="text-base font-semibold text-gray-500 text-sm">
+                    Calculated at checkout
                   </span>
                 </div>
                 
