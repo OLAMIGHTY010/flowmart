@@ -9,17 +9,10 @@ import {
 import { apiClient } from "@/services/api";
 import { useAuth } from "@/hooks/useAuth";
 
-/* ═══════════════════════════════════════════════════════
-   FlowMart Homepage
-   Sections: Hero → Categories → Featured Products →
-   Promo Banner → Delivery CTA → Sell CTA
-   ═══════════════════════════════════════════════════════ */
-
-// Icon mapping for categories that come from the backend
 const categoryIconMap: Record<string, any> = {
   "groceries": Apple,
   "electronics": Monitor,
-  "phones & tablets": Monitor, // adding specific fallback
+  "phones & tablets": Monitor,
   "fashion": Shirt,
   "home, furniture and appliances": HomeIcon,
   "health": Heart,
@@ -27,13 +20,13 @@ const categoryIconMap: Record<string, any> = {
 };
 
 const categoryColorMap: Record<string, string> = {
-  "groceries": "#15803d",
-  "electronics": "#2563eb",
-  "phones & tablets": "#2563eb",
-  "fashion": "#ea580c",
-  "home, furniture and appliances": "#0d9488",
-  "health": "#dc2626",
-  "beauty": "#d97706",
+  "groceries": "text-green-700 border-green-700",
+  "electronics": "text-blue-600 border-blue-600",
+  "phones & tablets": "text-blue-600 border-blue-600",
+  "fashion": "text-orange-600 border-orange-600",
+  "home, furniture and appliances": "text-teal-600 border-teal-600",
+  "health": "text-red-600 border-red-600",
+  "beauty": "text-amber-600 border-amber-600",
 };
 
 const Homepage = () => {
@@ -42,7 +35,6 @@ const Homepage = () => {
   const [page, setPage] = useState(1);
   const LIMIT = 20;
 
-  // Fetch products from backend — filtered by category, paginated
   const { data: productsData, isLoading: productsLoading, isFetching } = useQuery({
     queryKey: ["homepage-products", activeCategory, page],
     queryFn: () => {
@@ -52,10 +44,9 @@ const Homepage = () => {
       }
       return apiClient.get<{ success: boolean; products: any[]; meta: any }>(`/products?${params.toString()}`);
     },
-    placeholderData: (prev) => prev, // keep previous data while loading next page
+    placeholderData: (prev) => prev,
   });
 
-  // Fetch categories from backend
   const { data: categoriesData } = useQuery({
     queryKey: ["homepage-categories"],
     queryFn: () => apiClient.get<{ success: boolean; categories: string[] }>("/products/categories"),
@@ -68,65 +59,33 @@ const Homepage = () => {
 
   const handleCategoryClick = (cat: string) => {
     setActiveCategory(cat);
-    setPage(1); // Reset to page 1 when switching categories
+    setPage(1);
   };
 
   return (
     <div>
       {/* ═══ HERO SECTION ═══ */}
-      <section style={{
-        position: "relative",
-        minHeight: 420,
-        display: "flex",
-        alignItems: "center",
-        background: `linear-gradient(135deg, var(--color-bg-overlay) 0%, rgba(5, 46, 22, 0.85) 100%), url('https://images.unsplash.com/photo-1542838132-92c53300491e?w=1400&q=80') center/cover no-repeat`,
-        overflow: "hidden",
-      }}>
-        <div className="container" style={{
-          position: "relative",
-          zIndex: 2,
-          padding: "60px 24px",
-        }}>
+      <section className="relative min-h-[420px] flex items-center overflow-hidden bg-[linear-gradient(135deg,rgba(15,23,42,0.6)_0%,rgba(5,46,22,0.85)_100%),url('https://images.unsplash.com/photo-1542838132-92c53300491e?w=1400&q=80')] bg-center bg-cover bg-no-repeat">
+        <div className="container mx-auto px-6 py-16 relative z-10">
           {/* Tag */}
-          <div style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 6,
-            padding: "6px 14px",
-            backgroundColor: "rgba(34, 197, 94, 0.2)",
-            borderRadius: "var(--radius-full)",
-            marginBottom: 16,
-          }}>
-            <Zap size={14} style={{ color: "var(--color-primary-lighter)" }} />
-            <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--color-primary-lighter)" }}>
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-green-500/20 rounded-full mb-4">
+            <Zap size={14} className="text-green-300" />
+            <span className="text-xs font-semibold text-green-300">
               Free delivery on your first order
             </span>
           </div>
 
-          <h1 style={{
-            fontSize: "clamp(2rem, 5vw, 3.25rem)",
-            fontWeight: 800,
-            color: "var(--color-text-inverse)",
-            lineHeight: 1.15,
-            maxWidth: 560,
-            marginBottom: 16,
-          }}>
+          <h1 className="text-4xl sm:text-5xl lg:text-[52px] font-extrabold text-white leading-[1.15] max-w-2xl mb-4">
             Anything You Need,{" "}
-            <span style={{ color: "var(--color-primary-lighter)" }}>Delivered Fast.</span>
+            <span className="text-green-300">Delivered Fast.</span>
           </h1>
 
-          <p style={{
-            fontSize: "1rem",
-            color: "rgba(255, 255, 255, 0.8)",
-            maxWidth: 440,
-            lineHeight: 1.6,
-            marginBottom: 28,
-          }}>
+          <p className="text-base text-white/80 max-w-md leading-relaxed mb-8">
             Shop thousands of products from trusted vendors and get them delivered to your doorstep in minutes.
           </p>
 
           {/* CTA Buttons */}
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <div className="flex flex-wrap gap-3">
             <Link to="/get-started" className="inline-flex items-center justify-center gap-2 py-3.5 px-8 text-base font-semibold rounded-xl bg-green-500 text-white hover:bg-green-600 transition-colors">
               <ShoppingBag size={18} />
               Start Shopping
@@ -146,22 +105,17 @@ const Homepage = () => {
           </div>
 
           {/* Stats */}
-          <div style={{
-            display: "flex",
-            gap: 32,
-            marginTop: 40,
-            flexWrap: "wrap",
-          }}>
+          <div className="flex flex-wrap gap-8 mt-12">
             {[
               { label: "Active Vendors", value: "500+" },
               { label: "Products", value: "10K+" },
               { label: "Deliveries", value: "50K+" },
             ].map((stat) => (
               <div key={stat.label}>
-                <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--color-text-inverse)" }}>
+                <div className="text-2xl font-bold text-white">
                   {stat.value}
                 </div>
-                <div style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.6)" }}>
+                <div className="text-xs text-white/60">
                   {stat.label}
                 </div>
               </div>
@@ -171,59 +125,27 @@ const Homepage = () => {
       </section>
 
       {/* ═══ CATEGORIES — Jiji-style horizontal strip ═══ */}
-      <section style={{
-        backgroundColor: "#fff",
-        borderBottom: "1px solid var(--color-border-light)",
-        position: "sticky",
-        top: 0,
-        zIndex: 40,
-        boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
-      }}>
-        <div className="container" style={{ padding: "0 24px" }}>
-          <div style={{
-            display: "flex",
-            gap: 0,
-            overflowX: "auto",
-            scrollbarWidth: "none",
-          }}>
+      <section className="bg-white border-b border-gray-200 sticky top-[64px] z-40 shadow-sm">
+        <div className="container mx-auto px-6">
+          <div className="flex overflow-x-auto scrollbar-hide">
             {["All", ...(categories.length > 0 ? categories : ["Groceries", "Phones & Tablets", "Electronics", "Fashion", "Home, Furniture and Appliances", "Health", "Beauty"])].map((cat: string) => {
               const key = cat.toLowerCase();
               const IconComp = key === "all" ? ShoppingBag : categoryIconMap[key] || ShoppingBag;
-              const color = key === "all" ? "#475569" : categoryColorMap[key] || "#15803d";
+              
               const isActive = activeCategory === cat;
+              
+              // Map dynamic tailwind color classes
+              const activeColorClass = key === "all" ? "text-slate-600 border-slate-600" : categoryColorMap[key] || "text-green-700 border-green-700";
+              const inactiveColorClass = "text-slate-500 border-transparent hover:text-slate-800 hover:border-slate-300";
+              const colorClass = isActive ? activeColorClass : inactiveColorClass;
+
               return (
                 <button
                   key={cat}
                   onClick={() => handleCategoryClick(cat)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    padding: "14px 20px",
-                    whiteSpace: "nowrap",
-                    fontSize: "0.8125rem",
-                    fontWeight: 600,
-                    color: isActive ? color : "#475569",
-                    background: "none",
-                    border: "none",
-                    borderBottom: `2px solid ${isActive ? color : "transparent"}`,
-                    transition: "all 0.2s",
-                    cursor: "pointer",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.color = color;
-                      e.currentTarget.style.borderBottomColor = color;
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.color = "#475569";
-                      e.currentTarget.style.borderBottomColor = "transparent";
-                    }
-                  }}
+                  className={`flex items-center gap-2 px-5 py-3.5 whitespace-nowrap text-[13px] font-semibold bg-transparent border-b-2 transition-all cursor-pointer ${colorClass}`}
                 >
-                  <IconComp size={16} style={{ color: isActive ? color : "#475569" }} />
+                  <IconComp size={16} />
                   {cat}
                 </button>
               );
@@ -232,128 +154,75 @@ const Homepage = () => {
         </div>
       </section>
 
-      {/* ═══ ALL PRODUCTS (from backend) ═══ */}
-      <section className="section" id="products-section" style={{ backgroundColor: "var(--color-bg-secondary)", minHeight: "60vh" }}>
-        <div className="container">
-          <div style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 24,
-          }}>
+      {/* ═══ ALL PRODUCTS ═══ */}
+      <section className="bg-gray-50 min-h-[60vh] py-12" id="products-section">
+        <div className="container mx-auto px-6">
+          <div className="flex justify-between items-center mb-6">
             <div>
-              <h2 style={{ fontSize: "1.375rem", fontWeight: 700, color: "var(--color-text-primary)" }}>
+              <h2 className="text-2xl font-bold text-gray-900">
                 {activeCategory === "All" ? "All Products" : `${activeCategory} Products`}
               </h2>
-              <p style={{ fontSize: "0.813rem", color: "var(--color-text-muted)", marginTop: 2 }}>
+              <p className="text-sm text-gray-500 mt-1">
                 Shop the best items from our vendors
               </p>
             </div>
           </div>
 
           {productsLoading ? (
-            <div style={{ display: "flex", justifyContent: "center", padding: 60 }}>
-              <Loader2 size={32} style={{ color: "var(--color-primary)", animation: "spin 1s linear infinite" }} />
+            <div className="flex justify-center p-16">
+              <Loader2 size={32} className="text-green-600 animate-spin" />
             </div>
           ) : products.length === 0 ? (
-            <div style={{
-              textAlign: "center",
-              padding: "48px 24px",
-              backgroundColor: "var(--color-bg-primary)",
-              borderRadius: "var(--radius-xl)",
-              border: "1px solid var(--color-border)",
-            }}>
-              <Store size={40} style={{ color: "var(--color-text-muted)", marginBottom: 12 }} />
-              <h3 style={{ fontSize: "1.125rem", fontWeight: 600, color: "var(--color-text-primary)", marginBottom: 4 }}>
+            <div className="text-center py-12 px-6 bg-white rounded-2xl border border-gray-200">
+              <Store size={40} className="mx-auto text-gray-400 mb-3" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-1">
                 No Products Yet
               </h3>
-              <p style={{ fontSize: "0.875rem", color: "var(--color-text-muted)", marginBottom: 16 }}>
+              <p className="text-sm text-gray-500 mb-4">
                 Vendors are setting up shop. Check back soon!
               </p>
-              <Link to="/get-started" className="btn-primary" style={{ padding: "10px 24px" }}>
+              <Link to="/get-started" className="inline-flex items-center gap-1.5 px-6 py-2.5 bg-green-600 text-white font-semibold rounded-full hover:bg-green-500 transition-colors">
                 Become a Vendor <ArrowRight size={16} />
               </Link>
             </div>
           ) : (
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
-              gap: 16,
-            }}>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
               {products.map((product: any) => {
                 const firstImage = product.imageUrl || (product.images ? product.images.split(",")[0] : null);
                 return (
                   <Link
                     key={product.id}
                     to={`/products/${product.id}`}
-                    className="card"
-                    style={{
-                      overflow: "hidden",
-                      textDecoration: "none",
-                    }}
+                    className="flex flex-col bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden text-decoration-none transition-transform hover:-translate-y-1 hover:shadow-md"
                   >
                     {/* Product image */}
-                    <div style={{
-                      height: 140,
-                      backgroundColor: "var(--color-bg-tertiary)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      overflow: "hidden",
-                    }}>
+                    <div className="h-36 bg-gray-50 flex items-center justify-center overflow-hidden shrink-0">
                       {firstImage ? (
                         <img
                           src={firstImage.startsWith("http") ? firstImage : `https://flowmart-bucket.s3.amazonaws.com/${firstImage}`}
                           alt={product.name}
-                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                          className="w-full h-full object-cover"
                           loading="lazy"
                         />
                       ) : (
-                        <ShoppingBag size={32} style={{ color: "var(--color-text-muted)" }} />
+                        <ShoppingBag size={32} className="text-gray-300" />
                       )}
                     </div>
-                    <div style={{ padding: "12px" }}>
+                    <div className="p-3 flex flex-col flex-1">
                       {product.category && (
-                        <p style={{
-                          fontSize: "0.6875rem",
-                          color: "var(--color-primary)",
-                          marginBottom: 2,
-                          fontWeight: 600,
-                          textTransform: "uppercase",
-                          letterSpacing: "0.03em",
-                        }}>
+                        <p className="text-[11px] text-green-600 font-bold uppercase tracking-wider mb-0.5">
                           {product.category}
                         </p>
                       )}
-                      <h3 style={{
-                        fontSize: "0.875rem",
-                        fontWeight: 600,
-                        color: "var(--color-text-primary)",
-                        marginBottom: 6,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}>
+                      <h3 className="text-sm font-semibold text-gray-800 mb-2 truncate">
                         {product.name}
                       </h3>
-                      <div style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                      }}>
-                        <span style={{
-                          fontSize: "0.938rem",
-                          fontWeight: 700,
-                          color: "var(--color-primary)",
-                        }}>
+                      <div className="mt-auto flex justify-between items-center">
+                        <span className="text-[15px] font-bold text-green-600">
                           ₦{Number(product.price).toLocaleString()}
                         </span>
                         {product.oldPrice && (
-                          <span style={{
-                            fontSize: "0.75rem",
-                            color: "var(--color-text-muted)",
-                            textDecoration: "line-through",
-                          }}>
+                          <span className="text-xs text-gray-400 line-through">
                             ₦{Number(product.oldPrice).toLocaleString()}
                           </span>
                         )}
@@ -366,16 +235,15 @@ const Homepage = () => {
           )}
 
           {hasMore && (
-            <div style={{ display: "flex", justifyContent: "center", marginTop: 40 }}>
+            <div className="flex justify-center mt-10">
               <button
                 onClick={() => setPage((p) => p + 1)}
                 disabled={isFetching}
-                className="btn-secondary"
-                style={{ padding: "12px 32px", borderRadius: "var(--radius-full)", display: "flex", alignItems: "center", gap: 8 }}
+                className="px-8 py-3 bg-gray-200 text-gray-800 font-semibold rounded-full hover:bg-gray-300 transition-colors flex items-center gap-2"
               >
                 {isFetching ? (
                   <>
-                    <Loader2 size={18} style={{ animation: "spin 1s linear infinite" }} />
+                    <Loader2 size={18} className="animate-spin" />
                     Loading...
                   </>
                 ) : (
@@ -388,83 +256,36 @@ const Homepage = () => {
       </section>
 
       {/* ═══ PROMO BANNER ═══ */}
-      <section style={{
-        backgroundColor: "var(--color-primary)",
-        padding: "40px 0",
-      }}>
-        <div className="container" style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          textAlign: "center",
-        }}>
-          <h2 style={{
-            fontSize: "clamp(1.25rem, 3vw, 1.75rem)",
-            fontWeight: 700,
-            color: "var(--color-text-inverse)",
-            marginBottom: 8,
-          }}>
+      <section className="bg-green-600 py-10">
+        <div className="container mx-auto flex flex-col items-center text-center px-6">
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
             Up to 30% off{" "}
-            <span style={{
-              color: "var(--color-primary-lighter)",
-              textDecoration: "underline",
-              textUnderlineOffset: 4,
-            }}>
+            <span className="text-green-200 underline underline-offset-4">
               selected items
             </span>
           </h2>
-          <p style={{
-            fontSize: "0.875rem",
-            color: "rgba(255,255,255,0.8)",
-            marginBottom: 20,
-          }}>
+          <p className="text-sm text-white/80 mb-5">
             Limited time offers on groceries, electronics, and more
           </p>
-          <Link to="/products" className="btn-primary" style={{
-            backgroundColor: "var(--color-text-inverse)",
-            color: "var(--color-primary)",
-            padding: "12px 28px",
-            borderRadius: "var(--radius-full)",
-            textDecoration: "none",
-          }}>
+          <Link to="/products" className="bg-white text-green-600 px-7 py-3 rounded-full font-bold hover:bg-gray-50 transition-colors flex items-center gap-1.5">
             Shop Now <ArrowRight size={16} />
           </Link>
         </div>
       </section>
 
       {/* ═══ DELIVERY CTA — "Bet We Can" ═══ */}
-      <section style={{
-        backgroundColor: "var(--color-dark)",
-        padding: "56px 0",
-      }}>
-        <div className="container" style={{ textAlign: "center" }}>
-          <h2 style={{
-            fontSize: "clamp(1.25rem, 3vw, 1.75rem)",
-            fontWeight: 700,
-            color: "var(--color-text-inverse)",
-            marginBottom: 8,
-          }}>
+      <section className="bg-slate-900 py-14">
+        <div className="container mx-auto text-center px-6">
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
             Think We Can't Deliver It?{" "}
-            <span style={{ color: "var(--color-accent-amber)" }}>Bet We Can.</span>
+            <span className="text-amber-500">Bet We Can.</span>
           </h2>
-          <p style={{
-            fontSize: "0.875rem",
-            color: "rgba(255,255,255,0.7)",
-            maxWidth: 500,
-            margin: "0 auto 28px",
-            lineHeight: 1.6,
-          }}>
+          <p className="text-sm text-white/70 max-w-lg mx-auto mb-7 leading-relaxed">
             From fragile electronics to fresh farm produce — our verified riders deliver anything, anywhere, carefully.
           </p>
 
           {/* Delivery stats */}
-          <div style={{
-            display: "flex",
-            justifyContent: "center",
-            gap: 16,
-            flexWrap: "wrap",
-            marginBottom: 8,
-          }}>
+          <div className="flex justify-center gap-4 flex-wrap mb-2">
             {[
               { icon: Package, label: "Same-day delivery" },
               { icon: Truck, label: "Real-time tracking" },
@@ -474,18 +295,10 @@ const Homepage = () => {
               return (
                 <div
                   key={item.label}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    padding: "12px 20px",
-                    borderRadius: "var(--radius-lg)",
-                    backgroundColor: "var(--color-bg-dark-card)",
-                    border: "1px solid var(--color-border-dark)",
-                  }}
+                  className="flex items-center gap-2.5 px-5 py-3 rounded-lg bg-slate-800 border border-slate-700"
                 >
-                  <IconComp size={18} style={{ color: "var(--color-primary-light)" }} />
-                  <span style={{ fontSize: "0.813rem", color: "var(--color-text-inverse)", fontWeight: 500 }}>
+                  <IconComp size={18} className="text-green-400" />
+                  <span className="text-[13px] text-white font-medium">
                     {item.label}
                   </span>
                 </div>
@@ -496,61 +309,26 @@ const Homepage = () => {
       </section>
 
       {/* ═══ SELL ON FLOWMART CTA ═══ */}
-      <section style={{
-        backgroundColor: "var(--color-bg-secondary)",
-        padding: "48px 0",
-      }}>
-        <div className="container">
-          <div style={{
-            backgroundColor: "var(--color-bg-primary)",
-            borderRadius: "var(--radius-xl)",
-            padding: "40px 32px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 32,
-            flexWrap: "wrap",
-            border: "1px solid var(--color-border)",
-          }}>
+      <section className="bg-gray-50 py-12">
+        <div className="container mx-auto px-6">
+          <div className="bg-white rounded-2xl p-10 flex items-center justify-between gap-8 flex-wrap border border-gray-200 shadow-sm">
             <div>
-              <span style={{
-                fontSize: "0.75rem",
-                fontWeight: 600,
-                color: "var(--color-primary)",
-                textTransform: "uppercase",
-                letterSpacing: 1,
-              }}>
+              <span className="text-xs font-bold text-green-600 uppercase tracking-widest">
                 Become a Vendor
               </span>
-              <h2 style={{
-                fontSize: "1.5rem",
-                fontWeight: 700,
-                color: "var(--color-text-primary)",
-                marginTop: 4,
-                marginBottom: 4,
-              }}>
+              <h2 className="text-2xl font-bold text-gray-900 mt-1 mb-1">
                 Sell on FlowMart
               </h2>
-              <p style={{
-                fontSize: "0.875rem",
-                color: "var(--color-text-muted)",
-              }}>
+              <p className="text-sm text-gray-500">
                 Reach thousands of buyers across Nigeria
               </p>
             </div>
-            <Link to="/get-started" className="btn-primary" style={{
-              padding: "14px 32px",
-              borderRadius: "var(--radius-xl)",
-              textDecoration: "none",
-            }}>
+            <Link to="/get-started" className="bg-green-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-green-500 transition-colors flex items-center gap-1.5">
               Get Started <ArrowRight size={16} />
             </Link>
           </div>
         </div>
       </section>
-
-      {/* Spin keyframe for loader */}
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 };

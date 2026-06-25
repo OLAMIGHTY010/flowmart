@@ -40,7 +40,7 @@ export default function PaymentCallback() {
           setStatus("success");
           clearCart();
           setTimeout(() => {
-            navigate(`/order-confirmation/${data.order?.id || reference}`);
+            navigate(`/orders/${data.order?.id || reference}/track`);
           }, 2000);
         } else {
           setStatus("error");

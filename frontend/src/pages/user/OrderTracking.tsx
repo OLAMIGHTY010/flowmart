@@ -99,11 +99,19 @@ export default function OrderTracking() {
 
   const order = data?.order;
 
-  // Default map center (Lagos area)
   const defaultCenter: [number, number] = [6.5244, 3.3792];
   const mapCenter: [number, number] = riderPosition
     ? [riderPosition.lat, riderPosition.lng]
     : defaultCenter;
+
+  useEffect(() => {
+    if (confirmReceivedMutation.isSuccess) {
+      const timer = setTimeout(() => {
+        navigate("/products");
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [confirmReceivedMutation.isSuccess, navigate]);
 
   if (isLoading) {
     return (

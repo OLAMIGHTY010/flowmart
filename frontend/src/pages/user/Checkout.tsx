@@ -60,8 +60,9 @@ const Checkout = () => {
   const [paymentMethod, setPaymentMethod] = useState<"card" | "bank_transfer" | "pay_on_delivery">("card");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
-  const [deliveryFee, setDeliveryFee] = useState(1500);
+  const [deliveryFee, setDeliveryFee] = useState(0);
   const [isCalculatingDelivery, setIsCalculatingDelivery] = useState(false);
+  const [deliveryError, setDeliveryError] = useState<string | null>(null);
   
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
@@ -120,14 +121,18 @@ const Checkout = () => {
 
   useEffect(() => {
     const fetchDeliveryFee = async () => {
+      if (!address) return; // Don't fetch if address is empty
       setIsCalculatingDelivery(true);
+      setDeliveryError(null);
       try {
-        const res = await apiClient.post<{ success: boolean; deliveryCalc?: any }>("/orders/calculate-delivery", { zone: address || "default", distanceKm: 5 });
+        const res = await apiClient.post<{ success: boolean; deliveryCalc?: any }>("/orders/calculate-delivery", { zone: address, distanceKm: 5 });
         if (res.deliveryCalc && res.deliveryCalc.finalDeliveryFee !== undefined) {
           setDeliveryFee(res.deliveryCalc.finalDeliveryFee);
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("Failed to calculate delivery fee", err);
+        setDeliveryFee(0);
+        setDeliveryError(err.response?.data?.message || "Delivery pricing is not configured for this zone.");
       } finally {
         setIsCalculatingDelivery(false);
       }
@@ -144,6 +149,9 @@ const Checkout = () => {
     e.preventDefault();
     if (cart.length === 0) {
       return showToast("Your cart is empty", "error");
+    }
+    if (deliveryError) {
+      return showToast("Cannot place order: " + deliveryError, "error");
     }
     
     setIsSubmitting(true);
@@ -166,7 +174,7 @@ const Checkout = () => {
       } else {
         showToast("Order placed successfully!", "success");
         clearCart();
-        navigate("/orders");
+        navigate(`/orders/${(res as any).order?.id}/track`);
       }
     } catch (err) {
       showToast("Error placing order. Please try again.", "error");
@@ -309,6 +317,11 @@ const Checkout = () => {
                 <span>Delivery Fee {isCalculatingDelivery && <span className="text-primary text-xs ml-2">(calculating...)</span>}</span>
                 <span style={{ fontWeight: 600, color: "var(--color-text-primary)" }}>₦{deliveryFee.toLocaleString()}</span>
               </div>
+              {deliveryError && (
+                <div style={{ fontSize: "0.75rem", color: "var(--color-destructive, #ef4444)" }}>
+                  ⚠️ {deliveryError}
+                </div>
+              )}
             </div>
 
             <div style={{ height: 1, backgroundColor: "var(--color-border)", marginBottom: 20 }} />
@@ -318,7 +331,7 @@ const Checkout = () => {
               <span style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--color-primary)" }}>₦{totalAmount.toLocaleString()}</span>
             </div>
 
-            <button type="submit" disabled={isSubmitting} className="btn-primary" style={{ width: "100%", padding: "16px 24px", opacity: isSubmitting ? 0.7 : 1 }}>
+            <button type="submit" disabled={isSubmitting || !!deliveryError || !address} className="btn-primary" style={{ width: "100%", padding: "16px 24px", opacity: (isSubmitting || !!deliveryError || !address) ? 0.7 : 1, cursor: (isSubmitting || !!deliveryError || !address) ? "not-allowed" : "pointer" }}>
               <ShieldCheck size={20} />
               {isSubmitting ? "Processing..." : "Place Order securely"}
             </button>

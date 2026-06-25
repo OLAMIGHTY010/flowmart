@@ -84,7 +84,7 @@ export default function ProductCard({ product }: Props) {
         </h3>
         
         <div className="mt-auto flex justify-between items-center relative">
-          <div style={{ display: "flex", flexDirection: "column" }}>
+          <div className="flex flex-col">
             <span className="text-sm font-bold text-green-600">
               ₦{Number(product.price).toLocaleString()}
             </span>
@@ -97,20 +97,7 @@ export default function ProductCard({ product }: Props) {
           
           <button 
             onClick={handleQuickAdd}
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: "50%",
-              backgroundColor: "var(--color-primary-surface)",
-              color: "var(--color-primary)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              border: "none",
-              cursor: "pointer",
-              transition: "all 0.2s"
-            }}
-            className="hover:bg-green-100 hover:scale-110"
+            className="w-8 h-8 rounded-full bg-green-50 text-green-600 flex items-center justify-center border-none cursor-pointer transition-all duration-200 hover:bg-green-100 hover:scale-110"
             title="Quick add to cart"
           >
             <Plus size={18} strokeWidth={2.5} />

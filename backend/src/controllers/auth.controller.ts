@@ -71,14 +71,9 @@ export const googleAuth = async (req: Request, res: Response) => {
       if (user.authProvider === 'local') {
          return res.status(403).json({ success: false, message: 'This email is registered with a password. Please use standard login.' });
       }
-      
-      // Enforce strict role matching: an email cannot be used for a different role
-      if (role && user.role !== role && ['attendee', 'vendor', 'dispatch_rider'].includes(role)) {
-         return res.status(403).json({ 
-           success: false, 
-           message: `This email is already registered as a ${user.role}. Please log in with the correct role.` 
-         });
-      }
+      // We intentionally ignore the requested 'role' if the user already exists,
+      // allowing the frontend to seamlessly redirect them to their correct dashboard 
+      // based on the role attached to the email used.
     }
 
     const token = jwt.sign(
