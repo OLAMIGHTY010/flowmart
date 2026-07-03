@@ -18,8 +18,8 @@ export default function AddUserModal({ isOpen, onClose }: AddUserModalProps) {
   const [role, setRole] = useState('admin'); // Default role
   
   // Staff fields
-  const [church, setChurch] = useState('');
-  const [zonal, setZonal] = useState('');
+  const [branch, setChurch] = useState('');
+  const [region, setRegion] = useState('');
   const [department, setDepartment] = useState('');
   const [professionalCertification, setProfessionalCertification] = useState('');
   const [grade, setGrade] = useState('');
@@ -41,7 +41,7 @@ export default function AddUserModal({ isOpen, onClose }: AddUserModalProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    mutation.mutate({ fullName, email, role, phone, dateOfBirth, gender, password, church, zonal, department, professionalCertification, grade });
+    mutation.mutate({ fullName, email, role, phone, dateOfBirth, gender, password, branch, region, department, professionalCertification, grade });
   };
 
   const handleClose = () => {
@@ -53,7 +53,7 @@ export default function AddUserModal({ isOpen, onClose }: AddUserModalProps) {
     setPassword('');
     setRole('admin');
     setChurch('');
-    setZonal('');
+    setRegion('');
     setDepartment('');
     setProfessionalCertification('');
     setGrade('');
@@ -198,8 +198,8 @@ export default function AddUserModal({ isOpen, onClose }: AddUserModalProps) {
                     >
                       <option value="super_admin">Super Admin</option>
                       <option value="admin">Admin</option>
-                      <option value="zone_coordinator">Zonal Coordinator</option>
-                      <option value="camp_logistics_coordinator">Camp Logistics Coordinator</option>
+                      <option value="regional_manager">Region Coordinator</option>
+                      <option value="logistics_manager">Business Logistics Coordinator</option>
                       <option value="finance">Finance</option>
                       <option value="auditor">Auditor</option>
                       <option value="customer_service">Customer Service</option>
@@ -216,21 +216,21 @@ export default function AddUserModal({ isOpen, onClose }: AddUserModalProps) {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Church / Parish</label>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Branch / Parish</label>
                       <input 
                         type="text" 
-                        value={church}
+                        value={branch}
                         onChange={e => setChurch(e.target.value)}
                         className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#16a34a] focus:ring-1 focus:ring-[#16a34a]"
-                        placeholder="e.g. RCCG Main"
+                        placeholder="e.g. FlowMart Main"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Zonal</label>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Region</label>
                       <input 
                         type="text" 
-                        value={zonal}
-                        onChange={e => setZonal(e.target.value)}
+                        value={region}
+                        onChange={e => setRegion(e.target.value)}
                         className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#16a34a] focus:ring-1 focus:ring-[#16a34a]"
                         placeholder="e.g. Zone 4"
                       />

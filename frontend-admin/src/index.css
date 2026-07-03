@@ -23,7 +23,7 @@
     --secondary: 0 0% 100%;
     --secondary-foreground: 222 47% 11%;
 
-    --accent: 143 64% 24%;
+    --accent: 250 64% 40%;
     --accent-foreground: 0 0% 100%;
 
     /* UI */
@@ -32,7 +32,7 @@
 
     --border: 216 12% 84%;
     --input: 216 12% 84%;
-    --ring: 143 64% 24%;
+    --ring: 250 64% 40%;
 
     --muted: 215 20% 95%;
     --muted-foreground: 215 16% 47%;
@@ -42,15 +42,15 @@
     /* Sidebar */
     --sidebar-background: 222 47% 11%;
     --sidebar-foreground: 215 20% 75%;
-    --sidebar-primary: 143 64% 24%;
+    --sidebar-primary: 250 64% 40%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 217 33% 17%;
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 217 33% 17%;
-    --sidebar-ring: 143 64% 24%;
+    --sidebar-ring: 250 64% 40%;
 
     /* Charts */
-    --chart-1: 143 64% 24%;
+    --chart-1: 250 64% 40%;
     --chart-2: 141 84% 93%;
     --chart-3: 38 92% 50%;
     --chart-4: 0 74% 42%;
@@ -67,7 +67,7 @@
     --popover: 222 47% 8%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 143 64% 24%;
+    --primary: 250 64% 40%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 217 33% 17%;
@@ -78,7 +78,7 @@
 
     --border: 216 12% 24%;
     --input: 216 12% 24%;
-    --ring: 143 64% 24%;
+    --ring: 250 64% 40%;
 
     --muted: 217 33% 17%;
     --muted-foreground: 215 20% 65%;
@@ -119,13 +119,13 @@
 
   /* Banani Colors */
   --color-surface: #ffffff;
-  --color-dark-header: #14532d;
+  --color-dark-header: #312e81;
   --color-dark-header-foreground: #ffffff;
-  --color-success: #16a34a;
+  --color-success: #4f46e5;
   --color-danger: #dc2626;
   --color-warning: #d97706;
-  --color-secondary: #dcfce7;
-  --color-secondary-foreground: #16a34a;
+  --color-secondary: #c7d2fe;
+  --color-secondary-foreground: #4f46e5;
 
   /* Sidebar */
   --color-sidebar: hsl(var(--sidebar-background));
@@ -135,7 +135,7 @@
 
   /* FlowMart Custom Brands */
   --color-brand-navy: #0f172a;
-  --color-brand-green: #16a34a;
+  --color-brand-green: #4f46e5;
 
   /* Charts */
   --color-chart-1: hsl(var(--chart-1));

@@ -68,7 +68,7 @@ router.post('/vendors/:id/review', reviewVendor);
 router.get('/riders/stats', getRiderStats);
 router.get('/riders', getRidersList);
 router.get('/riders/:id', getRiderDetails);
-router.post('/riders/:id/review', authorizeRoles('camp_logistics_coordinator'), reviewRider);
+router.post('/riders/:id/review', authorizeRoles('logistics_manager'), reviewRider);
 
 // Audit Logs
 router.use('/audit-logs', authorizeRoles('super_admin', 'admin', 'auditor'));
@@ -83,8 +83,8 @@ router.get('/analytics/vendor-performance', getVendorPerformance);
 router.get('/analytics/zone-performance', getZonePerformance);
 router.get('/analytics/export', exportAnalytics);
 
-// Coordinator Analytics (Zone and Camp Logistics Coordinators)
-router.use('/coordinator-analytics', authorizeRoles('zone_coordinator', 'camp_logistics_coordinator'));
+// Coordinator Analytics (Zone and Business Logistics Coordinators)
+router.use('/coordinator-analytics', authorizeRoles('regional_manager', 'logistics_manager'));
 router.get('/coordinator-analytics/overview', getCoordinatorOverview);
 router.get('/coordinator-analytics/delivery-trends', getCoordinatorDeliveryTrends);
 router.get('/coordinator-analytics/zone-performance', getZonePerformance);

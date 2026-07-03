@@ -31,7 +31,7 @@ jest.mock("../middleware/auth.middleware", () => ({
 		if (authHeader === "Bearer rider-token") {
 			req.user = { id: "rider-abc", role: "dispatch_rider" };
 		} else if (authHeader === "Bearer regular-token") {
-			req.user = { id: "attendee-xyz", role: "attendee" };
+			req.user = { id: "user-xyz", role: "user" };
 		}
 		next();
 	},
@@ -77,7 +77,7 @@ describe("Rider Routing Layer - Integration Tests", () => {
 	});
 
 	describe("Global Route Guard Rails", () => {
-		it("should block non-riders (like attendees) with a 403 Forbidden status", async () => {
+		it("should block non-riders (like users) with a 403 Forbidden status", async () => {
 			const response = await request(app)
 				.get("/api/v1/riders/available")
 				.set("Authorization", "Bearer regular-token");
@@ -180,12 +180,12 @@ describe("Rider Routing Layer - Integration Tests", () => {
 				{
 					id: "order-10",
 					deliveryPin: "1234",
-					attendeeId: "user-xyz",
+					userId: "user-xyz",
 					riderId: "rider-abc",
 				},
 			];
 			const deliveredOrder = [{ id: "order-10", status: "delivered" }];
-			const attendeeProfile = [
+			const userProfile = [
 				{
 					id: "user-xyz",
 					email: "test@user.com",
@@ -203,7 +203,7 @@ describe("Rider Routing Layer - Integration Tests", () => {
 			);
 			// 3. Background Email Dispatch Lookup
 			mockDb.then.mockImplementationOnce((onFulfilled: any) =>
-				Promise.resolve(attendeeProfile).then(onFulfilled)
+				Promise.resolve(userProfile).then(onFulfilled)
 			);
 
 			const response = await request(app)
@@ -246,12 +246,12 @@ describe("Rider Routing Layer - Integration Tests", () => {
 				{
 					id: "order-20",
 					deliveryPin: "5678",
-					attendeeId: "user-xyz",
+					userId: "user-xyz",
 					riderId: "rider-abc",
 				},
 			];
 			const deliveredOrder = [{ id: "order-20", status: "delivered" }];
-			const attendeeProfile = [
+			const userProfile = [
 				{
 					id: "user-xyz",
 					email: "test@user.com",
@@ -269,7 +269,7 @@ describe("Rider Routing Layer - Integration Tests", () => {
 			);
 			// 3. Background Email dispatch lookup
 			mockDb.then.mockImplementationOnce((onFulfilled: any) =>
-				Promise.resolve(attendeeProfile).then(onFulfilled)
+				Promise.resolve(userProfile).then(onFulfilled)
 			);
 
 			const response = await request(app)

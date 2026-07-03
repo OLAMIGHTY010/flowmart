@@ -27,9 +27,9 @@ jest.mock("../middleware/auth.middleware", () => ({
 				.json({ success: false, message: "Unauthorized" });
 		}
 		if (authHeader === "Bearer coordinator-token") {
-			req.user = { id: "coord-123", role: "camp_logistics_coordinator" };
+			req.user = { id: "coord-123", role: "logistics_manager" };
 		} else if (authHeader === "Bearer regular-token") {
-			req.user = { id: "attendee-789", role: "attendee" };
+			req.user = { id: "user-789", role: "user" };
 		}
 		next();
 	},
@@ -73,7 +73,7 @@ describe("Welfare Routing Layer - Integration Tests", () => {
 	});
 
 	describe("Global Welfare Route Security Guard Rails", () => {
-		it("should block unauthorized roles (like attendee) with a 403 Forbidden status", async () => {
+		it("should block unauthorized roles (like user) with a 403 Forbidden status", async () => {
 			const response = await request(app)
 				.get("/api/v1/welfare/reports")
 				.set("Authorization", "Bearer regular-token");
@@ -137,7 +137,7 @@ describe("Welfare Routing Layer - Integration Tests", () => {
 			const mockCoordinatorProfile = [
 				{
 					id: "user-coord",
-					role: "zone_coordinator",
+					role: "regional_manager",
 					email: "north_coord@flowmart.com",
 					fullName: "Aliyu Musa",
 				},

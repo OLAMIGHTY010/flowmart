@@ -28,8 +28,8 @@ jest.mock("../middleware/auth.middleware", () => ({
 				.status(401)
 				.json({ success: false, message: "Unauthorized" });
 		}
-		if (authHeader === "Bearer attendee-token") {
-			req.user = { id: "attendee-111", role: "attendee" };
+		if (authHeader === "Bearer user-token") {
+			req.user = { id: "user-111", role: "user" };
 		} else if (authHeader === "Bearer vendor-token") {
 			req.user = { id: "vendor-222", role: "vendor" };
 		} else if (authHeader === "Bearer suspect-token") {
@@ -83,7 +83,7 @@ describe("Order Routing Layer - Integration Tests", () => {
 		it("should validate missing mandatory checkout details with 400", async () => {
 			const response = await request(app)
 				.post("/api/v1/orders")
-				.set("Authorization", "Bearer attendee-token")
+				.set("Authorization", "Bearer user-token")
 				.send({ productId: "p-1" }); // missing quantity, deliveryZone
 
 			expect(response.status).toBe(400);
@@ -107,7 +107,7 @@ describe("Order Routing Layer - Integration Tests", () => {
 
 			const response = await request(app)
 				.post("/api/v1/orders")
-				.set("Authorization", "Bearer attendee-token")
+				.set("Authorization", "Bearer user-token")
 				.send({
 					productId: "p-1",
 					quantity: 5,
@@ -138,9 +138,9 @@ describe("Order Routing Layer - Integration Tests", () => {
 					status: "pending",
 				},
 			];
-			const attendeeRecord = [
+			const userRecord = [
 				{
-					id: "attendee-111",
+					id: "user-111",
 					email: "user@test.com",
 					fullName: "User One",
 				},
@@ -169,9 +169,9 @@ describe("Order Routing Layer - Integration Tests", () => {
 			mockDb.then.mockImplementationOnce((onFulfilled: any) =>
 				Promise.resolve([]).then(onFulfilled)
 			);
-			// 5. Concurrent user lookups (Attendee & Vendor)
+			// 5. Concurrent user lookups (User & Vendor)
 			mockDb.then.mockImplementationOnce((onFulfilled: any) =>
-				Promise.resolve(attendeeRecord).then(onFulfilled)
+				Promise.resolve(userRecord).then(onFulfilled)
 			);
 			mockDb.then.mockImplementationOnce((onFulfilled: any) =>
 				Promise.resolve(vendorRecord).then(onFulfilled)
@@ -179,7 +179,7 @@ describe("Order Routing Layer - Integration Tests", () => {
 
 			const response = await request(app)
 				.post("/api/v1/orders")
-				.set("Authorization", "Bearer attendee-token")
+				.set("Authorization", "Bearer user-token")
 				.send({
 					productId: "p-1",
 					quantity: 2,
@@ -210,21 +210,21 @@ describe("Order Routing Layer - Integration Tests", () => {
 			expect(response.body.orders).toHaveLength(1);
 		});
 
-		it("should fetch history records matching attendee constraints", async () => {
-			const attendeeOrders = [
+		it("should fetch history records matching user constraints", async () => {
+			const userOrders = [
 				{
 					id: "order-200",
-					attendeeId: "attendee-111",
+					userId: "user-111",
 					totalAmount: "120",
 				},
 			];
 			mockDb.then.mockImplementationOnce((onFulfilled: any) =>
-				Promise.resolve(attendeeOrders).then(onFulfilled)
+				Promise.resolve(userOrders).then(onFulfilled)
 			);
 
 			const response = await request(app)
 				.get("/api/v1/orders")
-				.set("Authorization", "Bearer attendee-token");
+				.set("Authorization", "Bearer user-token");
 
 			expect(response.status).toBe(200);
 			expect(response.body.success).toBe(true);

@@ -105,7 +105,7 @@ describe("Sync Controller", () => {
 			const mockActiveOrder = {
 				id: "order-111",
 				deliveryPin: "123456",
-				attendeeId: "user-777",
+				userId: "user-777",
 			};
 			mockDb.limit.mockResolvedValue([mockActiveOrder]);
 
@@ -143,7 +143,7 @@ describe("Sync Controller", () => {
 			const mockActiveOrder = {
 				id: "order-222",
 				deliveryPin: "123456",
-				attendeeId: "user-888",
+				userId: "user-888",
 			};
 			mockDb.limit.mockResolvedValue([mockActiveOrder]);
 

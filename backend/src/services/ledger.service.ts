@@ -25,7 +25,7 @@ export const creditPendingBalance = async (vendorId: string, amount: number) => 
 
 /**
  * Step 2: Release funds from Escrow to Available
- * Called when both the Attendee and Rider confirm delivery.
+ * Called when both the User and Rider confirm delivery.
  */
 export const releaseEscrowToAvailable = async (vendorId: string, amount: number) => {
   try {

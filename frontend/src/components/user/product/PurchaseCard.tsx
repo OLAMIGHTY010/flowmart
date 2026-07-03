@@ -120,7 +120,7 @@ export default function PurchaseCard({
               FlowMart Express Delivery
             </h4>
             <p className="mt-1 text-xs text-gray-500 leading-normal">
-              Free delivery on orders above ₦50,000. Delivery to your zone in camp.
+              Free delivery on orders above ₦50,000. Delivery to your zone in business.
             </p>
           </div>
         </div>
@@ -144,7 +144,7 @@ export default function PurchaseCard({
               Warranty & Safety
             </h4>
             <p className="mt-1 text-xs text-gray-500 leading-normal">
-              100% genuine products sourced from verified camp vendors.
+              100% genuine products sourced from verified business vendors.
             </p>
           </div>
         </div>

@@ -147,7 +147,7 @@ export default function CreateEvent() {
                       value={targetPopulation}
                       onChange={(e) => setTargetPopulation(e.target.value)}
                     />
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">attendees</div>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">users</div>
                   </div>
                 </div>
                 <div>
@@ -440,7 +440,7 @@ export default function CreateEvent() {
             <div className="mt-auto pt-4 border-t border-slate-200">
               <div className="flex gap-2 text-[11px] text-slate-500 font-medium">
                 <Info size={14} className="shrink-0 text-[#16a34a]" />
-                <p>Tip: Enable more zones to improve distribution coverage across the camp.</p>
+                <p>Tip: Enable more zones to improve distribution coverage across the business.</p>
               </div>
             </div>
 

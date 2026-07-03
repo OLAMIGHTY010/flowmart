@@ -82,7 +82,7 @@ export const getVendorsList = async (req: Request, res: Response) => {
         if (kycData.governmentIdFile) score += 20;
         if (kycData.guarantorIdFile) score += 20;
         if (kycData.bankName && kycData.accountNumber) score += 20;
-        if (kycData.campCertificateFile) score += 20;
+        if (kycData.businessLicenseFile) score += 20;
       }
 
       return {
@@ -124,7 +124,7 @@ export const getVendorDetails = async (req: Request, res: Response) => {
     if (kycData.governmentIdFile) score += 20;
     if (kycData.guarantorIdFile) score += 20;
     if (kycData.bankName && kycData.accountNumber) score += 20;
-    if (kycData.campCertificateFile) score += 20;
+    if (kycData.businessLicenseFile) score += 20;
 
     return res.status(200).json({
       success: true,

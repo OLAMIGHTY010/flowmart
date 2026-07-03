@@ -3,11 +3,11 @@ import { pgTable, uuid, varchar, timestamp, pgEnum, integer, decimal, text, bool
 export const roleEnum = pgEnum('role', [
   'super_admin', 
   'admin',
-  'camp_logistics_coordinator', 
-  'zone_coordinator', 
+  'logistics_manager', 
+  'regional_manager', 
   'vendor', 
   'dispatch_rider', 
-  'attendee',
+  'user',
   'finance',
   'auditor',
   'customer_service'
@@ -27,7 +27,7 @@ export const users = pgTable('users', {
   authProvider: authProviderEnum('auth_provider').default('local').notNull(),
   providerId: varchar('provider_id', { length: 255 }), // Stores Google ID
   
-  role: roleEnum('role').default('attendee').notNull(),
+  role: roleEnum('role').default('user').notNull(),
   phone: varchar('phone', { length: 50 }),
   dateOfBirth: varchar('date_of_birth', { length: 50 }),
   gender: varchar('gender', { length: 50 }),
@@ -62,7 +62,7 @@ export const kycSubmissions = pgTable('kyc_submissions', {
   guarantorPhone: varchar('guarantor_phone', { length: 50 }),
   guarantorRelationship: varchar('guarantor_relationship', { length: 100 }),
   governmentIdUrl: varchar('government_id_url', { length: 500 }),
-  campCertificateUrl: varchar('camp_certificate_url', { length: 500 }),
+  businessLicenseUrl: varchar('business_license_url', { length: 500 }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -101,7 +101,7 @@ export const orderStatusEnum = pgEnum('order_status', [
 export const orders = pgTable('orders', {
   id: uuid('id').defaultRandom().primaryKey(),
   orderRef: varchar('order_ref', { length: 50 }).notNull().unique(), 
-  attendeeId: uuid('attendee_id').references(() => users.id).notNull(), 
+  userId: uuid('user_id').references(() => users.id).notNull(), 
   vendorId: uuid('vendor_id').references(() => users.id).notNull(),     
   riderId: uuid('rider_id').references(() => users.id),                 
   deliveryZone: varchar('delivery_zone', { length: 100 }).notNull(),    
@@ -174,7 +174,7 @@ export const vendorKyc = pgTable('vendor_kyc', {
   businessName: varchar('business_name', { length: 255 }).notNull(),
   cacNo: varchar('cac_no', { length: 255 }),
   tin: varchar('tin', { length: 255 }),
-  campCertificateId: varchar('camp_certificate_id', { length: 255 }),
+  businessLicenseId: varchar('business_license_id', { length: 255 }),
   bankName: varchar('bank_name', { length: 255 }).notNull(),
   accountNumber: varchar('account_number', { length: 20 }).notNull(),
   accountName: varchar('account_name', { length: 255 }).notNull(),
@@ -183,7 +183,7 @@ export const vendorKyc = pgTable('vendor_kyc', {
   guarantorPhone: varchar('guarantor_phone', { length: 50 }).notNull(),
   guarantorRelationship: varchar('guarantor_relationship', { length: 100 }).notNull(),
   governmentIdFile: text('government_id_file'), 
-  campCertificateFile: text('camp_certificate_file'), 
+  businessLicenseFile: text('business_license_file'), 
   guarantorIdFile: text('guarantor_id_file'), 
   bankReferenceFile: text('bank_reference_file'),
   cacDocumentFile: text('cac_document_file'),
@@ -345,8 +345,8 @@ export const supportMessages = pgTable('support_messages', {
 export const staffProfiles = pgTable('staff_profiles', {
   id: uuid('id').defaultRandom().primaryKey(),
   userId: uuid('user_id').references(() => users.id).notNull().unique(),
-  church: varchar('church', { length: 255 }),
-  zonal: varchar('zonal', { length: 255 }),
+  branch: varchar('branch', { length: 255 }),
+  region: varchar('region', { length: 255 }),
   department: varchar('department', { length: 255 }),
   professionalCertification: varchar('professional_certification', { length: 255 }),
   grade: varchar('grade', { length: 100 }),

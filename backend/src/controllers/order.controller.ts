@@ -60,10 +60,10 @@ export const calculateDelivery = async (req: Request, res: Response) => {
 	}
 };
 
-// 1. Place a New Order (Attendees)
+// 1. Place a New Order (Users)
 export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
 	try {
-		const attendeeId = req.user?.id;
+		const userId = req.user?.id;
 		let { items, productId, quantity, deliveryZone, zone, payment_method } = req.body;
 		const finalZone = deliveryZone || zone;
 
@@ -100,7 +100,7 @@ export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
 
 				const [newOrder] = await tx.insert(orders).values({
 					orderRef, 
-                    attendeeId: attendeeId!, 
+                    userId: userId!, 
                     vendorId, 
                     deliveryZone: finalZone,
 					totalAmount: "0", 
@@ -162,10 +162,10 @@ export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
 					finalDeliveryFee: deliveryCalc.finalDeliveryFee.toString()
 				});
 
-				const [attendee] = await tx.select().from(users).where(eq(users.id, attendeeId!)).limit(1);
-				if (attendee) {
-					emailService.sendOrderReceiptEmail(attendee.email, {
-						fullName: attendee.fullName, orderId: orderRef, totalAmount: totalAmountNum.toString(), deliveryPin,
+				const [user] = await tx.select().from(users).where(eq(users.id, userId!)).limit(1);
+				if (user) {
+					emailService.sendOrderReceiptEmail(user.email, {
+						fullName: user.fullName, orderId: orderRef, totalAmount: totalAmountNum.toString(), deliveryPin,
 						items: vItems.map(i => ({ name: i.product.name, quantity: i.quantity, price: i.product.price }))
 					}).catch(console.error);
 				}
@@ -222,16 +222,16 @@ const enrichOrderWithItems = async (order: any) => {
 		.leftJoin(products, eq(orderItems.productId, products.id))
 		.where(eq(orderItems.orderId, order.id));
 
-	const [attendee] = await db
+	const [user] = await db
 		.select({ fullName: users.fullName, phone: users.phone })
 		.from(users)
-		.where(eq(users.id, order.attendeeId))
+		.where(eq(users.id, order.userId))
 		.limit(1);
 
 	return {
 		...order,
-		attendeeName: attendee?.fullName,
-		attendeePhone: attendee?.phone,
+		userName: user?.fullName,
+		userPhone: user?.phone,
 		items: items.map(item => ({
 			id: item.id,
 			productId: item.productId,
@@ -247,7 +247,7 @@ const enrichOrderWithItems = async (order: any) => {
 	};
 };
 
-// 2. View Orders (For both Attendees and Vendors)
+// 2. View Orders (For both Users and Vendors)
 export const getOrders = async (req: AuthenticatedRequest, res: Response) => {
 	try {
 		const userId = req.user?.id;
@@ -267,11 +267,11 @@ export const getOrders = async (req: AuthenticatedRequest, res: Response) => {
 				.orderBy(desc(orders.createdAt))
                 .limit(limit)
                 .offset(offset);
-		} else if (role === "attendee") {
+		} else if (role === "user") {
 			userOrders = await db
 				.select()
 				.from(orders)
-				.where(eq(orders.attendeeId, userId!))
+				.where(eq(orders.userId, userId!))
 				.orderBy(desc(orders.createdAt))
                 .limit(limit)
                 .offset(offset);
@@ -306,7 +306,7 @@ export const getOrderById = async (req: AuthenticatedRequest, res: Response) => 
 			return res.status(404).json({ success: false, message: "Order not found" });
 		}
 
-		if (order.attendeeId !== userId && order.vendorId !== userId) {
+		if (order.userId !== userId && order.vendorId !== userId) {
 			return res.status(403).json({ success: false, message: "Unauthorized" });
 		}
 
@@ -356,7 +356,7 @@ export const updateOrderStatus = async (req: AuthenticatedRequest, res: Response
 			updatedAt: new Date(),
 		}).where(eq(orders.id, orderId as string)).returning();
 
-		sendInAppNotification(existingOrder.attendeeId, "order:statusUpdate", {
+		sendInAppNotification(existingOrder.userId, "order:statusUpdate", {
 			orderId,
 			status,
 		});
@@ -382,11 +382,11 @@ export const updateOrderStatus = async (req: AuthenticatedRequest, res: Response
 	}
 };
 
-// 4. Attendee confirms order received (ESCROW GATEWAY)
+// 4. User confirms order received (ESCROW GATEWAY)
 export const confirmOrderReceived = async (req: AuthenticatedRequest, res: Response) => {
 	try {
 		const orderId = req.params.id as string;
-		const attendeeId = req.user?.id;
+		const userId = req.user?.id;
 
 		const [existingOrder] = await db
 			.select()
@@ -394,7 +394,7 @@ export const confirmOrderReceived = async (req: AuthenticatedRequest, res: Respo
 			.where(
 				and(
 					eq(orders.id, orderId),
-					eq(orders.attendeeId, attendeeId!)
+					eq(orders.userId, userId!)
 				)
 			)
 			.limit(1);
@@ -405,7 +405,7 @@ export const confirmOrderReceived = async (req: AuthenticatedRequest, res: Respo
 
 		// ✨ STATE MACHINE ESCROW LOCK: 
         // 1. The rider must have confirmed drop off (status === 'delivered')
-        // 2. The attendee hitting this endpoint provides the second key.
+        // 2. The user hitting this endpoint provides the second key.
 		if (existingOrder.status !== "delivered") {
 			return res.status(400).json({ success: false, message: "Action required: The rider must confirm drop-off before you can release escrow." });
 		}
@@ -529,7 +529,7 @@ export const paystackWebhook = async (req: Request, res: Response) => {
                 await creditPendingBalance(order.vendorId, vendorShare);
 
                 // Real-time Notification
-                sendInAppNotification(order.attendeeId, "order:statusUpdate", {
+                sendInAppNotification(order.userId, "order:statusUpdate", {
                     orderId: order.orderRef,
                     status: "confirmed",
                 });

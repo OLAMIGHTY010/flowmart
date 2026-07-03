@@ -6,9 +6,9 @@ const router = Router();
 
 router.get('/', authenticateJWT, getOrders);
 router.get('/:id', authenticateJWT, getOrderById);
-router.post('/', authenticateJWT, authorizeRoles('attendee'), placeOrder);
-router.post('/calculate-delivery', authenticateJWT, authorizeRoles('attendee'), calculateDelivery);
-router.patch('/:id/received', authenticateJWT, authorizeRoles('attendee'), confirmOrderReceived);
+router.post('/', authenticateJWT, authorizeRoles('user'), placeOrder);
+router.post('/calculate-delivery', authenticateJWT, authorizeRoles('user'), calculateDelivery);
+router.patch('/:id/received', authenticateJWT, authorizeRoles('user'), confirmOrderReceived);
 router.patch('/:id/status', authenticateJWT, authorizeRoles('vendor', 'super_admin'), updateOrderStatus);
 router.get('/vendor/:vendorId/bank-details', authenticateJWT, getVendorBankDetails);
 

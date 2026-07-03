@@ -344,7 +344,7 @@ export default function StoreTab() {
           setActiveSubPage(null);
         }} className="flex flex-col gap-4">
           <p className="text-xs text-muted-foreground mb-1 leading-relaxed">
-            Select the fulfillment zones you are willing to deliver to. Attendees in these zones will see your store.
+            Select the fulfillment zones you are willing to deliver to. Users in these zones will see your store.
           </p>
           <div className="flex flex-col gap-2">
             {zonesList.map((z) => {
@@ -450,7 +450,7 @@ export default function StoreTab() {
           setActiveSubPage(null);
         }} className="flex flex-col gap-4">
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Define the flat delivery fee charged to customer orders. This amount goes directly to cover camp dispatch riders.
+            Define the flat delivery fee charged to customer orders. This amount goes directly to cover business dispatch riders.
           </p>
           <VendorInput 
             label="Flat Delivery Fee (₦)"
@@ -515,10 +515,10 @@ export default function StoreTab() {
             <ShieldCheck size={36} className={isVerified ? "text-[#15803d]" : "text-[#a16207]"} />
             <div>
               <h4 className={`text-sm font-bold ${isVerified ? 'text-[#166534]' : 'text-[#854d0e]'}`}>
-                {isVerified ? 'RCCG KYC Verified' : 'KYC Under Review'}
+                {isVerified ? 'FlowMart KYC Verified' : 'KYC Under Review'}
               </h4>
               <p className={`text-[11px] mt-0.5 ${isVerified ? 'text-[#15803d]' : 'text-[#a16207]'}`}>
-                {isVerified ? 'Your identity documents are fully checked and approved by RCCG.' : 'Your documents are currently being reviewed by admins.'}
+                {isVerified ? 'Your identity documents are fully checked and approved by FlowMart.' : 'Your documents are currently being reviewed by admins.'}
               </p>
             </div>
           </div>
@@ -643,7 +643,7 @@ export default function StoreTab() {
           <div className={`flex items-center justify-center gap-1.5 mt-1.5 px-2.5 py-0.5 rounded-full inline-flex ${kycStatus?.status === 'approved' ? 'bg-[#dcfce7] text-[#15803d]' : 'bg-[#fef9c3] text-[#a16207]'}`}>
             <ShieldCheck size={13} />
             <span className="text-[10px] font-bold uppercase tracking-wide">
-              {kycStatus?.status === 'approved' ? 'RCCG Verified' : 'Unverified'}
+              {kycStatus?.status === 'approved' ? 'FlowMart Verified' : 'Unverified'}
             </span>
           </div>
         </div>

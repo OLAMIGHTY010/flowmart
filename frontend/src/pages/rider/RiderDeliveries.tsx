@@ -67,7 +67,7 @@ const RiderDeliveries = () => {
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <MapPin size={14} style={{ color: "var(--color-text-muted)" }} />
                     <span style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)", fontWeight: 500 }}>
-                      {delivery.customerName || `Customer #${delivery.attendeeId.substring(0, 5)}`}
+                      {delivery.customerName || `Customer #${delivery.userId.substring(0, 5)}`}
                     </span>
                   </div>
                 </div>

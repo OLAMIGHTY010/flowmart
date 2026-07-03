@@ -41,7 +41,7 @@ describe("Welfare Controller", () => {
 			user: {
 				id: "welfare-coord-123",
 				email: "welfare@flowmart.com",
-				role: "camp_logistics_coordinator",
+				role: "logistics_manager",
 			},
 		};
 

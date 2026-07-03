@@ -486,13 +486,13 @@ export const getUserDashboardStats = async (req: AuthenticatedRequest, res: Resp
       pending = Number(orderStats?.pending || 0) + Number(welfareStats?.pending || 0);
       completed = Number(orderStats?.completed || 0) + Number(welfareStats?.completed || 0);
       
-    } else if (role === 'zone_coordinator') {
+    } else if (role === 'regional_manager') {
       const [welfareStats] = await db.select({
         pending: sql<number>`sum(case when ${welfareAllocations.status} != 'delivered' then 1 else 0 end)`,
         completed: sql<number>`sum(case when ${welfareAllocations.status} = 'delivered' then 1 else 0 end)`,
         alerts: sql<number>`sum(case when ${welfareAllocations.shortageReported} > 0 then 1 else 0 end)`
       }).from(welfareAllocations); 
-      // Note: Assuming zone_coordinator views general zone data or filter by zone table if mapped
+      // Note: Assuming regional_manager views general zone data or filter by zone table if mapped
 
       pending = Number(welfareStats?.pending || 0);
       completed = Number(welfareStats?.completed || 0);

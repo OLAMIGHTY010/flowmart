@@ -36,7 +36,7 @@ export interface RiderOrderItem {
 
 export interface RiderOrder {
   id: string;
-  attendeeId: string;
+  userId: string;
   vendorId: string;
   riderId?: string;
   deliveryZone: string;

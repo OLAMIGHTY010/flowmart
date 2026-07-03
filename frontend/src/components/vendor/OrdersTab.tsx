@@ -128,7 +128,7 @@ export default function OrdersTab() {
                         {displayStatus}
                       </span>
                     </div>
-                    <h3 className="text-sm font-semibold text-foreground mt-1.5">{order.attendeeName || 'Unknown Attendee'}</h3>
+                    <h3 className="text-sm font-semibold text-foreground mt-1.5">{order.userName || 'Unknown User'}</h3>
                     {!isExpanded && (
                       <p className="text-xs text-muted-foreground truncate mt-0.5">{itemsText}</p>
                     )}
@@ -170,7 +170,7 @@ export default function OrdersTab() {
                           Zone: {order.deliveryZone || 'Fulfillment Center'}
                         </p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          Phone: {order.attendeePhone || 'N/A'}
+                          Phone: {order.userPhone || 'N/A'}
                         </p>
                       </div>
                       <div>

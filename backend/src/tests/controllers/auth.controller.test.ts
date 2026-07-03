@@ -100,7 +100,7 @@ describe("Auth Controller", () => {
 			});
 		});
 
-		it("should register a new user successfully as an attendee and ignore role overrides", async () => {
+		it("should register a new user successfully as an user and ignore role overrides", async () => {
 			mockRequest.body = {
 				fullName: "New User",
 				email: "new@example.com",
@@ -115,7 +115,7 @@ describe("Auth Controller", () => {
 				id: "new-id",
 				fullName: "New User",
 				email: "new@example.com",
-				role: "attendee", // Verified locked fallback configuration
+				role: "user", // Verified locked fallback configuration
 			};
 			mockReturning.mockResolvedValue([createdUser]);
 
@@ -187,7 +187,7 @@ describe("Auth Controller", () => {
 				id: "user-id",
 				email: "unverified@example.com",
 				password: "hashed-password",
-				role: "attendee",
+				role: "user",
 				isVerified: false, // Triggers verification gate
 			};
 			mockLimit.mockResolvedValue([dbUser]);
@@ -211,7 +211,7 @@ describe("Auth Controller", () => {
 				id: "user-id",
 				email: "user@example.com",
 				password: "hashed-password",
-				role: "attendee",
+				role: "user",
 				isVerified: true, // Verification passed
 			};
 			mockLimit.mockResolvedValue([dbUser]);

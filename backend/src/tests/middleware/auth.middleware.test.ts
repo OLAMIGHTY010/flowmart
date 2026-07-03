@@ -127,11 +127,11 @@ describe("Auth Middleware", () => {
 			mockRequest.user = {
 				id: "123",
 				email: "test@test.com",
-				role: "attendee",
+				role: "user",
 			};
 			const middleware = authorizeRoles(
-				"camp_logistics_coordinator",
-				"zone_coordinator"
+				"logistics_manager",
+				"regional_manager"
 			);
 
 			middleware(
@@ -148,11 +148,11 @@ describe("Auth Middleware", () => {
 			mockRequest.user = {
 				id: "123",
 				email: "test@test.com",
-				role: "zone_coordinator",
+				role: "regional_manager",
 			};
 			const middleware = authorizeRoles(
-				"camp_logistics_coordinator",
-				"zone_coordinator"
+				"logistics_manager",
+				"regional_manager"
 			);
 
 			middleware(

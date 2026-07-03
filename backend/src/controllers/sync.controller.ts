@@ -20,7 +20,7 @@ export const processSyncQueue = async (req: AuthenticatedRequest, res: Response)
           await db.update(orders).set({ status: 'delivered', updatedAt: new Date() }).where(eq(orders.id, orderId));
           results.push({ orderId, status: 'success' });
           
-          sendInAppNotification(activeOrder.attendeeId, 'order.delivered', { orderId });
+          sendInAppNotification(activeOrder.userId, 'order.delivered', { orderId });
         } else {
           results.push({ orderId, status: 'failed', reason: 'Invalid PIN' });
         }

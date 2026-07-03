@@ -5,12 +5,12 @@ import { LogisticsPricingController } from '../controllers/logistics-pricing.con
 const router = Router();
 
 router.use(authenticateJWT);
-router.use(authorizeRoles('super_admin', 'admin', 'finance', 'camp_logistics_coordinator', 'zone_coordinator'));
+router.use(authorizeRoles('super_admin', 'admin', 'finance', 'logistics_manager', 'regional_manager'));
 
 // Zones
 router.get('/zones', LogisticsPricingController.getZones);
 // Only logistics coordinators can create zones
-router.post('/zones', authorizeRoles('camp_logistics_coordinator', 'zone_coordinator'), LogisticsPricingController.createZone);
+router.post('/zones', authorizeRoles('logistics_manager', 'regional_manager'), LogisticsPricingController.createZone);
 // Update zone (both finance and logistics can update, but we filter fields in the controller)
 router.patch('/zones/:id', LogisticsPricingController.updateZone);
 

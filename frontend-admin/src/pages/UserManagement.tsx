@@ -17,7 +17,7 @@ import UserDetailsPanel from '@/components/users/UserDetailsPanel';
 import { useToast } from '@/hooks/use-toast';
 
 export default function UserManagement() {
-  const [activeTab, setActiveTab] = useState<'attendee' | 'vendor' | 'dispatch_rider' | 'pending' | 'suspended' | 'admins'>('attendee');
+  const [activeTab, setActiveTab] = useState<'user' | 'vendor' | 'dispatch_rider' | 'pending' | 'suspended' | 'admins'>('user');
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
@@ -36,7 +36,7 @@ export default function UserManagement() {
   let roleFilter = 'all';
   let statusFilter = 'all';
 
-  if (activeTab === 'attendee') roleFilter = 'attendee';
+  if (activeTab === 'user') roleFilter = 'user';
   else if (activeTab === 'vendor') roleFilter = 'vendor';
   else if (activeTab === 'dispatch_rider') roleFilter = 'dispatch_rider';
   else if (activeTab === 'admins') roleFilter = 'admins';
@@ -71,9 +71,9 @@ export default function UserManagement() {
       case 'admin': return <span className="px-2 py-1 bg-blue-100 text-blue-700 text-[10px] font-bold rounded-full">Admin</span>;
       case 'vendor': return <span className="px-2 py-1 bg-orange-100 text-orange-700 text-[10px] font-bold rounded-full">Vendor</span>;
       case 'dispatch_rider': return <span className="px-2 py-1 bg-indigo-100 text-indigo-700 text-[10px] font-bold rounded-full">Rider</span>;
-      case 'attendee': return <span className="px-2 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded-full">Attendee</span>;
-      case 'zone_coordinator': return <span className="px-2 py-1 bg-teal-100 text-teal-700 text-[10px] font-bold rounded-full">Zone Coord</span>;
-      case 'camp_logistics_coordinator': return <span className="px-2 py-1 bg-cyan-100 text-cyan-700 text-[10px] font-bold rounded-full">Logistics</span>;
+      case 'user': return <span className="px-2 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded-full">User</span>;
+      case 'regional_manager': return <span className="px-2 py-1 bg-teal-100 text-teal-700 text-[10px] font-bold rounded-full">Zone Coord</span>;
+      case 'logistics_manager': return <span className="px-2 py-1 bg-cyan-100 text-cyan-700 text-[10px] font-bold rounded-full">Logistics</span>;
       case 'finance': return <span className="px-2 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-full">Finance</span>;
       case 'auditor': return <span className="px-2 py-1 bg-amber-100 text-amber-700 text-[10px] font-bold rounded-full">Auditor</span>;
       default: return <span className="px-2 py-1 bg-slate-100 text-slate-700 text-[10px] font-bold rounded-full">{role}</span>;
@@ -212,10 +212,10 @@ export default function UserManagement() {
         {/* Tabs */}
         <div className="flex overflow-x-auto border-b border-slate-200 hide-scrollbar">
           <button 
-            className={`px-5 py-3.5 text-sm font-bold whitespace-nowrap transition-colors border-b-2 ${activeTab === 'attendee' ? 'border-[#16a34a] text-[#16a34a]' : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50'}`}
-            onClick={() => {setActiveTab('attendee'); setPage(1);}}
+            className={`px-5 py-3.5 text-sm font-bold whitespace-nowrap transition-colors border-b-2 ${activeTab === 'user' ? 'border-[#16a34a] text-[#16a34a]' : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50'}`}
+            onClick={() => {setActiveTab('user'); setPage(1);}}
           >
-            All Users (Attendees)
+            All Users (Users)
           </button>
           <button 
             className={`px-5 py-3.5 text-sm font-bold whitespace-nowrap transition-colors border-b-2 ${activeTab === 'vendor' ? 'border-[#16a34a] text-[#16a34a]' : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50'}`}

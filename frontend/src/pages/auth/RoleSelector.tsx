@@ -3,11 +3,11 @@ import { useNavigate, Link } from "react-router-dom";
 import { ShoppingBag, Bike, Store, CheckCircle2, ArrowRight } from "lucide-react";
 import logo from "@/assets/logo.png";
 
-type RoleOption = "attendee" | "dispatch_rider" | "vendor";
+type RoleOption = "user" | "dispatch_rider" | "vendor";
 
 const roles: { key: RoleOption; label: string; description: string; icon: typeof ShoppingBag; badge?: string }[] = [
   {
-    key: "attendee",
+    key: "user",
     label: "Order Online",
     description: "Browse products and get deliveries right to your doorstep.",
     icon: ShoppingBag,
@@ -38,7 +38,7 @@ const RoleSelector = () => {
   };
 
   const roleLabels: Record<RoleOption, string> = {
-    attendee: "Buyer",
+    user: "Buyer",
     dispatch_rider: "Rider",
     vendor: "Vendor",
   };
@@ -201,7 +201,7 @@ const RoleSelector = () => {
                           {role.label}
                         </span>
                         {role.badge && (
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[0.75rem] font-bold ${role.key === "attendee" ? "bg-orange-500 text-white" : "bg-[#e6f4ea] text-brand-primary"}`}>
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[0.75rem] font-bold ${role.key === "user" ? "bg-orange-500 text-white" : "bg-[#e6f4ea] text-brand-primary"}`}>
                             {role.badge}
                           </span>
                         )}

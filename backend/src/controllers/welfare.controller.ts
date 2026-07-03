@@ -38,7 +38,7 @@ export const allocateWelfare = async (req: AuthenticatedRequest, res: Response) 
     }).returning();
 
     const [event] = await db.select().from(welfareEvents).where(eq(welfareEvents.id, eventId)).limit(1);
-    const [coordinator] = await db.select().from(users).where(eq(users.role, 'zone_coordinator')).limit(1);
+    const [coordinator] = await db.select().from(users).where(eq(users.role, 'regional_manager')).limit(1);
 
     if (coordinator && event) {
       emailService.sendWelfareAllocationAlert(coordinator.email, {
@@ -73,7 +73,7 @@ export const bulkAllocateWelfare = async (req: AuthenticatedRequest, res: Respon
 
     const insertedAllocations = await db.insert(welfareAllocations).values(valuesToInsert).returning();
     const [event] = await db.select().from(welfareEvents).where(eq(welfareEvents.id, eventId)).limit(1);
-    const [coordinator] = await db.select().from(users).where(eq(users.role, 'zone_coordinator')).limit(1);
+    const [coordinator] = await db.select().from(users).where(eq(users.role, 'regional_manager')).limit(1);
 
     if (coordinator && event) {
       const totalBulkItems = valuesToInsert.reduce((sum, a) => sum + a.totalItems, 0);

@@ -78,11 +78,11 @@ export const acceptDelivery = async (
 };
 
 // Helper function to send delivery email
-const dispatchDeliveryEmail = async (attendeeId: string, orderId: string) => {
+const dispatchDeliveryEmail = async (userId: string, orderId: string) => {
 	try {
-		const [attendee] = await db.select().from(users).where(eq(users.id, attendeeId)).limit(1);
-		if (attendee) {
-			await emailService.sendDeliveryConfirmationEmail(attendee.email, { fullName: attendee.fullName, orderId });
+		const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+		if (user) {
+			await emailService.sendDeliveryConfirmationEmail(user.email, { fullName: user.fullName, orderId });
 		}
 	} catch (err) {
 		console.error('Email Dispatch Error:', err);
@@ -124,7 +124,7 @@ export const confirmDelivery = async (
 			});
 		}
 
-		// Verify the PIN provided by the attendee
+		// Verify the PIN provided by the user
 		if (activeOrder.deliveryPin !== pin) {
 			return res
 				.status(400)
@@ -142,7 +142,7 @@ export const confirmDelivery = async (
 			.returning();
 
 		// Fire & Forget Delivery Confirmation Email
-		dispatchDeliveryEmail(activeOrder.attendeeId, deliveredOrder.id);
+		dispatchDeliveryEmail(activeOrder.userId, deliveredOrder.id);
 
 		return res.status(200).json({
 			success: true,
@@ -203,7 +203,7 @@ export const confirmDeliveryViaQR = async (
 			.returning();
 
 		// Fire & Forget Delivery Confirmation Email
-		dispatchDeliveryEmail(activeOrder.attendeeId, deliveredOrder.id);
+		dispatchDeliveryEmail(activeOrder.userId, deliveredOrder.id);
 
 		return res.status(200).json({
 			success: true,

@@ -21,7 +21,7 @@ export interface OrderItem {
 
 export interface Order {
   id: string;
-  attendeeId: string;
+  userId: string;
   vendorId: string;
   riderId?: string;
   deliveryZone: string;

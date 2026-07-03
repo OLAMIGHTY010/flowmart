@@ -131,7 +131,7 @@ export default function RiderDashboard() {
                         </span>
                       </div>
                       <p className="text-sm text-foreground font-semibold mt-0.5">
-                        {order.customerName || `Customer #${order.attendeeId.substring(0, 5)}`}
+                        {order.customerName || `Customer #${order.userId.substring(0, 5)}`}
                       </p>
                     </div>
                     <div className="flex flex-col items-end gap-1.5">
@@ -223,7 +223,7 @@ export default function RiderDashboard() {
             <div className="flex items-center justify-between gap-4">
               <div className="min-w-0">
                 <h4 className="font-extrabold text-foreground truncate">
-                  {inTransitOrder.customerName || `Customer #${inTransitOrder.attendeeId.substring(0, 5)}`}
+                  {inTransitOrder.customerName || `Customer #${inTransitOrder.userId.substring(0, 5)}`}
                 </h4>
                 <div className="flex items-center gap-1 mt-1 text-muted-foreground">
                   <Icon i="map-pin" size={12} className="shrink-0" />

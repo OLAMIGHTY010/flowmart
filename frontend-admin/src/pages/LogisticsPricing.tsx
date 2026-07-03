@@ -42,9 +42,9 @@ export default function LogisticsPricing() {
 
   const role = user?.role;
   
-  const canCreateZone = role === 'camp_logistics_coordinator' || role === 'zone_coordinator';
+  const canCreateZone = role === 'logistics_manager' || role === 'regional_manager';
   const canCreateRule = role === 'finance';
-  const canEditZone = role === 'camp_logistics_coordinator' || role === 'finance' || role === 'zone_coordinator';
+  const canEditZone = role === 'logistics_manager' || role === 'finance' || role === 'regional_manager';
   const canEditRule = role === 'finance';
 
   useEffect(() => {

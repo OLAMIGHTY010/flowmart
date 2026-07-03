@@ -62,7 +62,7 @@ describe("WebSocket Infrastructure Service", () => {
 			const mockSocket = {
 				id: "socket-session-xyz",
 				handshake: {
-					query: { userId: "attendee-456" },
+					query: { userId: "user-456" },
 				},
 				on: jest
 					.fn()
@@ -85,7 +85,7 @@ describe("WebSocket Infrastructure Service", () => {
 			const eventName = "order.status_changed";
 			const samplePayload = { orderId: "order-789", status: "ready" };
 
-			sendInAppNotification("attendee-456", eventName, samplePayload);
+			sendInAppNotification("user-456", eventName, samplePayload);
 
 			// Verify targeted delivery mapping occurred correctly
 			expect(mockIoInstance.to).toHaveBeenCalledWith(

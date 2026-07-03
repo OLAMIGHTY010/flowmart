@@ -65,7 +65,7 @@ export class LogisticsPricingController {
         if (updates.perKmFee !== undefined) filteredUpdates.perKmFee = updates.perKmFee;
         if (updates.riderCommissionPct !== undefined) filteredUpdates.riderCommissionPct = updates.riderCommissionPct;
         if (updates.platformCommissionPct !== undefined) filteredUpdates.platformCommissionPct = updates.platformCommissionPct;
-      } else if (user.role === 'camp_logistics_coordinator' || user.role === 'zone_coordinator') {
+      } else if (user.role === 'logistics_manager' || user.role === 'regional_manager') {
         // Logistics can only update zone definitions
         if (updates.zoneName !== undefined) filteredUpdates.zoneName = updates.zoneName;
         if (updates.active !== undefined) filteredUpdates.active = updates.active;

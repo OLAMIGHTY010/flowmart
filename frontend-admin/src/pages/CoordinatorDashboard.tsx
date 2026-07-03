@@ -70,7 +70,7 @@ export default function CoordinatorDashboard() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
         <div>
           <h1 className="text-2xl font-black text-slate-800 font-headings">Executive Dashboard</h1>
-          <p className="text-sm text-slate-500 font-medium mt-1">RCCG Redemption Camp - Live Operations Overview</p>
+          <p className="text-sm text-slate-500 font-medium mt-1">FlowMart Redemption Business - Live Operations Overview</p>
         </div>
         <div className="flex items-center gap-3">
           <button className="flex items-center gap-2 bg-[#16a34a] hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-sm">

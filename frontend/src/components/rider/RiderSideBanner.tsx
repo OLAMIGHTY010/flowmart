@@ -40,7 +40,7 @@ export default function SideBanner() {
           Partner Event 2025
         </div>
         <h1 className="text-3xl font-extrabold tracking-tight leading-tight">
-          RCCG Holy Ghost Congress 2025
+          FlowMart Holy Ghost Congress 2025
         </h1>
         <p className="text-sm text-white/80 leading-relaxed font-light">
           Theme: <strong className="font-bold text-white">"The God of All Flesh"</strong>

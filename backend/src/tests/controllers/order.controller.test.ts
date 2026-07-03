@@ -51,7 +51,7 @@ describe("Order Controller", () => {
 			user: {
 				id: "user-123",
 				email: "test@flowmart.com",
-				role: "attendee",
+				role: "user",
 			},
 		};
 
@@ -122,7 +122,7 @@ describe("Order Controller", () => {
 
 			const mockCreatedOrder = {
 				id: "order-111",
-				attendeeId: "user-123",
+				userId: "user-123",
 				totalAmount: "4000",
 				status: "pending",
 			};
@@ -193,21 +193,21 @@ describe("Order Controller", () => {
 			});
 		});
 
-		it("should fetch history filtering by attendeeId if user role is attendee", async () => {
+		it("should fetch history filtering by userId if user role is user", async () => {
 			mockRequest.user = {
-				id: "attendee-22",
+				id: "user-22",
 				email: "buyer@flowmart.com",
-				role: "attendee",
+				role: "user",
 			};
 
-			const mockAttendeeOrders = [
+			const mockUserOrders = [
 				{
 					id: "order-2",
-					attendeeId: "attendee-22",
+					userId: "user-22",
 					totalAmount: "3000",
 				},
 			];
-			mockDb.where.mockResolvedValue(mockAttendeeOrders);
+			mockDb.where.mockResolvedValue(mockUserOrders);
 
 			await getOrders(
 				mockRequest as AuthenticatedRequest,
@@ -218,7 +218,7 @@ describe("Order Controller", () => {
 			expect(mockResponse.status).toHaveBeenCalledWith(200);
 			expect(mockResponse.json).toHaveBeenCalledWith({
 				success: true,
-				orders: mockAttendeeOrders,
+				orders: mockUserOrders,
 			});
 		});
 

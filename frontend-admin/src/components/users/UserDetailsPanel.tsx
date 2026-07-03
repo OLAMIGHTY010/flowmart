@@ -176,11 +176,11 @@ export default function UserDetailsPanel({ user, onClose, onStatusChange, onRefr
               >
                 <option value="super_admin">Super Admin</option>
                 <option value="admin">Admin</option>
-                <option value="zone_coordinator">Zone Coordinator</option>
-                <option value="camp_logistics_coordinator">Camp Logistics</option>
+                <option value="regional_manager">Zone Coordinator</option>
+                <option value="logistics_manager">Business Logistics</option>
                 <option value="vendor">Vendor</option>
                 <option value="dispatch_rider">Rider</option>
-                <option value="attendee">Attendee</option>
+                <option value="user">User</option>
               </select>
             ) : (
               <input type="text" value={getRoleLabel(role)} readOnly className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-700 outline-none" />

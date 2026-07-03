@@ -49,7 +49,7 @@ export const googleAuth = async (req: Request, res: Response) => {
       }
       
       // Create new Google User
-      const requestedRole = ['attendee', 'vendor', 'dispatch_rider'].includes(role) ? role : 'attendee';
+      const requestedRole = ['user', 'vendor', 'dispatch_rider'].includes(role) ? role : 'user';
       
       const [newUser] = await db.insert(users).values({
         fullName: name || 'Google User',
@@ -60,7 +60,7 @@ export const googleAuth = async (req: Request, res: Response) => {
         role: requestedRole,
         gender: gender || null,
         dateOfBirth: birthdate ? new Date(birthdate).toISOString().split('T')[0] : null,
-        isVerified: requestedRole === 'attendee',
+        isVerified: requestedRole === 'user',
       }).returning();
       
       user = newUser;
@@ -113,8 +113,8 @@ export const register = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: 'All fields are required' });
     }
 
-    const staffRoles = ['super_admin', 'admin', 'camp_logistics_coordinator', 'zone_coordinator', 'finance', 'auditor', 'customer_service'];
-    const requestedRole = role || 'attendee';
+    const staffRoles = ['super_admin', 'admin', 'logistics_manager', 'regional_manager', 'finance', 'auditor', 'customer_service'];
+    const requestedRole = role || 'user';
 
     if (!staffRoles.includes(requestedRole)) {
       return res.status(403).json({ 
@@ -275,7 +275,7 @@ export const login = async (req: Request, res: Response) => {
       return res.status(403).json({ success: false, message: 'Please sign in with Google.' });
     }
 
-    const staffRoles = ['super_admin', 'admin', 'camp_logistics_coordinator', 'zone_coordinator', 'finance', 'auditor', 'customer_service'];
+    const staffRoles = ['super_admin', 'admin', 'logistics_manager', 'regional_manager', 'finance', 'auditor', 'customer_service'];
     if (!staffRoles.includes(user.role)) {
       return res.status(403).json({ success: false, message: 'Access denied. Normal users must log in via Google.' });
     }
@@ -558,7 +558,7 @@ export const assignRole = async (req: AuthenticatedRequest, res: Response) => {
       return res.status(400).json({ success: false, message: 'User ID and new role are required' });
     }
 
-    const validRoles = ['super_admin', 'camp_logistics_coordinator', 'zone_coordinator', 'vendor', 'dispatch_rider', 'attendee'];
+    const validRoles = ['super_admin', 'logistics_manager', 'regional_manager', 'vendor', 'dispatch_rider', 'user'];
     if (!validRoles.includes(newRole)) {
       return res.status(400).json({ success: false, message: 'Invalid role provided' });
     }

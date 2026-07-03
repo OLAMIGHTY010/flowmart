@@ -19,7 +19,7 @@ jest.mock("../middleware/auth.middleware", () => ({
 		if (authHeader === "Bearer admin-token") {
 			req.user = { id: "admin-1", role: "super_admin" };
 		} else {
-			req.user = { id: "user-1", role: "attendee" };
+			req.user = { id: "user-1", role: "user" };
 		}
 		next();
 	},
@@ -50,7 +50,7 @@ describe("Analytics Routing Layer - Integration Tests", () => {
 	it("should return 403 Forbidden for non-admin users", async () => {
 		const response = await request(app)
 			.get("/api/v1/analytics")
-			.set("Authorization", "Bearer user-token"); // attendee role
+			.set("Authorization", "Bearer user-token"); // user role
 
 		expect(response.status).toBe(403);
 	});

@@ -21,7 +21,7 @@ export const createProtectedRoute = (options?: GuardOptions) => {
     }
 
     if (!user?.forcePasswordChange && location.pathname === '/force-password-change') {
-      if (user?.role === 'camp_logistics_coordinator' || user?.role === 'zone_coordinator') {
+      if (user?.role === 'logistics_manager' || user?.role === 'regional_manager') {
         return <Navigate to="/coordinator-analytics" replace />;
       }
       return <Navigate to="/dashboard" replace />;

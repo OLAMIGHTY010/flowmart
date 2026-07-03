@@ -71,7 +71,7 @@ export default function AdminLayout() {
         { path: '/logistics-pricing', label: 'Pricing Engine', icon: Banknote },
         { path: '/settings', label: 'Settings', icon: Settings }
       ];
-    } else if (role === 'zone_coordinator' || role === 'camp_logistics_coordinator') {
+    } else if (role === 'regional_manager' || role === 'logistics_manager') {
       const items = [
         { path: '/coordinator-dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { path: '/events/create', label: 'Create Event', icon: PlusCircle },
@@ -80,7 +80,7 @@ export default function AdminLayout() {
         { path: '/coordinator-analytics', label: 'Analytics', icon: BarChart3 },
       ];
 
-      if (role === 'camp_logistics_coordinator') {
+      if (role === 'logistics_manager') {
         items.push({ path: '/rider-approvals', label: 'Rider Approvals', icon: UserCheck });
         items.push({ path: '/logistics-pricing', label: 'Delivery Fees', icon: Banknote });
       }

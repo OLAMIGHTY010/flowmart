@@ -27,7 +27,7 @@ export default function Login() {
     }
     
     // Admins and coordinators routing
-    if (user.role === 'camp_logistics_coordinator' || user.role === 'zone_coordinator') {
+    if (user.role === 'logistics_manager' || user.role === 'regional_manager') {
       return <Navigate to="/coordinator-dashboard" replace />;
     }
     if (user.role === 'finance') {

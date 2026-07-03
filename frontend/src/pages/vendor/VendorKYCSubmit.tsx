@@ -238,7 +238,7 @@ export default function VendorKYCSubmit() {
             </CardContent>
           </Card>
 
-          {/* ─── Camp Certificate Upload ─── */}
+          {/* ─── Business Certificate Upload ─── */}
           <Card className="bg-surface p-4 sm:p-6 rounded-2xl border border-border/70 shadow-xs">
             <CardContent className="p-0 flex flex-col gap-4 sm:gap-5">
               <div className="flex items-center gap-2 border-b border-border/50 pb-2.5">
@@ -246,7 +246,7 @@ export default function VendorKYCSubmit() {
                   <Icon i="file-text" size={13} className="text-primary-foreground" />
                 </div>
                 <span className="text-sm sm:text-base font-bold text-foreground">
-                  Camp Certificate
+                  Business Certificate
                 </span>
               </div>
 

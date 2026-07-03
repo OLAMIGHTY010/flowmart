@@ -12,7 +12,7 @@ const Login = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
 
-  const selectedRole = (localStorage.getItem("selectedRole") as UserRole) || "attendee";
+  const selectedRole = (localStorage.getItem("selectedRole") as UserRole) || "user";
 
   const handleGoogleSuccess = async (credentialResponse: any) => {
     // Check if we actually got the token back from Google

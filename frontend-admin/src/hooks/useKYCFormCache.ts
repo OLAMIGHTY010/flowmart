@@ -68,7 +68,7 @@ export function useProfileSetupFormCache() {
 export interface KYCInfoFormData {
   businessName: string;
   cacNo: string;
-  campCertificateId: string;
+  businessLicenseId: string;
   bankName: string;
   accountNumber: string;
   accountName: string;
@@ -85,7 +85,7 @@ function loadKYCInfoFromStorage(): KYCInfoFormData {
   return {
     businessName: '',
     cacNo: '',
-    campCertificateId: '',
+    businessLicenseId: '',
     bankName: '',
     accountNumber: '',
     accountName: '',
@@ -162,7 +162,7 @@ function loadKYCSubmitFromStorage(): KYCSubmitFormData {
     guarantorRelationship: '',
     documents: [
       { id: 'government_id', title: 'Government ID', subtitle: 'Upload a valid government-issued ID', status: 'upload' },
-      { id: 'camp_certificate', title: 'Camp Certificate', subtitle: 'Upload your camp certificate document', status: 'upload' },
+      { id: 'camp_certificate', title: 'Business Certificate', subtitle: 'Upload your business certificate document', status: 'upload' },
       { id: 'guarantor_id', title: 'Guarantor ID', subtitle: "Upload guarantor's government-issued ID", status: 'upload' },
     ],
   };

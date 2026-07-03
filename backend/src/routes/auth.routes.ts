@@ -12,7 +12,7 @@ const router = Router();
 // PUBLIC ROUTES
 // ==========================================
 
-// Normal Users (Attendees, Vendors, Riders)
+// Normal Users (Users, Vendors, Riders)
 router.post('/google', googleAuth);
 
 // Admins / Staff 

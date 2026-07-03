@@ -31,8 +31,8 @@ jest.mock("../middleware/auth.middleware", () => ({
 		}
 		if (authHeader === "Bearer vendor-token") {
 			req.user = { id: "vendor-123", role: "vendor" };
-		} else if (authHeader === "Bearer attendee-token") {
-			req.user = { id: "attendee-456", role: "attendee" };
+		} else if (authHeader === "Bearer user-token") {
+			req.user = { id: "user-456", role: "user" };
 		}
 		next();
 	},
@@ -93,7 +93,7 @@ describe("Product API Layer - Integration Tests", () => {
 
 			const response = await request(app)
 				.get("/api/v1/products")
-				.set("Authorization", "Bearer attendee-token");
+				.set("Authorization", "Bearer user-token");
 
 			expect(response.status).toBe(200);
 			expect(response.body.success).toBe(true);
@@ -102,10 +102,10 @@ describe("Product API Layer - Integration Tests", () => {
 	});
 
 	describe("POST /api/v1/products", () => {
-		it("should reject non-vendor roles (like attendee) with a 403 Forbidden", async () => {
+		it("should reject non-vendor roles (like user) with a 403 Forbidden", async () => {
 			const response = await request(app)
 				.post("/api/v1/products")
-				.set("Authorization", "Bearer attendee-token")
+				.set("Authorization", "Bearer user-token")
 				.send({ name: "Contraband", price: "500" });
 
 			expect(response.status).toBe(403);

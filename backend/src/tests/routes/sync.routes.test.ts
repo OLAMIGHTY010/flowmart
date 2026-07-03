@@ -56,7 +56,7 @@ describe("Offline Synchronization Routing Layer - Integration Tests", () => {
 				{
 					id: "order-abc",
 					deliveryPin: "999888",
-					attendeeId: "user-321",
+					userId: "user-321",
 				},
 			];
 
@@ -88,7 +88,7 @@ describe("Offline Synchronization Routing Layer - Integration Tests", () => {
 				status: "success",
 			});
 
-			// Verify WebSocket notification was dispatched to the attendee
+			// Verify WebSocket notification was dispatched to the user
 			expect(mockSendInAppNotification).toHaveBeenCalledWith(
 				"user-321",
 				"order.delivered",
@@ -101,7 +101,7 @@ describe("Offline Synchronization Routing Layer - Integration Tests", () => {
 				{
 					id: "order-xyz",
 					deliveryPin: "111222",
-					attendeeId: "user-321",
+					userId: "user-321",
 				},
 			];
 

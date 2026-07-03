@@ -1,4 +1,4 @@
-export type UserRole = 'super_admin' | 'admin' | 'camp_logistics_coordinator' | 'zone_coordinator' | 'finance' | 'auditor' | 'customer_service' | 'vendor' | 'dispatch_rider' | 'attendee';
+export type UserRole = 'super_admin' | 'admin' | 'logistics_manager' | 'regional_manager' | 'finance' | 'auditor' | 'customer_service' | 'vendor' | 'dispatch_rider' | 'user';
 
 export interface AppUser {
   id: string;
@@ -79,7 +79,7 @@ export interface KYCInfoRequest {
   gender: string;
   businessName: string;
   cacNo: string;
-  campCertificateId: string;
+  businessLicenseId: string;
   bankName: string;
   accountNumber: string;
   accountName: string;
@@ -107,7 +107,7 @@ export interface KYCSubmitPayload {
   dob?: string;
   gender?: string;
   cacNo?: string;
-  campCertificateId?: string;
+  businessLicenseId?: string;
   bankName: string;
   accountNumber: string;
   accountName: string;
@@ -118,7 +118,7 @@ export interface KYCSubmitPayload {
   guarantorPhone: string;
   guarantorRelationship: string;
   governmentIdFile?: string;
-  campCertificateFile?: string;
+  businessLicenseFile?: string;
   guarantorIdFile?: string;
 }
 
@@ -168,7 +168,7 @@ export interface OrderItem {
 
 export interface Order {
   id: string;
-  attendeeId: string;
+  userId: string;
   vendorId: string;
   riderId?: string;
   deliveryZone: string;

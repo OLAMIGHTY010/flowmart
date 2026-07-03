@@ -109,7 +109,7 @@ export default function VendorKYCReview() {
               { label: 'TIN', value: infoData.tin || '—' }
             ] 
           : []),
-        { label: 'Camp Certificate ID', value: infoData.campCertificateId || '—' },
+        { label: 'Business Certificate ID', value: infoData.businessLicenseId || '—' },
       ],
     },
     {
@@ -150,7 +150,7 @@ export default function VendorKYCReview() {
 
     try {
       let governmentIdFile = submitData.documents.find(d => d.id === 'government_id')?.base64;
-      let campCertificateFile = submitData.documents.find(d => d.id === 'camp_certificate')?.base64;
+      let businessLicenseFile = submitData.documents.find(d => d.id === 'camp_certificate')?.base64;
       let guarantorIdFile = submitData.documents.find(d => d.id === 'guarantor_id')?.base64;
       let avatarFile = profileData.avatar;
 
@@ -158,7 +158,7 @@ export default function VendorKYCReview() {
       let cacDocumentFile = submitData.documents.find(d => d.id === 'cac_document')?.base64;
 
       if (governmentIdFile) governmentIdFile = await compressBase64Image(governmentIdFile);
-      if (campCertificateFile) campCertificateFile = await compressBase64Image(campCertificateFile);
+      if (businessLicenseFile) businessLicenseFile = await compressBase64Image(businessLicenseFile);
       if (guarantorIdFile) guarantorIdFile = await compressBase64Image(guarantorIdFile);
       if (avatarFile) avatarFile = await compressBase64Image(avatarFile);
       if (bankReferenceFile) bankReferenceFile = await compressBase64Image(bankReferenceFile);
@@ -181,7 +181,7 @@ export default function VendorKYCReview() {
         gender: personalInfo.gender,
         tin: infoData.tin,
         cacNo: infoData.cacNo,
-        campCertificateId: infoData.campCertificateId,
+        businessLicenseId: infoData.businessLicenseId,
         bankName: infoData.bankName,
         accountNumber: infoData.accountNumber,
         accountName: infoData.accountName,
@@ -192,7 +192,7 @@ export default function VendorKYCReview() {
         guarantorPhone: submitData.guarantorPhone,
         guarantorRelationship: submitData.guarantorRelationship,
         governmentIdFile,
-        campCertificateFile,
+        businessLicenseFile,
         guarantorIdFile,
         bankReferenceFile,
         cacDocumentFile,

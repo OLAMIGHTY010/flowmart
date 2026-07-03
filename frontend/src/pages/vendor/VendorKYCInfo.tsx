@@ -71,7 +71,7 @@ export default function VendorKYCInfo() {
   const [tin, setTin] = useState(formData.tin || '');
   const [businessName, setBusinessName] = useState(formData.businessName);
   const [cacNo, setCacNo] = useState(formData.cacNo);
-  const [campCertificateId, setCampCertificateId] = useState(formData.campCertificateId);
+  const [businessLicenseId, setBusinessLicenseId] = useState(formData.businessLicenseId);
   const [bankName, setBankName] = useState(formData.bankName);
   const [accountNumber, setAccountNumber] = useState(formData.accountNumber);
   const [accountName, setAccountName] = useState(formData.accountName);
@@ -81,8 +81,8 @@ export default function VendorKYCInfo() {
 
   // Persist form changes to TanStack cache on every update
   useEffect(() => {
-    updateForm({ vendorType, tin, businessName, cacNo, campCertificateId, bankName, accountNumber, accountName });
-  }, [vendorType, tin, businessName, cacNo, campCertificateId, bankName, accountNumber, accountName]);
+    updateForm({ vendorType, tin, businessName, cacNo, businessLicenseId, bankName, accountNumber, accountName });
+  }, [vendorType, tin, businessName, cacNo, businessLicenseId, bankName, accountNumber, accountName]);
 
   // const formatDob = (dateStr: string) => {
   //   if (!dateStr) return '—';
@@ -108,7 +108,7 @@ export default function VendorKYCInfo() {
         businessName,
         tin: vendorType === 'business' ? tin : undefined,
         cacNo: vendorType === 'business' ? cacNo : undefined,
-        campCertificateId,
+        businessLicenseId,
         bankName,
         accountNumber,
         accountName
@@ -237,11 +237,11 @@ export default function VendorKYCInfo() {
                 )}
 
                 <VendorInput
-                  label="Camp Certificate ID"
-                  placeholder="Enter Camp Certificate ID"
+                  label="Business Certificate ID"
+                  placeholder="Enter Business Certificate ID"
                   icon="file-text"
-                  value={campCertificateId}
-                  onChange={(e) => setCampCertificateId(e.target.value)}
+                  value={businessLicenseId}
+                  onChange={(e) => setBusinessLicenseId(e.target.value)}
                   required
                 />
               </div>

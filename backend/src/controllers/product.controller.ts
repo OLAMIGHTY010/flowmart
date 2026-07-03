@@ -77,7 +77,7 @@ export const createProduct = async (
 	}
 };
 
-// 2. Get All Available Products (For Attendees) or Vendor's Products
+// 2. Get All Available Products (For Users) or Vendor's Products
 export const getProducts = async (req: AuthenticatedRequest, res: Response) => {
 	try {
         // Implement Standard Pagination 
