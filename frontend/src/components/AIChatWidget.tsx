@@ -11,6 +11,8 @@ interface Message {
   message: string;
   isBot: boolean;
   createdAt?: string;
+  recommendations?: any[];
+  suggestedActions?: string[];
 }
 
 const AIChatWidget = () => {
@@ -24,31 +26,31 @@ const AIChatWidget = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Unauthenticated local fallback bot
-  const handleLocalBot = (msg: string) => {
+  const handleShoppingAssistant = async (msg: string) => {
     setMessages(prev => [...prev, { id: Date.now().toString(), message: msg, isBot: false }]);
     setInputValue("");
     setIsTyping(true);
     
-    setTimeout(() => {
-      let reply = "Please log in to speak to our live agents or to get detailed help regarding your orders and accounts.";
-      const lower = msg.toLowerCase();
-      if (lower.includes("vendor") || lower.includes("sell")) {
-        reply = "To become a vendor, click 'Get Started' and select the Vendor role. You'll need to complete our KYC verification before you can start selling.";
-      } else if (lower.includes("delivery") || lower.includes("fee")) {
-        reply = "Delivery fees vary by zone. Log in and add items to your cart to see exact delivery fees to your location.";
-      } else if (lower.includes("hello") || lower.includes("hi")) {
-        reply = "Hello there! 👋 How can I help you today?";
-      } else if (lower.includes("rider") || lower.includes("dispatch")) {
-        reply = "Want to earn as a dispatch rider? Sign up via 'Get Started', select Rider, and complete the KYC onboarding to start receiving delivery requests.";
-      } else if (lower.includes("payment") || lower.includes("pay")) {
-        reply = "We support multiple payment methods including card payments and pay-on-delivery. All card payments are secured through Paystack.";
-      } else if (lower.includes("track") || lower.includes("order")) {
-        reply = "To track your order, please log in first. You'll find real-time tracking on your Orders page.";
+    try {
+      const res: any = await apiClient.post("/ai/chat", { message: msg });
+      if (res.success && res.data) {
+        setMessages(prev => [...prev, { 
+          id: (Date.now() + 1).toString(), 
+          message: res.data.reply, 
+          isBot: true,
+          recommendations: res.data.recommendations,
+          suggestedActions: res.data.suggestedActions
+        }]);
       }
-
+    } catch (error) {
+      setMessages(prev => [...prev, { 
+        id: (Date.now() + 1).toString(), 
+        message: "I'm having trouble connecting to my brain right now. Try again?", 
+        isBot: true 
+      }]);
+    } finally {
       setIsTyping(false);
-      setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), message: reply, isBot: true }]);
-    }, 1200);
+    }
   };
 
   useEffect(() => {
@@ -112,10 +114,10 @@ const AIChatWidget = () => {
     e.preventDefault();
     if (!inputValue.trim()) return;
 
-    if (!user) {
-      handleLocalBot(inputValue);
-      return;
-    }
+    // For the Super App, all messages first go through the AI Shopping Assistant
+    // If user explicitly asks for human support, we can route it via sockets later.
+    handleShoppingAssistant(inputValue);
+    return;
 
     if (socket && ticketId) {
       socket.emit("support:message", {
@@ -128,11 +130,11 @@ const AIChatWidget = () => {
     }
   };
 
-  const quickReplies = !user ? [
-    "How to sell?",
-    "Delivery fees",
-    "Track order",
-  ] : [];
+  const quickReplies = [
+    "I need ingredients for jollof rice",
+    "Birthday gift under 50k",
+    "Find nearest pharmacy",
+  ];
 
   return (
     <>
@@ -304,6 +306,24 @@ const AIChatWidget = () => {
                 }}
               >
                 {msg.message}
+                {msg.recommendations && msg.recommendations.length > 0 && (
+                  <div style={{ marginTop: 12, display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4 }}>
+                    {msg.recommendations.map((prod: any) => (
+                      <div key={prod.id} style={{ minWidth: 120, background: '#f8fafc', borderRadius: 8, padding: 8, border: '1px solid #e2e8f0' }}>
+                        <div style={{ fontWeight: 600, fontSize: '0.75rem', marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{prod.name}</div>
+                        <div style={{ color: '#15803d', fontWeight: 700, fontSize: '0.85rem' }}>₦{prod.price}</div>
+                        <button style={{ marginTop: 8, width: '100%', background: '#15803d', color: '#fff', border: 'none', borderRadius: 4, padding: '4px 0', fontSize: '0.7rem', cursor: 'pointer' }}>Add to Cart</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {msg.suggestedActions && msg.suggestedActions.length > 0 && (
+                  <div style={{ marginTop: 12, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    {msg.suggestedActions.map((action, i) => (
+                      <button key={i} onClick={() => handleShoppingAssistant(action)} style={{ padding: '4px 10px', fontSize: '0.7rem', background: '#e2e8f0', border: 'none', borderRadius: 12, cursor: 'pointer', color: '#334155' }}>{action}</button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           ))}

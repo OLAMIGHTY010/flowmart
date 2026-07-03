@@ -16,7 +16,7 @@ export const roleEnum = pgEnum('role', [
 export const paymentMethodEnum = pgEnum('payment_method', ['bank_transfer', 'pay_on_delivery', 'paystack', 'flutterwave']);
 export const kycStatusEnum = pgEnum('kyc_status', ['unsubmitted', 'pending', 'under_review', 'approved', 'rejected']);
 export const authProviderEnum = pgEnum('auth_provider', ['local', 'google']);
-export const productTypeEnum = pgEnum('product_type', ['food', 'retail']);
+export const productTypeEnum = pgEnum('product_type', ['food', 'retail', 'grocery', 'service', 'pharmacy']);
 
 export const users = pgTable('users', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -155,6 +155,8 @@ export const vendorProfiles = pgTable('vendor_profiles', {
   businessPhone: varchar('business_phone', { length: 50 }).notNull(),
   stateRegion: varchar('state_region', { length: 100 }).notNull(),
   city: varchar('city', { length: 100 }).notNull(),
+  latitude: decimal('latitude', { precision: 10, scale: 8 }),
+  longitude: decimal('longitude', { precision: 11, scale: 8 }),
   bio: text('bio'),
   avatar: text('avatar'),
   pendingBalance: decimal('pending_balance', { precision: 12, scale: 2 }).default('0.00').notNull(),
@@ -241,6 +243,8 @@ export const riderProfiles = pgTable('rider_profiles', {
   phone: varchar('phone', { length: 50 }).notNull(),
   stateRegion: varchar('state_region', { length: 100 }).notNull(),
   city: varchar('city', { length: 100 }).notNull(),
+  latitude: decimal('latitude', { precision: 10, scale: 8 }),
+  longitude: decimal('longitude', { precision: 11, scale: 8 }),
   bio: text('bio'),
   avatar: text('avatar'),
   createdAt: timestamp('created_at').defaultNow().notNull(),

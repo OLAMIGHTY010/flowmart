@@ -1,11 +1,24 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Search, Loader2, ArrowLeft, Star, ChevronRight } from "lucide-react";
 import { apiClient } from "@/services/api";
 import ProductCard from "@/components/user/product/ProductCard";
 
 export default function Marketplace() {
+  const location = useLocation();
+  const path = location.pathname.substring(1) || "products"; // 'food', 'groceries', 'pharmacy', 'services', 'products'
+  
+  const verticalConfig: Record<string, { title: string, icon: string, promo: string, type: string }> = {
+    food: { title: "Food Delivery", icon: "🍔", promo: "Fast Delivery under 45 mins!", type: "food" },
+    groceries: { title: "Fresh Groceries", icon: "🛒", promo: "Groceries at your doorstep in 20 mins", type: "grocery" },
+    pharmacy: { title: "Pharmacy", icon: "💊", promo: "Medicines & Health Essentials", type: "pharmacy" },
+    services: { title: "Local Services", icon: "🔧", promo: "Book trusted local artisans", type: "service" },
+    products: { title: "All Products", icon: "🛍️", promo: "Get extra 10% off on selected items", type: "retail" }
+  };
+
+  const currentVertical = verticalConfig[path] || verticalConfig.products;
+
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
@@ -26,7 +39,10 @@ export default function Marketplace() {
   const vendors = ["FlowMart Official", "Fresh Farms", "TechGadgets", "Everyday Essentials"];
 
   const filteredProducts = useMemo(() => {
-    let result = [...products];
+    // 1. Filter by vertical type first
+    let result = path === "products" 
+      ? [...products] 
+      : products.filter(p => p.productType === currentVertical.type || (path === "food" && !p.productType)); // fallback for legacy data
 
     if (searchTerm) {
       result = result.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -78,7 +94,7 @@ export default function Marketplace() {
             <ArrowLeft size={16} /> Home
           </Link>
           <ChevronRight size={14} className="text-gray-400" />
-          <span className="text-sm text-gray-800 font-medium">Marketplace</span>
+          <span className="text-sm text-gray-800 font-medium">{currentVertical.title}</span>
         </div>
 
         <div className="flex flex-col lg:grid lg:grid-cols-[260px_1fr] gap-8 items-start">
@@ -208,11 +224,11 @@ export default function Marketplace() {
             {/* Header */}
             <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
               <div>
-                <h1 className="text-2xl font-extrabold text-gray-900 mb-1">
-                  All Products
+                <h1 className="text-2xl font-extrabold text-gray-900 mb-1 flex items-center gap-2">
+                  {currentVertical.icon} {currentVertical.title}
                 </h1>
                 <p className="text-sm text-gray-500">
-                  {filteredProducts.length} products found
+                  {filteredProducts.length} items found near you
                 </p>
               </div>
 
@@ -237,10 +253,10 @@ export default function Marketplace() {
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-white mb-1">
-                    Get extra 10% off on selected items
+                    {currentVertical.promo}
                   </h3>
                   <p className="text-sm text-white/70">
-                    Use code <span className="text-green-400 font-bold">SELECT10</span> at checkout
+                    {path === "products" ? "Use code SELECT10 at checkout" : "Discover the best local options based on your location"}
                   </p>
                 </div>
               </div>

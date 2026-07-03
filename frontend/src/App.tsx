@@ -96,6 +96,10 @@ function App() {
             <Route element={<AppLayout />}>
               <Route index element={<Homepage />} />
               <Route path="products" element={<Marketplace />} />
+              <Route path="food" element={<Marketplace />} />
+              <Route path="groceries" element={<Marketplace />} />
+              <Route path="pharmacy" element={<Marketplace />} />
+              <Route path="services" element={<Marketplace />} />
               <Route path="products/:id" element={<ProductDetails />} />
               <Route path="cart" element={<Cart />} />
 
@@ -116,6 +120,7 @@ function App() {
                 <Route path="terms" element={<Terms />} />
                 <Route path="alerts" element={<Alerts />} />
                 <Route path="orders" element={<Orders />} />
+                <Route path="wallet" element={<Profile />} />
               </Route>
 
               <Route path="order-confirmation/:id" element={<OrderConfirmation />} />

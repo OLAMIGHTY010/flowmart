@@ -22,6 +22,8 @@ import wishlistRoutes from './wishlist.routes';
 import walletRoutes from './wallet.routes';
 import couponRoutes from './coupon.routes';
 import reviewRoutes from './review.routes';
+import aiRoutes from './ai.routes';
+import searchRoutes from './search.routes';
 
 // Controller & Middleware Imports
 import { authenticateJWT } from '../middleware/auth.middleware';
@@ -48,6 +50,8 @@ router.use('/users', userRoutes);
 router.use('/products', productRoutes);
 router.use('/orders', orderRoutes);
 router.use('/cart', cartRoutes);
+router.use('/search', searchRoutes);
+router.use('/ai', aiRoutes);
 router.use('/wishlist', wishlistRoutes);
 router.use('/wallet', walletRoutes);
 router.use('/coupons', couponRoutes);
