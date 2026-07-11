@@ -57,6 +57,7 @@ export default function AdminLayout() {
         { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { path: '/users', label: 'User Management', icon: Users },
         { path: '/vendors', label: 'Vendor Approvals', icon: UserCheck },
+        { path: '/rider-approvals', label: 'Rider Approvals', icon: UserCheck },
         { path: '/distribution', label: 'Distribution Events', icon: Truck },
         { path: '/riders', label: 'Riders (Live)', icon: Car },
         { path: '/analytics', label: 'Platform Analytics', icon: BarChart3 },
