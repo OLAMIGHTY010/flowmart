@@ -16,6 +16,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
       workbox: {
+        maximumFileSizeToCacheInBytes: 15000000,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/.*\/api\/v1\/.*/i,
