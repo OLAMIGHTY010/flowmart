@@ -116,6 +116,7 @@ export interface KYCSubmitRequest {
   governmentIdType: 'national_id' | 'passport' | 'drivers_license';
   guarantorName: string;
   guarantorPhone: string;
+  guarantorNin?: string;
   guarantorRelationship: string;
 }
 
@@ -154,6 +155,7 @@ export interface KYCSubmitPayload {
   govIdType: string;
   guarantorName: string;
   guarantorPhone: string;
+  guarantorNin?: string;
   guarantorRelationship: string;
   governmentIdFile?: string;
   businessLicenseFile?: string;
