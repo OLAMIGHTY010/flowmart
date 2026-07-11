@@ -224,13 +224,22 @@ export default function AddUserModal({ isOpen, onClose }: AddUserModalProps) {
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">Department</label>
-                      <input 
-                        type="text" 
+                      <select 
                         value={department}
                         onChange={e => setDepartment(e.target.value)}
-                        className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#16a34a] focus:ring-1 focus:ring-[#16a34a]"
-                        placeholder="e.g. Logistics"
-                      />
+                        className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#16a34a] focus:ring-1 focus:ring-[#16a34a] bg-white"
+                      >
+                        <option value="">Select Department</option>
+                        <option value="Administration">Administration</option>
+                        <option value="Logistics & Fleet">Logistics & Fleet</option>
+                        <option value="Vendor Management">Vendor Management</option>
+                        <option value="Finance & Accounting">Finance & Accounting</option>
+                        <option value="Customer Support">Customer Support</option>
+                        <option value="Audit & Compliance">Audit & Compliance</option>
+                        <option value="Operations">Operations</option>
+                        <option value="Human Resources">Human Resources</option>
+                        <option value="Engineering & IT">Engineering & IT</option>
+                      </select>
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">Prof. Certification</label>
