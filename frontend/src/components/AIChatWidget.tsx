@@ -369,7 +369,7 @@ const AIChatWidget = () => {
               {quickReplies.map((q) => (
                 <button
                   key={q}
-                  onClick={() => handleLocalBot(q)}
+                  onClick={() => handleShoppingAssistant(q)}
                   style={{
                     padding: "6px 14px",
                     fontSize: "0.75rem",

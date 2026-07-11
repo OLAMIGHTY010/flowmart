@@ -3,6 +3,7 @@ import { X, Loader2 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { UserManagementServices } from '@/services/UserManagementServices';
 import { PhoneInput } from '@/components/ui/PhoneInput';
+import { LocationSelector } from '@/components/ui/LocationSelector';
 
 interface AddUserModalProps {
   isOpen: boolean;
@@ -212,28 +213,13 @@ export default function AddUserModal({ isOpen, onClose }: AddUserModalProps) {
                     Staff Profile Data
                   </h4>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Branch / Parish</label>
-                      <input 
-                        type="text" 
-                        value={branch}
-                        onChange={e => setBranch(e.target.value)}
-                        className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#16a34a] focus:ring-1 focus:ring-[#16a34a]"
-                        placeholder="e.g. FlowMart Main"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Region</label>
-                      <input 
-                        type="text" 
-                        value={region}
-                        onChange={e => setRegion(e.target.value)}
-                        className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#16a34a] focus:ring-1 focus:ring-[#16a34a]"
-                        placeholder="e.g. Zone 4"
-                      />
-                    </div>
-                  </div>
+                  <LocationSelector 
+                    initialData={{ state: region, city: branch }}
+                    onChange={(data) => {
+                      setRegion(data.state);
+                      setBranch(data.city);
+                    }}
+                  />
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>

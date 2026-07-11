@@ -5,6 +5,8 @@ import { UserInput } from '@/components/ui/input';
 import { VendorButton } from '@/components/ui/button';
 import { Loader2, UserCircle } from 'lucide-react';
 import { apiClient } from '@/services/api';
+import { PhoneInput } from '@/components/ui/PhoneInput';
+import { LocationSelector } from '@/components/ui/LocationSelector';
 
 export default function ProfileSetup() {
   const navigate = useNavigate();
@@ -81,13 +83,11 @@ export default function ProfileSetup() {
               className="bg-slate-50 cursor-not-allowed"
             />
             
-            <UserInput 
+            <PhoneInput 
               label="Phone Number" 
-              name="phone" 
               value={formData.phone} 
-              onChange={handleChange} 
+              onChange={(val: string) => setFormData(prev => ({ ...prev, phone: val }))} 
               required
-              placeholder="e.g. 08012345678"
             />
 
             <div className="flex flex-col gap-2">
@@ -105,23 +105,14 @@ export default function ProfileSetup() {
               </select>
             </div>
 
-            <UserInput 
-              label="Branch" 
-              name="branch" 
-              value={formData.branch} 
-              onChange={handleChange} 
-              required
-              placeholder="e.g. FlowMart Main Parish"
-            />
-
-            <UserInput 
-              label="Region" 
-              name="region" 
-              value={formData.region} 
-              onChange={handleChange} 
-              required
-              placeholder="e.g. Zone 4"
-            />
+            <div className="col-span-1 md:col-span-2">
+              <LocationSelector 
+                initialData={{ state: formData.region, city: formData.branch }}
+                onChange={(data) => {
+                  setFormData(prev => ({ ...prev, region: data.state, branch: data.city }));
+                }}
+              />
+            </div>
 
             <UserInput 
               label="Department" 
