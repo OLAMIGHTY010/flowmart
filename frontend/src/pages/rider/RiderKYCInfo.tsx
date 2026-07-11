@@ -50,6 +50,56 @@ const VEHICLE_TYPES = [
   'Truck'
 ];
 
+const VEHICLE_MAKES: Record<string, Record<string, string[]>> = {
+  Car: {
+    Toyota: ['Corolla', 'Camry', 'Highlander', 'RAV4', 'Yaris', 'Sienna'],
+    Honda: ['Civic', 'Accord', 'CR-V', 'Pilot', 'City'],
+    Ford: ['Focus', 'Edge', 'Escape', 'Explorer', 'Transit'],
+    Nissan: ['Altima', 'Sentra', 'Rogue', 'Micra'],
+    Hyundai: ['Elantra', 'Tucson', 'Santa Fe', 'Sonata'],
+    Kia: ['Rio', 'Optima', 'Sportage', 'Sorento'],
+    Peugeot: ['301', '307', '406', '508'],
+    Volkswagen: ['Golf', 'Passat', 'Jetta'],
+    Other: ['Other']
+  },
+  Motorcycle: {
+    Bajaj: ['Pulsar', 'Discover', 'Boxer'],
+    TVS: ['Apache', 'Victor', 'HLX'],
+    Honda: ['CG 125', 'CB 125', 'Ace'],
+    Yamaha: ['Crux', 'FZ', 'Saluto'],
+    Suzuki: ['AX100', 'Gixxer'],
+    Qlink: ['Target', 'Champion'],
+    Kymco: ['Agility', 'Super 8'],
+    Other: ['Other']
+  },
+  Bicycle: {
+    Generic: ['Mountain Bike', 'Road Bike', 'Hybrid', 'E-Bike'],
+    Other: ['Other']
+  },
+  Van: {
+    Toyota: ['Hiace', 'Sienna'],
+    Ford: ['Transit'],
+    Nissan: ['NV200', 'Urvan'],
+    Mercedes: ['Sprinter'],
+    Other: ['Other']
+  },
+  Truck: {
+    Toyota: ['Dyna', 'Hilux'],
+    Ford: ['F-150', 'Ranger'],
+    Mitsubishi: ['Canter', 'L200'],
+    Isuzu: ['N-Series', 'D-Max'],
+    Other: ['Other']
+  }
+};
+
+const YEARS = Array.from({length: 30}, (_, i) => (new Date().getFullYear() - i).toString());
+
+const COLORS = [
+  'Black', 'White', 'Silver', 'Gray', 
+  'Blue', 'Red', 'Brown', 'Green', 
+  'Yellow', 'Gold', 'Orange', 'Purple', 'Other'
+];
+
 type DocStatus = 'uploaded' | 'upload';
 
 interface UploadDoc {
@@ -99,9 +149,35 @@ export default function KYCInfo() {
   
   const [vehicleType, setVehicleType] = useState(formData.vehicleType);
   const [makeModel, setMakeModel] = useState(formData.makeModel);
+  const [make, setMake] = useState(() => formData.makeModel ? formData.makeModel.split(' - ')[0] : '');
+  const [model, setModel] = useState(() => formData.makeModel ? formData.makeModel.split(' - ')[1] || '' : '');
+  
   const [year, setYear] = useState(formData.year);
   const [plateNumber, setPlateNumber] = useState(formData.plateNumber);
   const [color, setColor] = useState(formData.color);
+
+  // Sync make & model into makeModel
+  useEffect(() => {
+    if (make && model) {
+      setMakeModel(`${make} - ${model}`);
+    } else if (make) {
+      setMakeModel(make);
+    }
+  }, [make, model]);
+
+  // Format Plate Number logic
+  const handlePlateNumberChange = (val: string) => {
+    // Basic Nigerian Plate Format (e.g. ABC-123XY)
+    // First, remove non alphanumeric
+    let cleaned = val.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    
+    // Auto insert hyphen if it looks like standard plate (3 letters followed by numbers)
+    // E.g. ABC123XY -> ABC-123XY
+    if (cleaned.length > 3 && /^[A-Z]{3}/.test(cleaned)) {
+      cleaned = cleaned.slice(0, 3) + '-' + cleaned.slice(3);
+    }
+    setPlateNumber(cleaned);
+  };
   
   // Merge cached documents with default structure to ensure new fields like car_image exist
   const [documents, setDocuments] = useState<UploadDoc[]>(() => {
@@ -332,7 +408,16 @@ export default function KYCInfo() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div className="flex flex-col gap-1.5 w-full">
                   <label className="text-sm font-body text-foreground font-semibold">Vehicle Type</label>
-                  <Select value={vehicleType} onValueChange={setVehicleType} required>
+                  <Select 
+                    value={vehicleType} 
+                    onValueChange={(val) => {
+                      setVehicleType(val);
+                      setMake('');
+                      setModel('');
+                      setMakeModel('');
+                    }} 
+                    required
+                  >
                     <SelectTrigger className="w-full bg-input border-border rounded-xl px-3.5 h-[46px] focus:ring-primary/20">
                       <SelectValue placeholder="Select Vehicle Type" />
                     </SelectTrigger>
@@ -346,37 +431,76 @@ export default function KYCInfo() {
                   </Select>
                 </div>
 
-                <VendorInput
-                  label="Vehicle Make & Model"
-                  placeholder="e.g. Honda CG 125"
-                  value={makeModel}
-                  onChange={(e) => setMakeModel(e.target.value)}
-                  required
-                />
+                <div className="flex flex-col gap-1.5 w-full">
+                  <label className="text-sm font-body text-foreground font-semibold">Vehicle Make</label>
+                  <Select value={make} onValueChange={(val) => { setMake(val); setModel(''); }} required disabled={!vehicleType}>
+                    <SelectTrigger className="w-full bg-input border-border rounded-xl px-3.5 h-[46px] focus:ring-primary/20">
+                      <SelectValue placeholder="Select Make" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {vehicleType && VEHICLE_MAKES[vehicleType] ? Object.keys(VEHICLE_MAKES[vehicleType]).map((m) => (
+                        <SelectItem key={m} value={m}>{m}</SelectItem>
+                      )) : (
+                        <SelectItem value="Other">Other</SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                <VendorInput
-                  label="Vehicle Year"
-                  placeholder="2022"
-                  value={year}
-                  onChange={(e) => setYear(e.target.value)}
-                  required
-                />
+                <div className="flex flex-col gap-1.5 w-full">
+                  <label className="text-sm font-body text-foreground font-semibold">Vehicle Model</label>
+                  <Select value={model} onValueChange={setModel} required disabled={!make}>
+                    <SelectTrigger className="w-full bg-input border-border rounded-xl px-3.5 h-[46px] focus:ring-primary/20">
+                      <SelectValue placeholder="Select Model" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {make && vehicleType && VEHICLE_MAKES[vehicleType]?.[make] ? (
+                        VEHICLE_MAKES[vehicleType][make].map((mod) => (
+                          <SelectItem key={mod} value={mod}>{mod}</SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="Other">Other</SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex flex-col gap-1.5 w-full">
+                  <label className="text-sm font-body text-foreground font-semibold">Vehicle Year</label>
+                  <Select value={year} onValueChange={setYear} required>
+                    <SelectTrigger className="w-full bg-input border-border rounded-xl px-3.5 h-[46px] focus:ring-primary/20">
+                      <SelectValue placeholder="Select Year" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {YEARS.map((y) => (
+                        <SelectItem key={y} value={y}>{y}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
                 <VendorInput
                   label="Plate Number"
-                  placeholder="ABC-123XY"
+                  placeholder="e.g. ABC-123XY"
                   value={plateNumber}
-                  onChange={(e) => setPlateNumber(e.target.value)}
+                  onChange={(e) => handlePlateNumberChange(e.target.value)}
+                  maxLength={10}
                   required
                 />
 
-                <VendorInput
-                  label="Vehicle Color"
-                  placeholder="Black"
-                  value={color}
-                  onChange={(e) => setColor(e.target.value)}
-                  required
-                />
+                <div className="flex flex-col gap-1.5 w-full">
+                  <label className="text-sm font-body text-foreground font-semibold">Vehicle Color</label>
+                  <Select value={color} onValueChange={setColor} required>
+                    <SelectTrigger className="w-full bg-input border-border rounded-xl px-3.5 h-[46px] focus:ring-primary/20">
+                      <SelectValue placeholder="Select Color" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {COLORS.map((c) => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div className="flex flex-col gap-4 mt-2 border-t border-border/50 pt-4">
