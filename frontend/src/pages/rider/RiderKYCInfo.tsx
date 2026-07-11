@@ -12,35 +12,36 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import SideBanner from '@/components/SideBanner';
 import OnboardingStepIndicator from '@/components/OnboardingStepIndicator';
+import { paymentService } from '@/services/paymentService';
 
 const NIGERIAN_BANKS = [
-  'Access Bank',
-  'Zenith Bank',
-  'Guaranty Trust Bank (GTBank)',
-  'United Bank for Africa (UBA)',
-  'First Bank of Nigeria (FirstBank)',
-  'Ecobank Nigeria',
-  'Fidelity Bank',
-  'Union Bank of Nigeria',
-  'Stanbic IBTC Bank',
-  'Sterling Bank',
-  'Wema Bank',
-  'Keystone Bank',
-  'Polaris Bank',
-  'Unity Bank',
-  'Providus Bank',
-  'Jaiz Bank',
-  'Taj Bank',
-  'Lotus Bank',
-  'Globus Bank',
-  'Titan Trust Bank',
-  'OPay',
-  'Moniepoint MFB',
-  'Kuda Bank',
-  'PalmPay',
-  'VFD Microfinance Bank',
-  'Rubies Bank'
-].sort();
+  { name: 'Access Bank', code: '044' },
+  { name: 'Zenith Bank', code: '057' },
+  { name: 'Guaranty Trust Bank (GTBank)', code: '058' },
+  { name: 'United Bank for Africa (UBA)', code: '033' },
+  { name: 'First Bank of Nigeria (FirstBank)', code: '011' },
+  { name: 'Ecobank Nigeria', code: '050' },
+  { name: 'Fidelity Bank', code: '070' },
+  { name: 'Union Bank of Nigeria', code: '032' },
+  { name: 'Stanbic IBTC Bank', code: '221' },
+  { name: 'Sterling Bank', code: '232' },
+  { name: 'Wema Bank', code: '035' },
+  { name: 'Keystone Bank', code: '082' },
+  { name: 'Polaris Bank', code: '076' },
+  { name: 'Unity Bank', code: '215' },
+  { name: 'Providus Bank', code: '101' },
+  { name: 'Jaiz Bank', code: '301' },
+  { name: 'Taj Bank', code: '302' },
+  { name: 'Lotus Bank', code: '303' },
+  { name: 'Globus Bank', code: '103' },
+  { name: 'Titan Trust Bank', code: '102' },
+  { name: 'OPay', code: '999992' },
+  { name: 'Moniepoint MFB', code: '50515' },
+  { name: 'Kuda Bank', code: '50211' },
+  { name: 'PalmPay', code: '999991' },
+  { name: 'VFD Microfinance Bank', code: '566' },
+  { name: 'Rubies Bank', code: '125' }
+].sort((a, b) => a.name.localeCompare(b.name));
 
 const VEHICLE_TYPES = [
   'Motorcycle',
@@ -146,6 +147,8 @@ export default function KYCInfo() {
   const [bankName, setBankName] = useState(formData.bankName);
   const [accountNumber, setAccountNumber] = useState(formData.accountNumber);
   const [accountName, setAccountName] = useState(formData.accountName);
+  const [isResolvingBank, setIsResolvingBank] = useState(false);
+  const [bankResolveError, setBankResolveError] = useState('');
   
   const [vehicleType, setVehicleType] = useState(formData.vehicleType);
   const [makeModel, setMakeModel] = useState(formData.makeModel);
@@ -190,6 +193,33 @@ export default function KYCInfo() {
   });
 
   const { mutateAsync: saveKYCInfo, isPending } = useKYCInfo();
+
+  // Auto-resolve NUBAN
+  useEffect(() => {
+    const resolveAccount = async () => {
+      if (accountNumber.length === 10 && bankName) {
+        setIsResolvingBank(true);
+        setBankResolveError('');
+        try {
+          const bankObj = NIGERIAN_BANKS.find(b => b.name === bankName);
+          if (bankObj) {
+            const res = await paymentService.resolveBankAccount(accountNumber, bankObj.code);
+            if (res.success && res.data.accountName) {
+              setAccountName(res.data.accountName);
+            }
+          }
+        } catch (err: any) {
+          setBankResolveError(err.message || 'Could not verify account details');
+        } finally {
+          setIsResolvingBank(false);
+        }
+      }
+    };
+
+    // Add a slight debounce to avoid firing while user is typing
+    const timeoutId = setTimeout(resolveAccount, 500);
+    return () => clearTimeout(timeoutId);
+  }, [accountNumber, bankName]);
 
   // Persist form changes to TanStack cache on every update
   useEffect(() => {
@@ -365,29 +395,41 @@ export default function KYCInfo() {
                     </SelectTrigger>
                     <SelectContent>
                       {NIGERIAN_BANKS.map((bank) => (
-                        <SelectItem key={bank} value={bank}>
-                          {bank}
+                        <SelectItem key={bank.name} value={bank.name}>
+                          {bank.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
 
-                <VendorInput
-                  label="Account Number"
-                  placeholder="10-digit account number"
-                  value={accountNumber}
-                  onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                  maxLength={10}
-                  required
-                />
+                <div className="flex flex-col gap-1.5 w-full relative">
+                  <VendorInput
+                    label="Account Number"
+                    placeholder="10-digit account number"
+                    value={accountNumber}
+                    onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    maxLength={10}
+                    required
+                  />
+                  {isResolvingBank && (
+                    <div className="absolute right-3 top-[34px]">
+                      <Loader2 size={16} className="animate-spin text-primary" />
+                    </div>
+                  )}
+                  {bankResolveError && (
+                    <span className="text-[10px] text-destructive absolute -bottom-4 left-1 font-semibold">{bankResolveError}</span>
+                  )}
+                </div>
 
                 <VendorInput
                   label="Account Name"
-                  placeholder="Account holder name"
+                  placeholder="Auto-filled via NUBAN"
                   value={accountName}
                   onChange={(e) => setAccountName(e.target.value)}
+                  readOnly // Make it read-only since it's resolved via NUBAN
                   required
+                  className="bg-muted/50 cursor-not-allowed"
                 />
               </div>
             </CardContent>

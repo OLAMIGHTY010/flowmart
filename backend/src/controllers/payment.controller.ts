@@ -6,7 +6,7 @@ import crypto from 'crypto';
 import { creditPendingBalance } from '../services/ledger.service';
 import { sendInAppNotification } from '../services/websocket';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
-import { verifyTransaction as verifyPaystack } from '../services/paystack.service';
+import { verifyTransaction as verifyPaystack, resolveBankAccount } from '../services/paystack.service';
 
 // 1. Get Public Key for Frontend
 export const getPaystackKey = (req: Request, res: Response) => {
@@ -125,5 +125,32 @@ export const verifyPayment = async (req: AuthenticatedRequest, res: Response) =>
     } catch (err) {
         console.error("Verify Payment Error:", err);
         return res.status(500).json({ success: false, message: 'Server Error' });
+    }
+};
+
+// 4. Resolve Bank Account (NUBAN Verification)
+export const resolveAccount = async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const { accountNumber, bankCode } = req.query;
+
+        if (!accountNumber || !bankCode) {
+            return res.status(400).json({ success: false, message: 'Account number and bank code are required' });
+        }
+
+        const data = await resolveBankAccount(accountNumber as string, bankCode as string);
+        
+        return res.status(200).json({ 
+            success: true, 
+            data: {
+                accountName: data.account_name,
+                accountNumber: data.account_number
+            }
+        });
+    } catch (err: any) {
+        console.error("Resolve Account Error:", err);
+        return res.status(400).json({ 
+            success: false, 
+            message: err.message || 'Could not verify this account number. Please check the details.' 
+        });
     }
 };

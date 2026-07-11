@@ -133,3 +133,29 @@ export const initiatePayout = async (recipientCode: string, amount: number, orde
     throw error;
   }
 };
+
+/**
+ * Step 4: Resolve Bank Account (NUBAN)
+ * Used to verify the real name attached to a bank account number
+ * @param accountNumber 10 digit NUBAN
+ * @param bankCode Paystack bank code (e.g., '058' for GTB)
+ */
+export const resolveBankAccount = async (accountNumber: string, bankCode: string) => {
+  try {
+    const response = await fetch(`${BASE_URL}/bank/resolve?account_number=${accountNumber}&bank_code=${bankCode}`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.status) {
+      throw new Error(`Paystack Resolve Error: ${data.message || 'Failed to resolve account name'}`);
+    }
+
+    return data.data; // { account_number: string, account_name: string, bank_id: number }
+  } catch (error) {
+    console.error('Error in resolveBankAccount:', error);
+    throw error;
+  }
+};
