@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Camera, Loader2 } from "lucide-react";
 import { UserInput } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/PhoneInput";
 import { useAuth } from "@/hooks/useAuth";
 import { userServices } from "@/services/UserServices";
 
@@ -126,11 +127,10 @@ export default function EditProfile() {
           />
           <p className="mt-1 text-xs text-gray-400">Email addresses cannot be changed.</p>
 
-          <UserInput
+          <PhoneInput
             label="Phone Number"
-            type="tel"
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            onChange={setPhone}
             required
           />
         </div>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { UserManagementServices } from '@/services/UserManagementServices';
+import { PhoneInput } from '@/components/ui/PhoneInput';
 
 interface AddUserModalProps {
   isOpen: boolean;
@@ -140,14 +141,11 @@ export default function AddUserModal({ isOpen, onClose }: AddUserModalProps) {
               
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Phone Number</label>
-                  <input 
-                    type="tel" 
-                    required
-                    value={phone}
-                    onChange={e => setPhone(e.target.value)}
-                    className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#16a34a] focus:ring-1 focus:ring-[#16a34a]"
-                    placeholder="08012345678"
+                  <PhoneInput 
+                    label="Phone Number" 
+                    value={phone} 
+                    onChange={setPhone} 
+                    required 
                   />
                 </div>
                 <div>

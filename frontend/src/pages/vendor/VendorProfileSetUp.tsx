@@ -10,6 +10,8 @@ import Icon from '@/components/Icon';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import SideBanner from '@/components/SideBanner';
+import { PhoneInput } from '@/components/ui/PhoneInput';
+import { LocationSelector } from '@/components/ui/LocationSelector';
 
 interface ProfileSetupProps {
   onNext?: () => void;
@@ -262,35 +264,21 @@ export default function VendorProfileSetup({ onNext }: ProfileSetupProps) {
                   required
                 />
 
-                <VendorInput
+                <PhoneInput
                   label="Business Phone"
-                  placeholder="+234 800 000 0000"
-                  icon="phone"
                   value={businessPhone}
-                  onChange={(e) => setBusinessPhone(e.target.value)}
+                  onChange={setBusinessPhone}
                   required
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <VendorInput
-                  label="State / Region"
-                  placeholder="Select state"
-                  icon="map-pin"
-                  value={stateRegion}
-                  onChange={(e) => setStateRegion(e.target.value)}
-                  required
-                />
-
-                <VendorInput
-                  label="City"
-                  placeholder="Enter city"
-                  icon="building"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  required
-                />
-              </div>
+              <LocationSelector 
+                initialData={{ state: stateRegion, city: city }}
+                onChange={(data) => {
+                  setStateRegion(data.state);
+                  setCity(data.city);
+                }}
+              />
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-semibold text-foreground" htmlFor="bio">

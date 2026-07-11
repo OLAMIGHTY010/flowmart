@@ -5,6 +5,7 @@ import { useCartStore } from "@/stores/cartStore";
 import { useToast } from "@/contexts/ToastContext";
 import { apiClient } from "@/services/api";
 import { useAuth } from "@/hooks/useAuth";
+import { PhoneInput } from "@/components/ui/PhoneInput";
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -225,8 +226,12 @@ const Checkout = () => {
                 <input required type="text" className="input-field" value={fullName} readOnly style={{ backgroundColor: "var(--color-bg-secondary)", opacity: 0.8 }} />
               </div>
               <div style={{ gridColumn: "1 / -1" }}>
-                <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, marginBottom: 8 }}>Phone Number</label>
-                <input required type="tel" className="input-field" placeholder="+234..." value={phone} onChange={(e) => setPhone(e.target.value)} />
+                <PhoneInput 
+                  label="Phone Number" 
+                  value={phone} 
+                  onChange={setPhone} 
+                  required 
+                />
               </div>
               <div style={{ gridColumn: "1 / -1" }}>
                 <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, marginBottom: 8 }}>Delivery Address</label>
