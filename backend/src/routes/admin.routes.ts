@@ -62,13 +62,13 @@ router.get('/dashboard/activity', getRecentActivity);
 router.get('/vendors/stats', getVendorApprovalStats);
 router.get('/vendors', getVendorsList);
 router.get('/vendors/:id', getVendorDetails);
-router.post('/vendors/:id/review', reviewVendor);
+router.post('/vendors/:id/review', authorizeRoles('super_admin', 'admin'), reviewVendor);
 
 // Rider Management routes
 router.get('/riders/stats', getRiderStats);
 router.get('/riders', getRidersList);
 router.get('/riders/:id', getRiderDetails);
-router.post('/riders/:id/review', authorizeRoles('logistics_manager'), reviewRider);
+router.post('/riders/:id/review', authorizeRoles('super_admin', 'logistics_manager'), reviewRider);
 
 // Audit Logs
 router.use('/audit-logs', authorizeRoles('super_admin', 'admin', 'auditor'));
