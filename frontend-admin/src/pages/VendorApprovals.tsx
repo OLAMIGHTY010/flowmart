@@ -422,7 +422,7 @@ function VendorDetailsPanel({ vendorId, onClose }: { vendorId: string, onClose: 
               <ChecklistItem label="CAC Certificate" checked={!!kyc.cacNo} fileUrl={kyc.cacNo} />
               <ChecklistItem label="Government ID" checked={!!kyc.governmentIdFile} fileUrl={kyc.governmentIdFile} />
               <ChecklistItem label="Bank Details" checked={!!(kyc.bankName && kyc.accountNumber)} />
-              <ChecklistItem label="CAMP Certificate" checked={!!kyc.businessLicenseFile} fileUrl={kyc.businessLicenseFile} />
+              <ChecklistItem label="Business License" checked={!!kyc.businessLicenseFile} fileUrl={kyc.businessLicenseFile} />
               <ChecklistItem label="Guarantor ID" checked={!!kyc.guarantorIdFile} fileUrl={kyc.guarantorIdFile} />
             </div>
           </div>

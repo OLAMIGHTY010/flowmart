@@ -18,7 +18,7 @@ export default function AddUserModal({ isOpen, onClose }: AddUserModalProps) {
   const [role, setRole] = useState('admin'); // Default role
   
   // Staff fields
-  const [branch, setChurch] = useState('');
+  const [branch, setBranch] = useState('');
   const [region, setRegion] = useState('');
   const [department, setDepartment] = useState('');
   const [professionalCertification, setProfessionalCertification] = useState('');
@@ -52,7 +52,7 @@ export default function AddUserModal({ isOpen, onClose }: AddUserModalProps) {
     setGender('');
     setPassword('');
     setRole('admin');
-    setChurch('');
+    setBranch('');
     setRegion('');
     setDepartment('');
     setProfessionalCertification('');
@@ -220,7 +220,7 @@ export default function AddUserModal({ isOpen, onClose }: AddUserModalProps) {
                       <input 
                         type="text" 
                         value={branch}
-                        onChange={e => setChurch(e.target.value)}
+                        onChange={e => setBranch(e.target.value)}
                         className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#16a34a] focus:ring-1 focus:ring-[#16a34a]"
                         placeholder="e.g. FlowMart Main"
                       />
