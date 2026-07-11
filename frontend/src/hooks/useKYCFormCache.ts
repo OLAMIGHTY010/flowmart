@@ -187,6 +187,7 @@ export interface KYCSubmitFormData {
   govIdType: string;
   guarantorName: string;
   guarantorPhone: string;
+  guarantorNin: string;
   guarantorRelationship: string;
   documents: {
     id: string;
@@ -207,6 +208,7 @@ function loadKYCSubmitFromStorage(): KYCSubmitFormData {
     govIdType: 'national_id',
     guarantorName: '',
     guarantorPhone: '',
+    guarantorNin: '',
     guarantorRelationship: '',
     documents: [
       { id: 'government_id', title: 'Government ID', subtitle: 'Upload a valid government-issued ID', status: 'upload' },

@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import Icon from '@/components/Icon';
 import SideBanner from '@/components/SideBanner';
 import OnboardingStepIndicator from '@/components/vendor/OnboardingStepIndicator';
+import { paymentService } from '@/services/paymentService';
 
 type DocStatus = 'uploaded' | 'upload';
 
@@ -70,13 +71,59 @@ export default function VendorKYCSubmit() {
   const [govIdType, setGovIdType] = useState(formData.govIdType);
   const [guarantorName, setGuarantorName] = useState(formData.guarantorName);
   const [guarantorPhone, setGuarantorPhone] = useState(formData.guarantorPhone);
+  const [guarantorNin, setGuarantorNin] = useState(formData.guarantorNin);
   const [guarantorRelationship, setGuarantorRelationship] = useState(formData.guarantorRelationship);
+  const [isResolvingGuarantor, setIsResolvingGuarantor] = useState(false);
+  const [guarantorResolveError, setGuarantorResolveError] = useState('');
   const [documents, setDocuments] = useState<UploadDoc[]>(formData.documents);
 
   // Persist form changes to TanStack cache
   useEffect(() => {
-    updateForm({ govIdType, guarantorName, guarantorPhone, guarantorRelationship, documents });
-  }, [govIdType, guarantorName, guarantorPhone, guarantorRelationship, documents]);
+    updateForm({ govIdType, guarantorName, guarantorPhone, guarantorNin, guarantorRelationship, documents });
+  }, [govIdType, guarantorName, guarantorPhone, guarantorNin, guarantorRelationship, documents]);
+
+  // Auto-resolve Guarantor Name using Fintech hack (OPay/PalmPay)
+  useEffect(() => {
+    const resolveGuarantor = async () => {
+      // Clean phone: e.g. 08012345678 -> 8012345678
+      let cleanPhone = guarantorPhone.replace(/\D/g, '');
+      if (cleanPhone.startsWith('0') && cleanPhone.length === 11) {
+        cleanPhone = cleanPhone.substring(1);
+      } else if (cleanPhone.startsWith('234') && cleanPhone.length === 13) {
+        cleanPhone = cleanPhone.substring(3);
+      }
+      
+      if (cleanPhone.length === 10) {
+        setIsResolvingGuarantor(true);
+        setGuarantorResolveError('');
+        try {
+          // Try OPay first (999992)
+          let res = await paymentService.resolveBankAccount(cleanPhone, '999992');
+          if (res.success && res.data.accountName) {
+            setGuarantorName(res.data.accountName);
+            return;
+          }
+        } catch (err) {
+          try {
+            // Try PalmPay next (999991)
+            let res = await paymentService.resolveBankAccount(cleanPhone, '999991');
+            if (res.success && res.data.accountName) {
+              setGuarantorName(res.data.accountName);
+              return;
+            }
+          } catch (err2) {
+            // Both failed. Leave as is, user can type manually.
+            setGuarantorResolveError('Could not auto-verify. Please type manually and provide NIN.');
+          }
+        } finally {
+          setIsResolvingGuarantor(false);
+        }
+      }
+    };
+
+    const timeoutId = setTimeout(resolveGuarantor, 500);
+    return () => clearTimeout(timeoutId);
+  }, [guarantorPhone]);
 
   const handleCardClick = (id: string, status: DocStatus) => {
     if (status === 'upload') {
@@ -309,7 +356,26 @@ export default function VendorKYCSubmit() {
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-4">
+                <div className="flex flex-col gap-1.5 w-full relative">
+                  <VendorInput
+                    label="Guarantor Phone"
+                    placeholder="08012345678"
+                    icon="phone"
+                    value={guarantorPhone}
+                    onChange={(e) => setGuarantorPhone(e.target.value)}
+                    required
+                  />
+                  {isResolvingGuarantor && (
+                    <div className="absolute right-3 top-[34px]">
+                      <Loader2 size={16} className="animate-spin text-primary" />
+                    </div>
+                  )}
+                  {guarantorResolveError && (
+                    <span className="text-[10px] text-amber-600 absolute -bottom-4 left-1 font-semibold">{guarantorResolveError}</span>
+                  )}
+                </div>
+
                 <VendorInput
                   label="Guarantor Full Name"
                   placeholder="Enter guarantor's name"
@@ -320,11 +386,12 @@ export default function VendorKYCSubmit() {
                 />
 
                 <VendorInput
-                  label="Guarantor Phone"
-                  placeholder="08012345678"
-                  icon="phone"
-                  value={guarantorPhone}
-                  onChange={(e) => setGuarantorPhone(e.target.value)}
+                  label="Guarantor NIN"
+                  placeholder="11-digit NIN"
+                  icon="shield"
+                  value={guarantorNin}
+                  onChange={(e) => setGuarantorNin(e.target.value.replace(/\D/g, '').slice(0, 11))}
+                  maxLength={11}
                   required
                 />
 

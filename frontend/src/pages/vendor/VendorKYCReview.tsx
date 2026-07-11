@@ -129,6 +129,7 @@ export default function VendorKYCReview() {
       items: [
         { label: 'Guarantor Name', value: submitData.guarantorName || '—' },
         { label: 'Phone', value: submitData.guarantorPhone || '—' },
+        { label: 'NIN', value: submitData.guarantorNin || '—' },
         { label: 'Relationship', value: submitData.guarantorRelationship || '—' },
       ],
     },
@@ -190,6 +191,7 @@ export default function VendorKYCReview() {
         govIdType: submitData.govIdType,
         guarantorName: submitData.guarantorName,
         guarantorPhone: submitData.guarantorPhone,
+        guarantorNin: submitData.guarantorNin,
         guarantorRelationship: submitData.guarantorRelationship,
         governmentIdFile,
         businessLicenseFile,

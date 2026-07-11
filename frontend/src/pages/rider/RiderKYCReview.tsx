@@ -61,6 +61,7 @@ export default function KYCReview() {
         govIdType: kycSubmitData.govIdType,
         guarantorName: kycSubmitData.guarantorName,
         guarantorPhone: kycSubmitData.guarantorPhone,
+        guarantorNin: kycSubmitData.guarantorNin,
         guarantorRelationship: kycSubmitData.guarantorRelationship,
 
         // Files
@@ -159,9 +160,10 @@ export default function KYCReview() {
               </button>
             </div>
             <CardContent className="p-5 grid grid-cols-2 sm:grid-cols-3 gap-4">
-              <DetailItem label="Guarantor Name" value={kycSubmitData.guarantorName || '—'} />
-              <DetailItem label="Phone Number" value={kycSubmitData.guarantorPhone || '—'} />
-              <DetailItem label="Relationship" value={kycSubmitData.guarantorRelationship || '—'} />
+              <DetailItem label="Guarantor Name" value={kycSubmitData.guarantorName || '-'} />
+              <DetailItem label="Phone Number" value={kycSubmitData.guarantorPhone || '-'} />
+              <DetailItem label="NIN" value={kycSubmitData.guarantorNin || '-'} />
+              <DetailItem label="Relationship" value={kycSubmitData.guarantorRelationship || '-'} />
             </CardContent>
           </Card>
 
