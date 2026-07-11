@@ -1,32 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Country, State, City } from 'country-state-city';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-
-// Fix leaflet default icon issue
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconUrl: markerIcon,
-  iconRetinaUrl: markerIcon2x,
-  shadowUrl: markerShadow,
-});
-
-// Component to dynamically fly to location on map
-function MapUpdater({ lat, lng }: { lat: number, lng: number }) {
-  const map = useMap();
-  useEffect(() => {
-    if (lat && lng) {
-      map.flyTo([lat, lng], 13);
-    }
-  }, [lat, lng, map]);
-  return null;
-}
 
 interface LocationData {
   country: string;
@@ -42,7 +15,7 @@ interface LocationSelectorProps {
 }
 
 export function LocationSelector({ initialData, onChange }: LocationSelectorProps) {
-  const [countries, setCountries] = useState(Country.getAllCountries());
+  const countries = Country.getAllCountries();
   const [states, setStates] = useState<any[]>([]);
   const [cities, setCities] = useState<any[]>([]);
 
@@ -136,75 +109,51 @@ export function LocationSelector({ initialData, onChange }: LocationSelectorProp
         {/* Country */}
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-semibold text-foreground">Country</label>
-          <Select value={location.country} onValueChange={handleCountryChange}>
-            <SelectTrigger className="w-full bg-input border-border rounded-xl px-3.5 h-[46px]">
-              <SelectValue placeholder="Select Country" />
-            </SelectTrigger>
-            <SelectContent className="max-h-[300px]">
-              {countries.map(c => (
-                <SelectItem key={c.isoCode} value={c.name}>{c.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <select 
+            value={location.country} 
+            onChange={(e) => handleCountryChange(e.target.value)}
+            className="w-full bg-input border border-border rounded-xl px-3.5 h-[46px] outline-none focus:ring-1 focus:ring-primary"
+          >
+            <option value="">Select Country</option>
+            {countries.map(c => (
+              <option key={c.isoCode} value={c.name}>{c.name}</option>
+            ))}
+          </select>
         </div>
 
         {/* State */}
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-semibold text-foreground">State / Region</label>
-          <Select value={location.state} onValueChange={handleStateChange} disabled={!selectedCountryCode}>
-            <SelectTrigger className="w-full bg-input border-border rounded-xl px-3.5 h-[46px]">
-              <SelectValue placeholder="Select State" />
-            </SelectTrigger>
-            <SelectContent className="max-h-[300px]">
-              {states.map(s => (
-                <SelectItem key={s.isoCode} value={s.name}>{s.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <select 
+            value={location.state} 
+            onChange={(e) => handleStateChange(e.target.value)} 
+            disabled={!selectedCountryCode}
+            className="w-full bg-input border border-border rounded-xl px-3.5 h-[46px] outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
+          >
+            <option value="">Select State</option>
+            {states.map(s => (
+              <option key={s.isoCode} value={s.name}>{s.name}</option>
+            ))}
+          </select>
         </div>
 
         {/* City */}
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-semibold text-foreground">City</label>
-          <Select value={location.city} onValueChange={handleCityChange} disabled={!selectedStateCode || cities.length === 0}>
-            <SelectTrigger className="w-full bg-input border-border rounded-xl px-3.5 h-[46px]">
-              <SelectValue placeholder="Select City" />
-            </SelectTrigger>
-            <SelectContent className="max-h-[300px]">
-              {cities.map(c => (
-                <SelectItem key={c.name} value={c.name}>{c.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <select 
+            value={location.city} 
+            onChange={(e) => handleCityChange(e.target.value)} 
+            disabled={!selectedStateCode || cities.length === 0}
+            className="w-full bg-input border border-border rounded-xl px-3.5 h-[46px] outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
+          >
+            <option value="">Select City</option>
+            {cities.map(c => (
+              <option key={c.name} value={c.name}>{c.name}</option>
+            ))}
+          </select>
         </div>
       </div>
 
-      {/* Map Verification */}
-      <div className="flex flex-col gap-2">
-        <label className="text-sm font-semibold text-foreground">Location Verification Map</label>
-        <p className="text-xs text-muted-foreground mb-1">Visually confirm your selected location below.</p>
-        <div className="h-[250px] w-full rounded-xl overflow-hidden border border-border shadow-sm z-0 relative">
-          {location.lat && location.lng ? (
-            <MapContainer 
-              center={[location.lat, location.lng]} 
-              zoom={13} 
-              scrollWheelZoom={false}
-              style={{ height: '100%', width: '100%', zIndex: 0 }}
-            >
-              <TileLayer
-                url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
-              />
-              <Marker position={[location.lat, location.lng]} />
-              <MapUpdater lat={location.lat} lng={location.lng} />
-            </MapContainer>
-          ) : (
-            <div className="w-full h-full bg-muted flex items-center justify-center text-sm font-semibold text-muted-foreground">
-              Select a country to view map
-            </div>
-          )}
-        </div>
-      </div>
     </div>
   );
 }
