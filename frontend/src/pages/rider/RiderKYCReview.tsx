@@ -77,7 +77,8 @@ export default function KYCReview() {
       await refreshUser();
       navigate('/rider/kyc/verification');
     } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to submit KYC application. Please try again.');
+      const backendMessage = err.response?.data?.message;
+      setErrorMsg(backendMessage || err.message || 'Failed to submit KYC application. Please try again.');
     }
   };
 
