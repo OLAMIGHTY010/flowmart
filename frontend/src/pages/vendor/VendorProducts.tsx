@@ -105,7 +105,7 @@ const VendorProducts = () => {
                         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                           {product.images ? (
                             <img 
-                              src={product.images.split(',')[0]} 
+                              src={Array.isArray(product.images) ? product.images[0] : (product.images as string).split(',')[0]} 
                               alt={product.name} 
                               style={{ width: 48, height: 48, borderRadius: "var(--radius-sm)", objectFit: "cover" }} 
                             />

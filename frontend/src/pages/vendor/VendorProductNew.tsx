@@ -44,10 +44,10 @@ export default function VendorProductNew() {
       await productServices.createProduct({
         name: formData.name,
         description: formData.description,
-        price: formData.price,
+        price: Number(formData.price),
         category: formData.category,
         productType,
-        images: imageUrl,
+        images: [imageUrl],
         ...(productType === "retail" ? {
           stockQuantity: formData.stockQuantity ? parseInt(formData.stockQuantity) : 0,
           brand: formData.brand,
