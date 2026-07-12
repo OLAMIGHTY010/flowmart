@@ -51,7 +51,7 @@ export default function VendorProductNew() {
         ...(productType === "retail" ? {
           stockQuantity: formData.stockQuantity ? parseInt(formData.stockQuantity) : 0,
           brand: formData.brand,
-          weight: formData.weight,
+          weight: formData.weight ? parseFloat(formData.weight) : undefined,
         } : {
           preparationTime: formData.preparationTime ? parseInt(formData.preparationTime) : null,
           stockQuantity: null // unlimited for food
