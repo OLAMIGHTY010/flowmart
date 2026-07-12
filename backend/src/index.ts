@@ -62,6 +62,8 @@ app.get("/api/v1/fix-db", async (req, res) => {
       ALTER TABLE rider_profiles ADD COLUMN IF NOT EXISTS longitude numeric(11, 8);
       ALTER TABLE vendor_profiles ADD COLUMN IF NOT EXISTS latitude numeric(10, 8);
       ALTER TABLE vendor_profiles ADD COLUMN IF NOT EXISTS longitude numeric(11, 8);
+      ALTER TABLE rider_kyc ADD COLUMN IF NOT EXISTS guarantor_nin varchar(50);
+      ALTER TABLE vendor_kyc ADD COLUMN IF NOT EXISTS guarantor_nin varchar(50);
     `);
     client.release();
     
