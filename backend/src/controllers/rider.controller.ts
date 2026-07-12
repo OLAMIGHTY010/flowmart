@@ -369,9 +369,9 @@ export const submitKYC = async (req: AuthenticatedRequest, res: Response) => {
 			success: true,
 			message: "KYC submitted successfully and is now under review.",
 		});
-	} catch (error) {
+	} catch (error: any) {
 		console.error("Submit KYC Error:", error);
-		return res.status(500).json({ success: false, message: "Internal Server Error" });
+		return res.status(500).json({ success: false, message: `Internal Server Error: ${error?.message || error}` });
 	}
 };
 
