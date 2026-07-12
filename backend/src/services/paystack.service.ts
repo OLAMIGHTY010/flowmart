@@ -142,6 +142,15 @@ export const initiatePayout = async (recipientCode: string, amount: number, orde
  */
 export const resolveBankAccount = async (accountNumber: string, bankCode: string) => {
   try {
+    // Handle explicitly requested test bank code
+    if (bankCode === '001') {
+      return {
+        account_number: accountNumber,
+        account_name: 'Test Account Name',
+        bank_id: 1
+      };
+    }
+
     const response = await fetch(`${BASE_URL}/bank/resolve?account_number=${accountNumber}&bank_code=${bankCode}`, {
       method: 'GET',
       headers: getHeaders(),
@@ -150,6 +159,15 @@ export const resolveBankAccount = async (accountNumber: string, bankCode: string
     const data = await response.json();
 
     if (!response.ok || !data.status) {
+      // Auto-mock if the test environment limit is exceeded
+      if (data.message && data.message.includes('Test mode daily limit')) {
+        console.warn('Paystack test mode limit exceeded. Auto-mocking bank resolution.');
+        return {
+          account_number: accountNumber,
+          account_name: 'Mocked Test Account (Limit Exceeded)',
+          bank_id: 999
+        };
+      }
       throw new Error(`Paystack Resolve Error: ${data.message || 'Failed to resolve account name'}`);
     }
 

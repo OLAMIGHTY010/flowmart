@@ -15,6 +15,7 @@ import OnboardingStepIndicator from '@/components/vendor/OnboardingStepIndicator
 import { paymentService } from '@/services/paymentService';
 
 const NIGERIAN_BANKS = [
+  { name: 'Test Bank (Paystack)', code: '001' },
   { name: 'Access Bank', code: '044' },
   { name: 'Zenith Bank', code: '057' },
   { name: 'Guaranty Trust Bank (GTBank)', code: '058' },
