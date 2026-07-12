@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { db } from "../../db";
-import { orders, users, riderProfiles, riderKyc } from "../../db/schema";
-import { eq, and, isNull } from "drizzle-orm";
+import { orders, users, riderProfiles, riderKyc, orderItems } from "../../db/schema";
+import { eq, and, isNull, or } from "drizzle-orm";
 import { AuthenticatedRequest } from "../middleware/auth.middleware";
 import { emailService } from "../services/email.service";
 
@@ -395,6 +395,55 @@ export const getKYCStatus = async (req: AuthenticatedRequest, res: Response) => 
 		});
 	} catch (error) {
 		console.error("Get KYC Status Error:", error);
+		return res.status(500).json({ success: false, message: "Internal Server Error" });
+	}
+};
+export const getOrders = async (req: AuthenticatedRequest, res: Response) => {
+	try {
+		const riderId = req.user?.id;
+		const allOrders = await db.select().from(orders).where(
+			or(
+				and(eq(orders.status, "confirmed"), isNull(orders.riderId)),
+				eq(orders.riderId, riderId as string)
+			)
+		);
+		return res.status(200).json({ success: true, orders: allOrders });
+	} catch (error) {
+		console.error("Get Orders Error:", error);
+		return res.status(500).json({ success: false, message: "Internal Server Error" });
+	}
+};
+
+export const getOrderById = async (req: AuthenticatedRequest, res: Response) => {
+	try {
+		const orderId = req.params.id as string;
+		const [orderRecord] = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
+		if (!orderRecord) return res.status(404).json({ success: false, message: "Order not found" });
+
+		const items = await db.select().from(orderItems).where(eq(orderItems.orderId, orderId));
+		return res.status(200).json({ success: true, data: { ...orderRecord, items } });
+	} catch (error) {
+		console.error("Get Order By Id Error:", error);
+		return res.status(500).json({ success: false, message: "Internal Server Error" });
+	}
+};
+
+export const updateOrderStatus = async (req: AuthenticatedRequest, res: Response) => {
+	try {
+		const orderId = req.params.id as string;
+		const riderId = req.user?.id;
+		const { status } = req.body;
+
+		const [updatedOrder] = await db.update(orders)
+			.set({ status, updatedAt: new Date() })
+			.where(and(eq(orders.id, orderId), eq(orders.riderId, riderId as string)))
+			.returning();
+
+		if (!updatedOrder) return res.status(404).json({ success: false, message: "Order not found or not assigned to you" });
+
+		return res.status(200).json({ success: true, message: "Status updated", order: updatedOrder });
+	} catch (error) {
+		console.error("Update Order Status Error:", error);
 		return res.status(500).json({ success: false, message: "Internal Server Error" });
 	}
 };

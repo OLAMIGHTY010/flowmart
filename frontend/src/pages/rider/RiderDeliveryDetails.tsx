@@ -88,13 +88,29 @@ export default function DeliveryDetails() {
     }
   });
 
+  const acceptDeliveryMutation = useMutation({
+    mutationFn: (orderId: string) => riderService.acceptDelivery(orderId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["riderOrders"] });
+      queryClient.invalidateQueries({ queryKey: ["riderOrder", id] });
+      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
+      showToast("Delivery claimed successfully!", "success");
+    },
+    onError: (error: any) => {
+      showToast(error.message || "Failed to claim delivery", "error");
+    }
+  });
+
   const handleAction = () => {
     if (!id || !order) return;
-    const nextStatus = order.status === 'assigned' || order.status === 'confirmed' || order.status === 'pending'
-      ? 'picked_up'
-      : 'delivered';
-      
-    updateStatusMutation.mutate({ orderId: id, status: nextStatus });
+    if (!order.riderId && (order.status === 'pending' || order.status === 'confirmed')) {
+      acceptDeliveryMutation.mutate(id);
+    } else {
+      const nextStatus = order.status === 'assigned' || order.status === 'confirmed' || order.status === 'pending'
+        ? 'picked_up'
+        : 'delivered';
+      updateStatusMutation.mutate({ orderId: id, status: nextStatus });
+    }
   };
 
   return (
@@ -218,6 +234,17 @@ export default function DeliveryDetails() {
                 </div>
               </div>
 
+                            <div className="bg-white border border-border/60 rounded-2xl p-4 flex flex-col gap-3.5 shadow-2xs">
+                <span className="text-[10px] font-bold tracking-wider text-muted-foreground/80 uppercase">Items to Deliver</span>
+                <div className="flex flex-col gap-2">
+                  {order?.items?.map((item: any, idx: number) => (
+                    <div key={idx} className="flex justify-between items-center text-sm border-b border-border/40 pb-2 last:border-0 last:pb-0">
+                      <span className="font-semibold text-foreground">{item.quantity}x {item.productName || 'Product'}</span>
+                    </div>
+                  )) || <span className="text-sm text-muted-foreground">No items listed</span>}
+                </div>
+              </div>
+              
               {/* Status Timeline */}
               <div className="bg-white border border-border/60 rounded-2xl p-4 flex flex-col gap-3.5 shadow-2xs">
                 <span className="text-[10px] font-bold tracking-wider text-muted-foreground/80 uppercase">Timeline</span>
@@ -252,14 +279,10 @@ export default function DeliveryDetails() {
                 </button>
                 <RiderButton
                   onClick={handleAction}
-                  disabled={updateStatusMutation.isPending}
+                  disabled={updateStatusMutation.isPending || acceptDeliveryMutation.isPending}
                   className="w-full bg-[#006837] hover:bg-[#00522b] text-white py-3.5 rounded-xl text-sm font-bold shadow-xs border-none"
                 >
-                  {updateStatusMutation.isPending 
-                    ? "Processing..." 
-                    : (order?.status === 'assigned' || order?.status === 'confirmed' || order?.status === 'pending' 
-                      ? "Confirm Pickup" 
-                      : "Confirm Delivery")}
+                  {updateStatusMutation.isPending || acceptDeliveryMutation.isPending ? 'Processing...' : (!order?.riderId && (order?.status === 'pending' || order?.status === 'confirmed') ? 'Claim Delivery' : (order?.status === 'assigned' || order?.status === 'confirmed' || order?.status === 'pending' ? 'Confirm Pickup' : 'Confirm Delivery'))}
                 </RiderButton>
               </div>
             </div>
