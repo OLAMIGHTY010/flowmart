@@ -57,6 +57,11 @@ import RiderDeliveryDetails from "@/pages/rider/RiderDeliveryDetails";
 import RiderNewDelivery from "@/pages/rider/RiderNewDelivery";
 import RiderShortageReport from "@/pages/rider/RiderShortageReport";
 
+// Admin Pages
+import AdminLayout from "./components/admin/AdminLayout";
+import AdminVendorKYC from "./pages/admin/AdminVendorKYC";
+import AdminRiderKYC from "./pages/admin/AdminRiderKYC";
+
 import VendorProfileSetup from "./pages/vendor/VendorProfileSetUp";
 import VendorKYCInfo from "./pages/vendor/VendorKYCInfo";
 import VendorKYCSubmit from "./pages/vendor/VendorKYCSubmit";
@@ -171,6 +176,16 @@ function App() {
             <Route path="/rider/kyc/submit" element={<RiderKYCSubmit />} />
             <Route path="/rider/kyc/review" element={<RiderKYCReview />} />
             <Route path="/rider/kyc/verification" element={<RiderKYCVerification />} />
+
+            {/*  ? ? ? ADMIN ROUTES  ? ? ? */}
+            <Route path="/admin" element={
+              <ProtectedRoute allowedRoles={["super_admin", "admin"]}>
+                <AdminLayout />
+              </ProtectedRoute>
+            }>
+              <Route path="kyc/vendors" element={<AdminVendorKYC />} />
+              <Route path="kyc/riders" element={<AdminRiderKYC />} />
+            </Route>
 
             {/* Catch-all */}
             <Route path="*" element={<Navigate to="/" replace />} />
