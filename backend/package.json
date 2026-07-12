@@ -12,6 +12,8 @@
     "start": "ts-node src/index.ts"
   },
   "dependencies": {
+    "@google/genai": "^0.1.2",
+    "openai": "^4.80.0",
     "axios": "^1.13.2",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
