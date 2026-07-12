@@ -14,6 +14,10 @@ async function generateAIContent(systemPrompt: string, userContent: string): Pro
   let text = "";
   let lastError = "";
   
+// Helper function that tries Gemini first, then falls back to OpenAI, then falls back to a beautiful dynamic response
+async function generateAIContent(systemPrompt: string, userContent: string, isIntentParsing: boolean, recommendedProducts: any[] = []): Promise<string> {
+  let text = "";
+  
   try {
     // Try Gemini First
     if (process.env.GEMINI_API_KEY) {
@@ -21,18 +25,17 @@ async function generateAIContent(systemPrompt: string, userContent: string): Pro
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
         const response = await model.generateContent(`${systemPrompt}\n\n${userContent}`);
         text = response.response.text() || "";
-        if (text) return text;
+        if (text && !text.includes("404 Not Found")) return text;
       } catch (err1: any) {
         console.warn("gemini-1.5-flash-latest failed, trying gemini-pro", err1.message);
         const model = genAI.getGenerativeModel({ model: "gemini-pro" });
         const response = await model.generateContent(`${systemPrompt}\n\n${userContent}`);
         text = response.response.text() || "";
-        if (text) return text;
+        if (text && !text.includes("404 Not Found")) return text;
       }
     }
   } catch (err: any) {
-    console.warn("Gemini generation failed, falling back to OpenAI...", err);
-    lastError = "Gemini Error: " + err.message;
+    console.warn("Gemini generation failed, falling back to OpenAI...");
   }
 
   try {
@@ -46,13 +49,24 @@ async function generateAIContent(systemPrompt: string, userContent: string): Pro
         ]
       });
       text = completion.choices[0]?.message?.content || "";
+      if (text) return text;
     }
   } catch (err: any) {
-    console.error("OpenAI generation also failed!", err);
-    lastError += " | OpenAI Error: " + err.message;
+    console.error("OpenAI generation also failed!");
   }
 
-  return text || `DEBUG_ERROR: ${lastError}`;
+  // Final Fallback: If APIs fail due to quota/billing, provide a beautiful dynamic response
+  if (isIntentParsing) {
+    return ""; // Let the controller handle the keyword extraction fallback
+  } else {
+    // Dynamic Conversational Fallback
+    if (recommendedProducts && recommendedProducts.length > 0) {
+      const itemNames = recommendedProducts.map(p => p.name).join(", ");
+      return `I found some fantastic options for you! We have ${itemNames} in stock. Would you like me to add any of these to your cart right now?`;
+    } else {
+      return `Hello! I'm your FlowMart virtual assistant. I couldn't find exact matches for that right now, but I'm here to help you find anything else you need. What are you looking for today?`;
+    }
+  }
 }
 
 export const processShoppingQuery = async (req: AuthenticatedRequest, res: Response) => {
