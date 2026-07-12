@@ -17,10 +17,18 @@ async function generateAIContent(systemPrompt: string, userContent: string): Pro
   try {
     // Try Gemini First
     if (process.env.GEMINI_API_KEY) {
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      const response = await model.generateContent(`${systemPrompt}\n\n${userContent}`);
-      text = response.response.text() || "";
-      if (text) return text;
+      try {
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+        const response = await model.generateContent(`${systemPrompt}\n\n${userContent}`);
+        text = response.response.text() || "";
+        if (text) return text;
+      } catch (err1: any) {
+        console.warn("gemini-1.5-flash-latest failed, trying gemini-pro", err1.message);
+        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+        const response = await model.generateContent(`${systemPrompt}\n\n${userContent}`);
+        text = response.response.text() || "";
+        if (text) return text;
+      }
     }
   } catch (err: any) {
     console.warn("Gemini generation failed, falling back to OpenAI...", err);
