@@ -53,7 +53,7 @@ export default function VendorKYCReview() {
   useEffect(() => {
     if (kycStatus && kycStatus.status !== 'unsubmitted') {
       if (kycStatus.status === 'approved') {
-        navigate('/dashboard', { replace: true });
+        navigate('/vendor/dashboard', { replace: true });
       } else {
         navigate('/kyc/verification', { replace: true });
       }

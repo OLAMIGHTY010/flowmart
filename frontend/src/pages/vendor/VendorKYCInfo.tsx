@@ -54,7 +54,7 @@ export default function VendorKYCInfo() {
   useEffect(() => {
     if (kycStatus && kycStatus.status !== 'unsubmitted') {
       if (kycStatus.status === 'approved') {
-        navigate('/dashboard', { replace: true });
+        navigate('/vendor/dashboard', { replace: true });
       } else {
         navigate('/kyc/verification', { replace: true });
       }
@@ -117,6 +117,11 @@ export default function VendorKYCInfo() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
+
+    if (!accountName.trim()) {
+      setErrorMsg('Account Name is required. Please enter it manually if auto-fetch failed.');
+      return;
+    }
 
     try {
       await saveKYCInfo({
@@ -320,12 +325,11 @@ export default function VendorKYCInfo() {
 
                 <VendorInput
                   label="Account Name"
-                  placeholder="Auto-filled via NUBAN"
+                  placeholder="Auto-fetched after entering account number"
+                  icon="user"
                   value={accountName}
                   onChange={(e) => setAccountName(e.target.value)}
-                  readOnly
                   required
-                  className="bg-muted/50 cursor-not-allowed"
                 />
               </div>
             </CardContent>

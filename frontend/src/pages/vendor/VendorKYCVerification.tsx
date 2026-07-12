@@ -217,7 +217,7 @@ export default function VendorKYCVerification() {
 
           {/* Go to Dashboard Button (Enabled only when approved) */}
           <Button
-            onClick={() => isApproved && navigate('/dashboard')}
+            onClick={() => isApproved && navigate('/vendor/dashboard')}
             disabled={!isApproved}
             className={`w-full font-bold py-3.5 rounded-full mt-1 transition-all ${
               isApproved 

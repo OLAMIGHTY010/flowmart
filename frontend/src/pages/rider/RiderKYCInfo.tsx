@@ -285,6 +285,11 @@ export default function KYCInfo() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
+    
+    if (!accountName.trim()) {
+      setErrorMsg('Account Name is required. Please enter it manually if auto-fetch failed.');
+      return;
+    }
 
     if (!canProceed) {
       setErrorMsg('Please complete all bank and vehicle details and upload necessary documents.');
@@ -422,15 +427,14 @@ export default function KYCInfo() {
                   )}
                 </div>
 
-                <VendorInput
-                  label="Account Name"
-                  placeholder="Auto-filled via NUBAN"
-                  value={accountName}
-                  onChange={(e) => setAccountName(e.target.value)}
-                  readOnly // Make it read-only since it's resolved via NUBAN
-                  required
-                  className="bg-muted/50 cursor-not-allowed"
-                />
+                  <VendorInput
+                    label="Account Name"
+                    placeholder="Auto-fetched after entering account number"
+                    icon="user"
+                    value={accountName}
+                    onChange={(e) => setAccountName(e.target.value)}
+                    required
+                  />
               </div>
             </CardContent>
           </Card>
