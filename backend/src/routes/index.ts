@@ -24,6 +24,7 @@ import couponRoutes from './coupon.routes';
 import reviewRoutes from './review.routes';
 import aiRoutes from './ai.routes';
 import searchRoutes from './search.routes';
+import uploadRoutes from './upload.routes';
 
 // Controller & Middleware Imports
 import { authenticateJWT } from '../middleware/auth.middleware';
@@ -73,6 +74,7 @@ router.use('/admin', adminRoutes);
 router.use('/user-management', userManagementRoutes);
 router.use('/analytics', analyticsRoutes);
 router.use('/sync', syncRoutes);
+router.use('/upload', uploadRoutes);
 
 router.get('/vendors/:id', authenticateJWT, getVendorPublicProfile);
 

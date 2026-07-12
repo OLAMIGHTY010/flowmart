@@ -62,4 +62,18 @@ export const productServices = {
     const res = await apiClient.get<{ success: boolean; vendor: any }>(`/vendors/${vendorId}`);
     return res.vendor;
   },
+
+  createProduct: async (productData: Partial<Product>): Promise<Product> => {
+    const res = await apiClient.post<{ success: boolean; product: Product }>("/products", productData);
+    return res.product;
+  },
+
+  updateProduct: async (id: string, productData: Partial<Product>): Promise<Product> => {
+    const res = await apiClient.put<{ success: boolean; product: Product }>(`/products/${id}`, productData);
+    return res.product;
+  },
+
+  deleteProduct: async (id: string): Promise<void> => {
+    await apiClient.delete(`/products/${id}`);
+  },
 };

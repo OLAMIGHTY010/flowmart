@@ -37,6 +37,7 @@ import VendorLayout from "@/components/vendor/VendorLayout";
 import VendorDashboard from "@/pages/vendor/VendorDashboard";
 import VendorKYC from "@/pages/vendor/VendorKYC";
 import VendorProducts from "@/pages/vendor/VendorProducts";
+import VendorProductNew from "@/pages/vendor/VendorProductNew";
 // import VendorAddProduct from "@/pages/vendor/VendorAddProduct";
 import VendorOrders from "@/pages/vendor/VendorOrders";
 
@@ -145,7 +146,7 @@ function App() {
               <Route path="dashboard" element={<VendorDashboard />} />
               <Route path="kyc" element={<VendorKYC />} />
               <Route path="products" element={<VendorProducts />} />
-              {/* <Route path="products/new" element={<VendorAddProduct />} /> */}
+              <Route path="products/new" element={<VendorProductNew />} />
               <Route path="orders" element={<VendorOrders />} />
             </Route>
 
