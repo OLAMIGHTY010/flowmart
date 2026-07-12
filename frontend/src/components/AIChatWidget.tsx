@@ -27,12 +27,18 @@ const AIChatWidget = () => {
 
   // Unauthenticated local fallback bot
   const handleShoppingAssistant = async (msg: string) => {
-    setMessages(prev => [...prev, { id: Date.now().toString(), message: msg, isBot: false }]);
+    const newMessage = { id: Date.now().toString(), message: msg, isBot: false };
+    
+    // Calculate the history array BEFORE setting state (so we have the exact snapshot)
+    const historyPayload = messages.map(m => ({ role: m.isBot ? 'assistant' : 'user', content: m.message }));
+    historyPayload.push({ role: 'user', content: msg });
+
+    setMessages(prev => [...prev, newMessage]);
     setInputValue("");
     setIsTyping(true);
     
     try {
-      const res: any = await apiClient.post("/ai/chat", { message: msg });
+      const res: any = await apiClient.post("/ai/chat", { messages: historyPayload });
       if (res.success && res.data) {
         setMessages(prev => [...prev, { 
           id: (Date.now() + 1).toString(), 
