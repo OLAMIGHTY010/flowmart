@@ -58,12 +58,47 @@ app.get("/api/v1/fix-db", async (req, res) => {
     
     // Using IF NOT EXISTS safely (or try-catch if Postgres version requires it)
     await client.query(`
-      ALTER TABLE rider_profiles ADD COLUMN IF NOT EXISTS latitude numeric(10, 8);
-      ALTER TABLE rider_profiles ADD COLUMN IF NOT EXISTS longitude numeric(11, 8);
-      ALTER TABLE vendor_profiles ADD COLUMN IF NOT EXISTS latitude numeric(10, 8);
-      ALTER TABLE vendor_profiles ADD COLUMN IF NOT EXISTS longitude numeric(11, 8);
-      ALTER TABLE rider_kyc ADD COLUMN IF NOT EXISTS guarantor_nin varchar(50);
-      ALTER TABLE vendor_kyc ADD COLUMN IF NOT EXISTS guarantor_nin varchar(50);
+      DO $$ 
+      BEGIN 
+        -- Users
+        BEGIN ALTER TABLE users ADD COLUMN otp varchar(255); EXCEPTION WHEN duplicate_column THEN END;
+        BEGIN ALTER TABLE users ADD COLUMN otp_expiry timestamp; EXCEPTION WHEN duplicate_column THEN END;
+        BEGIN ALTER TABLE users ADD COLUMN reset_token varchar(255); EXCEPTION WHEN duplicate_column THEN END;
+        BEGIN ALTER TABLE users ADD COLUMN reset_token_expiry timestamp; EXCEPTION WHEN duplicate_column THEN END;
+        
+        -- Rider Profiles
+        BEGIN ALTER TABLE rider_profiles ADD COLUMN latitude numeric(10, 8); EXCEPTION WHEN duplicate_column THEN END;
+        BEGIN ALTER TABLE rider_profiles ADD COLUMN longitude numeric(11, 8); EXCEPTION WHEN duplicate_column THEN END;
+        
+        -- Vendor Profiles
+        BEGIN ALTER TABLE vendor_profiles ADD COLUMN latitude numeric(10, 8); EXCEPTION WHEN duplicate_column THEN END;
+        BEGIN ALTER TABLE vendor_profiles ADD COLUMN longitude numeric(11, 8); EXCEPTION WHEN duplicate_column THEN END;
+
+        -- Rider KYC
+        BEGIN ALTER TABLE rider_kyc ADD COLUMN guarantor_nin varchar(50); EXCEPTION WHEN duplicate_column THEN END;
+
+        -- Vendor KYC
+        BEGIN ALTER TABLE vendor_kyc ADD COLUMN guarantor_nin varchar(50); EXCEPTION WHEN duplicate_column THEN END;
+        BEGIN ALTER TABLE vendor_kyc ADD COLUMN vendor_type varchar(50) DEFAULT 'individual' NOT NULL; EXCEPTION WHEN duplicate_column THEN END;
+        BEGIN ALTER TABLE vendor_kyc ADD COLUMN tin varchar(255); EXCEPTION WHEN duplicate_column THEN END;
+        BEGIN ALTER TABLE vendor_kyc ADD COLUMN bank_reference_file text; EXCEPTION WHEN duplicate_column THEN END;
+        BEGIN ALTER TABLE vendor_kyc ADD COLUMN cac_document_file text; EXCEPTION WHEN duplicate_column THEN END;
+
+        -- Products
+        BEGIN ALTER TABLE products ADD COLUMN product_type varchar(50) DEFAULT 'retail' NOT NULL; EXCEPTION WHEN duplicate_column THEN END;
+        BEGIN ALTER TABLE products ADD COLUMN preparation_time integer; EXCEPTION WHEN duplicate_column THEN END;
+        BEGIN ALTER TABLE products ADD COLUMN modifiers jsonb DEFAULT '[]'::jsonb; EXCEPTION WHEN duplicate_column THEN END;
+        BEGIN ALTER TABLE products ADD COLUMN variants jsonb DEFAULT '[]'::jsonb; EXCEPTION WHEN duplicate_column THEN END;
+        BEGIN ALTER TABLE products ADD COLUMN dietary_tags jsonb DEFAULT '[]'::jsonb; EXCEPTION WHEN duplicate_column THEN END;
+
+        -- Renames (0003)
+        BEGIN ALTER TABLE orders RENAME COLUMN attendee_id TO user_id; EXCEPTION WHEN undefined_column THEN END;
+        BEGIN ALTER TABLE vendor_kyc RENAME COLUMN camp_certificate_id TO business_license_id; EXCEPTION WHEN undefined_column THEN END;
+        BEGIN ALTER TABLE vendor_kyc RENAME COLUMN camp_certificate_file TO business_license_file; EXCEPTION WHEN undefined_column THEN END;
+        BEGIN ALTER TABLE kyc_submissions RENAME COLUMN camp_certificate_url TO business_license_url; EXCEPTION WHEN undefined_column THEN END;
+        BEGIN ALTER TABLE staff_profiles RENAME COLUMN church TO branch; EXCEPTION WHEN undefined_column THEN END;
+        BEGIN ALTER TABLE staff_profiles RENAME COLUMN zonal TO region; EXCEPTION WHEN undefined_column THEN END;
+      END $$;
     `);
     client.release();
     
