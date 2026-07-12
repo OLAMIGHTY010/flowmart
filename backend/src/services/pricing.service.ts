@@ -13,7 +13,22 @@ export class PricingService {
     });
 
     if (!zoneRecord) {
-      throw new Error(`Delivery zone '${zoneName}' is not configured. Please contact logistics.`);
+      // Fallback to 'Default' zone
+      zoneRecord = await db.query.deliveryZones.findFirst({
+        where: eq(deliveryZones.zoneName, 'Default'),
+      });
+      
+      if (!zoneRecord) {
+        // Create 'Default' zone dynamically for MVP
+        const [newZone] = await db.insert(deliveryZones).values({
+          zoneName: 'Default',
+          baseFee: "500", // e.g., 500 NGN
+          perKmFee: "100", // e.g., 100 NGN per Km
+          riderCommissionPct: "70",
+          platformCommissionPct: "30",
+        }).returning();
+        zoneRecord = newZone;
+      }
     }
 
     const baseFee = parseFloat(zoneRecord.baseFee.toString());
