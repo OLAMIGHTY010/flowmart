@@ -4,8 +4,47 @@ import { db } from '../../db';
 import { products } from '../../db/schema';
 import { ilike, or } from 'drizzle-orm';
 import { GoogleGenAI } from '@google/genai';
+import OpenAI from 'openai';
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const gemini = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || '' });
+
+// Helper function that tries Gemini first, then falls back to OpenAI
+async function generateAIContent(systemPrompt: string, userContent: string): Promise<string> {
+  let text = "";
+  
+  try {
+    // Try Gemini First
+    if (process.env.GEMINI_API_KEY) {
+      const response = await gemini.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: `${systemPrompt}\n\n${userContent}`
+      });
+      text = response.text || "";
+      if (text) return text;
+    }
+  } catch (err) {
+    console.warn("Gemini generation failed, falling back to OpenAI...", err);
+  }
+
+  try {
+    // Fallback to OpenAI ChatGPT
+    if (process.env.OPENAI_API_KEY) {
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userContent }
+        ]
+      });
+      text = completion.choices[0]?.message?.content || "";
+    }
+  } catch (err) {
+    console.error("OpenAI generation also failed!", err);
+  }
+
+  return text;
+}
 
 export const processShoppingQuery = async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -16,28 +55,21 @@ export const processShoppingQuery = async (req: AuthenticatedRequest, res: Respo
     }
 
     const latestMessage = messages[messages.length - 1].content;
+    const conversationText = messages.map((m: any) => `${m.role}: ${m.content}`).join('\n');
 
-    // Step 1: Use Gemini to extract search parameters
-    const extractPrompt = `
-You are an intent extractor for an e-commerce platform called FlowMart.
+    // Step 1: Use AI to extract search parameters
+    const extractPrompt = `You are an intent extractor for an e-commerce platform called FlowMart.
 The user is talking to a shopping assistant.
 Based on the conversation history, extract search keywords for the database query.
 Output ONLY a valid JSON object with the following schema, nothing else (no markdown, no backticks):
 {
   "keywords": ["list", "of", "search", "terms"]
-}
-Conversation:
-${messages.map((m: any) => `${m.role}: ${m.content}`).join('\n')}
-`;
+}`;
     
     let searchParams = { keywords: [] as string[] };
     try {
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: extractPrompt
-      });
-      const text = response.text || "{}";
-      const cleaned = text.replace(/\`\`\`json/g, '').replace(/\`\`\`/g, '').trim();
+      const text = await generateAIContent(extractPrompt, `Conversation:\n${conversationText}`);
+      const cleaned = (text || "{}").replace(/\`\`\`json/g, '').replace(/\`\`\`/g, '').trim();
       searchParams = JSON.parse(cleaned);
     } catch (e) {
       console.warn("Failed to extract intent, falling back to simple split", e);
@@ -56,25 +88,17 @@ ${messages.map((m: any) => `${m.role}: ${m.content}`).join('\n')}
         .limit(5);
     }
 
-    // Step 3: Use Gemini to generate a conversational reply
-    const replyPrompt = `
-You are FlowMart's helpful AI shopping assistant.
+    // Step 3: Use AI to generate a conversational reply
+    const replyPrompt = `You are FlowMart's helpful AI shopping assistant.
 Respond to the user's latest message in a friendly, concise, and helpful tone.
 If products were found, mention them naturally and ask if they'd like to add them to their cart.
 If no products were found, apologize and ask for clarification.
-Database results: ${JSON.stringify(recommendedProducts.map(p => ({ name: p.name, price: p.price, store: p.storeName })))}
-
-Conversation history:
-${messages.map((m: any) => `${m.role}: ${m.content}`).join('\n')}
-`;
+Database results: ${JSON.stringify(recommendedProducts.map(p => ({ name: p.name, price: p.price, store: p.storeName })))}`;
 
     let finalReply = `I found some options based on your request.`;
     try {
-      const replyResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: replyPrompt
-      });
-      finalReply = replyResponse.text || finalReply;
+      const text = await generateAIContent(replyPrompt, `Conversation history:\n${conversationText}`);
+      if (text) finalReply = text;
     } catch (e) {
       console.error("Failed to generate conversational reply", e);
     }
