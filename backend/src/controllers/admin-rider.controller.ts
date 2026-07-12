@@ -105,7 +105,7 @@ export const getRidersList = async (req: Request, res: Response) => {
       email: users.email,
       phone: users.phone,
       lastLogin: users.lastLogin,
-      status: riderKyc.status,
+      status: riderKyc.status, vehicleType: riderKyc.vehicleType,
     })
     .from(riderKyc)
     .innerJoin(users, eq(users.id, riderKyc.riderId))
