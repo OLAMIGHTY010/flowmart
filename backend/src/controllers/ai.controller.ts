@@ -3,10 +3,10 @@ import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import { db } from '../../db';
 import { products } from '../../db/schema';
 import { ilike, or } from 'drizzle-orm';
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import OpenAI from 'openai';
 
-const gemini = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || '' });
 
 // Helper function that tries Gemini first, then falls back to OpenAI
@@ -16,11 +16,9 @@ async function generateAIContent(systemPrompt: string, userContent: string): Pro
   try {
     // Try Gemini First
     if (process.env.GEMINI_API_KEY) {
-      const response = await gemini.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: `${systemPrompt}\n\n${userContent}`
-      });
-      text = response.text || "";
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const response = await model.generateContent(`${systemPrompt}\n\n${userContent}`);
+      text = response.response.text() || "";
       if (text) return text;
     }
   } catch (err) {
