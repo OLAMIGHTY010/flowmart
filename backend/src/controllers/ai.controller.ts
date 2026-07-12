@@ -12,6 +12,7 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || '' });
 // Helper function that tries Gemini first, then falls back to OpenAI
 async function generateAIContent(systemPrompt: string, userContent: string): Promise<string> {
   let text = "";
+  let lastError = "";
   
   try {
     // Try Gemini First
@@ -21,8 +22,9 @@ async function generateAIContent(systemPrompt: string, userContent: string): Pro
       text = response.response.text() || "";
       if (text) return text;
     }
-  } catch (err) {
+  } catch (err: any) {
     console.warn("Gemini generation failed, falling back to OpenAI...", err);
+    lastError = "Gemini Error: " + err.message;
   }
 
   try {
@@ -37,11 +39,12 @@ async function generateAIContent(systemPrompt: string, userContent: string): Pro
       });
       text = completion.choices[0]?.message?.content || "";
     }
-  } catch (err) {
+  } catch (err: any) {
     console.error("OpenAI generation also failed!", err);
+    lastError += " | OpenAI Error: " + err.message;
   }
 
-  return text;
+  return text || `DEBUG_ERROR: ${lastError}`;
 }
 
 export const processShoppingQuery = async (req: AuthenticatedRequest, res: Response) => {
