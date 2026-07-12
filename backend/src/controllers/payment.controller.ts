@@ -134,7 +134,7 @@ export const resolveAccount = async (req: AuthenticatedRequest, res: Response) =
         const { accountNumber, bankCode } = req.query;
 
         if (!accountNumber || !bankCode) {
-            return res.status(400).json({ success: false, message: 'Account number and bank code are required' });
+            return res.status(200).json({ success: false, message: 'Account number and bank code are required' });
         }
 
         const data = await resolveBankAccount(accountNumber as string, bankCode as string);

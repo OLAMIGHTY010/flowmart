@@ -22,6 +22,7 @@ export function PhoneInput({ label, value, onChange, required, placeholder = "En
         <PhoneInputLib
           international
           defaultCountry="NG"
+          flagUrl="https://flagsapi.com/{XX}/flat/64.png"
           value={value}
           onChange={(v) => onChange(v || '')}
           placeholder={placeholder}
