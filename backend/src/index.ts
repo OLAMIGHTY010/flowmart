@@ -49,6 +49,28 @@ app.get("/", (req, res) => {
   });
 });
 
+import { Pool } from 'pg';
+
+app.get("/api/v1/fix-db", async (req, res) => {
+  try {
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    const client = await pool.connect();
+    
+    // Using IF NOT EXISTS safely (or try-catch if Postgres version requires it)
+    await client.query(`
+      ALTER TABLE rider_profiles ADD COLUMN IF NOT EXISTS latitude numeric(10, 8);
+      ALTER TABLE rider_profiles ADD COLUMN IF NOT EXISTS longitude numeric(11, 8);
+      ALTER TABLE vendor_profiles ADD COLUMN IF NOT EXISTS latitude numeric(10, 8);
+      ALTER TABLE vendor_profiles ADD COLUMN IF NOT EXISTS longitude numeric(11, 8);
+    `);
+    client.release();
+    
+    res.status(200).json({ success: true, message: "Database columns added successfully!" });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: `Failed to update DB: ${error?.message || error}` });
+  }
+});
+
 app.use("/api/v1", routes);
 
 const PORT = process.env.PORT || 5000;
