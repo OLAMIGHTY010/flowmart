@@ -9,11 +9,6 @@ import OpenAI from 'openai';
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || '' });
 
-// Helper function that tries Gemini first, then falls back to OpenAI
-async function generateAIContent(systemPrompt: string, userContent: string): Promise<string> {
-  let text = "";
-  let lastError = "";
-  
 // Helper function that tries Gemini first, then falls back to OpenAI, then falls back to a beautiful dynamic response
 async function generateAIContent(systemPrompt: string, userContent: string, isIntentParsing: boolean, recommendedProducts: any[] = []): Promise<string> {
   let text = "";
@@ -91,7 +86,7 @@ Output ONLY a valid JSON object with the following schema, nothing else (no mark
     
     let searchParams = { keywords: [] as string[] };
     try {
-      const text = await generateAIContent(extractPrompt, `Conversation:\n${conversationText}`);
+      const text = await generateAIContent(extractPrompt, `Conversation:\n${conversationText}`, true);
       const cleaned = (text || "{}").replace(/\`\`\`json/g, '').replace(/\`\`\`/g, '').trim();
       searchParams = JSON.parse(cleaned);
     } catch (e) {
@@ -120,7 +115,7 @@ Database results: ${JSON.stringify(recommendedProducts.map(p => ({ name: p.name,
 
     let finalReply = `I found some options based on your request.`;
     try {
-      const text = await generateAIContent(replyPrompt, `Conversation history:\n${conversationText}`);
+      const text = await generateAIContent(replyPrompt, `Conversation history:\n${conversationText}`, false, recommendedProducts);
       if (text) finalReply = text;
     } catch (e) {
       console.error("Failed to generate conversational reply", e);
