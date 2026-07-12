@@ -77,7 +77,7 @@ export const getRidersList = async (req: Request, res: Response) => {
     const statusFilter = req.query.status as string;
     const search = req.query.search as string;
 
-    let conditions: any[] = [eq(users.role, 'dispatch_rider')];
+    let conditions: any[] = [];
 
     if (statusFilter && statusFilter !== 'all') {
       if (statusFilter === 'pending') {
@@ -246,7 +246,7 @@ export const reviewRider = async (req: Request, res: Response) => {
     const user = userList[0];
 
     if (status === 'approved') {
-      await db.update(users).set({ status: 'active', updatedAt: new Date() }).where(eq(users.id, id as string));
+      await db.update(users).set({ status: 'active', role: 'dispatch_rider' as any, updatedAt: new Date() }).where(eq(users.id, id as string));
     } else if (status === 'rejected') {
       await db.update(users).set({ status: 'suspended', updatedAt: new Date() }).where(eq(users.id, id as string));
       if (user && user.email) {
