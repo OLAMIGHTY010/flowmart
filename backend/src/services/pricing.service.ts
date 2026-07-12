@@ -24,8 +24,8 @@ export class PricingService {
           zoneName: 'Default',
           baseFee: "500", // e.g., 500 NGN
           perKmFee: "100", // e.g., 100 NGN per Km
-          riderCommissionPct: "70",
-          platformCommissionPct: "30",
+          riderCommissionPct: 70,
+          platformCommissionPct: 30,
         }).returning();
         zoneRecord = newZone;
       }
