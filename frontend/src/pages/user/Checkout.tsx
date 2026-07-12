@@ -110,7 +110,7 @@ const Checkout = () => {
         showToast("Unable to retrieve your location", "error");
         setAddress("");
       },
-      { enableHighAccuracy: true }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   };
 

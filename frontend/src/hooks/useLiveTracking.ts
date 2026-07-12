@@ -34,12 +34,11 @@ export function useLiveTracking(enabled: boolean = true) {
       },
       (err) => {
         setError(err.message);
-        setIsTracking(false);
       },
       {
         enableHighAccuracy: true,
-        maximumAge: 0,
         timeout: 10000,
+        maximumAge: 0
       }
     );
 

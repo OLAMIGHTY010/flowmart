@@ -310,6 +310,11 @@ export default function VendorKYCInfo() {
                     placeholder="10-digit account number"
                     value={accountNumber}
                     onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                      }
+                    }}
                     maxLength={10}
                     required
                   />
@@ -325,11 +330,11 @@ export default function VendorKYCInfo() {
 
                 <VendorInput
                   label="Account Name"
-                  placeholder="Auto-fetched after entering account number"
-                  icon="user"
+                  placeholder="If auto-fetch fails, enter your account name here"
                   value={accountName}
                   onChange={(e) => setAccountName(e.target.value)}
                   required
+                  readOnly={isResolvingBank}
                 />
               </div>
             </CardContent>

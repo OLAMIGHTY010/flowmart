@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { db } from "../../db";
-import { orders, users, riderProfiles, riderKyc, orderItems } from "../../db/schema";
+import { orders, users, riderProfiles, riderKyc, orderItems, products } from "../../db/schema";
 import { eq, and, isNull, or } from "drizzle-orm";
 import { AuthenticatedRequest } from "../middleware/auth.middleware";
 import { emailService } from "../services/email.service";
@@ -420,7 +420,20 @@ export const getOrderById = async (req: AuthenticatedRequest, res: Response) => 
 		const [orderRecord] = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
 		if (!orderRecord) return res.status(404).json({ success: false, message: "Order not found" });
 
-		const items = await db.select().from(orderItems).where(eq(orderItems.orderId, orderId));
+		const items = await db
+			.select({
+				id: orderItems.id,
+				orderId: orderItems.orderId,
+				productId: orderItems.productId,
+				quantity: orderItems.quantity,
+				unitPrice: orderItems.unitPrice,
+				productName: products.name,
+				images: products.images
+			})
+			.from(orderItems)
+			.leftJoin(products, eq(orderItems.productId, products.id))
+			.where(eq(orderItems.orderId, orderId));
+
 		return res.status(200).json({ success: true, data: { ...orderRecord, items } });
 	} catch (error) {
 		console.error("Get Order By Id Error:", error);
