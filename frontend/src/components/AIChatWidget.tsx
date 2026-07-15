@@ -180,8 +180,8 @@ const AIChatWidget = () => {
     e.preventDefault();
     if (!inputValue.trim()) return;
 
-    // If support ticket has been escalated, send via websocket directly
-    if (socket && ticketId && user) {
+    // If support ticket has been escalated, send via websocket directly (only if socket is actively connected)
+    if (socket && socket.connected && ticketId && user) {
       socket.emit("support:message", {
         ticketId,
         senderId: user.id,
@@ -193,6 +193,7 @@ const AIChatWidget = () => {
       setInputValue("");
       return;
     }
+
 
     // Otherwise, route to AI Shopping Assistant
     handleShoppingAssistant(inputValue);
