@@ -21,7 +21,7 @@ const DefaultIcon = L.icon({
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
-const LocationPicker = ({ position, setPosition, setAddress }: any) => {
+const LocationPicker = ({ position, setPosition, setAddress, setIsManualInput }: any) => {
   const map = useMap();
   
   useEffect(() => {
@@ -32,6 +32,7 @@ const LocationPicker = ({ position, setPosition, setAddress }: any) => {
 
   useMapEvents({
     async click(e) {
+      if (setIsManualInput) setIsManualInput(false);
       const { lat, lng } = e.latlng;
       setPosition([lat, lng]);
       setAddress("Fetching location details...");
@@ -69,6 +70,8 @@ const Checkout = () => {
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [mapPosition, setMapPosition] = useState<[number, number] | null>(null);
+  const [isManualInput, setIsManualInput] = useState(false);
+
 
   useEffect(() => {
     if (user) {
@@ -82,9 +85,11 @@ const Checkout = () => {
       showToast("Geolocation is not supported by your browser", "error");
       return;
     }
+    setIsManualInput(false);
     setIsLoadingLocation(true);
     setAddress("Fetching your current location...");
     navigator.geolocation.getCurrentPosition(
+
       async (position) => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
@@ -114,7 +119,33 @@ const Checkout = () => {
     );
   };
 
+  // Address Geocoding Effect (for manual typing)
+  useEffect(() => {
+    if (!isManualInput || !address || address.trim().length < 5) return;
+
+    const geocodeAddress = async () => {
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`);
+        const data = await res.json();
+        if (data && data.length > 0) {
+          const lat = parseFloat(data[0].lat);
+          const lon = parseFloat(data[0].lon);
+          setMapPosition([lat, lon]);
+        }
+      } catch (err) {
+        console.error("Geocoding failed:", err);
+      }
+    };
+
+    const delayDebounceFn = setTimeout(() => {
+      geocodeAddress();
+    }, 1500); // 1.5s debounce to let user finish typing
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [address, isManualInput]);
+
   const cart = useCartStore((s) => s.cart);
+
   const clearCart = useCartStore((s) => s.clearCart);
 
   const subtotal = cart.reduce((sum, item) => sum + (Number(item.price) * item.qty), 0);
@@ -235,7 +266,17 @@ const Checkout = () => {
               </div>
               <div style={{ gridColumn: "1 / -1" }}>
                 <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, marginBottom: 8 }}>Delivery Address</label>
-                <textarea required className="input-field" rows={3} placeholder="123 Main Street..." value={address} onChange={(e) => setAddress(e.target.value)} />
+                <textarea 
+                  required 
+                  className="input-field" 
+                  rows={3} 
+                  placeholder="Type your address to locate it on the map (e.g. 123 Main Street, Lagos)..." 
+                  value={address} 
+                  onChange={(e) => {
+                    setIsManualInput(true);
+                    setAddress(e.target.value);
+                  }} 
+                />
                 <div style={{ marginTop: 16, height: 250, borderRadius: "var(--radius-lg)", overflow: "hidden", border: "1px solid var(--color-border)" }}>
                   <MapContainer 
                     center={mapPosition || [9.0820, 8.6753]} 
@@ -243,9 +284,10 @@ const Checkout = () => {
                     style={{ width: "100%", height: "100%", zIndex: 0 }}
                   >
                     <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                    <LocationPicker position={mapPosition} setPosition={setMapPosition} setAddress={setAddress} />
+                    <LocationPicker position={mapPosition} setPosition={setMapPosition} setAddress={setAddress} setIsManualInput={setIsManualInput} />
                   </MapContainer>
                 </div>
+
                 <p style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", marginTop: 8 }}>
                   Click on the map to pin your exact location, or type it manually.
                 </p>
