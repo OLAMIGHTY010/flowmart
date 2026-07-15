@@ -208,12 +208,14 @@ const Checkout = () => {
         clearCart();
         navigate(`/orders/${(res as any).order?.id}/track`);
       }
-    } catch (err) {
-      showToast("Error placing order. Please try again.", "error");
+    } catch (err: any) {
+      const errMsg = err.response?.data?.message || "Error placing order. Please try again.";
+      showToast(errMsg, "error");
     } finally {
       setIsSubmitting(false);
     }
   };
+
 
   return (
     <div className="container" style={{ padding: "32px 24px" }}>
