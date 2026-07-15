@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import { processShoppingQuery } from '../controllers/ai.controller';
-import { authenticateJWT } from '../middleware/auth.middleware';
+import { optionalAuthenticateJWT } from '../middleware/auth.middleware';
 
 const router = Router();
 
-// Protect AI routes
-router.use(authenticateJWT);
+// Allow optional auth so guest shoppers can chat too
+router.use(optionalAuthenticateJWT);
 
 router.post('/chat', processShoppingQuery);
 
