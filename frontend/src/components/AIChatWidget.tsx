@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { MessageSquare, X, Send, Bot, Sparkles } from "lucide-react";
+import { MessageSquare, X, Send, Bot, Sparkles, Mic, MicOff } from "lucide-react";
 import { io, Socket } from "socket.io-client";
 import { apiClient } from "@/services/api";
 
@@ -23,7 +23,55 @@ const AIChatWidget = () => {
   const [ticketId, setTicketId] = useState<string | null>(null);
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isTyping, setIsTyping] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const recognitionRef = useRef<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Initialize Web Speech API
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const rec = new SpeechRecognition();
+      rec.continuous = false;
+      rec.interimResults = false;
+      rec.lang = 'en-US';
+
+      rec.onstart = () => {
+        setIsRecording(true);
+      };
+
+      rec.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        if (transcript) {
+          setInputValue(transcript);
+        }
+      };
+
+      rec.onerror = (err: any) => {
+        console.error("Speech Recognition Error:", err);
+        setIsRecording(false);
+      };
+
+      rec.onend = () => {
+        setIsRecording(false);
+      };
+
+      recognitionRef.current = rec;
+    }
+  }, []);
+
+  const toggleRecording = () => {
+    if (!recognitionRef.current) {
+      alert("Speech recognition is not supported in your browser. Try Google Chrome.");
+      return;
+    }
+
+    if (isRecording) {
+      recognitionRef.current.stop();
+    } else {
+      recognitionRef.current.start();
+    }
+  };
 
   // Unauthenticated local fallback bot
   const handleShoppingAssistant = async (msg: string) => {
@@ -47,6 +95,18 @@ const AIChatWidget = () => {
           recommendations: res.data.recommendations,
           suggestedActions: res.data.suggestedActions
         }]);
+
+        // Auto-escalation trigger
+        if (res.data.shouldEscalate && user) {
+          try {
+            const ticketRes: any = await apiClient.get("/support/ticket");
+            if (ticketRes.ticket) {
+              setTicketId(ticketRes.ticket.id);
+            }
+          } catch (err) {
+            console.error("Failed to escalate support ticket", err);
+          }
+        }
       }
     } catch (error) {
       setMessages(prev => [...prev, { 
@@ -120,21 +180,24 @@ const AIChatWidget = () => {
     e.preventDefault();
     if (!inputValue.trim()) return;
 
-    // For the Super App, all messages first go through the AI Shopping Assistant
-    // If user explicitly asks for human support, we can route it via sockets later.
-    handleShoppingAssistant(inputValue);
-    return;
-
-    if (socket && ticketId) {
+    // If support ticket has been escalated, send via websocket directly
+    if (socket && ticketId && user) {
       socket.emit("support:message", {
         ticketId,
         senderId: user.id,
         message: inputValue,
         isBot: false
       });
+      // Optimistically add user message to list
+      setMessages(prev => [...prev, { id: Date.now().toString(), message: inputValue, isBot: false }]);
       setInputValue("");
+      return;
     }
+
+    // Otherwise, route to AI Shopping Assistant
+    handleShoppingAssistant(inputValue);
   };
+
 
   const quickReplies = [
     "I need ingredients for jollof rice",
@@ -413,26 +476,54 @@ const AIChatWidget = () => {
                 type="text"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                placeholder="Type a message..."
+                placeholder={isRecording ? "Listening..." : "Type a message..."}
                 style={{
                   width: "100%",
                   padding: "12px 16px",
-                  paddingRight: 44,
+                  paddingRight: 80,
                   fontSize: "0.8125rem",
                   borderRadius: 24,
                   border: "1.5px solid #e2e8f0",
-                  background: "#f8fafc",
+                  background: isRecording ? "#f0fdf4" : "#f8fafc",
                   color: "#1e293b",
                   outline: "none",
                   transition: "all 0.2s",
                   boxSizing: "border-box",
                 }}
+                disabled={isRecording}
                 onFocus={(e) => { e.currentTarget.style.borderColor = "#15803d"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(21,128,61,0.1)"; e.currentTarget.style.background = "#fff"; }}
                 onBlur={(e) => { e.currentTarget.style.borderColor = "#e2e8f0"; e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.background = "#f8fafc"; }}
               />
+              
+              {/* Voice Microphone Search Button */}
+              <button
+                type="button"
+                onClick={toggleRecording}
+                style={{
+                  position: "absolute",
+                  right: 42,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  width: 34,
+                  height: 34,
+                  borderRadius: "50%",
+                  border: "none",
+                  background: isRecording ? "linear-gradient(135deg, #dc2626, #f87171)" : "transparent",
+                  color: isRecording ? "#fff" : "#64748b",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  transition: "all 0.25s",
+                  boxShadow: isRecording ? "0 2px 8px rgba(220,38,38,0.3)" : "none",
+                }}
+              >
+                {isRecording ? <MicOff size={16} /> : <Mic size={16} />}
+              </button>
+
               <button
                 type="submit"
-                disabled={!inputValue.trim()}
+                disabled={!inputValue.trim() || isRecording}
                 style={{
                   position: "absolute",
                   right: 4,
@@ -442,20 +533,21 @@ const AIChatWidget = () => {
                   height: 34,
                   borderRadius: "50%",
                   border: "none",
-                  background: inputValue.trim() ? "linear-gradient(135deg, #15803d, #22c55e)" : "#cbd5e1",
+                  background: inputValue.trim() && !isRecording ? "linear-gradient(135deg, #15803d, #22c55e)" : "#cbd5e1",
                   color: "#fff",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  cursor: inputValue.trim() ? "pointer" : "default",
+                  cursor: inputValue.trim() && !isRecording ? "pointer" : "default",
                   transition: "all 0.25s",
-                  boxShadow: inputValue.trim() ? "0 2px 8px rgba(21,128,61,0.3)" : "none",
+                  boxShadow: inputValue.trim() && !isRecording ? "0 2px 8px rgba(21,128,61,0.3)" : "none",
                 }}
               >
                 <Send size={14} style={{ marginLeft: 1 }} />
               </button>
             </div>
           </form>
+
           {!user && (
             <p style={{ textAlign: "center", fontSize: "0.625rem", color: "#94a3b8", marginTop: 10, fontWeight: 500, letterSpacing: "0.02em" }}>
               🔒 Log in to connect with live agents
