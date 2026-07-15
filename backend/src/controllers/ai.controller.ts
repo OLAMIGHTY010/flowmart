@@ -8,10 +8,35 @@ import OpenAI from 'openai';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || '' });
+const openrouter = new OpenAI({
+  baseURL: "https://openrouter.ai/api/v1",
+  apiKey: process.env.OPENROUTER_API_KEY || '',
+  defaultHeaders: {
+    "HTTP-Referer": "https://flowmart.com",
+    "X-Title": "FlowMart",
+  }
+});
 
-// Helper function that tries Gemini first, then falls back to OpenAI, then falls back to a beautiful dynamic response
+// Helper function that tries OpenRouter first, then Gemini, then OpenAI, then falls back to a beautiful dynamic response
 async function generateAIContent(systemPrompt: string, userContent: string, isIntentParsing: boolean, recommendedProducts: any[] = []): Promise<string> {
   let text = "";
+  
+  try {
+    // Try OpenRouter First
+    if (process.env.OPENROUTER_API_KEY) {
+      const completion = await openrouter.chat.completions.create({
+        model: process.env.OPENROUTER_MODEL || "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userContent }
+        ]
+      });
+      text = completion.choices[0]?.message?.content || "";
+      if (text) return text;
+    }
+  } catch (err: any) {
+    console.warn("OpenRouter generation failed, trying other fallbacks...", err.message);
+  }
   
   try {
     // Try Gemini First
