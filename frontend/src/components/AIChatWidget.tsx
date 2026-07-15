@@ -3,6 +3,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { MessageSquare, X, Send, Bot, Sparkles, Mic, MicOff } from "lucide-react";
 import { io, Socket } from "socket.io-client";
 import { apiClient } from "@/services/api";
+import { useNavigate } from "react-router-dom";
+import { useCartStore } from "@/stores/cartStore";
+
 
 const API_URL = import.meta.env.VITE_API_URL?.replace('/api/v1', '') || 'http://localhost:5000';
 
@@ -17,9 +20,45 @@ interface Message {
 
 const AIChatWidget = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const addToCart = useCartStore((s) => s.addToCart);
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
+
+  const handleActionClick = (action: string, recommendations: any[] = []) => {
+    if (action === 'Checkout') {
+      navigate('/cart');
+      return;
+    }
+    if (action === 'Add All to Cart') {
+      if (recommendations && recommendations.length > 0) {
+        recommendations.forEach(prod => {
+          addToCart({
+            id: prod.id,
+            name: prod.name,
+            price: prod.price,
+            imageUrl: prod.imageUrl || '/assets/logo.png',
+            description: prod.description || '',
+            vendorId: prod.vendorId || '',
+            stock: prod.stock || 10,
+            category: prod.category || '',
+            status: prod.status || 'active',
+            createdAt: prod.createdAt || '',
+            updatedAt: prod.updatedAt || ''
+          } as any);
+        });
+        setMessages(prev => [...prev, {
+          id: Date.now().toString(),
+          message: "Successfully added all recommended items to your cart! 🛒",
+          isBot: true
+        }]);
+      }
+      return;
+    }
+    handleShoppingAssistant(action);
+  };
+
   const [ticketId, setTicketId] = useState<string | null>(null);
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isTyping, setIsTyping] = useState(false);
@@ -382,7 +421,31 @@ const AIChatWidget = () => {
                       <div key={prod.id} style={{ minWidth: 120, background: '#f8fafc', borderRadius: 8, padding: 8, border: '1px solid #e2e8f0' }}>
                         <div style={{ fontWeight: 600, fontSize: '0.75rem', marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{prod.name}</div>
                         <div style={{ color: '#15803d', fontWeight: 700, fontSize: '0.85rem' }}>₦{prod.price}</div>
-                        <button style={{ marginTop: 8, width: '100%', background: '#15803d', color: '#fff', border: 'none', borderRadius: 4, padding: '4px 0', fontSize: '0.7rem', cursor: 'pointer' }}>Add to Cart</button>
+                        <button
+                          onClick={() => {
+                            addToCart({
+                              id: prod.id,
+                              name: prod.name,
+                              price: prod.price,
+                              imageUrl: prod.imageUrl || '/assets/logo.png',
+                              description: prod.description || '',
+                              vendorId: prod.vendorId || '',
+                              stock: prod.stock || 10,
+                              category: prod.category || '',
+                              status: prod.status || 'active',
+                              createdAt: prod.createdAt || '',
+                              updatedAt: prod.updatedAt || ''
+                            } as any);
+                            setMessages(prev => [...prev, {
+                              id: Date.now().toString(),
+                              message: `Added ${prod.name} to cart! 🛒`,
+                              isBot: true
+                            }]);
+                          }}
+                          style={{ marginTop: 8, width: '100%', background: '#15803d', color: '#fff', border: 'none', borderRadius: 4, padding: '4px 0', fontSize: '0.7rem', cursor: 'pointer' }}
+                        >
+                          Add to Cart
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -390,10 +453,11 @@ const AIChatWidget = () => {
                 {msg.suggestedActions && msg.suggestedActions.length > 0 && (
                   <div style={{ marginTop: 12, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                     {msg.suggestedActions.map((action, i) => (
-                      <button key={i} onClick={() => handleShoppingAssistant(action)} style={{ padding: '4px 10px', fontSize: '0.7rem', background: '#e2e8f0', border: 'none', borderRadius: 12, cursor: 'pointer', color: '#334155' }}>{action}</button>
+                      <button key={i} onClick={() => handleActionClick(action, msg.recommendations)} style={{ padding: '4px 10px', fontSize: '0.7rem', background: '#e2e8f0', border: 'none', borderRadius: 12, cursor: 'pointer', color: '#334155' }}>{action}</button>
                     ))}
                   </div>
                 )}
+
               </div>
             </div>
           ))}
