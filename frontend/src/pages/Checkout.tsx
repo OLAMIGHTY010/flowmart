@@ -383,21 +383,28 @@ export default function Checkout() {
             <div className="sticky top-24 p-4 sm:p-6">
               <h2 className="mb-5 text-lg font-bold text-gray-900">Order Summary</h2>
 
-              <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
-                {cart.map((item) => (
-                  <div key={item.id} className="flex items-center gap-3 rounded-lg bg-gray-50 p-3">
-                    <img
-                      src={item.imageUrl}
-                      alt={item.name}
-                      className="h-14 w-14 flex-shrink-0 rounded-lg object-cover"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="truncate text-sm font-semibold text-gray-900">{item.name}</p>
-                      <p className="text-xs text-gray-500">Qty: {item.qty}</p>
-                    </div>
-                    <p className="text-sm font-bold text-gray-900 whitespace-nowrap">
-                      ₦{(Number(item.price) * item.qty).toLocaleString()}
+              <div className="max-h-64 space-y-4 overflow-y-auto pr-1">
+                {Object.entries(useCartStore(state => state.getCartGroupedByVendor())).map(([vendorId, items], index) => (
+                  <div key={vendorId} className="space-y-2">
+                    <p className="text-xs font-bold uppercase tracking-wider text-gray-500">
+                      Package {index + 1}
                     </p>
+                    {items.map((item) => (
+                      <div key={item.id} className="flex items-center gap-3 rounded-lg bg-gray-50 p-3 border">
+                        <img
+                          src={item.imageUrl}
+                          alt={item.name}
+                          className="h-12 w-12 flex-shrink-0 rounded-lg object-cover"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="truncate text-sm font-semibold text-gray-900">{item.name}</p>
+                          <p className="text-xs text-gray-500">Qty: {item.qty}</p>
+                        </div>
+                        <p className="text-sm font-bold text-gray-900 whitespace-nowrap">
+                          ₦{(Number(item.price) * item.qty).toLocaleString()}
+                        </p>
+                      </div>
+                    ))}
                   </div>
                 ))}
               </div>
@@ -409,8 +416,8 @@ export default function Checkout() {
                 </div>
 
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Delivery Fee</span>
-                  <span className="font-semibold text-gray-900">Free</span>
+                  <span className="text-gray-500">Delivery Fee (Multi-Vendor)</span>
+                  <span className="font-semibold text-gray-900">₦{useCartStore(state => state.getShippingFee()).toLocaleString()}</span>
                 </div>
 
                 <hr className="border-gray-100" />

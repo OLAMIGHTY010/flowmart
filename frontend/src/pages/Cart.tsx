@@ -86,80 +86,89 @@ export default function Cart() {
             </button>
           </div>
 
-          {cart.map((item) => (
-            <Card
-              key={item.id}
-              className="flex gap-4 p-3"
-            >
-              {/* IMAGE */}
-              <img
-                src={item.imageUrl}
-                alt={item.name}
-                className="h-24 w-24 rounded-lg object-cover"
-              />
-
-              {/* DETAILS */}
-              <div className="flex flex-1 flex-col justify-between">
-                <div>
-                  <h3 className="font-semibold">
-                    {item.name}
-                  </h3>
-
-                  <p className="font-bold text-primary">
-                    ₦
-                    {Number(
-                      item.price
-                    ).toLocaleString()}
-                  </p>
-                </div>
-
-                <div className="mt-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-
-                    <button
-                      onClick={() =>
-                        decreaseQty(item.id)
-                      }
-                      className="rounded-md border p-1"
-                    >
-                      <Minus className="h-4 w-4" />
-                    </button>
-
-                    <span className="w-8 text-center">
-                      {item.qty}
-                    </span>
-
-                    <button
-                      onClick={() =>
-                        increaseQty(item.id)
-                      }
-                      className="rounded-md border p-1"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </button>
-
-                  </div>
-
-                  <button
-                    onClick={() =>
-                      removeFromCart(item.id)
-                    }
-                    className="text-red-500"
+          {Object.entries(useCartStore(state => state.getCartGroupedByVendor())).map(([vendorId, items], index) => (
+            <div key={vendorId} className="mb-6 rounded-xl border bg-white p-4 shadow-sm">
+              <h3 className="mb-3 font-semibold text-gray-700 flex items-center gap-2">
+                📦 Package {index + 1} 
+                <span className="text-sm font-normal text-gray-500">(Dispatched by Vendor {vendorId.substring(0, 8)})</span>
+              </h3>
+              
+              <div className="space-y-3">
+                {items.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex gap-4 border-b border-gray-100 pb-3 last:border-0 last:pb-0"
                   >
-                    <Trash2 className="h-5 w-5" />
-                  </button>
-                </div>
-              </div>
+                    {/* IMAGE */}
+                    <img
+                      src={item.imageUrl}
+                      alt={item.name}
+                      className="h-20 w-20 rounded-lg object-cover"
+                    />
 
-              {/* ITEM TOTAL */}
-              <div className="hidden items-center font-semibold sm:flex">
-                ₦
-                {(
-                  Number(item.price) *
-                  item.qty
-                ).toLocaleString()}
+                    {/* DETAILS */}
+                    <div className="flex flex-1 flex-col justify-between">
+                      <div>
+                        <h4 className="font-semibold text-gray-900">
+                          {item.name}
+                        </h4>
+
+                        <p className="font-bold text-primary">
+                          ₦
+                          {Number(
+                            item.price
+                          ).toLocaleString()}
+                        </p>
+                      </div>
+
+                      <div className="mt-3 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() =>
+                              decreaseQty(item.id)
+                            }
+                            className="rounded-md border p-1"
+                          >
+                            <Minus className="h-4 w-4" />
+                          </button>
+
+                          <span className="w-8 text-center">
+                            {item.qty}
+                          </span>
+
+                          <button
+                            onClick={() =>
+                              increaseQty(item.id)
+                            }
+                            className="rounded-md border p-1"
+                          >
+                            <Plus className="h-4 w-4" />
+                          </button>
+                        </div>
+
+                        <button
+                          onClick={() =>
+                            removeFromCart(item.id)
+                          }
+                          className="text-red-500"
+                        >
+                          <Trash2 className="h-5 w-5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* ITEM TOTAL */}
+                    <div className="hidden items-center font-semibold sm:flex">
+                      ₦
+                      {(
+                        Number(item.price) *
+                        item.qty
+                      ).toLocaleString()}
+                    </div>
+                  </div>
+                ))}
               </div>
-            </Card>
+            </div>
           ))}
         </div>
 

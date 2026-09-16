@@ -21,6 +21,7 @@ interface CartStore {
   getCartSubtotal: () => number;
   getShippingFee: () => number;
   getCartTotal: () => number;
+  getCartGroupedByVendor: () => Record<string, CartItem[]>;
 }
 
 // helper
@@ -30,7 +31,12 @@ const calculateTotals = (cart: CartItem[]) => {
     0
   );
 
-  const shippingFee = subtotal >= 50000 ? 0 : 2500;
+  // Group by vendorId to calculate dynamic shipping
+  const uniqueVendors = new Set(cart.map((item) => item.vendorId));
+  const numberOfVendors = uniqueVendors.size;
+  
+  // Base fee per vendor is 2500 (Dynamic calculation could easily scale with distance later)
+  const shippingFee = numberOfVendors * 2500;
 
   return {
     subtotal,
@@ -104,6 +110,18 @@ export const useCartStore = create<CartStore>()(
       getCartTotal: () => {
         const { total } = calculateTotals(get().cart);
         return total;
+      },
+
+      getCartGroupedByVendor: () => {
+        const grouped: Record<string, CartItem[]> = {};
+        get().cart.forEach((item) => {
+          const vId = item.vendorId || "Unknown Vendor";
+          if (!grouped[vId]) {
+            grouped[vId] = [];
+          }
+          grouped[vId].push(item);
+        });
+        return grouped;
       },
     }),
     {
