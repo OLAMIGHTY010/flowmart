@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { db } from '../../db';
-import { users, orders, vendorProfiles, vendorKyc, auditLogs, welfareEvents } from '../../db/schema';
+import { users, orders, vendorProfiles, vendorKyc, auditLogs, promotionalCampaigns } from '../../db/schema';
 import { sql, eq } from 'drizzle-orm';
 
 export const getPlatformHealth = async (req: Request, res: Response) => {
@@ -63,8 +63,8 @@ export const getDashboardStats = async (req: Request, res: Response) => {
 
     // Active Events count
     const activeEventsResult = await db.select({ count: sql<number>`count(*)` })
-      .from(welfareEvents)
-      .where(eq(welfareEvents.status, 'active'));
+      .from(promotionalCampaigns)
+      .where(eq(promotionalCampaigns.status, 'active'));
     const activeEvents = Number(activeEventsResult[0]?.count) || 0;
 
     // Deliveries today (orders with status delivered or out_for_delivery today)

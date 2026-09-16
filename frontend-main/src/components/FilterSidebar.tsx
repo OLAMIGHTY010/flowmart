@@ -15,6 +15,14 @@ interface FilterSidebarProps {
   categories: string[];
   showFilters: boolean;
   setShowFilters: (value: boolean) => void;
+  minPrice: string;
+  setMinPrice: React.Dispatch<React.SetStateAction<string>>;
+  maxPrice: string;
+  setMaxPrice: React.Dispatch<React.SetStateAction<string>>;
+  conditions: string[];
+  setConditions: React.Dispatch<React.SetStateAction<string[]>>;
+  isNegotiableFilter: boolean;
+  setIsNegotiableFilter: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const sortOptions: { key: SortKey; label: string }[] = [
@@ -26,6 +34,12 @@ const sortOptions: { key: SortKey; label: string }[] = [
 
 const quickFilterOptions = ["In Stock", "Top Rated", "New Arrivals"];
 const offerOptions = ["Free Delivery", "Discount Deals", "Bundle Offers"];
+const conditionOptions = [
+  { id: 'new', label: 'Brand New' },
+  { id: 'used_like_new', label: 'Used - Like New' },
+  { id: 'used_good', label: 'Used - Good' },
+  { id: 'used_fair', label: 'Used - Fair' }
+];
 
 export default function FilterSidebar({
   sort,
@@ -39,6 +53,14 @@ export default function FilterSidebar({
   categories,
   showFilters,
   setShowFilters,
+  minPrice,
+  setMinPrice,
+  maxPrice,
+  setMaxPrice,
+  conditions,
+  setConditions,
+  isNegotiableFilter,
+  setIsNegotiableFilter,
 }: FilterSidebarProps) {
   const [categorySearch, setCategorySearch] = useState("");
 
@@ -167,6 +189,88 @@ export default function FilterSidebar({
               </label>
             ))}
           </div>
+        </div>
+
+        <hr className="border-border mb-5" />
+
+        {/* Price Range */}
+        <div className="mb-6">
+          <h4 className="text-sm font-semibold text-foreground mb-3">Price Range (₦)</h4>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              placeholder="Min"
+              value={minPrice}
+              onChange={(e) => setMinPrice(e.target.value)}
+              className="w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm outline-none focus:border-primary"
+            />
+            <span className="text-gray-500">-</span>
+            <input
+              type="number"
+              placeholder="Max"
+              value={maxPrice}
+              onChange={(e) => setMaxPrice(e.target.value)}
+              className="w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm outline-none focus:border-primary"
+            />
+          </div>
+        </div>
+
+        <hr className="border-border mb-5" />
+
+        {/* Condition */}
+        <div className="mb-6">
+          <h4 className="text-sm font-semibold text-foreground mb-3">Condition</h4>
+          <div className="flex flex-col gap-2.5">
+            {conditionOptions.map((opt) => (
+              <label
+                key={opt.id}
+                onClick={() => setConditions(prev => prev.includes(opt.id) ? prev.filter(c => c !== opt.id) : [...prev, opt.id])}
+                className="flex items-center gap-2.5 cursor-pointer group"
+              >
+                <span
+                  className={`flex h-[18px] w-[18px] items-center justify-center rounded border-2 transition-colors ${conditions.includes(opt.id)
+                    ? "border-primary bg-primary"
+                    : "border-gray-300 group-hover:border-primary/50"
+                    }`}
+                >
+                  {conditions.includes(opt.id) && (
+                    <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </span>
+                <span className="text-sm text-gray-700 group-hover:text-foreground transition-colors">
+                  {opt.label}
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <hr className="border-border mb-5" />
+
+        {/* Negotiable */}
+        <div className="mb-6">
+          <label
+            onClick={() => setIsNegotiableFilter(!isNegotiableFilter)}
+            className="flex items-center gap-2.5 cursor-pointer group"
+          >
+            <span
+              className={`flex h-[18px] w-[18px] items-center justify-center rounded border-2 transition-colors ${isNegotiableFilter
+                ? "border-primary bg-primary"
+                : "border-gray-300 group-hover:border-primary/50"
+                }`}
+            >
+              {isNegotiableFilter && (
+                <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </span>
+            <span className="text-sm font-semibold text-gray-700 group-hover:text-foreground transition-colors">
+              Negotiable Price Only
+            </span>
+          </label>
         </div>
 
         <hr className="border-border mb-5" />

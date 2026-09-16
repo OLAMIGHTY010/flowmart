@@ -17,6 +17,14 @@ interface FilterContext {
   setQuickFilters: React.Dispatch<React.SetStateAction<string[]>>;
   offers: string[];
   setOffers: React.Dispatch<React.SetStateAction<string[]>>;
+  minPrice: string;
+  setMinPrice: React.Dispatch<React.SetStateAction<string>>;
+  maxPrice: string;
+  setMaxPrice: React.Dispatch<React.SetStateAction<string>>;
+  conditions: string[];
+  setConditions: React.Dispatch<React.SetStateAction<string[]>>;
+  isNegotiableFilter: boolean;
+  setIsNegotiableFilter: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export default function Homepage() {
@@ -34,6 +42,14 @@ export default function Homepage() {
     setSelectedTab,
     setQuickFilters,
     setOffers,
+    minPrice,
+    maxPrice,
+    conditions,
+    isNegotiableFilter,
+    setMinPrice,
+    setMaxPrice,
+    setConditions,
+    setIsNegotiableFilter,
   } = useOutletContext<FilterContext>();
 
   const addToCart = useCartStore(
@@ -134,6 +150,28 @@ export default function Homepage() {
         if (!isCombo) {
           return false;
         }
+      }
+    }
+
+    // 6. Price Range
+    if (minPrice) {
+      if (product.price < Number(minPrice)) return false;
+    }
+    if (maxPrice) {
+      if (product.price > Number(maxPrice)) return false;
+    }
+
+    // 7. Condition
+    if (conditions.length > 0) {
+      if (!product.condition || !conditions.includes(product.condition)) {
+        return false;
+      }
+    }
+
+    // 8. Negotiable
+    if (isNegotiableFilter) {
+      if (!product.isNegotiable) {
+        return false;
       }
     }
 

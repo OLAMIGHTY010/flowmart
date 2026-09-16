@@ -44,8 +44,14 @@ export const processBillPayment = async (req: AuthenticatedRequest, res: Respons
     }
 
     // 1. Check user wallet balance
-    const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
-    const currentBalance = Number(user.walletBalance);
+    const { wallets } = await import('../../db/schema');
+    const [wallet] = await db.select().from(wallets).where(eq(wallets.userId, userId)).limit(1);
+    
+    if (!wallet) {
+      return res.status(400).json({ success: false, message: 'Wallet not found' });
+    }
+    
+    const currentBalance = Number(wallet.balance);
 
     if (currentBalance < amount) {
       return res.status(400).json({ success: false, message: 'Insufficient wallet balance' });
@@ -64,9 +70,9 @@ export const processBillPayment = async (req: AuthenticatedRequest, res: Respons
     });
 
     // 3. Deduct from wallet if successful
-    await db.update(users)
-      .set({ walletBalance: sql`${users.walletBalance} - ${amount}` })
-      .where(eq(users.id, userId));
+    await db.update(wallets)
+      .set({ balance: sql`${wallets.balance} - ${amount}` })
+      .where(eq(wallets.id, wallet.id));
 
     // Optional: Log the transaction in a transactions table if it existed
 

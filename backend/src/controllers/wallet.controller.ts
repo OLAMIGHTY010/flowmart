@@ -40,3 +40,32 @@ export const getWalletTransactions = async (req: AuthenticatedRequest, res: Resp
     return res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 };
+
+export const fundWallet = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { amount, gateway } = req.body;
+    const userId = req.user?.id;
+    const email = req.user?.email || "user@flowmart.com";
+
+    if (!amount || amount < 100) {
+      return res.status(400).json({ success: false, message: "Minimum funding amount is 100" });
+    }
+
+    const txRef = `FUND-${userId}-${Date.now()}`;
+
+    let paymentUrl = "";
+    if (gateway === "paystack") {
+       // Import dynamic to avoid circular dependencies if any
+       const { initializeTransaction } = await import('../services/paystack.service');
+       const initData = await initializeTransaction(email, amount, txRef);
+       paymentUrl = initData.authorization_url;
+    } else {
+       return res.status(400).json({ success: false, message: "Unsupported gateway" });
+    }
+
+    return res.status(200).json({ success: true, paymentUrl, reference: txRef });
+  } catch (error: any) {
+    console.error("Fund Wallet Error:", error);
+    return res.status(500).json({ success: false, message: error.message || "Failed to initialize payment" });
+  }
+};

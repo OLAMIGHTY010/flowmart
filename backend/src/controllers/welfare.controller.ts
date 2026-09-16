@@ -38,7 +38,7 @@ export const allocatePromo = async (req: AuthenticatedRequest, res: Response) =>
     }).returning();
 
     const [event] = await db.select().from(promotionalCampaigns).where(eq(promotionalCampaigns.id, eventId)).limit(1);
-    const [coordinator] = await db.select().from(users).where(eq(users.role, 'zone_coordinator')).limit(1);
+    const [coordinator] = await db.select().from(users).where(eq(users.role, 'regional_coordinator')).limit(1);
 
     if (coordinator && event) {
       emailService.sendCampaignAllocationAlert(coordinator.email, {
@@ -73,7 +73,7 @@ export const bulkAllocatePromo = async (req: AuthenticatedRequest, res: Response
 
     const insertedAllocations = await db.insert(campaignAllocations).values(valuesToInsert).returning();
     const [event] = await db.select().from(promotionalCampaigns).where(eq(promotionalCampaigns.id, eventId)).limit(1);
-    const [coordinator] = await db.select().from(users).where(eq(users.role, 'zone_coordinator')).limit(1);
+    const [coordinator] = await db.select().from(users).where(eq(users.role, 'regional_coordinator')).limit(1);
 
     if (coordinator && event) {
       const totalBulkItems = valuesToInsert.reduce((sum, a) => sum + a.totalItems, 0);

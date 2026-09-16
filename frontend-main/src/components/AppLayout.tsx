@@ -36,12 +36,13 @@ const AppLayout = () => {
   const [quickFilters, setQuickFilters] = useState<
     string[]
   >([]);
-  const [offers, setOffers] = useState<string[]>(
-    []
-  );
+  const [offers, setOffers] = useState<string[]>([]);
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [conditions, setConditions] = useState<string[]>([]);
+  const [isNegotiableFilter, setIsNegotiableFilter] = useState(false);
 
-  const [showFooter, setShowFooter] =
-    useState(true);
+  const [showFooter, setShowFooter] = useState(true);
 
   const scrollContainerRef =
     useRef<HTMLDivElement>(null);
@@ -159,6 +160,14 @@ const AppLayout = () => {
             categories={categories}
             showFilters={showFilters}
             setShowFilters={setShowFilters}
+            minPrice={minPrice}
+            setMinPrice={setMinPrice}
+            maxPrice={maxPrice}
+            setMaxPrice={setMaxPrice}
+            conditions={conditions}
+            setConditions={setConditions}
+            isNegotiableFilter={isNegotiableFilter}
+            setIsNegotiableFilter={setIsNegotiableFilter}
           />
         )}
 
@@ -187,6 +196,14 @@ const AppLayout = () => {
                 setQuickFilters,
                 offers,
                 setOffers,
+                minPrice,
+                setMinPrice,
+                maxPrice,
+                setMaxPrice,
+                conditions,
+                setConditions,
+                isNegotiableFilter,
+                setIsNegotiableFilter,
               }}
             />
           </div>
