@@ -91,4 +91,4 @@ function RiderButton({
   );
 }
 
-export { Button, buttonVariants, RiderButton }
+export { Button, buttonVariants, RiderButton, RiderButton as VendorButton }

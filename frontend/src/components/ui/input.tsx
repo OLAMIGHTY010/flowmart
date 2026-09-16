@@ -106,4 +106,4 @@ function VendorInput({
   );
 }
 
-export { Input, VendorInput };
+export { Input, VendorInput, VendorInput as UserInput };
