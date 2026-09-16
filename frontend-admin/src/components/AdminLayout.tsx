@@ -17,7 +17,8 @@ import {
   PlusCircle,
   Banknote,
   Wallet,
-  MessageSquare
+  MessageSquare,
+  ShieldAlert
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import logo from '@/assets/flowmart-logo.png';
@@ -61,6 +62,7 @@ export default function AdminLayout() {
         { path: '/riders', label: 'Riders (Live)', icon: Car },
         { path: '/analytics', label: 'Platform Analytics', icon: BarChart3 },
         { path: '/logistics-pricing', label: 'Delivery Fees', icon: Truck },
+        { path: '/disputes', label: 'Escrow Disputes', icon: ShieldAlert },
         { path: '/support', label: 'Support Queue', icon: MessageSquare },
         { path: '/audit-logs', label: 'Audit Log', icon: FileText },
         { path: '/settings', label: 'Settings', icon: Settings },

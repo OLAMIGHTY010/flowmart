@@ -44,10 +44,10 @@ const calculateVendorNetEarnings = async (txOrDb: any, orderId: string, vendorId
     return subtotal - flowmartVendorShare;
 };
 
-// 1. Place a New Order (Attendees)
+// 1. Place a New Order (customers)
 export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
 	try {
-		const attendeeId = req.user?.id;
+		const customerId = req.user?.id;
 		let { items, productId, quantity, deliveryZone, zone, payment_method } = req.body;
 		const finalZone = deliveryZone || zone;
 
@@ -83,7 +83,7 @@ export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
 
 				const [newOrder] = await tx.insert(orders).values({
 					orderRef, 
-                    attendeeId: attendeeId!, 
+                    customerId: customerId!, 
                     vendorId, 
                     deliveryZone: finalZone,
 					totalAmount: "0", 
@@ -147,10 +147,10 @@ export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
 					finalDeliveryFee: deliveryCalc.finalDeliveryFee.toString()
 				});
 
-				const [attendee] = await tx.select().from(users).where(eq(users.id, attendeeId!)).limit(1);
-				if (attendee) {
-					emailService.sendOrderReceiptEmail(attendee.email, {
-						fullName: attendee.fullName, orderId: orderRef, totalAmount: totalAmountNum.toString(), deliveryPin,
+				const [customer] = await tx.select().from(users).where(eq(users.id, customerId!)).limit(1);
+				if (customer) {
+					emailService.sendOrderReceiptEmail(customer.email, {
+						fullName: customer.fullName, orderId: orderRef, totalAmount: totalAmountNum.toString(), deliveryPin,
 						items: vItems.map(i => ({ name: i.product.name, quantity: i.quantity, price: i.product.price }))
 					}).catch(console.error);
 				}
@@ -210,7 +210,7 @@ const enrichOrderWithItems = async (order: any) => {
 			unitPrice: orderItems.unitPrice,
 			productName: products.name,
 			productImage: products.images,
-			productCategory: products.category,
+			productCategory: products.categoryId,
 		})
 		.from(orderItems)
 		.leftJoin(products, eq(orderItems.productId, products.id))
@@ -230,7 +230,7 @@ const enrichOrderWithItems = async (order: any) => {
 	};
 };
 
-// 2. View Orders (For both Attendees and Vendors)
+// 2. View Orders (For both customers and Vendors)
 export const getOrders = async (req: AuthenticatedRequest, res: Response) => {
 	try {
 		const userId = req.user?.id;
@@ -250,11 +250,11 @@ export const getOrders = async (req: AuthenticatedRequest, res: Response) => {
 				.orderBy(desc(orders.createdAt))
                 .limit(limit)
                 .offset(offset);
-		} else if (role === "attendee") {
+		} else if (role === "customer") {
 			userOrders = await db
 				.select()
 				.from(orders)
-				.where(eq(orders.attendeeId, userId!))
+				.where(eq(orders.customerId, userId!))
 				.orderBy(desc(orders.createdAt))
                 .limit(limit)
                 .offset(offset);
@@ -289,7 +289,7 @@ export const getOrderById = async (req: AuthenticatedRequest, res: Response) => 
 			return res.status(404).json({ success: false, message: "Order not found" });
 		}
 
-		if (order.attendeeId !== userId && order.vendorId !== userId) {
+		if (order.customerId !== userId && order.vendorId !== userId) {
 			return res.status(403).json({ success: false, message: "Unauthorized" });
 		}
 
@@ -340,7 +340,7 @@ export const updateOrderStatus = async (req: AuthenticatedRequest, res: Response
 			updatedAt: new Date(),
 		}).where(eq(orders.id, orderId as string)).returning();
 
-		sendInAppNotification(existingOrder.attendeeId, "order:statusUpdate", {
+		sendInAppNotification(existingOrder.customerId, "order:statusUpdate", {
 			orderId,
 			status,
 		});
@@ -356,11 +356,11 @@ export const updateOrderStatus = async (req: AuthenticatedRequest, res: Response
 	}
 };
 
-// 4. Attendee confirms order received (ESCROW GATEWAY)
+// 4. customer confirms order received (ESCROW GATEWAY)
 export const confirmOrderReceived = async (req: AuthenticatedRequest, res: Response) => {
 	try {
 		const orderId = req.params.id as string;
-		const attendeeId = req.user?.id;
+		const customerId = req.user?.id;
 
 		const [existingOrder] = await db
 			.select()
@@ -368,7 +368,7 @@ export const confirmOrderReceived = async (req: AuthenticatedRequest, res: Respo
 			.where(
 				and(
 					eq(orders.id, orderId),
-					eq(orders.attendeeId, attendeeId!)
+					eq(orders.customerId, customerId!)
 				)
 			)
 			.limit(1);
@@ -379,7 +379,7 @@ export const confirmOrderReceived = async (req: AuthenticatedRequest, res: Respo
 
 		// ✨ STATE MACHINE ESCROW LOCK: 
         // 1. The rider must have confirmed drop off (status === 'delivered')
-        // 2. The attendee hitting this endpoint provides the second key.
+        // 2. The customer hitting this endpoint provides the second key.
 		if (existingOrder.status !== "delivered") {
 			return res.status(400).json({ success: false, message: "Action required: The rider must confirm drop-off before you can release escrow." });
 		}
@@ -502,7 +502,7 @@ export const paystackWebhook = async (req: Request, res: Response) => {
             await creditPendingBalance(order.vendorId, vendorShare);
 
             // Real-time Notification
-            sendInAppNotification(order.attendeeId, "order:statusUpdate", {
+            sendInAppNotification(order.customerId, "order:statusUpdate", {
                 orderId: orderRef,
                 status: "confirmed",
             });

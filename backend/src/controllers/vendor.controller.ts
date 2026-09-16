@@ -94,7 +94,7 @@ export const submitKYC = async (req: AuthenticatedRequest, res: Response) => {
       gender,
       businessName,
       cacNo,
-      campCertificateId,
+      businessPermitId,
       bankName,
       accountNumber,
       accountName,
@@ -103,7 +103,7 @@ export const submitKYC = async (req: AuthenticatedRequest, res: Response) => {
       guarantorPhone,
       guarantorRelationship,
       governmentIdFile,
-      campCertificateFile,
+      businessPermitFile,
       guarantorIdFile,
     } = req.body;
 
@@ -166,7 +166,7 @@ export const submitKYC = async (req: AuthenticatedRequest, res: Response) => {
       vendorId,
       businessName,
       cacNo: cacNo || null,
-      campCertificateId: campCertificateId || null,
+      businessPermitId: businessPermitId || null,
       bankName,
       accountNumber,
       accountName,
@@ -175,7 +175,7 @@ export const submitKYC = async (req: AuthenticatedRequest, res: Response) => {
       guarantorPhone,
       guarantorRelationship,
       governmentIdFile: governmentIdFile || null,
-      campCertificateFile: campCertificateFile || null,
+      businessPermitFile: businessPermitFile || null,
       guarantorIdFile: guarantorIdFile || null,
       status: "under_review", // Change to under review on submission
       updatedAt: new Date(),

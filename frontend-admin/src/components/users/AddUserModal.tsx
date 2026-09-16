@@ -17,9 +17,8 @@ export default function AddUserModal({ isOpen, onClose }: AddUserModalProps) {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('admin'); // Default role
   
-  // Staff fields
-  const [church, setChurch] = useState('');
-  const [zonal, setZonal] = useState('');
+  const [region, setRegion] = useState('');
+  const [userState, setUserState] = useState('');
   const [department, setDepartment] = useState('');
   const [professionalCertification, setProfessionalCertification] = useState('');
   const [grade, setGrade] = useState('');
@@ -41,7 +40,7 @@ export default function AddUserModal({ isOpen, onClose }: AddUserModalProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    mutation.mutate({ fullName, email, role, phone, dateOfBirth, gender, password, church, zonal, department, professionalCertification, grade });
+    mutation.mutate({ fullName, email, role, phone, dateOfBirth, gender, password, region, state: userState, department, professionalCertification, grade });
   };
 
   const handleClose = () => {
@@ -52,8 +51,8 @@ export default function AddUserModal({ isOpen, onClose }: AddUserModalProps) {
     setGender('');
     setPassword('');
     setRole('admin');
-    setChurch('');
-    setZonal('');
+    setRegion('');
+    setUserState('');
     setDepartment('');
     setProfessionalCertification('');
     setGrade('');
@@ -198,8 +197,8 @@ export default function AddUserModal({ isOpen, onClose }: AddUserModalProps) {
                     >
                       <option value="super_admin">Super Admin</option>
                       <option value="admin">Admin</option>
-                      <option value="zone_coordinator">Zonal Coordinator</option>
-                      <option value="camp_logistics_coordinator">Camp Logistics Coordinator</option>
+                      <option value="area_manager">Area Manager</option>
+                      <option value="regional_coordinator">Regional Coordinator</option>
                       <option value="finance">Finance</option>
                       <option value="auditor">Auditor</option>
                       <option value="customer_service">Customer Service</option>
@@ -216,23 +215,23 @@ export default function AddUserModal({ isOpen, onClose }: AddUserModalProps) {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Church / Parish</label>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Region</label>
                       <input 
                         type="text" 
-                        value={church}
-                        onChange={e => setChurch(e.target.value)}
+                        value={region}
+                        onChange={e => setRegion(e.target.value)}
                         className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#16a34a] focus:ring-1 focus:ring-[#16a34a]"
-                        placeholder="e.g. RCCG Main"
+                        placeholder="e.g. South West"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Zonal</label>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">State</label>
                       <input 
                         type="text" 
-                        value={zonal}
-                        onChange={e => setZonal(e.target.value)}
+                        value={userState}
+                        onChange={e => setUserState(e.target.value)}
                         className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#16a34a] focus:ring-1 focus:ring-[#16a34a]"
-                        placeholder="e.g. Zone 4"
+                        placeholder="e.g. Lagos"
                       />
                     </div>
                   </div>

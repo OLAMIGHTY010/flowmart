@@ -17,8 +17,8 @@ export default function ProfileSetup() {
     fullName: user?.fullName || '',
     phone: user?.phone || '',
     gender: user?.gender || '',
-    church: '',
-    zonal: '',
+    region: '',
+    state: '',
     department: '',
     professionalCertification: '',
     grade: ''
@@ -106,21 +106,21 @@ export default function ProfileSetup() {
             </div>
 
             <UserInput 
-              label="Church" 
-              name="church" 
-              value={formData.church} 
+              label="Region" 
+              name="region" 
+              value={formData.region} 
               onChange={handleChange} 
               required
-              placeholder="e.g. RCCG Main Parish"
+              placeholder="e.g. South West"
             />
 
             <UserInput 
-              label="Zonal" 
-              name="zonal" 
-              value={formData.zonal} 
+              label="State" 
+              name="state" 
+              value={formData.state} 
               onChange={handleChange} 
               required
-              placeholder="e.g. Zone 4"
+              placeholder="e.g. Lagos"
             />
 
             <UserInput 

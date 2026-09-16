@@ -7,7 +7,7 @@ import { AuthenticatedRequest } from '../middleware/auth.middleware';
 export const updateProfile = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user!.id;
-    const { fullName, phone, avatar, dateOfBirth, gender, church, zonal, department, professionalCertification, grade } = req.body;
+    const { fullName, phone, avatar, dateOfBirth, gender, region, state, department, professionalCertification, grade } = req.body;
 
     // Safely format the date as a YYYY-MM-DD string if it exists
     let formattedDob: string | undefined = undefined;
@@ -27,13 +27,13 @@ export const updateProfile = async (req: AuthenticatedRequest, res: Response) =>
     }).where(eq(users.id, userId)).returning();
 
     // Upsert Staff Profile Fields if they exist
-    if (church || zonal || department || professionalCertification || grade) {
+    if (region || state || department || professionalCertification || grade) {
       const existingProfile = await db.select().from(staffProfiles).where(eq(staffProfiles.userId, userId)).limit(1);
       
       if (existingProfile.length > 0) {
         await db.update(staffProfiles).set({
-          church: church !== undefined ? church : undefined,
-          zonal: zonal !== undefined ? zonal : undefined,
+          region: region !== undefined ? region : undefined,
+          state: state !== undefined ? state : undefined,
           department: department !== undefined ? department : undefined,
           professionalCertification: professionalCertification !== undefined ? professionalCertification : undefined,
           grade: grade !== undefined ? grade : undefined,
@@ -42,8 +42,8 @@ export const updateProfile = async (req: AuthenticatedRequest, res: Response) =>
       } else {
         await db.insert(staffProfiles).values({
           userId,
-          church,
-          zonal,
+          region,
+          state,
           department,
           professionalCertification,
           grade

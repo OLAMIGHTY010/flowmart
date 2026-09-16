@@ -11,7 +11,7 @@ const buildDynamicLogsQuery = (search: string, filter: string, dateRange: string
       UNION ALL
       SELECT id::text, 'AUT-' || substring(id::text from 1 for 4), id::text, full_name, 'Registered', 'Auth', 'New user registered: ' || full_name, 'N/A', 'Success', '{}'::jsonb, created_at FROM users
       UNION ALL
-      SELECT id::text, 'ORD-' || order_ref, attendee_id::text, 'System', status, 'Delivery', 'Order ' || order_ref || ' status changed to ' || status, 'N/A', 'Success', '{}'::jsonb, updated_at FROM orders
+      SELECT id::text, 'ORD-' || order_ref, customer_id::text, 'System', status, 'Delivery', 'Order ' || order_ref || ' status changed to ' || status, 'N/A', 'Success', '{}'::jsonb, updated_at FROM orders
       UNION ALL
       SELECT id::text, 'VEN-' || substring(id::text from 1 for 4), vendor_id::text, business_name, status, 'Vendor', 'Vendor KYC status: ' || status, 'N/A', 'Success', '{}'::jsonb, updated_at FROM vendor_kyc
       UNION ALL

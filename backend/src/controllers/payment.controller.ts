@@ -61,8 +61,8 @@ export const paystackWebhook = async (req: Request, res: Response) => {
 
             await creditPendingBalance(order.vendorId, vendorShare);
 
-            // Real-time Notification to the Attendee's Tracking Screen
-            sendInAppNotification(order.attendeeId, "order:statusUpdate", {
+            // Real-time Notification to the Customer's Tracking Screen
+            sendInAppNotification(order.customerId, "order:statusUpdate", {
                 orderId: orderRef,
                 status: "confirmed",
             });
@@ -126,7 +126,7 @@ export const verifyPayment = async (req: AuthenticatedRequest, res: Response) =>
         const vendorShare = amountInNaira * 0.95; 
         await creditPendingBalance(targetOrder.vendorId, vendorShare);
 
-        sendInAppNotification(targetOrder.attendeeId, "order:statusUpdate", { orderId: targetOrder.orderRef, status: "confirmed" });
+        sendInAppNotification(targetOrder.customerId, "order:statusUpdate", { orderId: targetOrder.orderRef, status: "confirmed" });
 
         return res.status(200).json({ success: true, message: 'Payment verified securely', order: targetOrder });
     } catch (err) {

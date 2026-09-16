@@ -141,14 +141,14 @@ export const createUser = async (req: Request, res: Response) => {
       return res.status(403).json({ success: false, message: "Forbidden: Only Super Admins can create new user accounts." });
     }
 
-    const { fullName, email, role, phone, dateOfBirth, gender, password, church, zonal, department, professionalCertification, grade } = req.body;
+    const { fullName, email, role, phone, dateOfBirth, gender, password, region, state, department, professionalCertification, grade } = req.body;
     
     if (!fullName || !email || !role) {
       return res.status(400).json({ success: false, message: "Missing required fields" });
     }
 
     // Only allow specific administrative roles to be created via this endpoint
-    const allowedRoles = ['admin', 'super_admin', 'zone_coordinator', 'camp_logistics_coordinator', 'finance', 'auditor', 'customer_service'];
+    const allowedRoles = ['admin', 'super_admin', 'area_manager', 'regional_coordinator', 'finance', 'auditor', 'customer_service'];
     if (!allowedRoles.includes(role)) {
       return res.status(400).json({ success: false, message: "Invalid role selected" });
     }
@@ -178,8 +178,8 @@ export const createUser = async (req: Request, res: Response) => {
     // Insert staff profile
     await db.insert(staffProfiles).values({
       userId: newUser.id,
-      church: church || null,
-      zonal: zonal || null,
+      region: region || null,
+      state: state || null,
       department: department || null,
       professionalCertification: professionalCertification || null,
       grade: grade || null

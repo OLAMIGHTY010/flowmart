@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { 
   register, login, verifyOtp, resendOtp, getMe, logout,
-  forgotPassword, resetPassword, forceChangePassword, assignRole 
+  forgotPassword, resetPassword, forceChangePassword, assignRole, syncSession 
 } from '../controllers/auth.controller';
 import { authenticateJWT, authorizeRoles } from '../middleware/auth.middleware';
 
@@ -10,6 +10,7 @@ const router = Router();
 router.post('/register', register);
 router.post('/login', login);
 router.post('/logout', authenticateJWT, logout);
+router.post('/sync', authenticateJWT, syncSession);
 router.post('/verify-otp', verifyOtp);
 router.post('/resend-otp', resendOtp);
 router.post('/forgot-password', forgotPassword);

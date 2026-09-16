@@ -6,7 +6,7 @@ export interface AuthenticatedRequest extends Request {
   user?: {
     id: string;
     email: string;
-    role: 'super_admin' | 'admin' | 'camp_logistics_coordinator' | 'zone_coordinator' | 'vendor' | 'dispatch_rider' | 'attendee' | 'finance' | 'auditor';
+    role: 'super_admin' | 'admin' | 'regional_coordinator' | 'area_manager' | 'vendor' | 'dispatch_rider' | 'customer' | 'finance' | 'auditor';
   };
 }
 
@@ -21,8 +21,15 @@ export const authenticateJWT = (req: AuthenticatedRequest, res: Response, next: 
   const token = authHeader.split(' ')[1];
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as AuthenticatedRequest['user'];
-    req.user = decoded;
+    const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
+    
+    // Support both custom JWT and Supabase JWT
+    req.user = {
+      id: decoded.sub || decoded.id,
+      email: decoded.email,
+      role: decoded.user_metadata?.role || decoded.app_metadata?.role || decoded.role || 'attendee',
+    };
+    
     next();
   } catch (error) {
     return res.status(403).json({ success: false, message: 'Invalid or expired token' });

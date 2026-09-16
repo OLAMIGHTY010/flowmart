@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { db } from '../../db';
-import { orders, users, vendorKyc, welfareEvents, welfareAllocations, welfareInventory } from '../../db/schema';
+import { orders, users, vendorKyc, promotionalCampaigns, campaignAllocations, featuredInventory } from '../../db/schema';
 import { sql, eq, desc, and, ne, gt } from 'drizzle-orm';
 import { parse } from 'json2csv';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
@@ -121,13 +121,13 @@ export const exportAnalytics = async (req: Request, res: Response) => {
 export const getCoordinatorOverview = async (req: Request, res: Response) => {
   try {
     const allocations = await db.select({
-      totalDistributed: sql<number>`sum(${welfareAllocations.distributedItems})`,
-      totalAllocated: sql<number>`sum(${welfareAllocations.totalItems})`,
-      deliveredZones: sql<number>`count(case when ${welfareAllocations.distributedItems} > 0 then 1 end)`,
-      pendingZones: sql<number>`count(case when ${welfareAllocations.distributedItems} = 0 then 1 end)`,
+      totalDistributed: sql<number>`sum(${campaignAllocations.distributedItems})`,
+      totalAllocated: sql<number>`sum(${campaignAllocations.totalItems})`,
+      deliveredZones: sql<number>`count(case when ${campaignAllocations.distributedItems} > 0 then 1 end)`,
+      pendingZones: sql<number>`count(case when ${campaignAllocations.distributedItems} = 0 then 1 end)`,
       totalZones: sql<number>`count(*)`,
-      criticalAlerts: sql<number>`count(case when ${welfareAllocations.shortageReported} > 0 then 1 end)`,
-    }).from(welfareAllocations);
+      criticalAlerts: sql<number>`count(case when ${campaignAllocations.shortageReported} > 0 then 1 end)`,
+    }).from(campaignAllocations);
 
     const activeRidersResult = await db.select({ count: sql<number>`count(*)` })
       .from(users)
@@ -168,11 +168,11 @@ export const getCoordinatorOverview = async (req: Request, res: Response) => {
 
 export const getCoordinatorDeliveryTrends = async (req: Request, res: Response) => {
   try {
-    // Generate dynamic trends based on welfareAllocations stats since we don't have a time-series table yet
+    // Generate dynamic trends based on campaignAllocations stats since we don't have a time-series table yet
     const stats = await db.select({
-      totalAllocated: sql<number>`sum(${welfareAllocations.totalItems})`,
-      totalDelivered: sql<number>`sum(${welfareAllocations.distributedItems})`
-    }).from(welfareAllocations);
+      totalAllocated: sql<number>`sum(${campaignAllocations.totalItems})`,
+      totalDelivered: sql<number>`sum(${campaignAllocations.distributedItems})`
+    }).from(campaignAllocations);
     
     const target = Number(stats[0]?.totalAllocated) || 250000;
     const delivered = Number(stats[0]?.totalDelivered) || 120000;
@@ -196,13 +196,13 @@ export const getCoordinatorDeliveryTrends = async (req: Request, res: Response) 
 export const getZonePerformance = async (req: Request, res: Response) => {
   try {
     const allocations = await db.select({
-      zone: welfareAllocations.zoneId,
-      allocated: sql<number>`sum(${welfareAllocations.totalItems})`,
-      delivered: sql<number>`sum(${welfareAllocations.distributedItems})`,
+      zone: campaignAllocations.zoneId,
+      allocated: sql<number>`sum(${campaignAllocations.totalItems})`,
+      delivered: sql<number>`sum(${campaignAllocations.distributedItems})`,
     })
-    .from(welfareAllocations)
-    .groupBy(welfareAllocations.zoneId)
-    .orderBy(welfareAllocations.zoneId);
+    .from(campaignAllocations)
+    .groupBy(campaignAllocations.zoneId)
+    .orderBy(campaignAllocations.zoneId);
 
     const data = allocations.map(a => ({
       zone: a.zone,
@@ -243,17 +243,17 @@ export const getRiderEfficiencyDist = async (req: Request, res: Response) => {
 export const getEventMetricsSummary = async (req: Request, res: Response) => {
   try {
     const events = await db.select({
-      name: welfareEvents.name,
-      date: welfareEvents.date,
-      status: welfareEvents.status,
-      zones: sql<number>`count(${welfareAllocations.id})`,
-      qrIds: sql<number>`sum(${welfareAllocations.totalItems})`,
-      riders: sql<number>`sum(${welfareAllocations.distributedItems})`
+      name: promotionalCampaigns.name,
+      date: promotionalCampaigns.date,
+      status: promotionalCampaigns.status,
+      zones: sql<number>`count(${campaignAllocations.id})`,
+      qrIds: sql<number>`sum(${campaignAllocations.totalItems})`,
+      riders: sql<number>`sum(${campaignAllocations.distributedItems})`
     })
-    .from(welfareEvents)
-    .leftJoin(welfareAllocations, eq(welfareEvents.id, welfareAllocations.eventId))
-    .groupBy(welfareEvents.id, welfareEvents.name, welfareEvents.date, welfareEvents.status)
-    .orderBy(desc(welfareEvents.date))
+    .from(promotionalCampaigns)
+    .leftJoin(campaignAllocations, eq(promotionalCampaigns.id, campaignAllocations.eventId))
+    .groupBy(promotionalCampaigns.id, promotionalCampaigns.name, promotionalCampaigns.date, promotionalCampaigns.status)
+    .orderBy(desc(promotionalCampaigns.date))
     .limit(5);
 
     const formattedEvents = events.map(e => {
@@ -281,8 +281,8 @@ export const getEventMetricsSummary = async (req: Request, res: Response) => {
 export const getShortageIncidents = async (req: Request, res: Response) => {
   try {
     const allocations = await db.select()
-      .from(welfareAllocations)
-      .orderBy(welfareAllocations.zoneId);
+      .from(campaignAllocations)
+      .orderBy(campaignAllocations.zoneId);
 
     const data = allocations.map(a => {
       const shortage = a.shortageReported || 0;
@@ -313,10 +313,10 @@ export const getShortageIncidents = async (req: Request, res: Response) => {
 
 // --- LIVE TRACKER & CREATE EVENT MOCK ENDPOINTS REPLACED WITH DB ---
 
-export const getWelfareZones = async (req: Request, res: Response) => {
+export const getDeliveryZones = async (req: Request, res: Response) => {
   try {
     // Return distinct zoneIds
-    const zonesQuery = await db.selectDistinct({ zoneId: welfareAllocations.zoneId }).from(welfareAllocations);
+    const zonesQuery = await db.selectDistinct({ zoneId: campaignAllocations.zoneId }).from(campaignAllocations);
     
     // Since there is no dedicated zones table yet, we need to return a default list of platform zones 
     // so the coordinator has options to select from during event creation.
@@ -347,14 +347,14 @@ export const getWelfareZones = async (req: Request, res: Response) => {
   }
 };
 
-export const getWelfareInventory = async (req: Request, res: Response) => {
+export const getPromotionalInventory = async (req: Request, res: Response) => {
   try {
-    const inventoryQuery = await db.select().from(welfareInventory);
+    const inventoryQuery = await db.select().from(featuredInventory);
     
     // Fallback default inventory items if no active database items exist yet
     if (inventoryQuery.length === 0) {
       return res.status(200).json({ success: true, data: [
-        { name: 'Standard Welfare Packs', stock: '250,000', allocated: '150,000', unit: 'packs', status: 'Sufficient' },
+        { name: 'Standard Promotional Packs', stock: '250,000', allocated: '150,000', unit: 'packs', status: 'Sufficient' },
         { name: 'Cooking Oil', stock: '45,000', allocated: '45,000', unit: 'liters', status: 'Shortage Risk' },
         { name: 'Bottled Water', stock: '300,000', allocated: '280,000', unit: 'bottles', status: 'Sufficient' }
       ]});
@@ -379,8 +379,8 @@ export const getWelfareInventory = async (req: Request, res: Response) => {
 export const getLiveZoneGrid = async (req: Request, res: Response) => {
   try {
     const allocations = await db.select()
-      .from(welfareAllocations)
-      .orderBy(welfareAllocations.zoneId);
+      .from(campaignAllocations)
+      .orderBy(campaignAllocations.zoneId);
       
     if (!allocations.length) {
       return res.status(200).json({ success: true, data: [] });
@@ -415,8 +415,8 @@ export const getLiveZoneGrid = async (req: Request, res: Response) => {
 export const getLiveActivityFeed = async (req: Request, res: Response) => {
   try {
     const allocations = await db.select()
-      .from(welfareAllocations)
-      .orderBy(desc(welfareAllocations.updatedAt))
+      .from(campaignAllocations)
+      .orderBy(desc(campaignAllocations.updatedAt))
       .limit(10);
       
     if (!allocations.length) {
@@ -446,8 +446,8 @@ export const getLiveActivityFeed = async (req: Request, res: Response) => {
 export const getShortageAlerts = async (req: Request, res: Response) => {
   try {
     const alerts = await db.select()
-      .from(welfareAllocations)
-      .where(sql`${welfareAllocations.shortageReported} > 0`);
+      .from(campaignAllocations)
+      .where(sql`${campaignAllocations.shortageReported} > 0`);
 
     const data = alerts.map(a => ({
       zone: `Zone ${a.zoneId}`,
@@ -478,25 +478,25 @@ export const getUserDashboardStats = async (req: AuthenticatedRequest, res: Resp
         completed: sql<number>`sum(case when ${orders.status} = 'delivered' then 1 else 0 end)`
       }).from(orders).where(eq(orders.riderId, userId));
 
-      const [welfareStats] = await db.select({
-        pending: sql<number>`sum(case when ${welfareAllocations.status} = 'assigned' then 1 else 0 end)`,
-        completed: sql<number>`sum(case when ${welfareAllocations.status} = 'delivered' then 1 else 0 end)`
-      }).from(welfareAllocations).where(eq(welfareAllocations.riderId, userId));
+      const [promoStats] = await db.select({
+        pending: sql<number>`sum(case when ${campaignAllocations.status} = 'assigned' then 1 else 0 end)`,
+        completed: sql<number>`sum(case when ${campaignAllocations.status} = 'delivered' then 1 else 0 end)`
+      }).from(campaignAllocations).where(eq(campaignAllocations.riderId, userId));
 
-      pending = Number(orderStats?.pending || 0) + Number(welfareStats?.pending || 0);
-      completed = Number(orderStats?.completed || 0) + Number(welfareStats?.completed || 0);
+      pending = Number(orderStats?.pending || 0) + Number(promoStats?.pending || 0);
+      completed = Number(orderStats?.completed || 0) + Number(promoStats?.completed || 0);
       
-    } else if (role === 'zone_coordinator') {
-      const [welfareStats] = await db.select({
-        pending: sql<number>`sum(case when ${welfareAllocations.status} != 'delivered' then 1 else 0 end)`,
-        completed: sql<number>`sum(case when ${welfareAllocations.status} = 'delivered' then 1 else 0 end)`,
-        alerts: sql<number>`sum(case when ${welfareAllocations.shortageReported} > 0 then 1 else 0 end)`
-      }).from(welfareAllocations); 
-      // Note: Assuming zone_coordinator views general zone data or filter by zone table if mapped
+    } else if (role === 'area_manager') {
+      const [promoStats] = await db.select({
+        pending: sql<number>`sum(case when ${campaignAllocations.status} != 'delivered' then 1 else 0 end)`,
+        completed: sql<number>`sum(case when ${campaignAllocations.status} = 'delivered' then 1 else 0 end)`,
+        alerts: sql<number>`sum(case when ${campaignAllocations.shortageReported} > 0 then 1 else 0 end)`
+      }).from(campaignAllocations); 
+      // Note: Assuming area_manager views general zone data or filter by zone table if mapped
 
-      pending = Number(welfareStats?.pending || 0);
-      completed = Number(welfareStats?.completed || 0);
-      alerts = Number(welfareStats?.alerts || 0);
+      pending = Number(promoStats?.pending || 0);
+      completed = Number(promoStats?.completed || 0);
+      alerts = Number(promoStats?.alerts || 0);
     }
 
     return res.status(200).json({ 

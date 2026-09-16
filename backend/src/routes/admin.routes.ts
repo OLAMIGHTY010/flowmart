@@ -33,8 +33,8 @@ import {
   getRiderEfficiencyDist,
   getEventMetricsSummary,
   getShortageIncidents,
-  getWelfareZones,
-  getWelfareInventory,
+  getDeliveryZones,
+  getPromotionalInventory,
   getLiveZoneGrid,
   getLiveActivityFeed,
   getShortageAlerts
@@ -68,7 +68,7 @@ router.post('/vendors/:id/review', reviewVendor);
 router.get('/riders/stats', getRiderStats);
 router.get('/riders', getRidersList);
 router.get('/riders/:id', getRiderDetails);
-router.post('/riders/:id/review', authorizeRoles('camp_logistics_coordinator'), reviewRider);
+router.post('/riders/:id/review', authorizeRoles('regional_coordinator'), reviewRider);
 
 // Audit Logs
 router.use('/audit-logs', authorizeRoles('super_admin', 'admin', 'auditor'));
@@ -84,7 +84,7 @@ router.get('/analytics/zone-performance', getZonePerformance);
 router.get('/analytics/export', exportAnalytics);
 
 // Coordinator Analytics (Zone and Camp Logistics Coordinators)
-router.use('/coordinator-analytics', authorizeRoles('zone_coordinator', 'camp_logistics_coordinator'));
+router.use('/coordinator-analytics', authorizeRoles('area_manager', 'regional_coordinator'));
 router.get('/coordinator-analytics/overview', getCoordinatorOverview);
 router.get('/coordinator-analytics/delivery-trends', getCoordinatorDeliveryTrends);
 router.get('/coordinator-analytics/zone-performance', getZonePerformance);
@@ -92,8 +92,8 @@ router.get('/coordinator-analytics/events-summary', getEventMetricsSummary);
 router.get('/coordinator-analytics/shortage-incidents', getShortageIncidents);
 
 // Live Tracker & Create Event Endpoints
-router.get('/coordinator-analytics/welfare-zones', getWelfareZones);
-router.get('/coordinator-analytics/welfare-inventory', getWelfareInventory);
+router.get('/coordinator-analytics/delivery-zones', getDeliveryZones);
+router.get('/coordinator-analytics/promotional-inventory', getPromotionalInventory);
 router.get('/coordinator-analytics/live-zone-grid', getLiveZoneGrid);
 router.get('/coordinator-analytics/live-activity-feed', getLiveActivityFeed);
 router.get('/coordinator-analytics/shortage-alerts', getShortageAlerts);
