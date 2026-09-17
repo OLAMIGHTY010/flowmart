@@ -1,28 +1,30 @@
 import "./App.css";
+import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 
 // Public unified pages
-import Welcome from "@/pages/Welcome";
-import Auth from "@/pages/Auth";
-import Login from "@/pages/Login";
-import Register from "@/pages/Register";
+const Welcome = lazy(() => import("@/pages/Welcome"));
+const Auth = lazy(() => import("@/pages/Auth"));
+const Login = lazy(() => import("@/pages/Login"));
+const Register = lazy(() => import("@/pages/Register"));
 
 // Customer Pages
-import Homepage from "@/pages/Homepage";
-import AppLayout from "@/components/AppLayout";
-import Checkout from "@/pages/Checkout";
-import Orders from "@/pages/Orders";
-import Messages from "@/pages/Messages";
-import OrderTracking from "@/pages/OrderTracking";
-import VendorProfile from "@/pages/VendorProfile";
-import ProtectedRoute from "@/components/ProtectedRoute";
+const Homepage = lazy(() => import("@/pages/Homepage"));
+import AppLayout from "@/components/AppLayout"; // Keep layout static for fast paint
+const Checkout = lazy(() => import("@/pages/Checkout"));
+const Orders = lazy(() => import("@/pages/Orders"));
+const Messages = lazy(() => import("@/pages/Messages"));
+const OrderTracking = lazy(() => import("@/pages/OrderTracking"));
+const VendorProfile = lazy(() => import("@/pages/VendorProfile"));
+import ProtectedRoute from "@/components/ProtectedRoute"; // Keep guard static
 
 // Vendor Pages
-import VendorDashboard from "@/pages/vendor/Dashboard";
+const VendorDashboard = lazy(() => import("@/pages/vendor/Dashboard"));
 
 // Rider Pages
-import RiderDashboard from "@/pages/rider/Dashboard";
+const RiderDashboard = lazy(() => import("@/pages/rider/Dashboard"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -40,41 +42,47 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <Routes>
-          {/* Public unified entry point */}
-          <Route path="/" element={<Welcome />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+        <Suspense fallback={
+          <div className="flex h-screen w-screen items-center justify-center bg-background">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        }>
+          <Routes>
+            {/* Public unified entry point */}
+            <Route path="/" element={<Welcome />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
 
-          {/* Customer Flow */}
-          <Route path="/vendor-profile/:id" element={<VendorProfile />} />
-          
-          <Route element={<ProtectedRoute />}>
-            <Route element={<AppLayout />}>
-              <Route path="/customer/home" element={<Homepage />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/orders" element={<Orders />} />
-              <Route path="/messages" element={<Messages />} />
-              <Route path="/orders/:id/track" element={<OrderTracking />} />
+            {/* Customer Flow */}
+            <Route path="/vendor-profile/:id" element={<VendorProfile />} />
+            
+            <Route element={<ProtectedRoute />}>
+              <Route element={<AppLayout />}>
+                <Route path="/customer/home" element={<Homepage />} />
+                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/orders" element={<Orders />} />
+                <Route path="/messages" element={<Messages />} />
+                <Route path="/orders/:id/track" element={<OrderTracking />} />
+              </Route>
             </Route>
-          </Route>
 
-          {/* Vendor Flow */}
-          <Route path="/vendor">
-            <Route path="dashboard" element={<VendorDashboard />} />
-            {/* Add more vendor routes here */}
-          </Route>
+            {/* Vendor Flow */}
+            <Route path="/vendor">
+              <Route path="dashboard" element={<VendorDashboard />} />
+              {/* Add more vendor routes here */}
+            </Route>
 
-          {/* Rider Flow */}
-          <Route path="/rider">
-            <Route path="dashboard" element={<RiderDashboard />} />
-            {/* Add more rider routes here */}
-          </Route>
+            {/* Rider Flow */}
+            <Route path="/rider">
+              <Route path="dashboard" element={<RiderDashboard />} />
+              {/* Add more rider routes here */}
+            </Route>
 
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
       </BrowserRouter>
     </QueryClientProvider>
   );
