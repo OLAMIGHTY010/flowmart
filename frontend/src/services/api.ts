@@ -19,7 +19,7 @@ class ApiClient {
   private initializeInterceptors() {
     this.axiosInstance.interceptors.request.use(
       (config: InternalAxiosRequestConfig) => {
-        const token = sessionStorage.getItem('accessToken');
+        const token = localStorage.getItem('accessToken');
 
         if (token && config.headers) {
           config.headers.Authorization = `Bearer ${token}`;
@@ -38,7 +38,7 @@ class ApiClient {
         if (status === 401) {
           console.warn('Unauthorized: Token expired or invalid.');
 
-          sessionStorage.clear();
+          localStorage.removeItem('accessToken');
           window.dispatchEvent(new Event('auth:logout'));
         }
 
