@@ -9,7 +9,8 @@
     "db:mig": "npx drizzle-kit migrate",
     "studio": "npx drizzle-kit studio",
     "dev": "nodemon src/index.ts",
-    "start": "ts-node src/index.ts"
+    "start": "ts-node src/index.ts",
+    "build": "echo 'No build step required for backend, Vercel will use api/index.ts'"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
