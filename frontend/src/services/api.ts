@@ -5,8 +5,9 @@ class ApiClient {
   private axiosInstance: AxiosInstance;
 
   constructor() {
+    const API_URL = import.meta.env.VITE_API_URL || "https://flowmart-backend-2s2d.vercel.app/api/v1";
     this.axiosInstance = axios.create({
-      baseURL: "https://flowmart-backend-2s2d.vercel.app/api/v1",
+      baseURL: API_URL,
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
