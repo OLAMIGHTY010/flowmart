@@ -14,9 +14,9 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
 
 const STATUS_COLORS: Record<OrderStatus, string> = {
   pending: "bg-amber-100 text-amber-700",
-  confirmed: "bg-primary/20 text-primary",
-  assigned: "bg-primary/20 text-primary",
-  picked_up: "bg-primary/20 text-primary",
+  confirmed: "bg-indigo-100 text-indigo-700",
+  assigned: "bg-indigo-100 text-indigo-700",
+  picked_up: "bg-orange-100 text-orange-700",
   delivered: "bg-green-100 text-green-700",
   cancelled: "bg-red-100 text-red-700",
 };

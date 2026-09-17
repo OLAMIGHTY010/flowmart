@@ -97,10 +97,10 @@ export default function OrdersTab() {
             const isExpanded = expandedId === order.id;
             
             // Format status pills
-            let statusPill = 'bg-[#fef9c3] text-[#a16207]'; // pending
-            if (order.status === 'processing') statusPill = 'bg-primary/20 text-primary'; // processing
-            if (order.status === 'completed') statusPill = 'bg-[#dcfce7] text-[#15803d]'; // completed
-            if (order.status === 'cancelled') statusPill = 'bg-[#fee2e2] text-[#b91c1c]'; // cancelled
+            let statusPill = 'bg-yellow-100 text-yellow-800'; // pending
+            if (order.status === 'processing') statusPill = 'bg-indigo-100 text-indigo-800'; // processing
+            if (order.status === 'completed') statusPill = 'bg-green-100 text-green-800'; // completed
+            if (order.status === 'cancelled') statusPill = 'bg-red-100 text-red-800'; // cancelled
 
             // Format items text
             const itemsText = order.items
