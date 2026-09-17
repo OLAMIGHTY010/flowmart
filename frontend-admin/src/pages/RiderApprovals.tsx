@@ -440,7 +440,7 @@ function ChecklistItem({ label, checked, fileUrl }: { label: string, checked: bo
             href={fileUrl.startsWith('http') ? fileUrl : `https://flowmart-bucket.s3.amazonaws.com/${fileUrl}`} 
             target="_blank" 
             rel="noopener noreferrer"
-            className="text-[10px] font-bold text-primary/90 hover:text-blue-800 underline uppercase"
+            className="text-[10px] font-bold text-primary/90 hover:text-primary underline uppercase"
           >
             View
           </a>

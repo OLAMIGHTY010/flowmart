@@ -67,10 +67,10 @@ export default function UserManagement() {
 
   const getRoleBadge = (role: string) => {
     switch(role) {
-      case 'super_admin': return <span className="px-2 py-1 bg-primary/20 text-purple-700 text-[10px] font-bold rounded-full">Super Admin</span>;
-      case 'admin': return <span className="px-2 py-1 bg-primary/20 text-blue-700 text-[10px] font-bold rounded-full">Admin</span>;
+      case 'super_admin': return <span className="px-2 py-1 bg-primary/20 text-primary text-[10px] font-bold rounded-full">Super Admin</span>;
+      case 'admin': return <span className="px-2 py-1 bg-primary/20 text-primary text-[10px] font-bold rounded-full">Admin</span>;
       case 'vendor': return <span className="px-2 py-1 bg-primary/20 text-orange-700 text-[10px] font-bold rounded-full">Vendor</span>;
-      case 'dispatch_rider': return <span className="px-2 py-1 bg-primary/20 text-indigo-700 text-[10px] font-bold rounded-full">Rider</span>;
+      case 'dispatch_rider': return <span className="px-2 py-1 bg-primary/20 text-primary text-[10px] font-bold rounded-full">Rider</span>;
       case 'attendee': return <span className="px-2 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded-full">Attendee</span>;
       case 'zone_coordinator': return <span className="px-2 py-1 bg-teal-100 text-teal-700 text-[10px] font-bold rounded-full">Zone Coord</span>;
       case 'camp_logistics_coordinator': return <span className="px-2 py-1 bg-cyan-100 text-cyan-700 text-[10px] font-bold rounded-full">Logistics</span>;

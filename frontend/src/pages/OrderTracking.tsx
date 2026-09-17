@@ -67,9 +67,9 @@ const STATUS_COLORS: Record<
   { bg: string; text: string; dot: string }
 > = {
   pending: { bg: "bg-amber-100", text: "text-amber-700", dot: "bg-amber-500" },
-  confirmed: { bg: "bg-primary/20", text: "text-blue-700", dot: "bg-primary" },
-  assigned: { bg: "bg-primary/20", text: "text-blue-700", dot: "bg-primary" },
-  picked_up: { bg: "bg-primary/20", text: "text-indigo-700", dot: "bg-primary" },
+  confirmed: { bg: "bg-primary/20", text: "text-primary", dot: "bg-primary" },
+  assigned: { bg: "bg-primary/20", text: "text-primary", dot: "bg-primary" },
+  picked_up: { bg: "bg-primary/20", text: "text-primary", dot: "bg-primary" },
   delivered: { bg: "bg-green-100", text: "text-green-700", dot: "bg-green-500" },
   cancelled: { bg: "bg-red-100", text: "text-red-700", dot: "bg-red-500" },
 };

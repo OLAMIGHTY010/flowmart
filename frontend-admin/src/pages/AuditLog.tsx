@@ -183,9 +183,9 @@ function LogTableRow({ log, isExpanded, onToggle }: { log: AuditLogItem, isExpan
   const getModuleColor = (module: string) => {
     switch(module.toLowerCase()) {
       case 'onboard': return 'bg-teal-100 text-teal-800';
-      case 'vendor': return 'bg-primary/20 text-purple-800';
-      case 'auth': return 'bg-primary/20 text-indigo-800';
-      case 'profile': return 'bg-primary/20 text-blue-800';
+      case 'vendor': return 'bg-primary/20 text-primary';
+      case 'auth': return 'bg-primary/20 text-primary';
+      case 'profile': return 'bg-primary/20 text-primary';
       case 'security': return 'bg-primary/20 text-orange-800';
       case 'platform': return 'bg-slate-200 text-slate-800';
       default: return 'bg-slate-100 text-slate-800';

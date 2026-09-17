@@ -56,8 +56,8 @@ export default function ChangePassword() {
             <Lock size={20} />
           </div>
           <div>
-            <p className="text-sm font-bold text-blue-900">Password Requirements</p>
-            <p className="mt-0.5 text-xs text-blue-700">Must be at least 8 characters long and contain a number.</p>
+            <p className="text-sm font-bold text-primary">Password Requirements</p>
+            <p className="mt-0.5 text-xs text-primary">Must be at least 8 characters long and contain a number.</p>
           </div>
         </div>
 

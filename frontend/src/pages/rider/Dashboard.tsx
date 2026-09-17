@@ -137,7 +137,7 @@ export default function Dashboard() {
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-slate-400 font-medium">×{order.items?.length || 1} packs</span>
                         <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${order.status === 'picked_up' || order.status === 'assigned'
-                            ? 'bg-primary/20 text-blue-700'
+                            ? 'bg-primary/20 text-primary'
                             : 'bg-amber-100 text-amber-700'
                           }`}>
                           {order.status === 'picked_up' || order.status === 'assigned' ? 'In Transit' : 'Pending'}

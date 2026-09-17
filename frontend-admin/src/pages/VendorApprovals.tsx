@@ -286,7 +286,7 @@ function VendorCard({ vendor, isSelected, onClick }: { vendor: VendorListItem, i
     >
       <div className="flex justify-between items-start">
         <div className="flex gap-4">
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shrink-0 ${isSelected ? 'bg-success' : 'bg-primary/30 text-blue-700'}`}>
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shrink-0 ${isSelected ? 'bg-success' : 'bg-primary/30 text-primary'}`}>
             {vendor.logo}
           </div>
           <div>
@@ -515,7 +515,7 @@ function ChecklistItem({ label, checked, fileUrl }: { label: string, checked: bo
             href={fileUrl.startsWith('http') ? fileUrl : `https://flowmart-bucket.s3.amazonaws.com/${fileUrl}`} 
             target="_blank" 
             rel="noopener noreferrer"
-            className="text-[10px] font-bold text-primary/90 hover:text-blue-800 underline uppercase"
+            className="text-[10px] font-bold text-primary/90 hover:text-primary underline uppercase"
           >
             View
           </a>

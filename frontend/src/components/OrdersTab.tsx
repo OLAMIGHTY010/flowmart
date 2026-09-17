@@ -98,7 +98,7 @@ export default function OrdersTab() {
             
             // Format status pills
             let statusPill = 'bg-[#fef9c3] text-[#a16207]'; // pending
-            if (order.status === 'processing') statusPill = 'bg-[#dbeafe] text-[#1e40af]'; // processing
+            if (order.status === 'processing') statusPill = 'bg-primary/20 text-primary'; // processing
             if (order.status === 'completed') statusPill = 'bg-[#dcfce7] text-[#15803d]'; // completed
             if (order.status === 'cancelled') statusPill = 'bg-[#fee2e2] text-[#b91c1c]'; // cancelled
 

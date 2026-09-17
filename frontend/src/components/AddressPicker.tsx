@@ -489,7 +489,7 @@ const AddressPicker: React.FC<AddressPickerProps> = ({
                 },
                 blue: {
                   active:
-                    "bg-primary/20 text-blue-700 border-blue-300 ring-2 ring-primary/80/30",
+                    "bg-primary/20 text-primary border-primary ring-2 ring-primary/80/30",
                   inactive:
                     "bg-white text-gray-500 border-gray-200 hover:border-primary/30 hover:bg-primary/10",
                 },

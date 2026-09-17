@@ -101,12 +101,12 @@ export default function PromoteProductModal({ product, onClose }: PromoteProduct
             <div className="bg-primary/10/50 border border-primary/20 rounded-xl p-3 flex flex-col gap-1 items-center text-center">
               <TrendingUp className="text-primary mb-1" size={20} />
               <span className="text-[10px] uppercase font-bold tracking-wider text-primary/90">Higher Rank</span>
-              <span className="text-xs text-blue-900 font-medium">Appear first in searches</span>
+              <span className="text-xs text-primary font-medium">Appear first in searches</span>
             </div>
             <div className="bg-primary/10/50 border border-primary/20 rounded-xl p-3 flex flex-col gap-1 items-center text-center">
               <Target className="text-primary mb-1" size={20} />
               <span className="text-[10px] uppercase font-bold tracking-wider text-primary/90">More Sales</span>
-              <span className="text-xs text-purple-900 font-medium">Up to 3x more visibility</span>
+              <span className="text-xs text-primary font-medium">Up to 3x more visibility</span>
             </div>
           </div>
 

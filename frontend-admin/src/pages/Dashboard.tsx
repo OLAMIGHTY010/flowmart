@@ -302,7 +302,7 @@ export default function Dashboard() {
             const getTagStyle = (type: string) => {
               switch (type) {
                 case 'Vendor': return 'bg-green-100 text-green-700';
-                case 'Delivery': return 'bg-primary/20 text-blue-700';
+                case 'Delivery': return 'bg-primary/20 text-primary';
                 case 'Wallet': return 'bg-red-100 text-red-700';
                 case 'Audit Log': return 'bg-primary/20 text-orange-700';
                 case 'Settings': return 'bg-slate-100 text-slate-700';
