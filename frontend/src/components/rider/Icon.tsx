@@ -1,0 +1,95 @@
+import React from 'react';
+import {
+  ArrowLeft,
+  User,
+  Briefcase,
+  Landmark,
+  ChevronDown,
+  Calendar,
+  CreditCard,
+  Hash,
+  FileText,
+  Check,
+  Signal,
+  Wifi,
+  Users,
+  Battery,
+  FileCheck,
+  CheckCircle,
+  Camera,
+  Phone,
+  MapPin,
+  Building,
+  Bell,
+  BellRing,
+  Loader2,
+  TrendingUp,
+  Package,
+  PlusCircle,
+  Tag,
+  Truck,
+  ShoppingCart,
+  Home,
+  ShoppingBag,
+  BarChart2,
+  Settings,
+  AlertCircle,
+  ShieldCheck,
+  Clock,
+  Upload,
+} from 'lucide-react';
+
+interface IconProps {
+  i: string;
+  size?: number;
+  className?: string;
+}
+
+const iconMap: Record<string, React.ComponentType<any>> = {
+  'arrow-left': ArrowLeft,
+  'user': User,
+  'briefcase': Briefcase,
+  'landmark': Landmark,
+  'chevron-down': ChevronDown,
+  'calendar': Calendar,
+  'credit-card': CreditCard,
+  'hash': Hash,
+  'file-text': FileText,
+  'check': Check,
+  'signal': Signal,
+  'wifi': Wifi,
+  'users': Users,
+  'battery': Battery,
+  'file-check': FileCheck,
+  'check-circle': CheckCircle,
+  'camera': Camera,
+  'phone': Phone,
+  'map-pin': MapPin,
+  'building': Building,
+  'bell': Bell,
+  'bell-ring': BellRing,
+  'loader': Loader2,
+  'trending-up': TrendingUp,
+  'package': Package,
+  'plus-circle': PlusCircle,
+  'tag': Tag,
+  'truck': Truck,
+  'shopping-cart': ShoppingCart,
+  'home': Home,
+  'shopping-bag': ShoppingBag,
+  'bar-chart-2': BarChart2,
+  'settings': Settings,
+  'alert-circle': AlertCircle,
+  'shield-check': ShieldCheck,
+  'clock': Clock,
+  'upload': Upload,
+};
+
+export default function Icon({ i, size = 16, className = '' }: IconProps) {
+  const IconComponent = iconMap[i];
+  if (!IconComponent) {
+    console.warn(`Icon "${i}" not found in Icon mapping`);
+    return null;
+  }
+  return <IconComponent size={size} className={className} />;
+}

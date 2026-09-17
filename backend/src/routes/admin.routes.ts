@@ -33,8 +33,8 @@ import {
   getRiderEfficiencyDist,
   getEventMetricsSummary,
   getShortageIncidents,
-  getWelfareZones,
-  getWelfareInventory,
+  getDeliveryZones,
+  getPromotionalInventory,
   getLiveZoneGrid,
   getLiveActivityFeed,
   getShortageAlerts
@@ -92,8 +92,8 @@ router.get('/coordinator-analytics/events-summary', getEventMetricsSummary);
 router.get('/coordinator-analytics/shortage-incidents', getShortageIncidents);
 
 // Live Tracker & Create Event Endpoints
-router.get('/coordinator-analytics/welfare-zones', getWelfareZones);
-router.get('/coordinator-analytics/welfare-inventory', getWelfareInventory);
+router.get('/coordinator-analytics/delivery-zones', getDeliveryZones);
+router.get('/coordinator-analytics/promotional-inventory', getPromotionalInventory);
 router.get('/coordinator-analytics/live-zone-grid', getLiveZoneGrid);
 router.get('/coordinator-analytics/live-activity-feed', getLiveActivityFeed);
 router.get('/coordinator-analytics/shortage-alerts', getShortageAlerts);

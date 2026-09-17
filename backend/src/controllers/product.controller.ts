@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { db } from "../../db";
-import { products, vendorProfiles, users, vendorKyc } from "../../db/schema";
+import { products, vendorProfiles, users, vendorKyc, categories } from "../../db/schema";
 import { eq, and, gt, sql, count, or, isNull } from "drizzle-orm";
 import { AuthenticatedRequest } from "../middleware/auth.middleware";
 import { deliveryZones } from "../../db/schema";
@@ -11,7 +11,7 @@ export const createProduct = async (
 	res: Response
 ) => {
 	try {
-		const { name, description, price, stockQuantity, sku, category, brand, oldPrice, weight, images, productType, preparationTime, modifiers, variants, dietaryTags } = req.body;
+		const { name, description, price, stockQuantity, sku, category, categoryId, brand, oldPrice, weight, images, productType, preparationTime, modifiers, variants, dietaryTags } = req.body;
 		const vendorId = req.user?.id;
 
 		if (!name || !price) {
@@ -51,7 +51,7 @@ export const createProduct = async (
 				price: finalPrice.toString(),
 				stockQuantity: stockQuantity !== undefined ? stockQuantity : (productType === 'food' ? null : 0),
 				sku,
-				category,
+				categoryId: categoryId || null,
 				brand,
 				oldPrice: oldPrice || null,
 				weight: weight || null,
@@ -86,22 +86,42 @@ export const getProducts = async (req: AuthenticatedRequest, res: Response) => {
         const offset = (page - 1) * limit;
 
 		if (req.user?.role === 'vendor') {
-			const vendorProducts = await db
-				.select()
+			const vendorProductsRaw = await db
+				.select({
+					product: products,
+					categoryName: categories.name,
+				})
 				.from(products)
+				.leftJoin(categories, eq(products.categoryId, categories.id))
 				.where(eq(products.vendorId, req.user.id))
+				.orderBy(sql`${products.isSponsored} DESC`, sql`${products.createdAt} DESC`)
                 .limit(limit)
                 .offset(offset);
+			
+			const vendorProducts = vendorProductsRaw.map(r => ({
+				...r.product,
+				category: r.categoryName
+			}));
+
 			return res.status(200).json({ success: true, products: vendorProducts, meta: { page, limit } });
 		}
 
 		// Only fetch products where stockQuantity is greater than 0 OR is null (unlimited stock for food)
-		const availableProducts = await db
-			.select()
+		const availableProductsRaw = await db
+			.select({
+				product: products,
+				categoryName: categories.name,
+			})
 			.from(products)
+			.leftJoin(categories, eq(products.categoryId, categories.id))
 			.where(or(gt(products.stockQuantity, 0), isNull(products.stockQuantity)))
             .limit(limit)
             .offset(offset);
+
+		const availableProducts = availableProductsRaw.map(r => ({
+			...r.product,
+			category: r.categoryName
+		}));
 
 		return res
 			.status(200)
@@ -117,8 +137,19 @@ export const getProducts = async (req: AuthenticatedRequest, res: Response) => {
 // Newly added endpoint directly answering frontend tracker 404 gap
 export const getProductById = async (req: Request, res: Response) => {
 	try {
-		const [product] = await db.select().from(products).where(eq(products.id, req.params.id as string)).limit(1);
-		if (!product) return res.status(404).json({ success: false, message: "Product not found" });
+		const raw = await db
+			.select({
+				product: products,
+				categoryName: categories.name
+			})
+			.from(products)
+			.leftJoin(categories, eq(products.categoryId, categories.id))
+			.where(eq(products.id, req.params.id as string))
+			.limit(1);
+
+		if (!raw.length) return res.status(404).json({ success: false, message: "Product not found" });
+		
+		const product = { ...raw[0].product, category: raw[0].categoryName };
 		return res.status(200).json({ success: true, product });
 	} catch (error) {
 		return res.status(500).json({ success: false, message: "Internal Server Error" });
@@ -133,7 +164,7 @@ export const updateProduct = async (
 	try {
 		const productId = req.params.id as string;
 		const vendorId = req.user?.id;
-		const { name, description, price, stockQuantity, sku, category, brand, oldPrice, weight, images, productType, preparationTime, modifiers, variants, dietaryTags } = req.body;
+		const { name, description, price, stockQuantity, sku, category, categoryId, brand, oldPrice, weight, images, productType, preparationTime, modifiers, variants, dietaryTags } = req.body;
 
 		// Verify the product belongs to the vendor requesting the update (Keeping type assertion)
 		const [existingProduct] = await db
@@ -189,7 +220,7 @@ export const updateProduct = async (
 						: existingProduct.stockQuantity,
 
 				sku: sku !== undefined ? sku : existingProduct.sku,
-				category: category !== undefined ? category : existingProduct.category,
+				categoryId: categoryId !== undefined ? categoryId : existingProduct.categoryId,
 				brand: brand !== undefined ? brand : existingProduct.brand,
 				oldPrice: oldPrice !== undefined ? oldPrice : existingProduct.oldPrice,
 				weight: weight !== undefined ? weight : existingProduct.weight,
@@ -315,24 +346,4 @@ export const getVendorPublicProfile = async (req: Request, res: Response) => {
 	}
 };
 
-// 6. Get all product categories
-export const getCategories = async (_req: Request, res: Response) => {
-	try {
-		const result = await db
-			.selectDistinct({ category: products.category })
-			.from(products)
-			.where(gt(products.stockQuantity, 0));
-
-		const categories = result
-			.map(r => r.category)
-			.filter((c): c is string => c !== null && c !== undefined && c.trim() !== "");
-
-		return res.status(200).json({
-			success: true,
-			categories: ["All", ...categories],
-		});
-	} catch (error) {
-		console.error("Get Categories Error:", error);
-		return res.status(500).json({ success: false, message: "Internal Server Error" });
-	}
-};
+export { getCategories } from "./category.controller";

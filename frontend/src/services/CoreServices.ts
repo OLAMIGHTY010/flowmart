@@ -10,7 +10,12 @@ export const coreServices = {
   },
 
   getCategories: async (): Promise<string[]> => {
-    const res = await apiClient.get<{ success: boolean; categories: string[] }>("/products/categories");
-    return res.categories || ["All"];
+    try {
+      const res = await apiClient.get<{ success: boolean; categories: { name: string }[] }>("/categories");
+      const names = res.categories?.map((c) => c.name) || [];
+      return ["All", ...names];
+    } catch {
+      return ["All"];
+    }
   },
 };

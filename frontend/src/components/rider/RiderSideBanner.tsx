@@ -10,7 +10,7 @@ export default function SideBanner() {
       <div className="absolute inset-0 opacity-25 mix-blend-overlay">
         <img
           src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80&w=1200"
-          alt="Worship scene background"
+          alt="Nigerian marketplace background"
           className="w-full h-full object-cover"
         />
       </div>
@@ -37,16 +37,20 @@ export default function SideBanner() {
       {/* Event Center Display */}
       <div className="relative z-10 my-auto py-12 flex flex-col gap-4">
         <div className="bg-white/10 backdrop-blur-md px-3.5 py-1.5 rounded-full text-[10px] font-bold tracking-widest uppercase text-primary bg-secondary/90 w-fit">
-          Partner Event 2025
+          Nigeria's Super App
         </div>
         <h1 className="text-3xl font-extrabold tracking-tight leading-tight">
+<<<<<<<< HEAD:frontend/src/components/rider/RiderSideBanner.tsx
           FlowMart Holy Ghost Congress 2025
+========
+          Shop Smarter, Live Better 🇳🇬
+>>>>>>>> origin/main:frontend/src/components/SideBanner.tsx
         </h1>
         <p className="text-sm text-white/80 leading-relaxed font-light">
-          Theme: <strong className="font-bold text-white">"The God of All Flesh"</strong>
+          <strong className="font-bold text-white">E-Commerce • Bills • Delivery</strong>
         </p>
         <p className="text-xs text-white/60 leading-relaxed">
-          December 8 – 14, 2025 • Redemption City, Nigeria
+          Delivering Across All 36 States + FCT
         </p>
       </div>
 

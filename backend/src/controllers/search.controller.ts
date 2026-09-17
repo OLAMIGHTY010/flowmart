@@ -19,7 +19,7 @@ export const unifiedSearch = async (req: AuthenticatedRequest, res: Response) =>
       .where(or(
         ilike(products.name, searchTerm),
         ilike(products.description, searchTerm),
-        ilike(products.category, searchTerm)
+        ilike(products.brand, searchTerm)
       ))
       .limit(10);
 

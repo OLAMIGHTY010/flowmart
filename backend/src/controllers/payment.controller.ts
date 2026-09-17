@@ -34,9 +34,40 @@ export const paystackWebhook = async (req: Request, res: Response) => {
         const event = req.body;
 
         if (event.event === 'charge.success') {
-            const orderRef = event.data.reference;
+            const orderRef = event.data.reference as string;
+            
+            // 1. Handle Wallet Funding
+            if (orderRef.startsWith('FUND-')) {
+               const parts = orderRef.split('-');
+               const userId = parts[1];
+               const amountInNaira = event.data.amount / 100;
+               
+               const { wallets, walletTransactions } = await import('../../db/schema');
+               let [wallet] = await db.select().from(wallets).where(eq(wallets.userId, userId)).limit(1);
+               if (!wallet) {
+                  [wallet] = await db.insert(wallets).values({ userId, balance: '0.00' }).returning();
+               }
+               
+               // Idempotency: Check if transaction already exists
+               const [existingTx] = await db.select().from(walletTransactions).where(eq(walletTransactions.reference, orderRef)).limit(1);
+               if (existingTx) {
+                   return res.status(200).send('Webhook ignored: Funding already processed');
+               }
+               
+               const newBalance = (Number(wallet.balance) + amountInNaira).toString();
+               await db.update(wallets).set({ balance: newBalance }).where(eq(wallets.id, wallet.id));
+               await db.insert(walletTransactions).values({
+                  walletId: wallet.id,
+                  amount: amountInNaira.toString(),
+                  type: 'deposit',
+                  status: 'completed',
+                  reference: orderRef
+               });
+               
+               return res.status(200).send('Wallet funded successfully');
+            }
 
-            // Find the matching Escrow order
+            // 2. Find the matching Escrow order
             const [order] = await db.select().from(orders).where(eq(orders.orderRef, orderRef)).limit(1);
             
             if (!order) {

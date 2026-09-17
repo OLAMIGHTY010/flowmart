@@ -122,7 +122,7 @@ export default function VendorApprovals() {
         <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between">
           <div className="flex justify-between items-start mb-4">
             <h3 className="text-xs font-bold text-slate-500">Pending Review</h3>
-            <div className="p-2 bg-orange-50 text-orange-500 rounded-full"><Clock size={20} /></div>
+            <div className="p-2 bg-primary/10 text-primary rounded-full"><Clock size={20} /></div>
           </div>
           <div>
             <p className="text-3xl font-black text-slate-800">{stats?.pendingReview || 0}</p>
@@ -193,11 +193,11 @@ export default function VendorApprovals() {
                       >
                         <td className="px-4 py-3 font-bold text-slate-800">{vendor.businessName || vendor.fullName}</td>
                         <td className="px-4 py-3">
-                          <span className="px-2 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold rounded">{vendor.category || 'Logistics'}</span>
+                          <span className="px-2 py-1 bg-primary/10 text-primary/90 text-[10px] font-bold rounded">{vendor.category || 'Logistics'}</span>
                         </td>
                         <td className="px-4 py-3">
                           <span className={`px-2 py-1 text-[10px] font-bold rounded border capitalize ${
-                            vendor.status === 'pending' ? 'bg-orange-50 text-orange-600 border-orange-100' : 
+                            vendor.status === 'pending' ? 'bg-primary/10 text-primary/90 border-primary/20' : 
                             vendor.status === 'approved' ? 'bg-green-50 text-green-600 border-green-100' :
                             'bg-red-50 text-red-600 border-red-100'
                           }`}>
@@ -256,8 +256,8 @@ export default function VendorApprovals() {
               onClose={() => setSelectedVendorId(null)} 
             />
           ) : (
-            <div className="h-full border-2 border-dashed border-blue-200 rounded-2xl flex flex-col items-center justify-center text-center p-8 bg-blue-50/50">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-blue-500 mb-4">
+            <div className="h-full border-2 border-dashed border-primary/30 rounded-2xl flex flex-col items-center justify-center text-center p-8 bg-primary/10/50">
+              <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center text-primary mb-4">
                 <CheckCircle2 size={32} />
               </div>
               <h3 className="text-lg font-bold text-slate-700">No Vendor Selected</h3>
@@ -286,7 +286,7 @@ function VendorCard({ vendor, isSelected, onClick }: { vendor: VendorListItem, i
     >
       <div className="flex justify-between items-start">
         <div className="flex gap-4">
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shrink-0 ${isSelected ? 'bg-success' : 'bg-blue-200 text-blue-700'}`}>
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shrink-0 ${isSelected ? 'bg-success' : 'bg-primary/30 text-primary'}`}>
             {vendor.logo}
           </div>
           <div>
@@ -295,11 +295,11 @@ function VendorCard({ vendor, isSelected, onClick }: { vendor: VendorListItem, i
           </div>
         </div>
         <div className="flex flex-col items-end gap-2">
-          <span className="px-2 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold rounded">
+          <span className="px-2 py-1 bg-primary/10 text-primary/90 text-[10px] font-bold rounded">
             {vendor.category}
           </span>
           <span className={`px-2 py-1 text-[10px] font-bold rounded border ${
-            isPending ? 'bg-orange-50 text-orange-600 border-orange-100' : 
+            isPending ? 'bg-primary/10 text-primary/90 border-primary/20' : 
             vendor.status === 'approved' ? 'bg-green-50 text-green-600 border-green-100' :
             'bg-red-50 text-red-600 border-red-100'
           }`}>
@@ -315,7 +315,7 @@ function VendorCard({ vendor, isSelected, onClick }: { vendor: VendorListItem, i
         </div>
         <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
           <div 
-            className={`h-full rounded-full ${vendor.complianceScore >= 80 ? 'bg-success' : vendor.complianceScore >= 50 ? 'bg-orange-400' : 'bg-red-500'}`} 
+            className={`h-full rounded-full ${vendor.complianceScore >= 80 ? 'bg-success' : vendor.complianceScore >= 50 ? 'bg-primary/80' : 'bg-red-500'}`} 
             style={{ width: `${vendor.complianceScore}%` }}
           />
         </div>
@@ -370,7 +370,7 @@ function VendorDetailsPanel({ vendorId, onClose }: { vendorId: string, onClose: 
   const { user, profile, kyc, complianceScore, history } = details;
 
   return (
-    <div className="h-full bg-white rounded-2xl border-2 border-blue-500 shadow-xl overflow-hidden flex flex-col relative">
+    <div className="h-full bg-white rounded-2xl border-2 border-primary shadow-xl overflow-hidden flex flex-col relative">
       <button onClick={onClose} className="absolute top-4 right-4 p-2 text-slate-400 hover:bg-slate-100 rounded-full z-10 lg:hidden">
         <X size={20} />
       </button>
@@ -387,7 +387,7 @@ function VendorDetailsPanel({ vendorId, onClose }: { vendorId: string, onClose: 
               <p className="text-xs text-slate-500 mt-1">Vendor profile and compliance review</p>
             </div>
             <div className="ml-auto">
-              <span className="px-2 py-1 bg-orange-50 text-orange-600 text-[10px] font-bold rounded border border-orange-100">
+              <span className="px-2 py-1 bg-primary/10 text-primary/90 text-[10px] font-bold rounded border border-primary/20">
                 {kyc.status === 'pending' ? 'Pending Review' : kyc.status}
               </span>
             </div>
@@ -513,7 +513,7 @@ function ChecklistItem({ label, checked, fileUrl }: { label: string, checked: bo
             href={fileUrl.startsWith('http') ? fileUrl : `https://flowmart-bucket.s3.amazonaws.com/${fileUrl}`} 
             target="_blank" 
             rel="noopener noreferrer"
-            className="text-[10px] font-bold text-blue-600 hover:text-blue-800 underline uppercase"
+            className="text-[10px] font-bold text-primary/90 hover:text-primary underline uppercase"
           >
             View
           </a>

@@ -12,7 +12,7 @@ import type { Product } from "@/types/product";
 
 export const vendorService = {
   updateProfile: async (data: ProfileSetupRequest): Promise<ApiResponse<any>> => {
-    const res = await apiClient.put<ApiResponse<any>>("/vendor/profile", data);
+    const res = await apiClient.put<ApiResponse<any>>("/vendors/profile", data);
     
     // Update local storage auth user profile completed flag
     const storedUser = localStorage.getItem("currentUser");
@@ -41,15 +41,15 @@ export const vendorService = {
   },
 
   submitKYCForReview: async (data: KYCSubmitPayload): Promise<ApiResponse<any>> => {
-    return apiClient.post<ApiResponse<any>>("/vendor/kyc/submit", data);
+    return apiClient.post<ApiResponse<any>>("/vendors/kyc/submit", data);
   },
 
   getKYCStatus: async (): Promise<KYCStatusResponse> => {
-    return apiClient.get<KYCStatusResponse>("/vendor/kyc/status");
+    return apiClient.get<KYCStatusResponse>("/vendors/kyc/status");
   },
 
   getDashboardStats: async (): Promise<DashboardStatsResponse> => {
-    return apiClient.get<DashboardStatsResponse>("/vendor/dashboard/stats");
+    return apiClient.get<DashboardStatsResponse>("/vendors/dashboard/stats");
   },
 
   getOrders: async (): Promise<Order[]> => {

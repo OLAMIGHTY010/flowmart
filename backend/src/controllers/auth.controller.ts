@@ -12,6 +12,37 @@ import { OAuth2Client } from 'google-auth-library';
 // Initialize Google Client
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
+export const syncSession = async (req: Request, res: Response) => {
+  try {
+    const authReq = req as AuthenticatedRequest;
+    if (!authReq.user) return res.status(401).json({ success: false });
+
+    const { email, id } = authReq.user;
+    const { role, fullName } = req.body;
+
+    const existingUser = await db.select().from(users).where(eq(users.email, email)).limit(1);
+
+    if (existingUser.length === 0) {
+      // Create new user in public schema
+      const [newUser] = await db.insert(users).values({
+        id, // Map Supabase UUID to our UUID
+        email,
+        fullName: fullName || email.split('@')[0],
+        role: role || 'customer',
+        isVerified: true, // Supabase OAuth users are auto-verified
+        password: await hashPassword(crypto.randomBytes(16).toString('hex')) // Dummy password
+      }).returning();
+      
+      return res.status(200).json({ success: true, user: newUser });
+    }
+
+    return res.status(200).json({ success: true, user: existingUser[0] });
+  } catch (error) {
+    console.error('Sync Error:', error);
+    return res.status(500).json({ success: false });
+  }
+};
+
 // Helper to generate a secure 6-digit OTP
 const generateSecureOTP = () => crypto.randomInt(100000, 999999).toString();
 
@@ -113,7 +144,8 @@ export const register = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: 'All fields are required' });
     }
 
-    const staffRoles = ['super_admin', 'admin', 'logistics_manager', 'regional_manager', 'finance', 'auditor', 'customer_service'];
+    const staffRoles = ['super_admin', 'admin', 'logistics_manager', 'regional_manager', 'regional_coordinator', 'area_manager', 'finance', 'auditor', 'customer_service'];
+    const allowedPublicRoles = ['customer', 'user', 'vendor', 'dispatch_rider'];
     const requestedRole = role || 'user';
 
     if (!staffRoles.includes(requestedRole)) {

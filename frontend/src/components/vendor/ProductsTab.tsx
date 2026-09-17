@@ -40,24 +40,6 @@ export default function ProductsTab() {
   const [variants, setVariants] = useState<any[]>([]);
   const [dietaryTags, setDietaryTags] = useState<string[]>([]);
 
-  const openAddModal = () => {
-    setEditingProduct(null);
-    setName('');
-    setCategory('Food & Catering');
-    setPrice('');
-    setStockQuantity('10');
-    setDescription('');
-    setImageUrl('');
-    setSku('');
-    setBrand('');
-    setWeight('');
-    setOldPrice('');
-    setImages('');
-    setProductType('retail');
-    setPreparationTime('');
-    setModifiers([]);
-    setVariants([]);
-    setDietaryTags([]);
     setIsModalOpen(true);
   };
 
@@ -111,51 +93,6 @@ export default function ProductsTab() {
     setModifiers(Array.isArray(prod.modifiers) ? prod.modifiers : []);
     setVariants(Array.isArray(prod.variants) ? prod.variants : []);
     setDietaryTags(Array.isArray(prod.dietaryTags) ? prod.dietaryTags : []);
-    setIsModalOpen(true);
-  };
-
-  const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this product?')) {
-      try {
-        await deleteMutation.mutateAsync(id);
-      } catch (err) {
-        console.error('Delete error', err);
-      }
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const data = {
-      name,
-      category,
-      price: parseFloat(price) || 0,
-      stockQuantity: productType === 'food' ? undefined : (parseInt(stockQuantity) || 0),
-      description,
-      imageUrl: imageUrl || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=150&auto=format&fit=crop&q=60', // Default beautiful fallback food image
-      sku: productType === 'food' ? undefined : (sku || undefined),
-      brand: productType === 'food' ? undefined : (brand || undefined),
-      weight: productType === 'food' ? undefined : (weight ? parseFloat(weight) : undefined),
-      oldPrice: oldPrice ? parseFloat(oldPrice) : undefined,
-      images: images 
-        ? images.split(',').map(s => s.trim()).filter(Boolean) 
-        : (imageUrl ? [imageUrl] : ['https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=150&auto=format&fit=crop&q=60']),
-      productType,
-      preparationTime: productType === 'food' ? (parseInt(preparationTime) || undefined) : undefined,
-      modifiers: productType === 'food' ? modifiers.map(m => ({
-        ...m,
-        options: m.options.map((o: any) => ({
-          name: o.name,
-          price: o.price ? parseFloat(o.price) : 0
-        }))
-      })) : undefined,
-      variants: productType === 'retail' ? variants.map(v => ({
-        name: v.name,
-        value: v.value,
-        price: v.price ? parseFloat(v.price) : 0,
-        stock: v.stock ? parseInt(v.stock) : 0
-      })) : undefined,
-      dietaryTags: productType === 'food' ? dietaryTags : undefined
     };
 
     try {

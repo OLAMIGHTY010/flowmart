@@ -216,7 +216,7 @@ const enrichOrderWithItems = async (order: any) => {
 			unitPrice: orderItems.unitPrice,
 			productName: products.name,
 			productImage: products.images,
-			productCategory: products.category,
+			productCategory: products.categoryId,
 		})
 		.from(orderItems)
 		.leftJoin(products, eq(orderItems.productId, products.id))

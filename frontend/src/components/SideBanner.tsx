@@ -7,7 +7,7 @@ export default function SideBanner() {
       <div className="absolute inset-0 opacity-25 mix-blend-overlay">
         <img
           src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80&w=1200"
-          alt="Worship scene background"
+          alt="Nigerian marketplace background"
           className="w-full h-full object-cover"
         />
       </div>
@@ -23,6 +23,7 @@ export default function SideBanner() {
       {/* Main Display */}
       <div className="relative z-10 my-auto py-12 flex flex-col gap-4">
         <div className="bg-white/10 backdrop-blur-md px-3.5 py-1.5 rounded-full text-[10px] font-bold tracking-widest uppercase text-primary bg-secondary/90 w-fit">
+<<<<<<<< HEAD:frontend/src/components/SideBanner.tsx
           Vendor & Logistics Partner
         </div>
         <h1 className="text-3xl font-extrabold tracking-tight leading-tight">
@@ -33,6 +34,22 @@ export default function SideBanner() {
         </p>
         <p className="text-xs text-white/60 leading-relaxed">
           Empowering businesses across the globe.
+========
+          Nigeria's Super App
+        </div>
+        <h1 className="text-3xl font-extrabold tracking-tight leading-tight">
+          Shop Smarter, Live Better 🇳🇬
+>>>>>>> origin/main
+        </h1>
+        <p className="text-sm text-white/80 leading-relaxed font-light">
+          <strong className="font-bold text-white">E-Commerce • Bills • Delivery</strong>
+        </p>
+        <p className="text-xs text-white/60 leading-relaxed">
+          Delivering Across All 36 States + FCT
+<<<<<<< HEAD
+>>>>>>>> origin/main:frontend/src/components/vendor/SideBanner.tsx
+=======
+>>>>>>> origin/main
         </p>
       </div>
 

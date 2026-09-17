@@ -260,7 +260,7 @@ export default function CreateEvent() {
                       <tr key={i}>
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-2">
-                            <div className="w-5 h-5 rounded flex items-center justify-center bg-orange-50 text-orange-500">
+                            <div className="w-5 h-5 rounded flex items-center justify-center bg-primary/10 text-primary">
                               <Package size={12} />
                             </div>
                             <span className="font-bold text-slate-800">{item.name}</span>

@@ -84,7 +84,7 @@ export default function UserManagement() {
     switch(status) {
       case 'active': return <span className="text-green-600 font-bold text-xs bg-green-50 px-2.5 py-1 rounded-md border border-green-100">Active</span>;
       case 'suspended': return <span className="text-red-600 font-bold text-xs bg-red-50 px-2.5 py-1 rounded-md border border-red-100">Suspended</span>;
-      case 'pending': return <span className="text-orange-600 font-bold text-xs bg-orange-50 px-2.5 py-1 rounded-md border border-orange-100">Pending</span>;
+      case 'pending': return <span className="text-primary/90 font-bold text-xs bg-primary/10 px-2.5 py-1 rounded-md border border-primary/20">Pending</span>;
       default: return <span className="text-slate-600 font-bold text-xs">{status}</span>;
     }
   };
@@ -174,13 +174,13 @@ export default function UserManagement() {
             ) : (
               <>
                 <p className="text-3xl sm:text-4xl font-black text-slate-800 font-headings">{stats?.pendingApprovals}</p>
-                <div className="mt-2 inline-block px-2 py-0.5 bg-orange-50 text-orange-600 text-[10px] font-bold rounded border border-orange-100">
+                <div className="mt-2 inline-block px-2 py-0.5 bg-primary/10 text-primary/90 text-[10px] font-bold rounded border border-primary/20">
                   Needs Review
                 </div>
               </>
             )}
           </div>
-          <div className="p-3 bg-orange-50 text-orange-500 rounded-lg">
+          <div className="p-3 bg-primary/10 text-primary rounded-lg">
             <Clock size={24} />
           </div>
         </div>
@@ -234,7 +234,7 @@ export default function UserManagement() {
             onClick={() => {setActiveTab('pending'); setPage(1);}}
           >
           Active Admins
-            {stats?.pendingApprovals ? <span className="bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded text-[10px]">{stats.pendingApprovals}</span> : null}
+            {stats?.pendingApprovals ? <span className="bg-primary/20 text-primary/90 px-1.5 py-0.5 rounded text-[10px]">{stats.pendingApprovals}</span> : null}
           </button>
           <button 
             className={`px-5 py-3.5 text-sm font-bold whitespace-nowrap flex items-center gap-2 transition-colors border-b-2 ${activeTab === 'suspended' ? 'border-[#16a34a] text-[#16a34a]' : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50'}`}
