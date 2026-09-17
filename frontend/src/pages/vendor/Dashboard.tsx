@@ -11,6 +11,7 @@ import StoreTab from '@/components/StoreTab';
 import CouponsTab from '@/components/CouponsTab';
 import WalletTab from '@/components/WalletTab';
 import ReviewsTab from '@/components/ReviewsTab';
+import { DashboardSkeleton, Skeleton } from "@/components/ui/Skeleton";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -41,9 +42,8 @@ export default function Dashboard() {
 
   if (kycLoading || (kycStatus && kycStatus.status !== 'approved')) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center">
-        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
-        <p className="text-sm font-semibold text-muted-foreground">Checking verification status...</p>
+      <div className="min-h-screen bg-background">
+        <DashboardSkeleton />
       </div>
     );
   }

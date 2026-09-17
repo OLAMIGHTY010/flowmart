@@ -6,6 +6,7 @@ import {
   Clock, ChevronRight, Crosshair, Package
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { Skeleton } from "@/components/ui/Skeleton";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -69,7 +70,10 @@ export default function Dashboard() {
             </button>
             <div className="text-right">
               {statsLoading ? (
-                <Loader2 className="h-6 w-6 animate-spin text-white opacity-80 ml-auto" />
+                <div className="flex flex-col items-end gap-2">
+                  <Skeleton variant="text" className="w-24 h-8 bg-white/30" />
+                  <Skeleton variant="text" className="w-16 h-3 bg-white/20" />
+                </div>
               ) : (
                 <>
                   <h2 className="text-2xl font-black">{revenue}</h2>
@@ -111,8 +115,9 @@ export default function Dashboard() {
           {/* Deliveries List */}
           <div className="flex flex-col gap-3">
             {ordersLoading ? (
-              <div className="flex justify-center p-6 bg-white rounded-2xl">
-                <Loader2 className="animate-spin text-[#15803d]" />
+              <div className="flex flex-col gap-3">
+                <Skeleton variant="rectangular" className="h-20 w-full rounded-2xl" />
+                <Skeleton variant="rectangular" className="h-20 w-full rounded-2xl" />
               </div>
             ) : assignedOrders.length === 0 ? (
               <div className="p-6 bg-white rounded-2xl text-center text-sm text-slate-500 shadow-xs border border-slate-100">

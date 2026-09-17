@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { useCartStore } from "@/stores/cartStore";
 import { useProducts } from "@/hooks/useProducts";
 import WeatherWidget from "@/components/WeatherWidget";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 interface FilterContext {
   query: string;
@@ -216,26 +217,17 @@ export default function Homepage() {
         ) : (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
             {isLoading
-              ? Array.from({ length: 12 }).map(
-                  (_, index) => (
-                    <Card
-                      key={index}
-                      className="overflow-hidden"
-                    >
-                      <div className="h-28 animate-pulse bg-gray-200 lg:h-36" />
-
-                      <div className="p-3">
-                        <div className="mb-2 h-4 animate-pulse rounded bg-gray-200" />
-
-                        <div className="mb-3 h-4 w-2/3 animate-pulse rounded bg-gray-200" />
-
-                        <div className="mb-3 h-5 w-1/2 animate-pulse rounded bg-gray-200" />
-
-                        <div className="h-9 animate-pulse rounded-lg bg-gray-200" />
-                      </div>
-                    </Card>
-                  )
-                )
+              ? Array.from({ length: 12 }).map((_, index) => (
+                  <Card key={index} className="overflow-hidden">
+                    <Skeleton variant="card" className="h-28 lg:h-36 rounded-none" />
+                    <div className="p-3 space-y-3">
+                      <Skeleton variant="text" className="h-4 w-full" />
+                      <Skeleton variant="text" className="h-4 w-2/3" />
+                      <Skeleton variant="text" className="h-5 w-1/2" />
+                      <Skeleton variant="rectangular" className="h-9 w-full rounded-lg" />
+                    </div>
+                  </Card>
+                ))
               : sortedProducts.map((product) => {
                   const stockStatus =
                     product.stockQuantity === 0

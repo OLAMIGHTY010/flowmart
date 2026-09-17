@@ -12,6 +12,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import FilterSidebar from "@/components/FilterSidebar";
 import ChatWidget from "@/components/ChatWidget";
+import { CommandPalette } from "@/components/CommandPalette";
 import { useCategories } from "@/hooks/useCategories";
 
 type SortKey =
@@ -218,6 +219,9 @@ const AppLayout = () => {
       >
         <Footer />
       </div>
+
+      {/* Omni Search Command Palette */}
+      <CommandPalette />
 
       {/* Global Support Chat Widget */}
       <ChatWidget />
