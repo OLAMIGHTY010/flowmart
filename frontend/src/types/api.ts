@@ -19,6 +19,46 @@ export interface AppUser {
   };
 }
 
+export interface ProfileSetupRequest {
+  displayName?: string;
+  businessName?: string;
+  businessPhone?: string;
+  phone?: string;
+  stateRegion: string;
+  city: string;
+  bio?: string;
+  avatar?: string;
+}
+
+export interface KYCInfoRequest {
+  fullName: string;
+  dob: string;
+  gender: string;
+  businessName: string;
+  cacNo: string;
+  businessPermitId: string;
+  bankName: string;
+  accountNumber: string;
+  accountName: string;
+}
+
+export interface KYCSubmitPayload {
+  documents: any[];
+}
+
+export interface KYCStatusResponse {
+  success: boolean;
+  status: 'unsubmitted' | 'pending' | 'approved' | 'rejected';
+  rejectionReason?: string;
+}
+
+export interface DashboardStatsResponse {
+  success: boolean;
+  totalOrders: number;
+  totalRevenue: number;
+  activeProducts: number;
+}
+
 export interface RegisterRequest {
   fullName: string;
   phoneNumber: string;

@@ -77,8 +77,9 @@ export default function ProfileSetup({ onNext }: ProfileSetupProps) {
 
     try {
       await saveProfile({
+        displayName: fullName,
         businessName,
-        phone: businessPhone,
+        businessPhone,
         stateRegion,
         city,
         bio,
