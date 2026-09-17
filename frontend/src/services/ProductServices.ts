@@ -51,11 +51,12 @@ export const productServices = {
   },
 
   getReviews: async (productId: string): Promise<any[]> => {
-    return apiClient.get<any[]>(`/products/${productId}/reviews`);
+    const res = await apiClient.get<any>(`/reviews/${productId}`);
+    return res.reviews || [];
   },
 
   postReview: async (reviewData: any): Promise<any> => {
-    return apiClient.post<any>(`/products/${reviewData.productId}/reviews`, reviewData);
+    return apiClient.post<any>(`/reviews`, reviewData);
   },
 
   getVendorProfile: async (vendorId: string): Promise<any> => {

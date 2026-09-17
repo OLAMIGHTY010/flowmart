@@ -64,7 +64,7 @@ export default function RiderManagement() {
         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
           <div className="text-sm font-bold text-slate-500 mb-1">Avg. Deliveries/Rider</div>
           <div className="text-2xl font-black text-slate-800">{stats?.avgDeliveriesPerRider.toLocaleString() || '3.2'}</div>
-          <div className="text-xs text-blue-500 font-medium mt-2 flex items-center gap-1">
+          <div className="text-xs text-primary font-medium mt-2 flex items-center gap-1">
             <Clock size={12} /> Above average target
           </div>
         </div>
@@ -145,7 +145,7 @@ export default function RiderManagement() {
                       {rider.status === 'active' ? (
                         <span className="text-success font-bold text-[10px] bg-green-50 px-2 py-0.5 rounded border border-green-100 uppercase">Active</span>
                       ) : (
-                        <span className="text-orange-500 font-bold text-[10px] bg-orange-50 px-2 py-0.5 rounded border border-orange-100 uppercase">Idle</span>
+                        <span className="text-primary font-bold text-[10px] bg-primary/10 px-2 py-0.5 rounded border border-primary/20 uppercase">Idle</span>
                       )}
                     </td>
                     <td className="px-5 py-4 font-bold text-slate-800">{rider.deliveriesToday}</td>

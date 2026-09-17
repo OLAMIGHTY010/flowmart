@@ -22,6 +22,7 @@ import SupportDashboard from "@/pages/SupportDashboard";
 import OtpVerification from "@/pages/OtpVerification";
 import ProfileSetup from "@/pages/ProfileSetup";
 import Settings from "@/pages/Settings";
+import Disputes from "@/pages/Disputes";
 import { createProtectedRoute } from "@/routes/guards/ProtectedRoute";
 
 const queryClient = new QueryClient({
@@ -70,6 +71,7 @@ function App() {
               <Route path="/logistics-pricing" element={<LogisticsPricing />} />
               <Route path="/finance" element={<FinanceDashboard />} />
               <Route path="/support" element={<SupportDashboard />} />
+              <Route path="/disputes" element={<Disputes />} />
               <Route path="/settings" element={<Settings />} />
               {/* Other admin routes will go here later */}
             </Route>

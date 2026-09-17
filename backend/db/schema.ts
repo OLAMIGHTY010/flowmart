@@ -1,13 +1,16 @@
-import { pgTable, uuid, varchar, timestamp, pgEnum, integer, decimal, text, boolean, jsonb, date } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, timestamp, pgEnum, integer, decimal, text, boolean, jsonb, date, AnyPgColumn } from 'drizzle-orm/pg-core';
 
 export const roleEnum = pgEnum('role', [
   'super_admin', 
   'admin',
   'logistics_manager', 
   'regional_manager', 
+  'regional_coordinator', 
+  'area_manager', 
   'vendor', 
   'dispatch_rider', 
   'user',
+  'customer',
   'finance',
   'auditor',
   'customer_service'
@@ -17,12 +20,14 @@ export const paymentMethodEnum = pgEnum('payment_method', ['bank_transfer', 'pay
 export const kycStatusEnum = pgEnum('kyc_status', ['unsubmitted', 'pending', 'under_review', 'approved', 'rejected']);
 export const authProviderEnum = pgEnum('auth_provider', ['local', 'google']);
 export const productTypeEnum = pgEnum('product_type', ['food', 'retail', 'grocery', 'service', 'pharmacy']);
+export const productConditionEnum = pgEnum('product_condition', ['new', 'used_like_new', 'used_good', 'used_fair']);
+export const disputeStatusEnum = pgEnum('dispute_status', ['open', 'under_review', 'resolved_buyer_refunded', 'resolved_vendor_paid']);
+export const offerStatusEnum = pgEnum('offer_status', ['pending', 'accepted', 'rejected', 'withdrawn']);
 
 export const users = pgTable('users', {
   id: uuid('id').defaultRandom().primaryKey(),
   fullName: varchar('full_name', { length: 255 }).notNull(),
   email: varchar('email', { length: 255 }).notNull().unique(),
-  
   password: varchar('password', { length: 255 }), // Nullable for Google users
   authProvider: authProviderEnum('auth_provider').default('local').notNull(),
   providerId: varchar('provider_id', { length: 255 }), // Stores Google ID
@@ -63,8 +68,18 @@ export const kycSubmissions = pgTable('kyc_submissions', {
   guarantorRelationship: varchar('guarantor_relationship', { length: 100 }),
   governmentIdUrl: varchar('government_id_url', { length: 500 }),
   businessLicenseUrl: varchar('business_license_url', { length: 500 }),
+  businessPermitUrl: varchar('business_permit_url', { length: 500 }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const categories = pgTable('categories', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: varchar('name', { length: 100 }).notNull(),
+  slug: varchar('slug', { length: 100 }).notNull().unique(),
+  parentId: uuid('parent_id').references((): AnyPgColumn => categories.id),
+  iconUrl: varchar('icon_url', { length: 500 }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
 export const products = pgTable('products', {
@@ -75,9 +90,12 @@ export const products = pgTable('products', {
   description: text('description'),
   price: decimal('price', { precision: 10, scale: 2 }).notNull(),
   oldPrice: decimal('old_price', { precision: 10, scale: 2 }),
-  category: varchar('category', { length: 100 }),
+  categoryId: uuid('category_id').references(() => categories.id),
   brand: varchar('brand', { length: 100 }),
   weight: decimal('weight', { precision: 8, scale: 2 }),
+  condition: productConditionEnum('condition').default('new').notNull(),
+  isNegotiable: boolean('is_negotiable').default(false).notNull(),
+  isSponsored: boolean('is_sponsored').default(false).notNull(),
   images: jsonb('images').default([]), 
   stockQuantity: integer('stock_quantity').default(0),
   productType: productTypeEnum('product_type').default('retail').notNull(),
@@ -101,7 +119,7 @@ export const orderStatusEnum = pgEnum('order_status', [
 export const orders = pgTable('orders', {
   id: uuid('id').defaultRandom().primaryKey(),
   orderRef: varchar('order_ref', { length: 50 }).notNull().unique(), 
-  userId: uuid('user_id').references(() => users.id).notNull(), 
+  userId: uuid('user_id').references(() => users.id).notNull(),
   vendorId: uuid('vendor_id').references(() => users.id).notNull(),     
   riderId: uuid('rider_id').references(() => users.id),                 
   deliveryZone: varchar('delivery_zone', { length: 100 }).notNull(),    
@@ -123,7 +141,7 @@ export const orderItems = pgTable('order_items', {
   unitPrice: decimal('unit_price', { precision: 10, scale: 2 }).notNull(),
 });
 
-export const welfareEvents = pgTable('welfare_events', {
+export const promotionalCampaigns = pgTable('promotional_campaigns', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: varchar('name', { length: 255 }).notNull(),
   date: timestamp('date').notNull(),
@@ -132,10 +150,10 @@ export const welfareEvents = pgTable('welfare_events', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
-export const welfareAllocations = pgTable('welfare_allocations', {
+export const campaignAllocations = pgTable('campaign_allocations', {
   id: uuid('id').defaultRandom().primaryKey(),
   deliveryRef: varchar('delivery_ref', { length: 50 }).unique(), 
-  eventId: uuid('event_id').references(() => welfareEvents.id).notNull(),
+  eventId: uuid('event_id').references(() => promotionalCampaigns.id).notNull(),
   zoneId: varchar('zone_id', { length: 100 }).notNull(),
   riderId: uuid('rider_id').references(() => users.id),
   totalItems: integer('total_items').notNull(),
@@ -175,6 +193,7 @@ export const vendorKyc = pgTable('vendor_kyc', {
   cacNo: varchar('cac_no', { length: 255 }),
   tin: varchar('tin', { length: 255 }),
   businessLicenseId: varchar('business_license_id', { length: 255 }),
+  businessPermitId: varchar('business_permit_id', { length: 255 }),
   bankName: varchar('bank_name', { length: 255 }).notNull(),
   accountNumber: varchar('account_number', { length: 20 }).notNull(),
   accountName: varchar('account_name', { length: 255 }).notNull(),
@@ -185,6 +204,7 @@ export const vendorKyc = pgTable('vendor_kyc', {
   guarantorRelationship: varchar('guarantor_relationship', { length: 100 }).notNull(),
   governmentIdFile: text('government_id_file'), 
   businessLicenseFile: text('business_license_file'), 
+  businessPermitFile: text('business_permit_file'),
   guarantorIdFile: text('guarantor_id_file'), 
   bankReferenceFile: text('bank_reference_file'),
   cacDocumentFile: text('cac_document_file'),
@@ -226,7 +246,7 @@ export const auditLogs = pgTable('audit_logs', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
-export const welfareInventory = pgTable('welfare_inventory', {
+export const featuredInventory = pgTable('featured_inventory', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: varchar('name', { length: 255 }).notNull(),
   stock: integer('stock').notNull().default(0),
@@ -349,6 +369,7 @@ export const staffProfiles = pgTable('staff_profiles', {
   userId: uuid('user_id').references(() => users.id).notNull().unique(),
   branch: varchar('branch', { length: 255 }),
   region: varchar('region', { length: 255 }),
+  state: varchar('state', { length: 255 }),
   department: varchar('department', { length: 255 }),
   professionalCertification: varchar('professional_certification', { length: 255 }),
   grade: varchar('grade', { length: 100 }),
@@ -427,4 +448,91 @@ export const coupons = pgTable('coupons', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+// --- GPS Address System ---
+export const addresses = pgTable('addresses', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').references(() => users.id).notNull(),
+  label: varchar('label', { length: 50 }).notNull(), // 'Home', 'Work', 'Other'
+  address: text('address').notNull(),
+  landmark: text('landmark'), // e.g. "Behind Shoprite, beside the yellow gate"
+  latitude: decimal('latitude', { precision: 10, scale: 7 }).notNull(),
+  longitude: decimal('longitude', { precision: 10, scale: 7 }).notNull(),
+  isDefault: boolean('is_default').default(false).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
 
+// --- Escrow Transactions ---
+export const escrowTransactions = pgTable('escrow_transactions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  orderId: uuid('order_id').references(() => orders.id).notNull(),
+  buyerId: uuid('buyer_id').references(() => users.id).notNull(),
+  vendorId: uuid('vendor_id').references(() => users.id).notNull(),
+  amount: decimal('amount', { precision: 12, scale: 2 }).notNull(),
+  platformFee: decimal('platform_fee', { precision: 12, scale: 2 }).default('0.00').notNull(),
+  status: varchar('status', { length: 50 }).default('held').notNull(), // 'held', 'released', 'refunded', 'disputed'
+  releasedAt: timestamp('released_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// --- Bill Payment Transactions ---
+export const billTransactions = pgTable('bill_transactions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').references(() => users.id).notNull(),
+  category: varchar('category', { length: 50 }).notNull(), // 'airtime', 'data', 'electricity', 'cable'
+  provider: varchar('provider', { length: 100 }).notNull(),
+  customer: varchar('customer', { length: 100 }).notNull(), // phone or meter number
+  amount: decimal('amount', { precision: 12, scale: 2 }).notNull(),
+  reference: varchar('reference', { length: 255 }).notNull().unique(),
+  status: varchar('status', { length: 50 }).default('pending').notNull(), // 'pending', 'success', 'failed'
+  apiResponse: jsonb('api_response'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// --- Advertising Engine ---
+export const sponsoredAds = pgTable('sponsored_ads', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  productId: uuid('product_id').references(() => products.id).notNull(),
+  vendorId: uuid('vendor_id').references(() => users.id).notNull(),
+  amountPaid: decimal('amount_paid', { precision: 12, scale: 2 }).notNull(),
+  startDate: timestamp('start_date').notNull(),
+  endDate: timestamp('end_date').notNull(),
+  status: varchar('status', { length: 50 }).default('pending').notNull(), // 'active', 'expired', 'pending'
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// --- Dispute Resolution ---
+export const disputes = pgTable('disputes', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  escrowId: uuid('escrow_id').references(() => escrowTransactions.id).notNull(),
+  raisedById: uuid('raised_by_id').references(() => users.id).notNull(),
+  reason: text('reason').notNull(),
+  evidenceUrls: jsonb('evidence_urls').default([]),
+  status: disputeStatusEnum('status').default('open').notNull(),
+  resolutionNotes: text('resolution_notes'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// --- Buyer-Seller Chat & Negotiation ---
+export const conversations = pgTable('conversations', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  buyerId: uuid('buyer_id').references(() => users.id).notNull(),
+  vendorId: uuid('vendor_id').references(() => users.id).notNull(),
+  productId: uuid('product_id').references(() => products.id).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const messages = pgTable('messages', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  conversationId: uuid('conversation_id').references(() => conversations.id).notNull(),
+  senderId: uuid('sender_id').references(() => users.id).notNull(),
+  content: text('content'),
+  isOffer: boolean('is_offer').default(false).notNull(),
+  offerAmount: decimal('offer_amount', { precision: 12, scale: 2 }),
+  offerStatus: offerStatusEnum('offer_status'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});

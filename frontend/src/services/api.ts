@@ -3,12 +3,6 @@ import type { AxiosRequestConfig, AxiosError, AxiosInstance, InternalAxiosReques
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-class ApiClient {
-  private axiosInstance: AxiosInstance;
-
-  constructor() {
-    this.axiosInstance = axios.create({
-      baseURL: API_URL,
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
@@ -71,3 +65,7 @@ class ApiClient {
 }
 
 export const apiClient = new ApiClient();
+<<<<<<< HEAD
+=======
+export const api = apiClient;
+>>>>>>> origin/main

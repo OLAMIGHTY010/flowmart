@@ -95,7 +95,7 @@ export default function Dashboard() {
         <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
           <div className="flex justify-between items-start mb-4">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Active Events</span>
-            <div className="p-1.5 bg-orange-100 text-orange-600 rounded-md">
+            <div className="p-1.5 bg-primary/20 text-primary/90 rounded-md">
               <Activity size={16} />
             </div>
           </div>
@@ -148,8 +148,8 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {healthData?.map((item, index) => {
           const isOperational = item.status === 'Operational';
-          const colorClass = isOperational ? 'text-success' : 'text-orange-500';
-          const bgClass = isOperational ? 'bg-success' : 'bg-orange-500';
+          const colorClass = isOperational ? 'text-success' : 'text-primary';
+          const bgClass = isOperational ? 'bg-success' : 'bg-primary';
 
           return (
             <div key={index} className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex flex-col">
@@ -254,13 +254,13 @@ export default function Dashboard() {
               <div
                 key={alert.id}
                 className={`p-3 rounded-lg border flex flex-col gap-2 ${alert.type === 'critical' ? 'bg-red-50 border-red-100' :
-                    alert.type === 'warning' ? 'bg-orange-50 border-orange-100' :
+                    alert.type === 'warning' ? 'bg-primary/10 border-primary/20' :
                       'bg-green-50 border-green-100'
                   }`}
               >
                 <div className="flex justify-between items-center">
                   <div className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${alert.type === 'critical' ? 'bg-red-100 text-red-600' :
-                      alert.type === 'warning' ? 'bg-orange-100 text-orange-600' :
+                      alert.type === 'warning' ? 'bg-primary/20 text-primary/90' :
                         'bg-green-100 text-green-600'
                     }`}>
                     <div className="flex items-center gap-1">
@@ -302,9 +302,9 @@ export default function Dashboard() {
             const getTagStyle = (type: string) => {
               switch (type) {
                 case 'Vendor': return 'bg-green-100 text-green-700';
-                case 'Delivery': return 'bg-blue-100 text-blue-700';
+                case 'Delivery': return 'bg-primary/20 text-primary';
                 case 'Wallet': return 'bg-red-100 text-red-700';
-                case 'Audit Log': return 'bg-orange-100 text-orange-700';
+                case 'Audit Log': return 'bg-primary/20 text-orange-700';
                 case 'Settings': return 'bg-slate-100 text-slate-700';
                 default: return 'bg-slate-100 text-slate-700';
               }

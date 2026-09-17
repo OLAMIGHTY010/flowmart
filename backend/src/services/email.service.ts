@@ -37,7 +37,7 @@ interface OutOfStockData {
   productName: string;
 }
 
-interface WelfareAllocationData {
+interface CampaignAllocationData {
   coordinatorName: string;
   zoneId: string;
   eventName: string;
@@ -160,12 +160,13 @@ class EmailService {
     });
   }
 
-  public async sendWelfareAllocationAlert(coordinatorEmail: string, data: WelfareAllocationData): Promise<void> {
+  public async sendCampaignAllocationAlert(coordinatorEmail: string, data: CampaignAllocationData): Promise<void> {
     const html = await this.compileTemplate('welfare-allocation', data);
+
     await this.transporter.sendMail({
-      from: this.fromEmail,
+      from: `"FlowMart Support" <${process.env.SMTP_USER}>`,
       to: coordinatorEmail,
-      subject: `📦 New Welfare Allocation for ${data.zoneId}`,
+      subject: `📦 New Campaign Allocation for ${data.zoneId}`,
       html,
     });
   }

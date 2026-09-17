@@ -46,7 +46,7 @@ export default function LiveTracker() {
   const getStatusColor = (status: string) => {
     switch(status) {
       case 'Done': return 'bg-green-100 text-[#16a34a] border-green-200';
-      case 'Active': return 'bg-orange-100 text-orange-500 border-orange-200';
+      case 'Active': return 'bg-primary/20 text-primary border-orange-200';
       case 'Critical': return 'bg-red-100 text-red-500 border-red-200';
       case 'Pending': return 'bg-slate-100 text-slate-500 border-slate-200';
       default: return 'bg-slate-100 text-slate-500 border-slate-200';
@@ -56,7 +56,7 @@ export default function LiveTracker() {
   const getStatusDot = (status: string) => {
     switch(status) {
       case 'Done': return 'bg-[#16a34a]';
-      case 'Active': return 'bg-orange-500';
+      case 'Active': return 'bg-primary';
       case 'Critical': return 'bg-red-500';
       case 'Pending': return 'bg-slate-300';
       default: return 'bg-slate-300';
@@ -188,7 +188,7 @@ export default function LiveTracker() {
               <div className="flex items-center gap-4 text-[10px] font-bold text-slate-500">
                 <span>{overview?.totalZones || 0} Zones</span>
                 <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-[#16a34a]"></span>Completed</div>
-                <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-orange-500"></span>In Progress</div>
+                <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-primary"></span>In Progress</div>
                 <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-red-500"></span>Critical</div>
                 <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-slate-300"></span>Not Started</div>
               </div>
@@ -302,7 +302,7 @@ export default function LiveTracker() {
                   if (feed.type === 'error') {
                     iconBg = 'bg-red-500';
                   } else if (feed.type === 'info') {
-                    iconBg = 'bg-blue-500';
+                    iconBg = 'bg-primary';
                   }
                   return (
                   <div key={i} className="flex gap-4 group">
@@ -333,13 +333,13 @@ export default function LiveTracker() {
 
             <div className="flex flex-col gap-3">
               {shortageAlerts?.map((alert: any, i: number) => {
-                const bg = alert.severity === 'Critical' ? 'bg-red-50 border-red-100' : 'bg-orange-50 border-orange-100';
+                const bg = alert.severity === 'Critical' ? 'bg-red-50 border-red-100' : 'bg-primary/10 border-primary/20';
                 return (
                 <div key={i} className={`p-4 rounded-xl border flex flex-col gap-3 ${bg}`}>
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-black text-slate-800">{alert.zone}</span>
-                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${alert.severity === 'Critical' ? 'bg-red-100 text-red-600' : 'bg-orange-100 text-orange-600'}`}>
+                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${alert.severity === 'Critical' ? 'bg-red-100 text-red-600' : 'bg-primary/20 text-primary/90'}`}>
                         {alert.severity}
                       </span>
                     </div>

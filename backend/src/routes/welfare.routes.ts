@@ -1,10 +1,15 @@
 import { Router } from 'express';
 import { 
-  createWelfareEvent, 
-  allocateWelfare, 
-  bulkAllocateWelfare, 
-  getWelfareReports,
+  createPromoEvent, 
+  allocatePromo, 
+  bulkAllocatePromo, 
+  getPromoReports,
   reportShortage,
+  updatePromoStatus,
+  createWelfareEvent,
+  allocateWelfare,
+  bulkAllocateWelfare,
+  getWelfareReports,
   updateWelfareStatus
 } from '../controllers/welfare.controller';
 import { authenticateJWT, authorizeRoles } from '../middleware/auth.middleware';

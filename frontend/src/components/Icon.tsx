@@ -13,52 +13,6 @@ import {
   Signal,
   Wifi,
   Users,
-  Battery,
-  FileCheck,
-  CheckCircle,
-  Camera,
-  Phone,
-  MapPin,
-  Building,
-  Bell,
-  BellRing,
-  Loader2,
-  TrendingUp,
-  Package,
-  PlusCircle,
-  Tag,
-  Truck,
-  ShoppingCart,
-  Home,
-  ShoppingBag,
-  BarChart2,
-  Settings,
-  AlertCircle,
-  ShieldCheck,
-  Clock,
-  Upload,
-} from 'lucide-react';
-
-interface IconProps {
-  i: string;
-  size?: number;
-  className?: string;
-}
-
-const iconMap: Record<string, React.ComponentType<any>> = {
-  'arrow-left': ArrowLeft,
-  'user': User,
-  'briefcase': Briefcase,
-  'landmark': Landmark,
-  'chevron-down': ChevronDown,
-  'calendar': Calendar,
-  'credit-card': CreditCard,
-  'hash': Hash,
-  'file-text': FileText,
-  'check': Check,
-  'signal': Signal,
-  'wifi': Wifi,
-  'users': Users,
   'battery': Battery,
   'file-check': FileCheck,
   'check-circle': CheckCircle,

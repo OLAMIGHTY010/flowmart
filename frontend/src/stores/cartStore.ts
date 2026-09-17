@@ -21,6 +21,7 @@ interface CartStore {
   getCartSubtotal: () => number;
   getShippingFee: () => number;
   getCartTotal: () => number;
+  getCartGroupedByVendor: () => Record<string, CartItem[]>;
 }
 
 // helper
@@ -106,6 +107,18 @@ export const useCartStore = create<CartStore>()(
       getCartTotal: () => {
         const { total } = calculateTotals(get().cart);
         return total;
+      },
+
+      getCartGroupedByVendor: () => {
+        const grouped: Record<string, CartItem[]> = {};
+        get().cart.forEach((item) => {
+          const vId = item.vendorId || "Unknown Vendor";
+          if (!grouped[vId]) {
+            grouped[vId] = [];
+          }
+          grouped[vId].push(item);
+        });
+        return grouped;
       },
     }),
     {

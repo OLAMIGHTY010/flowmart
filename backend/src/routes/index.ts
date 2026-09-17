@@ -25,6 +25,12 @@ import reviewRoutes from './review.routes';
 import aiRoutes from './ai.routes';
 import searchRoutes from './search.routes';
 import uploadRoutes from './upload.routes';
+import weatherRoutes from './weather.routes';
+import billsRoutes from './bills.routes';
+import categoryRoutes from './category.routes';
+import adRoutes from './ad.routes';
+import disputeRoutes from './dispute.routes';
+import chatRoutes from './chat.routes';
 
 // Controller & Middleware Imports
 import { authenticateJWT } from '../middleware/auth.middleware';
@@ -61,6 +67,12 @@ router.use('/payment', paymentRoutes);
 router.use('/finance', financeRoutes);
 router.use('/logistics', logisticsPricingRoutes);
 router.use('/support', supportRoutes);
+router.use('/weather', weatherRoutes);
+router.use('/bills', billsRoutes);
+router.use('/categories', categoryRoutes);
+router.use('/ads', adRoutes);
+router.use('/disputes', disputeRoutes);
+router.use('/chat', chatRoutes);
 
 // Dashboards & Roles
 router.use('/vendors', vendorRoutes);

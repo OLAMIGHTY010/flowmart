@@ -6,7 +6,7 @@ export interface AuthenticatedRequest extends Request {
   user?: {
     id: string;
     email: string;
-    role: 'super_admin' | 'admin' | 'logistics_manager' | 'regional_manager' | 'vendor' | 'dispatch_rider' | 'user' | 'finance' | 'auditor';
+    role: 'super_admin' | 'admin' | 'logistics_manager' | 'regional_manager' | 'regional_coordinator' | 'area_manager' | 'vendor' | 'dispatch_rider' | 'user' | 'customer' | 'finance' | 'auditor';
   };
 }
 

@@ -5,6 +5,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import tailwindcss from '@tailwindcss/vite'
 
+// Manually define __dirname and __filename in ESM
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
@@ -45,6 +46,7 @@ export default defineConfig({
         start_url: '/',
         scope: '/',
         display: 'standalone',
+        orientation: 'portrait',
         icons: [
           { src: '/flowmart.png', sizes: '192x192', type: 'image/png' },
           { src: '/flowmart.png', sizes: '512x512', type: 'image/png' },

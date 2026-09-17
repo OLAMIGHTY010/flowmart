@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { 
   register, login, verifyOtp, resendOtp, getMe, logout,
-  forgotPassword, resetPassword, forceChangePassword, assignRole,
+  forgotPassword, resetPassword, forceChangePassword, assignRole, syncSession,
   googleAuth
 } from '../controllers/auth.controller';
 import { authenticateJWT, authorizeRoles } from '../middleware/auth.middleware';
@@ -18,6 +18,8 @@ router.post('/google', googleAuth);
 // Admins / Staff 
 router.post('/register', register);
 router.post('/login', login);
+router.post('/logout', authenticateJWT, logout);
+router.post('/sync', authenticateJWT, syncSession);
 
 // Password recovery / Verification (Staff predominantly, except verifyOtp if needed)
 router.post('/verify-otp', verifyOtp);
