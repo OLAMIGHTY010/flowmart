@@ -27,6 +27,12 @@ const VendorDashboard = lazy(() => import("@/pages/vendor/Dashboard"));
 // Rider Pages
 const RiderDashboard = lazy(() => import("@/pages/rider/Dashboard"));
 
+// Onboarding Routers (Unified)
+const ProfileSetupRouter = lazy(() => import("@/pages/ProfileSetupRouter"));
+const KYCInfoRouter = lazy(() => import("@/pages/KYCRouters").then(m => ({ default: m.KYCInfoRouter })));
+const KYCVerificationRouter = lazy(() => import("@/pages/KYCRouters").then(m => ({ default: m.KYCVerificationRouter })));
+const KYCReviewRouter = lazy(() => import("@/pages/KYCRouters").then(m => ({ default: m.KYCReviewRouter })));
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -82,6 +88,12 @@ function AnimatedRoutes() {
         <Route path="/vendor-profile/:id" element={<PageWrapper><VendorProfile /></PageWrapper>} />
         
         <Route element={<ProtectedRoute />}>
+          {/* Onboarding Flow */}
+          <Route path="/profile-setup" element={<PageWrapper><ProfileSetupRouter /></PageWrapper>} />
+          <Route path="/kyc" element={<PageWrapper><KYCInfoRouter /></PageWrapper>} />
+          <Route path="/kyc/verification" element={<PageWrapper><KYCVerificationRouter /></PageWrapper>} />
+          <Route path="/kyc/review" element={<PageWrapper><KYCReviewRouter /></PageWrapper>} />
+
           <Route element={<PageWrapper><AppLayout /></PageWrapper>}>
             <Route path="/customer/home" element={<Homepage />} />
             <Route path="/checkout" element={<Checkout />} />
