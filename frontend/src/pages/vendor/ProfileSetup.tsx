@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfileSetupFormCache } from '@/hooks/useKYCFormCache';
+import { useProfileSetup } from '@/hooks/useVendorMutations';
 import { VendorButton } from '@/components/ui/button';
 import { VendorInput } from '@/components/ui/input';
 import OnboardingStepIndicator from '@/components/OnboardingStepIndicator';
@@ -63,7 +64,9 @@ export default function ProfileSetup({ onNext }: ProfileSetupProps) {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const { mutateAsync: saveProfile, isPending } = useProfileSetup();
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
 
@@ -72,15 +75,31 @@ export default function ProfileSetup({ onNext }: ProfileSetupProps) {
       return;
     }
 
-    setShowToast(true);
-    setTimeout(() => {
-      setShowToast(false);
-      if (onNext) {
-        onNext();
-      } else {
-        navigate('/kyc');
-      }
-    }, 500);
+    try {
+      await saveProfile({
+        businessName,
+        phone: businessPhone,
+        stateRegion,
+        city,
+        bio,
+        avatar: profileImage || undefined,
+      });
+
+      // Update local context so protected route won't bounce
+      await refreshUser();
+
+      setShowToast(true);
+      setTimeout(() => {
+        setShowToast(false);
+        if (onNext) {
+          onNext();
+        } else {
+          navigate('/kyc');
+        }
+      }, 500);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Failed to update profile. Please try again.');
+    }
   };
 
   return (
@@ -296,7 +315,8 @@ export default function ProfileSetup({ onNext }: ProfileSetupProps) {
             </CardContent>
           </Card>
 
-          <VendorButton type="submit" className="mt-2">
+          <VendorButton type="submit" className="mt-2 w-full sm:w-auto self-start" disabled={isPending}>
+            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin inline" />}
             Save & Continue
           </VendorButton>
         </form>
