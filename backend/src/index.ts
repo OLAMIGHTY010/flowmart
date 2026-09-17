@@ -113,21 +113,31 @@ app.use("/api/v1", routes);
 const PORT = process.env.PORT || 5000;
 
 // Only start the server locally. Vercel will use the exported app directly.
-if (process.env.NODE_ENV !== "production") {
 	testDatabaseConnection()
 		.then(() => {
 			initWebSocketHub(server);
 
+		if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
 			server.listen(PORT, () => {
 				console.log(
 					`FlowMart Server & WebSocket Hub is running on port ${PORT}`
 				);
 			});
-		})
-		.catch((error: Error) => {
-			console.error("Failed to start server:", error);
-			process.exit(1);
-		});
-}
+		}
+	})
+	.catch((error: Error) => {
+		console.error("Failed to connect to database:", error.message);
+		console.warn("WARNING: Server starting without database connection. API requests will fail until DATABASE_URL is corrected.");
+		
+		initWebSocketHub(server);
+		
+		if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+			server.listen(PORT, () => {
+				console.log(
+					`FlowMart Server & WebSocket Hub is running on port ${PORT} (NO DATABASE)`
+				);
+			});
+		}
+	});
 
 export default app;
