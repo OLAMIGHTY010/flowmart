@@ -47,22 +47,27 @@ testDatabaseConnection()
 		initWebSocketHub(server);
 		startCronJobs();
 
-		server.listen(PORT, () => {
-			console.log(
-				`FlowMart Server & WebSocket Hub is running on port ${PORT}`
-			);
-		});
+		if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+			server.listen(PORT, () => {
+				console.log(
+					`FlowMart Server & WebSocket Hub is running on port ${PORT}`
+				);
+			});
+		}
 	})
 	.catch((error: Error) => {
 		console.error("Failed to connect to database:", error.message);
 		console.warn("WARNING: Server starting without database connection. API requests will fail until DATABASE_URL is corrected.");
 		
 		initWebSocketHub(server);
-		server.listen(PORT, () => {
-			console.log(
-				`FlowMart Server & WebSocket Hub is running on port ${PORT} (NO DATABASE)`
-			);
-		});
+		
+		if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+			server.listen(PORT, () => {
+				console.log(
+					`FlowMart Server & WebSocket Hub is running on port ${PORT} (NO DATABASE)`
+				);
+			});
+		}
 	});
 
-export { app };
+export default app;
