@@ -5,6 +5,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 // Public unified pages
 import Welcome from "@/pages/Welcome";
 import Auth from "@/pages/Auth";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
 
 // Customer Pages
 import Homepage from "@/pages/Homepage";
@@ -13,6 +15,8 @@ import Checkout from "@/pages/Checkout";
 import Orders from "@/pages/Orders";
 import Messages from "@/pages/Messages";
 import OrderTracking from "@/pages/OrderTracking";
+import VendorProfile from "@/pages/VendorProfile";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 // Vendor Pages
 import VendorDashboard from "@/pages/vendor/Dashboard";
@@ -40,14 +44,20 @@ function App() {
           {/* Public unified entry point */}
           <Route path="/" element={<Welcome />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
           {/* Customer Flow */}
           <Route path="/vendor-profile/:id" element={<VendorProfile />} />
+          
           <Route element={<ProtectedRoute />}>
-            <Route path="/checkout" element={<Checkout />} />
-            <Route path="/orders" element={<Orders />} />
-            <Route path="/messages" element={<Messages />} />
-            <Route path="/orders/:id/track" element={<OrderTracking />} />
+            <Route element={<AppLayout />}>
+              <Route path="/customer/home" element={<Homepage />} />
+              <Route path="/checkout" element={<Checkout />} />
+              <Route path="/orders" element={<Orders />} />
+              <Route path="/messages" element={<Messages />} />
+              <Route path="/orders/:id/track" element={<OrderTracking />} />
+            </Route>
           </Route>
 
           {/* Vendor Flow */}

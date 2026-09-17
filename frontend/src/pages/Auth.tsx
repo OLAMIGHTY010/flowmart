@@ -138,7 +138,7 @@ export default function Auth() {
           </div>
 
           <button
-            onClick={() => navigate(`/auth/email?role=${role}`)}
+            onClick={() => navigate(`/login?role=${role}`)}
             disabled={loading}
             className="w-full bg-muted border border-border text-foreground hover:bg-muted/80 flex items-center justify-center gap-3 py-3.5 rounded-xl font-bold transition-all disabled:opacity-50"
           >

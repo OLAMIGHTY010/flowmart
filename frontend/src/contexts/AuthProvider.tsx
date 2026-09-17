@@ -88,7 +88,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setUser(mappedUser);
         localStorage.setItem("currentUser", JSON.stringify(mappedUser));
         
-        return { success: true, error: "" }; 
+        return { success: true, error: "", user: mappedUser }; 
       }
       
       return { success: false, error: 'Invalid server response structure' };
@@ -110,7 +110,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setUser(mappedUser);
         localStorage.setItem("currentUser", JSON.stringify(mappedUser));
         
-        return { success: true, error: "" };
+        return { success: true, error: "", user: mappedUser };
       }
       
       return { success: false, error: 'Invalid registration response' };

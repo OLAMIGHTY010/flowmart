@@ -15,8 +15,8 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   if (!user) {
-    // Redirect to login but save the attempted url
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    // Redirect to welcome screen to force role selection
+    return <Navigate to="/" state={{ from: location }} replace />;
   }
 
   return children ? <>{children}</> : <Outlet />;

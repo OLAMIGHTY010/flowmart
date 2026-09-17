@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { Navigate, useNavigate, useLocation } from "react-router-dom";
+import { Navigate, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { Eye, EyeOff, Loader2, Camera, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { VendorButton } from "@/components/ui/button";
@@ -10,6 +10,8 @@ import SideBanner from "@/components/SideBanner";
 export default function Register() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const role = searchParams.get("role");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { register, user } = useAuth();
@@ -27,6 +29,10 @@ export default function Register() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  if (!role) {
+    return <Navigate to="/" replace />;
+  }
 
   if (user) {
     return <Navigate to={from} replace />;
@@ -67,13 +73,26 @@ export default function Register() {
       dateOfBirth:dob,
       gender,
       profileImage,
-      role:"customer",
+      role: role as any,
     });
 
     setLoading(false);
 
     if (!result.success) {
       setError(result.error || "Failed to create account. Please try again.");
+    } else {
+      const userRole = result.user?.role || role;
+      if (from !== "/") {
+        navigate(from, { replace: true });
+      } else {
+        if (userRole === "vendor") {
+          navigate("/vendor/dashboard", { replace: true });
+        } else if (userRole === "dispatch_rider") {
+          navigate("/rider/dashboard", { replace: true });
+        } else {
+          navigate("/customer/home", { replace: true });
+        }
+      }
     }
   };
 
@@ -239,7 +258,7 @@ export default function Register() {
               Already have an account?{" "}
               <button
                 type="button"
-                onClick={() => navigate("/login")}
+                onClick={() => navigate(`/login?role=${role}`)}
                 className="text-primary font-bold hover:underline cursor-pointer bg-transparent border-none outline-none font-body"
               >
                 Sign In

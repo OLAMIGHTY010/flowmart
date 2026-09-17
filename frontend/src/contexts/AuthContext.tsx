@@ -7,10 +7,12 @@ export interface AuthContextType {
   login: (email: string, password: string) => Promise<{
     success: boolean;
     error: string;
+    user?: AppUser;
   }>;
   register: (data: RegisterRequest) => Promise<{
     success: boolean;
     error: string;
+    user?: AppUser;
   }>;
   logout: () => Promise<void>;
 }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Navigate, useLocation } from 'react-router-dom';
+import { useNavigate, Navigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Eye, EyeOff, Loader2, ArrowLeft } from 'lucide-react';
 import { VendorButton } from '@/components/ui/button';
 import { UserInput } from '@/components/ui/input';
@@ -10,6 +10,8 @@ import SideBanner from '@/components/SideBanner';
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const role = searchParams.get("role");
   const { login, user } = useAuth();
   const from = (location.state as any)?.from || "/";
 
@@ -18,6 +20,10 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
+
+  if (!role) {
+    return <Navigate to="/" replace />;
+  }
 
   if (user) {
     return <Navigate to={from} replace />;
@@ -40,6 +46,20 @@ export default function Login() {
 
     if (!result.success) {
       setError(result.error || 'Invalid credentials. Please try again.');
+    } else {
+      // Determine where to redirect based on the user's role
+      const userRole = result.user?.role || role;
+      if (from !== "/") {
+        navigate(from, { replace: true });
+      } else {
+        if (userRole === "vendor") {
+          navigate("/vendor/dashboard", { replace: true });
+        } else if (userRole === "dispatch_rider") {
+          navigate("/rider/dashboard", { replace: true });
+        } else {
+          navigate("/customer/home", { replace: true });
+        }
+      }
     }
   };
 
@@ -128,7 +148,7 @@ export default function Login() {
                 Don’t have an account?{' '}
                 <button
                   type="button"
-                  onClick={() => navigate('/register')}
+                  onClick={() => navigate(`/register?role=${role}`)}
                   className="text-primary font-bold hover:underline cursor-pointer bg-transparent border-none outline-none font-body"
                 >
                   Sign up
