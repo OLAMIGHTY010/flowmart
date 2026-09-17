@@ -409,7 +409,7 @@ export default function KYCInfo() {
                     documents.find(d => d.id === 'car_image') || { id: 'car_image', title: 'Car Image', subtitle: 'Clear photo', status: 'upload' },
                     uploadingId,
                     handleCardClick,
-                    'border-blue-200 bg-blue-50/50 text-blue-600 hover:bg-blue-50'
+                    'border-primary/30 bg-primary/10/50 text-primary/90 hover:bg-primary/10'
                   )}
                 </div>
               </div>

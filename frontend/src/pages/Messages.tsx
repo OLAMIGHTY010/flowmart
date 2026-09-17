@@ -132,7 +132,7 @@ export default function Messages() {
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-gray-50">
-        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -143,7 +143,7 @@ export default function Messages() {
       <div className={`w-full md:w-80 bg-white border-r border-gray-200 flex flex-col ${activeChat ? 'hidden md:flex' : 'flex'}`}>
         <div className="p-4 border-b border-gray-100 flex items-center justify-between">
           <h2 className="font-extrabold text-xl text-gray-900">Messages</h2>
-          <Link to="/" className="text-sm font-semibold text-orange-500 hover:underline md:hidden">Back to Shop</Link>
+          <Link to="/" className="text-sm font-semibold text-primary hover:underline md:hidden">Back to Shop</Link>
         </div>
         <div className="flex-1 overflow-y-auto">
           {conversations.length === 0 ? (
@@ -160,7 +160,7 @@ export default function Messages() {
                   setActiveChat(conv);
                   setMessages([]);
                 }}
-                className={`w-full text-left p-4 border-b border-gray-100 flex items-center gap-3 transition-colors hover:bg-orange-50 ${activeChat?.id === conv.id ? 'bg-orange-50' : 'bg-white'}`}
+                className={`w-full text-left p-4 border-b border-gray-100 flex items-center gap-3 transition-colors hover:bg-primary/10 ${activeChat?.id === conv.id ? 'bg-primary/10' : 'bg-white'}`}
               >
                 <div className="w-12 h-12 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0 border border-gray-200">
                   <img src={conv.productImage || "https://placehold.co/100x100"} alt="product" className="w-full h-full object-cover" />
@@ -187,7 +187,7 @@ export default function Messages() {
             {/* Chat Header */}
             <div className="bg-white px-4 py-3 border-b border-gray-200 flex items-center gap-3 shadow-sm z-10">
               <button 
-                className="md:hidden p-2 -ml-2 text-gray-500 hover:text-orange-500 transition-colors"
+                className="md:hidden p-2 -ml-2 text-gray-500 hover:text-primary transition-colors"
                 onClick={() => setActiveChat(null)}
               >
                 <ArrowLeft size={20} />
@@ -198,7 +198,7 @@ export default function Messages() {
               <div>
                 <h3 className="font-bold text-gray-900 leading-tight">{activeChat.productName}</h3>
                 <p className="text-xs font-semibold text-gray-500">
-                  Chat with <span className="text-orange-600">{activeChat.otherUser?.fullName}</span>
+                  Chat with <span className="text-primary/90">{activeChat.otherUser?.fullName}</span>
                 </p>
               </div>
             </div>
@@ -212,10 +212,10 @@ export default function Messages() {
                   return (
                     <div key={msg.id} className={`flex w-full ${isMe ? 'justify-end' : 'justify-start'}`}>
                       <div className={`max-w-[85%] sm:max-w-[70%] rounded-2xl p-4 shadow-sm border ${
-                        isMe ? 'bg-orange-50 border-orange-200' : 'bg-white border-gray-200'
+                        isMe ? 'bg-primary/10 border-primary/30' : 'bg-white border-gray-200'
                       }`}>
                         <div className="flex items-center gap-2 mb-2">
-                          <Tag size={16} className={isMe ? 'text-orange-500' : 'text-gray-500'} />
+                          <Tag size={16} className={isMe ? 'text-primary' : 'text-gray-500'} />
                           <span className="text-xs font-bold uppercase tracking-wider text-gray-500">
                             {isMe ? 'You made an offer' : 'Offer received'}
                           </span>
@@ -232,7 +232,7 @@ export default function Messages() {
                               <button onClick={() => handleRespondToOffer(msg.id, 'reject')} className="flex-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold py-2 rounded-lg transition-colors">Reject</button>
                             </div>
                           ) : (
-                            <div className="text-center bg-orange-100 text-orange-700 text-xs font-bold py-1.5 rounded-lg border border-orange-200">
+                            <div className="text-center bg-primary/20 text-primary-700 text-xs font-bold py-1.5 rounded-lg border border-primary/30">
                               Pending Review
                             </div>
                           )
@@ -253,7 +253,7 @@ export default function Messages() {
                 return (
                   <div key={msg.id} className={`flex w-full ${isMe ? 'justify-end' : 'justify-start'}`}>
                     <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 shadow-sm text-sm ${
-                      isMe ? 'bg-orange-500 text-white font-medium rounded-br-none' : 'bg-white text-gray-800 border border-gray-200 rounded-bl-none'
+                      isMe ? 'bg-primary text-white font-medium rounded-br-none' : 'bg-white text-gray-800 border border-gray-200 rounded-bl-none'
                     }`}>
                       {msg.content}
                     </div>
@@ -272,7 +272,7 @@ export default function Messages() {
                     <input
                       type="number"
                       placeholder="Enter offer amount..."
-                      className="w-full bg-orange-50 border border-orange-200 rounded-xl py-3 pl-8 pr-4 text-sm font-bold text-gray-900 outline-none focus:border-orange-500 focus:bg-white transition-colors"
+                      className="w-full bg-primary/10 border border-primary/30 rounded-xl py-3 pl-8 pr-4 text-sm font-bold text-gray-900 outline-none focus:border-primary focus:bg-white transition-colors"
                       value={offerAmount}
                       onChange={(e) => setOfferAmount(e.target.value)}
                       autoFocus
@@ -288,7 +288,7 @@ export default function Messages() {
                   <button
                     type="submit"
                     disabled={sending || !offerAmount}
-                    className="h-11 px-4 bg-orange-600 text-white rounded-xl flex items-center justify-center hover:bg-orange-700 transition-colors disabled:opacity-50 font-bold text-sm shadow-md"
+                    className="h-11 px-4 bg-primary/90 text-white rounded-xl flex items-center justify-center hover:bg-primary-700 transition-colors disabled:opacity-50 font-bold text-sm shadow-md"
                   >
                     {sending ? <Loader2 size={18} className="animate-spin" /> : "Send Offer"}
                   </button>
@@ -317,7 +317,7 @@ export default function Messages() {
                     <button
                       type="submit"
                       disabled={sending || !inputText.trim()}
-                      className="h-11 w-11 sm:w-12 bg-orange-600 text-white rounded-xl flex items-center justify-center hover:bg-orange-700 transition-colors disabled:opacity-50 shadow-md flex-shrink-0"
+                      className="h-11 w-11 sm:w-12 bg-primary/90 text-white rounded-xl flex items-center justify-center hover:bg-primary-700 transition-colors disabled:opacity-50 shadow-md flex-shrink-0"
                     >
                       {sending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} className="ml-0.5" />}
                     </button>

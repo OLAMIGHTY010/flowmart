@@ -67,10 +67,10 @@ export default function UserManagement() {
 
   const getRoleBadge = (role: string) => {
     switch(role) {
-      case 'super_admin': return <span className="px-2 py-1 bg-purple-100 text-purple-700 text-[10px] font-bold rounded-full">Super Admin</span>;
-      case 'admin': return <span className="px-2 py-1 bg-blue-100 text-blue-700 text-[10px] font-bold rounded-full">Admin</span>;
-      case 'vendor': return <span className="px-2 py-1 bg-orange-100 text-orange-700 text-[10px] font-bold rounded-full">Vendor</span>;
-      case 'dispatch_rider': return <span className="px-2 py-1 bg-indigo-100 text-indigo-700 text-[10px] font-bold rounded-full">Rider</span>;
+      case 'super_admin': return <span className="px-2 py-1 bg-primary/20 text-purple-700 text-[10px] font-bold rounded-full">Super Admin</span>;
+      case 'admin': return <span className="px-2 py-1 bg-primary/20 text-blue-700 text-[10px] font-bold rounded-full">Admin</span>;
+      case 'vendor': return <span className="px-2 py-1 bg-primary/20 text-orange-700 text-[10px] font-bold rounded-full">Vendor</span>;
+      case 'dispatch_rider': return <span className="px-2 py-1 bg-primary/20 text-indigo-700 text-[10px] font-bold rounded-full">Rider</span>;
       case 'attendee': return <span className="px-2 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded-full">Attendee</span>;
       case 'zone_coordinator': return <span className="px-2 py-1 bg-teal-100 text-teal-700 text-[10px] font-bold rounded-full">Zone Coord</span>;
       case 'camp_logistics_coordinator': return <span className="px-2 py-1 bg-cyan-100 text-cyan-700 text-[10px] font-bold rounded-full">Logistics</span>;
@@ -84,7 +84,7 @@ export default function UserManagement() {
     switch(status) {
       case 'active': return <span className="text-green-600 font-bold text-xs bg-green-50 px-2.5 py-1 rounded-md border border-green-100">Active</span>;
       case 'suspended': return <span className="text-red-600 font-bold text-xs bg-red-50 px-2.5 py-1 rounded-md border border-red-100">Suspended</span>;
-      case 'pending': return <span className="text-orange-600 font-bold text-xs bg-orange-50 px-2.5 py-1 rounded-md border border-orange-100">Pending</span>;
+      case 'pending': return <span className="text-primary/90 font-bold text-xs bg-primary/10 px-2.5 py-1 rounded-md border border-primary/20">Pending</span>;
       default: return <span className="text-slate-600 font-bold text-xs">{status}</span>;
     }
   };
@@ -174,13 +174,13 @@ export default function UserManagement() {
             ) : (
               <>
                 <p className="text-3xl sm:text-4xl font-black text-slate-800 font-headings">{stats?.pendingApprovals}</p>
-                <div className="mt-2 inline-block px-2 py-0.5 bg-orange-50 text-orange-600 text-[10px] font-bold rounded border border-orange-100">
+                <div className="mt-2 inline-block px-2 py-0.5 bg-primary/10 text-primary/90 text-[10px] font-bold rounded border border-primary/20">
                   Needs Review
                 </div>
               </>
             )}
           </div>
-          <div className="p-3 bg-orange-50 text-orange-500 rounded-lg">
+          <div className="p-3 bg-primary/10 text-primary rounded-lg">
             <Clock size={24} />
           </div>
         </div>
@@ -234,7 +234,7 @@ export default function UserManagement() {
             onClick={() => {setActiveTab('pending'); setPage(1);}}
           >
           Active Admins
-            {stats?.pendingApprovals ? <span className="bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded text-[10px]">{stats.pendingApprovals}</span> : null}
+            {stats?.pendingApprovals ? <span className="bg-primary/20 text-primary/90 px-1.5 py-0.5 rounded text-[10px]">{stats.pendingApprovals}</span> : null}
           </button>
           <button 
             className={`px-5 py-3.5 text-sm font-bold whitespace-nowrap flex items-center gap-2 transition-colors border-b-2 ${activeTab === 'suspended' ? 'border-[#16a34a] text-[#16a34a]' : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50'}`}

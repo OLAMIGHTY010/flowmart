@@ -29,7 +29,7 @@ export default function ProductDetails() {
   if (isLoading) {
     return (
       <div className="flex h-96 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-orange-500 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
     );
   }
@@ -38,7 +38,7 @@ export default function ProductDetails() {
     return (
       <div className="mx-auto max-w-7xl px-4 py-8 text-center">
         <h2 className="text-xl font-bold text-gray-900">Product not found</h2>
-        <Link to="/" className="mt-4 inline-block text-sm font-semibold text-orange-500 hover:underline">
+        <Link to="/" className="mt-4 inline-block text-sm font-semibold text-primary hover:underline">
           Go back to homepage
         </Link>
       </div>
@@ -49,7 +49,7 @@ export default function ProductDetails() {
     <div className="mx-auto max-w-7xl px-0 py-6">
       {/* Breadcrumbs / Back button */}
       <div className="mb-4">
-        <Link to="/" className="text-sm font-semibold text-orange-500 hover:underline">
+        <Link to="/" className="text-sm font-semibold text-primary hover:underline">
           ← Back to Homepage
         </Link>
       </div>

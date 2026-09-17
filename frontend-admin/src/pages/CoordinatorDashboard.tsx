@@ -45,10 +45,10 @@ export default function CoordinatorDashboard() {
   const getStatusBadge = (status: string) => {
     switch(status) {
       case 'Completed': return <span className="bg-green-100 text-[#16a34a] px-2 py-1 rounded font-bold text-[10px] uppercase">Completed</span>;
-      case 'Scheduled': return <span className="bg-blue-100 text-blue-600 px-2 py-1 rounded font-bold text-[10px] uppercase">Scheduled</span>;
-      case 'In progress': return <span className="bg-orange-100 text-orange-600 px-2 py-1 rounded font-bold text-[10px] uppercase">In progress</span>;
+      case 'Scheduled': return <span className="bg-primary/20 text-primary/90 px-2 py-1 rounded font-bold text-[10px] uppercase">Scheduled</span>;
+      case 'In progress': return <span className="bg-primary/20 text-primary/90 px-2 py-1 rounded font-bold text-[10px] uppercase">In progress</span>;
       case 'Critical': return <span className="bg-red-100 text-red-600 px-2 py-1 rounded font-bold text-[10px] uppercase">Critical</span>;
-      case 'Paused': return <span className="bg-orange-100 text-orange-600 px-2 py-1 rounded font-bold text-[10px] uppercase">Paused</span>;
+      case 'Paused': return <span className="bg-primary/20 text-primary/90 px-2 py-1 rounded font-bold text-[10px] uppercase">Paused</span>;
       case 'Flagged': return <span className="bg-red-100 text-red-600 px-2 py-1 rounded font-bold text-[10px] uppercase">Flagged</span>;
       default: return null;
     }
@@ -114,13 +114,13 @@ export default function CoordinatorDashboard() {
         <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
           <div className="flex justify-between items-start mb-2">
             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Pending Deliveries</span>
-            <Package size={16} className="text-orange-500" />
+            <Package size={16} className="text-primary" />
           </div>
           <div>
             <h3 className="text-2xl font-black text-slate-800 mb-1">
               {overview?.pendingZones || 0} <span className="text-xs font-bold text-slate-400">zones</span>
             </h3>
-            <div className="text-[10px] font-bold text-orange-600 bg-orange-100 px-2 py-0.5 rounded inline-block">Awaiting dispatch</div>
+            <div className="text-[10px] font-bold text-primary/90 bg-primary/20 px-2 py-0.5 rounded inline-block">Awaiting dispatch</div>
           </div>
         </div>
 
@@ -216,7 +216,7 @@ export default function CoordinatorDashboard() {
                     iconBg = 'bg-red-100 text-red-500';
                   } else if (feed.type === 'info') {
                     icon = Users;
-                    iconBg = 'bg-blue-100 text-blue-600';
+                    iconBg = 'bg-primary/20 text-primary/90';
                   }
                   const Icon = icon;
                   return (

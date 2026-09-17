@@ -10,7 +10,7 @@ export default function Welcome() {
       {/* Background decorations */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
         <div className="absolute top-[-10%] right-[-5%] w-[40%] h-[40%] rounded-full bg-primary/20 blur-[120px]" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-500/10 blur-[100px]" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary/10 blur-[100px]" />
       </div>
 
       <div className="max-w-4xl w-full z-10 flex flex-col items-center">
@@ -32,25 +32,25 @@ export default function Welcome() {
             onClick={() => navigate('/auth?role=customer')}
             className="group bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-white/10 p-8 rounded-3xl transition-all cursor-pointer flex flex-col items-center text-center animate-in slide-in-from-bottom-10 fade-in duration-700 delay-100"
           >
-            <div className="w-16 h-16 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+            <div className="w-16 h-16 rounded-full bg-primary/20 text-primary/80 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
               <ShoppingBag size={32} />
             </div>
             <h2 className="text-2xl font-bold text-white mb-2 font-headings">Shop on FlowMart</h2>
             <p className="text-sm text-white/50 mb-6">Discover products from thousands of vendors with fast delivery.</p>
-            <span className="text-blue-400 font-bold text-sm uppercase tracking-wider group-hover:underline mt-auto">Sign in as Customer</span>
+            <span className="text-primary/80 font-bold text-sm uppercase tracking-wider group-hover:underline mt-auto">Sign in as Customer</span>
           </div>
 
           {/* Vendor */}
           <div 
             onClick={() => navigate('/auth?role=vendor')}
-            className="group bg-white/5 border border-white/10 hover:border-orange-500/50 hover:bg-white/10 p-8 rounded-3xl transition-all cursor-pointer flex flex-col items-center text-center animate-in slide-in-from-bottom-10 fade-in duration-700 delay-200"
+            className="group bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-white/10 p-8 rounded-3xl transition-all cursor-pointer flex flex-col items-center text-center animate-in slide-in-from-bottom-10 fade-in duration-700 delay-200"
           >
-            <div className="w-16 h-16 rounded-full bg-orange-500/20 text-orange-400 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+            <div className="w-16 h-16 rounded-full bg-primary/20 text-primary/80 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
               <Store size={32} />
             </div>
             <h2 className="text-2xl font-bold text-white mb-2 font-headings">Sell on FlowMart</h2>
             <p className="text-sm text-white/50 mb-6">Open your Food, Store, or Clothes business and reach thousands of customers.</p>
-            <span className="text-orange-400 font-bold text-sm uppercase tracking-wider group-hover:underline mt-auto">Become a Vendor</span>
+            <span className="text-primary/80 font-bold text-sm uppercase tracking-wider group-hover:underline mt-auto">Become a Vendor</span>
           </div>
 
           {/* Delivery Rider */}

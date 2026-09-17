@@ -61,7 +61,7 @@ export default function CoordinatorAnalytics() {
       case 'None': return 'bg-green-100 text-green-700';
       case 'Low': return 'bg-green-300 text-green-800';
       case 'Moderate': return 'bg-orange-300 text-orange-900';
-      case 'High': return 'bg-orange-500 text-white';
+      case 'High': return 'bg-primary text-white';
       case 'Critical': return 'bg-red-600 text-white';
       default: return 'bg-slate-100';
     }
@@ -70,8 +70,8 @@ export default function CoordinatorAnalytics() {
   const getStatusBadge = (status: string) => {
     switch(status) {
       case 'Completed': return <span className="bg-green-100 text-[#16a34a] px-2 py-1 rounded font-bold text-[10px] uppercase">Completed</span>;
-      case 'Scheduled': return <span className="bg-blue-100 text-blue-600 px-2 py-1 rounded font-bold text-[10px] uppercase">Scheduled</span>;
-      case 'Paused': return <span className="bg-orange-100 text-orange-600 px-2 py-1 rounded font-bold text-[10px] uppercase">Paused</span>;
+      case 'Scheduled': return <span className="bg-primary/20 text-primary/90 px-2 py-1 rounded font-bold text-[10px] uppercase">Scheduled</span>;
+      case 'Paused': return <span className="bg-primary/20 text-primary/90 px-2 py-1 rounded font-bold text-[10px] uppercase">Paused</span>;
       case 'Flagged': return <span className="bg-red-100 text-red-600 px-2 py-1 rounded font-bold text-[10px] uppercase">Flagged</span>;
       default: return null;
     }
@@ -296,7 +296,7 @@ export default function CoordinatorAnalytics() {
               <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-sm bg-green-100"></div>None</div>
               <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-sm bg-green-300"></div>Low</div>
               <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-sm bg-orange-300"></div>Moderate</div>
-              <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-sm bg-orange-500"></div>High</div>
+              <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-sm bg-primary"></div>High</div>
               <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-sm bg-red-600"></div>Critical</div>
             </div>
             

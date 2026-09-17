@@ -19,9 +19,9 @@ export default function Auth() {
         return {
           title: "Sell on FlowMart",
           subtitle: "Create your vendor account to start selling.",
-          icon: <Store className="text-orange-500 w-6 h-6" />,
-          color: "border-orange-500",
-          bg: "bg-orange-500/10"
+          icon: <Store className="text-primary w-6 h-6" />,
+          color: "border-primary",
+          bg: "bg-primary/10"
         };
       case "dispatch_rider":
         return {
@@ -36,9 +36,9 @@ export default function Auth() {
         return {
           title: "Join FlowMart",
           subtitle: "Sign in to buy and track your orders.",
-          icon: <ShoppingBag className="text-blue-500 w-6 h-6" />,
-          color: "border-blue-500",
-          bg: "bg-blue-500/10"
+          icon: <ShoppingBag className="text-primary w-6 h-6" />,
+          color: "border-primary",
+          bg: "bg-primary/10"
         };
     }
   };

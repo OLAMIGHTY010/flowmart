@@ -36,7 +36,7 @@ export default function ProductGallery({
                 onClick={() => setSelected(image)}
                 className={`flex-shrink-0 rounded-lg border-2 bg-white p-1 transition overflow-hidden h-20 w-20 cursor-pointer ${
                   isSelected
-                    ? "border-orange-500 shadow-sm"
+                    ? "border-primary shadow-sm"
                     : "border-gray-200 hover:border-gray-300"
                 }`}
               >

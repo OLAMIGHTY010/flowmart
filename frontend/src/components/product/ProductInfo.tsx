@@ -16,7 +16,7 @@ export default function ProductInfo({
 
   return (
     <div className="flex flex-col">
-      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-orange-500">
+      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
         <span>{product.brand || "Official Store"}</span>
         <span className="text-gray-300">•</span>
         <span className="text-gray-500">{product.category || "General"}</span>
@@ -42,7 +42,7 @@ export default function ProductInfo({
         </div>
 
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-orange-500 transition cursor-pointer">
+          <button className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-primary transition cursor-pointer">
             <Share2 size={16} />
             Share
           </button>
@@ -62,7 +62,7 @@ export default function ProductInfo({
           <span className="text-sm text-gray-400 line-through">
             ₦{displayOldPrice.toLocaleString()}
           </span>
-          <span className="rounded bg-orange-100 px-2 py-0.5 text-xs font-bold text-orange-600">
+          <span className="rounded bg-primary/20 px-2 py-0.5 text-xs font-bold text-primary/90">
             -{discountPercent}% OFF
           </span>
         </div>

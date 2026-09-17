@@ -162,7 +162,7 @@ export default function SupportDashboard() {
                 >
                   <div className="flex justify-between items-start mb-1">
                     <h4 className="font-bold text-sm text-slate-800 truncate pr-2">{ticket.userFullName || 'Anonymous User'}</h4>
-                    <span className="text-[10px] text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded font-bold uppercase">{ticket.userRole}</span>
+                    <span className="text-[10px] text-primary/90 bg-primary/20 px-1.5 py-0.5 rounded font-bold uppercase">{ticket.userRole}</span>
                   </div>
                   <p className="text-xs text-slate-500 truncate mb-2">{ticket.userEmail}</p>
                   <div className="flex items-center gap-1 text-[10px] text-slate-400 font-medium">
@@ -218,10 +218,10 @@ export default function SupportDashboard() {
                       isMine 
                         ? 'bg-[#15803d] text-white rounded-tr-sm shadow-sm' 
                         : isBot 
-                          ? 'bg-blue-50 border border-blue-100 text-slate-800 rounded-tl-sm'
+                          ? 'bg-primary/10 border border-primary/20 text-slate-800 rounded-tl-sm'
                           : 'bg-white border border-slate-200 text-slate-800 rounded-tl-sm shadow-sm'
                     }`}>
-                      {isBot && <div className="flex items-center gap-1 text-[10px] text-blue-600 font-bold uppercase mb-1"><AlertCircle size={10}/> FlowMart Bot History</div>}
+                      {isBot && <div className="flex items-center gap-1 text-[10px] text-primary/90 font-bold uppercase mb-1"><AlertCircle size={10}/> FlowMart Bot History</div>}
                       <p className="text-sm">{msg.message}</p>
                       <p className={`text-[10px] mt-1 text-right ${isMine ? 'text-green-100' : 'text-slate-400'}`}>
                         {new Date(msg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}

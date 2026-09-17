@@ -63,12 +63,12 @@ const WeatherWidget: React.FC = () => {
 
   const getWeatherIcon = (main: string) => {
     switch (main.toLowerCase()) {
-      case 'rain': return <CloudRain className="h-6 w-6 text-blue-500" />;
+      case 'rain': return <CloudRain className="h-6 w-6 text-primary" />;
       case 'clouds': return <Cloud className="h-6 w-6 text-gray-400" />;
       case 'clear': return <Sun className="h-6 w-6 text-yellow-500" />;
       case 'thunderstorm': return <CloudLightning className="h-6 w-6 text-yellow-600" />;
-      case 'drizzle': return <CloudDrizzle className="h-6 w-6 text-blue-400" />;
-      case 'snow': return <CloudSnow className="h-6 w-6 text-blue-200" />;
+      case 'drizzle': return <CloudDrizzle className="h-6 w-6 text-primary/80" />;
+      case 'snow': return <CloudSnow className="h-6 w-6 text-primary/30" />;
       default: return <Wind className="h-6 w-6 text-teal-400" />;
     }
   };

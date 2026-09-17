@@ -35,7 +35,7 @@ function Card({ className, title, subtitle, status, children, ...props }: Custom
                 "text-xs font-medium px-2.5 py-1 rounded-full uppercase tracking-wider text-[10px]",
                 status === "approved" && "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
                 status === "pending" && " text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-                status === "upload" && "bg-blue-100  text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                status === "upload" && "bg-primary/20  text-blue-700 dark:bg-blue-900/30 dark:text-primary/80"
               )}>
                 {status}
               </span>

@@ -84,7 +84,7 @@ export default function Checkout() {
         <p className="mt-2 text-sm text-gray-500">Add products before checking out</p>
         <Link
           to="/"
-          className="mt-6 rounded-lg bg-orange-500 px-8 py-3 text-sm font-bold text-white transition hover:bg-orange-600"
+          className="mt-6 rounded-lg bg-primary px-8 py-3 text-sm font-bold text-white transition hover:bg-primary/90"
         >
           Continue Shopping
         </Link>
@@ -160,7 +160,7 @@ export default function Checkout() {
                   <div
                     className={`flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full text-sm font-bold transition ${
                       isActive
-                        ? "bg-orange-500 text-white shadow-md"
+                        ? "bg-primary text-white shadow-md"
                         : isCompleted
                         ? "bg-green-500 text-white"
                         : "bg-gray-100 text-gray-400"
@@ -171,7 +171,7 @@ export default function Checkout() {
                   <span
                     className={`mt-1 text-[10px] sm:text-[11px] font-semibold ${
                       isActive
-                        ? "text-orange-600"
+                        ? "text-primary/90"
                         : isCompleted
                         ? "text-green-600"
                         : "text-gray-400"
@@ -201,7 +201,7 @@ export default function Checkout() {
           <Card className="w-full overflow-hidden p-0">
             <div className="p-4 sm:p-6">
               <div className="mb-5 flex items-center gap-2">
-                <MapPin size={20} className="text-orange-500" />
+                <MapPin size={20} className="text-primary" />
                 <h2 className="text-lg font-bold text-gray-900">Delivery Details</h2>
               </div>
 
@@ -227,7 +227,7 @@ export default function Checkout() {
           <Card className="w-full overflow-hidden p-0">
             <div className="p-4 sm:p-6">
               <div className="mb-5 flex items-center gap-2">
-                <CreditCard size={20} className="text-orange-500" />
+                <CreditCard size={20} className="text-primary" />
                 <h2 className="text-lg font-bold text-gray-900">Payment Method</h2>
               </div>
 
@@ -235,7 +235,7 @@ export default function Checkout() {
                 <label
                   className={`flex cursor-pointer items-center gap-3 rounded-lg border-2 p-4 transition ${
                     paymentMethod === "paystack"
-                      ? "border-orange-500 bg-orange-50"
+                      ? "border-primary bg-primary/10"
                       : "border-gray-200 hover:border-gray-300"
                   }`}
                 >
@@ -244,7 +244,7 @@ export default function Checkout() {
                     name="payment"
                     checked={paymentMethod === "paystack"}
                     onChange={() => setPaymentMethod("paystack")}
-                    className="accent-orange-500"
+                    className="accent-primary"
                   />
                   <div>
                     <p className="text-sm font-semibold text-gray-900 flex items-center gap-2">
@@ -258,7 +258,7 @@ export default function Checkout() {
                 <label
                   className={`flex cursor-pointer items-center gap-3 rounded-lg border-2 p-4 transition ${
                     paymentMethod === "flutterwave"
-                      ? "border-orange-500 bg-orange-50"
+                      ? "border-primary bg-primary/10"
                       : "border-gray-200 hover:border-gray-300"
                   }`}
                 >
@@ -267,7 +267,7 @@ export default function Checkout() {
                     name="payment"
                     checked={paymentMethod === "flutterwave"}
                     onChange={() => setPaymentMethod("flutterwave")}
-                    className="accent-orange-500"
+                    className="accent-primary"
                   />
                   <div>
                     <p className="text-sm font-semibold text-gray-900">Flutterwave</p>
@@ -278,7 +278,7 @@ export default function Checkout() {
                 <label
                   className={`flex cursor-pointer items-center gap-3 rounded-lg border-2 p-4 transition ${
                     paymentMethod === "bank_transfer"
-                      ? "border-orange-500 bg-orange-50"
+                      ? "border-primary bg-primary/10"
                       : "border-gray-200 hover:border-gray-300"
                   }`}
                 >
@@ -287,7 +287,7 @@ export default function Checkout() {
                     name="payment"
                     checked={paymentMethod === "bank_transfer"}
                     onChange={() => setPaymentMethod("bank_transfer")}
-                    className="accent-orange-500"
+                    className="accent-primary"
                   />
                   <div>
                     <p className="text-sm font-semibold text-gray-900">Direct Bank Transfer</p>
@@ -298,7 +298,7 @@ export default function Checkout() {
                 <label
                   className={`flex cursor-pointer items-center gap-3 rounded-lg border-2 p-4 transition ${
                     paymentMethod === "pay_on_delivery"
-                      ? "border-orange-500 bg-orange-50"
+                      ? "border-primary bg-primary/10"
                       : "border-gray-200 hover:border-gray-300"
                   }`}
                 >
@@ -307,7 +307,7 @@ export default function Checkout() {
                     name="payment"
                     checked={paymentMethod === "pay_on_delivery"}
                     onChange={() => setPaymentMethod("pay_on_delivery")}
-                    className="accent-orange-500"
+                    className="accent-primary"
                   />
                   <div>
                     <p className="text-sm font-semibold text-gray-900">Pay on Delivery</p>
@@ -319,8 +319,8 @@ export default function Checkout() {
               {/* Bank Transfer Details */}
               {paymentMethod === "bank_transfer" && (
                 <div className="mt-5 space-y-4">
-                  <div className="rounded-lg border border-orange-200 bg-orange-50 p-4 min-h-[120px]">
-                    <p className="mb-2 text-xs font-bold uppercase tracking-wider text-orange-600">
+                  <div className="rounded-lg border border-primary/30 bg-primary/10 p-4 min-h-[120px]">
+                    <p className="mb-2 text-xs font-bold uppercase tracking-wider text-primary/90">
                       Transfer to this account
                     </p>
                     {loadingBank ? (
@@ -358,7 +358,7 @@ export default function Checkout() {
 
                   <div className="flex flex-col gap-[10px] w-full">
                     <label className="text-sm font-medium text-foreground">Payment Proof (optional)</label>
-                    <label className="flex w-full cursor-pointer items-center gap-3 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50/50 p-4 transition hover:border-orange-400 hover:bg-orange-50">
+                    <label className="flex w-full cursor-pointer items-center gap-3 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50/50 p-4 transition hover:border-primary/80 hover:bg-primary/10">
                       <Upload size={20} className="flex-shrink-0 text-gray-400" />
                       <span className="text-sm text-gray-500 truncate flex-1 min-w-0">
                         {proof ? proof.name : "Upload screenshot or receipt"}
@@ -424,14 +424,14 @@ export default function Checkout() {
 
                 <div className="flex justify-between text-lg">
                   <span className="font-bold text-gray-900">Total</span>
-                  <span className="font-extrabold text-orange-600">₦{total.toLocaleString()}</span>
+                  <span className="font-extrabold text-primary/90">₦{total.toLocaleString()}</span>
                 </div>
               </div>
 
               <button
                 disabled={placeOrderMutation.isPending}
                 onClick={handleSubmit}
-                className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-orange-500 py-3.5 text-sm font-bold uppercase tracking-wider text-white shadow-sm transition hover:bg-orange-600 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed cursor-pointer"
+                className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-3.5 text-sm font-bold uppercase tracking-wider text-white shadow-sm transition hover:bg-primary/90 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed cursor-pointer"
               >
                 {placeOrderMutation.isPending ? (
                   <>
@@ -448,7 +448,7 @@ export default function Checkout() {
 
               <Link
                 to="/cart"
-                className="mt-3 block text-center text-sm font-medium text-gray-500 hover:text-orange-500 transition"
+                className="mt-3 block text-center text-sm font-medium text-gray-500 hover:text-primary transition"
               >
                 ← Back to Cart
               </Link>

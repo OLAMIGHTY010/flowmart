@@ -106,7 +106,7 @@ export default function VendorProfile() {
           <div className="mt-8 grid grid-cols-2 gap-4 border-t border-gray-100 pt-6 md:grid-cols-4">
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-1.5 text-gray-500">
-                <Star size={16} className="text-orange-400 fill-orange-400" />
+                <Star size={16} className="text-primary/80 fill-primary/80" />
                 <span className="text-xs font-bold uppercase tracking-wider">Seller Score</span>
               </div>
               <p className="text-xl font-extrabold text-gray-900">{vendor.rating?.toFixed(1) || "4.8"}</p>

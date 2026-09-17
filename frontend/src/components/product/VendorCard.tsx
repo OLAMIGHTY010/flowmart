@@ -41,7 +41,7 @@ export default function VendorCard({ vendor }: Props) {
           
           <div className="mt-1 flex items-center gap-3 text-xs font-semibold text-gray-500">
             <div className="flex items-center gap-1">
-              <Star size={12} className="fill-orange-400 text-orange-400" />
+              <Star size={12} className="fill-primary/80 text-primary/80" />
               <span className="text-gray-900">{vendor.rating?.toFixed(1) || "New"}</span>
             </div>
             <span className="h-1 w-1 rounded-full bg-gray-300" />

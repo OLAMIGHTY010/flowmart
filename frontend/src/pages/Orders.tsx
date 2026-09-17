@@ -14,9 +14,9 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
 
 const STATUS_COLORS: Record<OrderStatus, string> = {
   pending: "bg-amber-100 text-amber-700",
-  confirmed: "bg-blue-100 text-blue-700",
-  assigned: "bg-blue-100 text-blue-700",
-  picked_up: "bg-indigo-100 text-indigo-700",
+  confirmed: "bg-primary/20 text-blue-700",
+  assigned: "bg-primary/20 text-blue-700",
+  picked_up: "bg-primary/20 text-indigo-700",
   delivered: "bg-green-100 text-green-700",
   cancelled: "bg-red-100 text-red-700",
 };
@@ -27,7 +27,7 @@ export default function Orders() {
   if (isLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -54,7 +54,7 @@ export default function Orders() {
         </p>
         <Link
           to="/"
-          className="mt-6 rounded-lg bg-orange-500 px-8 py-3 text-sm font-bold text-white transition hover:bg-orange-600"
+          className="mt-6 rounded-lg bg-primary px-8 py-3 text-sm font-bold text-white transition hover:bg-primary/90"
         >
           Start Shopping
         </Link>
@@ -91,8 +91,8 @@ export default function Orders() {
               className="flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition hover:shadow-md hover:border-gray-300 group"
             >
               {/* Icon */}
-              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-orange-50">
-                <Package className="h-6 w-6 text-orange-500" />
+              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                <Package className="h-6 w-6 text-primary" />
               </div>
 
               {/* Details */}
@@ -126,7 +126,7 @@ export default function Orders() {
               {/* Arrow */}
               <ChevronRight
                 size={18}
-                className="flex-shrink-0 text-gray-300 transition group-hover:text-orange-500"
+                className="flex-shrink-0 text-gray-300 transition group-hover:text-primary"
               />
             </Link>
           );

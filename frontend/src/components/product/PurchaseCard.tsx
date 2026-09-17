@@ -93,7 +93,7 @@ export default function PurchaseCard({
         <button
           onClick={handleAddToCart}
           disabled={isOutOfStock}
-          className="w-full rounded-lg bg-orange-500 py-3 text-sm font-bold uppercase tracking-wider text-white shadow-sm transition hover:bg-orange-600 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed cursor-pointer"
+          className="w-full rounded-lg bg-primary py-3 text-sm font-bold uppercase tracking-wider text-white shadow-sm transition hover:bg-primary/90 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed cursor-pointer"
         >
           {isOutOfStock ? "Out of Stock" : "Add To Cart"}
         </button>
@@ -119,7 +119,7 @@ export default function PurchaseCard({
                 console.error(e);
               }
             }}
-            className="w-full rounded-lg border border-orange-200 bg-orange-50 py-3 text-sm font-bold uppercase tracking-wider text-orange-600 shadow-sm transition hover:bg-orange-100 cursor-pointer flex items-center justify-center gap-2"
+            className="w-full rounded-lg border border-primary/30 bg-primary/10 py-3 text-sm font-bold uppercase tracking-wider text-primary/90 shadow-sm transition hover:bg-primary/20 cursor-pointer flex items-center justify-center gap-2"
           >
             {product.isNegotiable ? "Make an Offer" : "Chat with Seller"}
           </button>
@@ -131,7 +131,7 @@ export default function PurchaseCard({
               addToCart(product, qty);
               navigate("/cart");
             }}
-            className="w-full rounded-lg border border-orange-500 py-3 text-sm font-bold uppercase tracking-wider text-orange-500 transition hover:bg-orange-50 cursor-pointer"
+            className="w-full rounded-lg border border-primary py-3 text-sm font-bold uppercase tracking-wider text-primary transition hover:bg-primary/10 cursor-pointer"
           >
             Buy Now
           </button>
@@ -158,7 +158,7 @@ export default function PurchaseCard({
       {/* Delivery details / Jumia-style Info Block */}
       <div className="mt-6 border-t border-gray-100 pt-5 space-y-4">
         <div className="flex gap-3">
-          <Truck size={18} className="text-orange-500 flex-shrink-0 mt-0.5" />
+          <Truck size={18} className="text-primary flex-shrink-0 mt-0.5" />
           <div>
             <h4 className="text-xs font-bold text-gray-800 uppercase">
               FlowMart Express Delivery
@@ -170,7 +170,7 @@ export default function PurchaseCard({
         </div>
 
         <div className="flex gap-3">
-          <RefreshCw size={18} className="text-orange-500 flex-shrink-0 mt-0.5" />
+          <RefreshCw size={18} className="text-primary flex-shrink-0 mt-0.5" />
           <div>
             <h4 className="text-xs font-bold text-gray-800 uppercase">
               Easy Return Policy
@@ -182,7 +182,7 @@ export default function PurchaseCard({
         </div>
 
         <div className="flex gap-3">
-          <ShieldCheck size={18} className="text-orange-500 flex-shrink-0 mt-0.5" />
+          <ShieldCheck size={18} className="text-primary flex-shrink-0 mt-0.5" />
           <div>
             <h4 className="text-xs font-bold text-gray-800 uppercase">
               Warranty & Safety

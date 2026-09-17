@@ -101,7 +101,7 @@ export default function PlatformAnalytics() {
         <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group">
           <div className="flex justify-between items-start mb-2">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Deliveries</span>
-            <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+            <div className="p-2 bg-primary/10 text-primary/90 rounded-lg">
               <Truck size={18} />
             </div>
           </div>
@@ -129,7 +129,7 @@ export default function PlatformAnalytics() {
         <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
           <div className="flex justify-between items-start mb-2">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Active Vendors</span>
-            <div className="p-2 bg-purple-50 text-purple-600 rounded-lg">
+            <div className="p-2 bg-primary/10 text-primary/90 rounded-lg">
               <Store size={18} />
             </div>
           </div>
@@ -257,7 +257,7 @@ export default function PlatformAnalytics() {
         {/* Automated Insights Panel */}
         <div className="bg-gradient-to-br from-slate-800 to-slate-900 p-6 rounded-xl shadow-md text-white flex flex-col">
           <div className="flex items-center gap-2 mb-4">
-            <div className="p-1.5 bg-blue-500/20 rounded-md text-blue-400">
+            <div className="p-1.5 bg-primary/20 rounded-md text-primary/80">
               <BarChart3 size={18} />
             </div>
             <h3 className="text-lg font-bold">Automated Insights</h3>
@@ -266,9 +266,9 @@ export default function PlatformAnalytics() {
           <div className="flex flex-col gap-4 flex-1">
             {overview && overview.slaAdherence < 95 ? (
               <div className="bg-white/5 rounded-lg p-4 border border-white/10 flex gap-3">
-                <AlertTriangle className="text-orange-400 shrink-0 mt-0.5" size={16} />
+                <AlertTriangle className="text-primary/80 shrink-0 mt-0.5" size={16} />
                 <div>
-                  <h4 className="text-sm font-bold text-orange-400">SLA Adherence Alert</h4>
+                  <h4 className="text-sm font-bold text-primary/80">SLA Adherence Alert</h4>
                   <p className="text-xs text-slate-300 mt-1 leading-relaxed">System-wide SLA adherence has dropped below 95% (Current: {overview.slaAdherence}%). Consider investigating delivery bottlenecks.</p>
                 </div>
               </div>

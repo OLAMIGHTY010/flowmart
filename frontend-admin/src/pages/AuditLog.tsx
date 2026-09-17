@@ -171,11 +171,11 @@ function LogTableRow({ log, isExpanded, onToggle }: { log: AuditLogItem, isExpan
     switch(action.toLowerCase()) {
       case 'rejected': return 'text-danger bg-red-50';
       case 'approved': return 'text-success bg-green-50';
-      case 'updated': return 'text-blue-600 bg-blue-50';
+      case 'updated': return 'text-primary/90 bg-primary/10';
       case 'deleted': return 'text-danger bg-red-50';
       case 'created': return 'text-success bg-green-50';
-      case 'login': return 'text-indigo-600 bg-indigo-50';
-      case 'alert': return 'text-orange-600 bg-orange-50';
+      case 'login': return 'text-primary/90 bg-primary/10';
+      case 'alert': return 'text-primary/90 bg-primary/10';
       default: return 'text-slate-600 bg-slate-50';
     }
   };
@@ -183,10 +183,10 @@ function LogTableRow({ log, isExpanded, onToggle }: { log: AuditLogItem, isExpan
   const getModuleColor = (module: string) => {
     switch(module.toLowerCase()) {
       case 'onboard': return 'bg-teal-100 text-teal-800';
-      case 'vendor': return 'bg-purple-100 text-purple-800';
-      case 'auth': return 'bg-indigo-100 text-indigo-800';
-      case 'profile': return 'bg-blue-100 text-blue-800';
-      case 'security': return 'bg-orange-100 text-orange-800';
+      case 'vendor': return 'bg-primary/20 text-purple-800';
+      case 'auth': return 'bg-primary/20 text-indigo-800';
+      case 'profile': return 'bg-primary/20 text-blue-800';
+      case 'security': return 'bg-primary/20 text-orange-800';
       case 'platform': return 'bg-slate-200 text-slate-800';
       default: return 'bg-slate-100 text-slate-800';
     }

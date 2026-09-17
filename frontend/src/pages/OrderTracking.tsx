@@ -67,9 +67,9 @@ const STATUS_COLORS: Record<
   { bg: string; text: string; dot: string }
 > = {
   pending: { bg: "bg-amber-100", text: "text-amber-700", dot: "bg-amber-500" },
-  confirmed: { bg: "bg-blue-100", text: "text-blue-700", dot: "bg-blue-500" },
-  assigned: { bg: "bg-blue-100", text: "text-blue-700", dot: "bg-blue-500" },
-  picked_up: { bg: "bg-indigo-100", text: "text-indigo-700", dot: "bg-indigo-500" },
+  confirmed: { bg: "bg-primary/20", text: "text-blue-700", dot: "bg-primary" },
+  assigned: { bg: "bg-primary/20", text: "text-blue-700", dot: "bg-primary" },
+  picked_up: { bg: "bg-primary/20", text: "text-indigo-700", dot: "bg-primary" },
   delivered: { bg: "bg-green-100", text: "text-green-700", dot: "bg-green-500" },
   cancelled: { bg: "bg-red-100", text: "text-red-700", dot: "bg-red-500" },
 };
@@ -110,7 +110,7 @@ export default function OrderTracking() {
   if (isLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -124,7 +124,7 @@ export default function OrderTracking() {
         </h1>
         <Link
           to="/orders"
-          className="mt-4 text-sm font-semibold text-orange-500 hover:underline"
+          className="mt-4 text-sm font-semibold text-primary hover:underline"
         >
           View all orders
         </Link>
@@ -267,7 +267,7 @@ export default function OrderTracking() {
                           isCompleted
                             ? "border-green-500 bg-green-500"
                             : isCurrent
-                            ? "border-orange-500 bg-orange-500"
+                            ? "border-primary bg-primary"
                             : "border-gray-200 bg-white"
                         }`}
                       >

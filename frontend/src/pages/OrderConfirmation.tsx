@@ -26,7 +26,7 @@ export default function OrderConfirmation() {
   if (isLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -40,7 +40,7 @@ export default function OrderConfirmation() {
         </h1>
         <Link
           to="/"
-          className="mt-4 text-sm font-semibold text-orange-500 hover:underline"
+          className="mt-4 text-sm font-semibold text-primary hover:underline"
         >
           Go back to homepage
         </Link>
@@ -64,7 +64,7 @@ export default function OrderConfirmation() {
                 <div
                   className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold transition ${
                     isActive
-                      ? "bg-orange-500 text-white shadow-md"
+                      ? "bg-primary text-white shadow-md"
                       : isCompleted
                       ? "bg-green-500 text-white"
                       : "bg-gray-100 text-gray-400"
@@ -75,7 +75,7 @@ export default function OrderConfirmation() {
                 <span
                   className={`mt-1.5 text-[11px] font-semibold ${
                     isActive
-                      ? "text-orange-600"
+                      ? "text-primary/90"
                       : isCompleted
                       ? "text-green-600"
                       : "text-gray-400"
@@ -166,7 +166,7 @@ export default function OrderConfirmation() {
         <div className="mt-5 space-y-2 border-t border-gray-100 pt-4">
           <div className="flex justify-between text-lg">
             <span className="font-bold">Total</span>
-            <span className="font-extrabold text-orange-600">
+            <span className="font-extrabold text-primary/90">
               ₦{Number(order.totalAmount).toLocaleString()}
             </span>
           </div>
@@ -197,7 +197,7 @@ export default function OrderConfirmation() {
       <div className="flex flex-col gap-3 sm:flex-row">
         <Link
           to={`/orders/${order.id}/track`}
-          className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-orange-500 py-3.5 text-sm font-bold uppercase tracking-wider text-white shadow-sm transition hover:bg-orange-600"
+          className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary py-3.5 text-sm font-bold uppercase tracking-wider text-white shadow-sm transition hover:bg-primary/90"
         >
           Track Order
           <ChevronRight size={16} />

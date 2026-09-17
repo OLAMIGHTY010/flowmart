@@ -60,7 +60,7 @@ export default function Orders() {
                 <div className="flex justify-between items-start mb-2">
                   <div>
                     <h3 className="text-sm font-bold text-slate-800">{order.id?.toUpperCase() || `Order #${i + 1}`}</h3>
-                    <p className="text-[10px] text-blue-600 font-bold tracking-wide uppercase mt-0.5">
+                    <p className="text-[10px] text-primary/90 font-bold tracking-wide uppercase mt-0.5">
                       {order.status === 'in_transit' || order.status === 'picked_up' ? 'In Transit' : order.status}
                     </p>
                   </div>

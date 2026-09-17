@@ -89,7 +89,7 @@ export default function DisputeModal({ orderId, onClose }: DisputeModalProps) {
 
         {/* Content */}
         <form onSubmit={handleSubmit} className="p-5 flex flex-col gap-4">
-          <div className="bg-orange-50 border border-orange-100 text-orange-800 text-xs p-3 rounded-lg font-medium leading-relaxed">
+          <div className="bg-primary/10 border border-primary/20 text-primary-800 text-xs p-3 rounded-lg font-medium leading-relaxed">
             By raising a dispute, the escrow funds for this order will be locked until the issue is resolved by our admins. Please provide accurate details.
           </div>
 

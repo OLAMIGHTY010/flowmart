@@ -40,8 +40,8 @@ export default function UserDetailsPanel({ user, onClose, onStatusChange, onRefr
   const isActionBlocked = (isAdmin && isTargetSuperAdmin);
 
   const getRoleBadgeColor = (r: string) => {
-    if (r === 'super_admin') return 'bg-purple-100 text-purple-700';
-    if (r === 'admin') return 'bg-blue-100 text-blue-700';
+    if (r === 'super_admin') return 'bg-primary/20 text-purple-700';
+    if (r === 'admin') return 'bg-primary/20 text-blue-700';
     return 'bg-slate-100 text-slate-700';
   };
 

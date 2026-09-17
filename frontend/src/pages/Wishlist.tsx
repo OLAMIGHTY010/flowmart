@@ -53,7 +53,7 @@ export default function Wishlist() {
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-orange-500 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
     );
   }
@@ -64,7 +64,7 @@ export default function Wishlist() {
         <Heart className="h-16 w-16 text-gray-300" />
         <h1 className="mt-4 text-2xl font-bold text-gray-900">Please Log In</h1>
         <p className="mt-2 text-gray-500">You must be logged in to view your wishlist.</p>
-        <Link to="/login" className="mt-6 rounded-xl bg-orange-600 px-8 py-3 font-semibold text-white transition hover:bg-orange-700">
+        <Link to="/login" className="mt-6 rounded-xl bg-primary/90 px-8 py-3 font-semibold text-white transition hover:bg-primary-700">
           Login
         </Link>
       </div>
@@ -77,7 +77,7 @@ export default function Wishlist() {
         <Heart className="h-16 w-16 text-gray-300" />
         <h1 className="mt-4 text-2xl font-bold text-gray-900">Your wishlist is empty</h1>
         <p className="mt-2 text-gray-500">Save items you love to view them later.</p>
-        <Link to="/" className="mt-6 rounded-xl bg-orange-600 px-8 py-3 font-semibold text-white transition hover:bg-orange-700">
+        <Link to="/" className="mt-6 rounded-xl bg-primary/90 px-8 py-3 font-semibold text-white transition hover:bg-primary-700">
           Explore Products
         </Link>
       </div>
@@ -88,7 +88,7 @@ export default function Wishlist() {
     <div className="mx-auto max-w-5xl px-4 py-8 animate-in slide-in-from-bottom-4 duration-500">
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 flex items-center gap-3">
-          <Heart className="h-8 w-8 text-orange-500 fill-orange-500/20" />
+          <Heart className="h-8 w-8 text-primary fill-primary/20" />
           My Wishlist
         </h1>
         <span className="text-sm font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
@@ -114,11 +114,11 @@ export default function Wishlist() {
             </div>
             <div className="p-5">
               <Link to={`/product/${item.product.id}`}>
-                <h3 className="text-lg font-bold text-gray-900 line-clamp-1 hover:text-orange-600 transition-colors">
+                <h3 className="text-lg font-bold text-gray-900 line-clamp-1 hover:text-primary/90 transition-colors">
                   {item.product.name}
                 </h3>
               </Link>
-              <p className="mt-2 text-xl font-extrabold text-orange-600">
+              <p className="mt-2 text-xl font-extrabold text-primary/90">
                 ₦{parseFloat(item.product.price).toLocaleString()}
               </p>
               <button
@@ -129,7 +129,7 @@ export default function Wishlist() {
                   imageUrl: item.product.images?.[0] || "",
                   quantity: 1,
                 })}
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-orange-600"
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-primary/90"
               >
                 <ShoppingCart className="h-4 w-4" />
                 Add to Cart

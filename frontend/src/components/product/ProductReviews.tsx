@@ -59,7 +59,7 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
             Please log in to leave a review.
           </p>
         ) : !user.isVerified ? (
-          <div className="flex items-center gap-2 text-sm font-medium text-orange-600 bg-orange-50 p-3 rounded-lg border border-orange-100">
+          <div className="flex items-center gap-2 text-sm font-medium text-primary/90 bg-primary/10 p-3 rounded-lg border border-primary/20">
             <CheckCircle2 size={16} />
             Only verified users can post a review. Please verify your account in your profile settings.
           </div>
@@ -77,7 +77,7 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
                   >
                     <Star
                       size={24}
-                      className={star <= rating ? "fill-orange-400 text-orange-400" : "text-gray-300"}
+                      className={star <= rating ? "fill-primary/80 text-primary/80" : "text-gray-300"}
                     />
                   </button>
                 ))}
@@ -131,7 +131,7 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
                           <Star
                             key={star}
                             size={12}
-                            className={star <= review.rating ? "fill-orange-400 text-orange-400" : "text-gray-200"}
+                            className={star <= review.rating ? "fill-primary/80 text-primary/80" : "text-gray-200"}
                           />
                         ))}
                       </div>

@@ -51,8 +51,8 @@ export default function ChangePassword() {
       </div>
 
       <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-        <div className="mb-6 flex items-center gap-3 rounded-lg bg-blue-50 p-4 border border-blue-100">
-          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+        <div className="mb-6 flex items-center gap-3 rounded-lg bg-primary/10 p-4 border border-primary/20">
+          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary/90">
             <Lock size={20} />
           </div>
           <div>

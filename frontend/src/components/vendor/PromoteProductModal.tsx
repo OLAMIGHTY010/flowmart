@@ -66,7 +66,7 @@ export default function PromoteProductModal({ product, onClose }: PromoteProduct
     <div className="fixed inset-0 bg-neutral-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
       <div className="bg-surface w-full max-w-md rounded-2xl shadow-xl overflow-hidden flex flex-col">
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-gradient-to-r from-amber-50 to-orange-50">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-gradient-to-r from-amber-50 to-primary/10">
           <div className="flex items-center gap-2">
             <Sparkles className="text-amber-500" size={20} />
             <h3 className="font-bold text-base text-amber-900 font-headings">
@@ -98,14 +98,14 @@ export default function PromoteProductModal({ product, onClose }: PromoteProduct
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-3 flex flex-col gap-1 items-center text-center">
-              <TrendingUp className="text-blue-500 mb-1" size={20} />
-              <span className="text-[10px] uppercase font-bold tracking-wider text-blue-600">Higher Rank</span>
+            <div className="bg-primary/10/50 border border-primary/20 rounded-xl p-3 flex flex-col gap-1 items-center text-center">
+              <TrendingUp className="text-primary mb-1" size={20} />
+              <span className="text-[10px] uppercase font-bold tracking-wider text-primary/90">Higher Rank</span>
               <span className="text-xs text-blue-900 font-medium">Appear first in searches</span>
             </div>
-            <div className="bg-purple-50/50 border border-purple-100 rounded-xl p-3 flex flex-col gap-1 items-center text-center">
-              <Target className="text-purple-500 mb-1" size={20} />
-              <span className="text-[10px] uppercase font-bold tracking-wider text-purple-600">More Sales</span>
+            <div className="bg-primary/10/50 border border-primary/20 rounded-xl p-3 flex flex-col gap-1 items-center text-center">
+              <Target className="text-primary mb-1" size={20} />
+              <span className="text-[10px] uppercase font-bold tracking-wider text-primary/90">More Sales</span>
               <span className="text-xs text-purple-900 font-medium">Up to 3x more visibility</span>
             </div>
           </div>

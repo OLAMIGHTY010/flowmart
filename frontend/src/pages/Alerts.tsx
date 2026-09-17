@@ -49,9 +49,9 @@ export default function Alerts() {
   const getAlertIcon = (type: AlertType) => {
     switch (type) {
       case "order":
-        return <PackageSearch size={20} className="text-blue-600" />;
+        return <PackageSearch size={20} className="text-primary/90" />;
       case "promo":
-        return <AlertTriangle size={20} className="text-orange-600" />;
+        return <AlertTriangle size={20} className="text-primary/90" />;
       case "system":
         return <Info size={20} className="text-gray-600" />;
     }
@@ -60,9 +60,9 @@ export default function Alerts() {
   const getAlertBg = (type: AlertType) => {
     switch (type) {
       case "order":
-        return "bg-blue-100 border-blue-200";
+        return "bg-primary/20 border-primary/30";
       case "promo":
-        return "bg-orange-100 border-orange-200";
+        return "bg-primary/20 border-primary/30";
       case "system":
         return "bg-gray-100 border-gray-200";
     }

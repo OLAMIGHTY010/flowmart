@@ -156,7 +156,7 @@ export default function ChatWidget() {
                       </p>
                     )}
                     {(!isMine && isBot) && (
-                      <p className="text-[10px] font-bold text-blue-600 mb-1 flex items-center gap-1 uppercase">
+                      <p className="text-[10px] font-bold text-primary/90 mb-1 flex items-center gap-1 uppercase">
                         <Bot size={10} /> AI Assistant
                       </p>
                     )}

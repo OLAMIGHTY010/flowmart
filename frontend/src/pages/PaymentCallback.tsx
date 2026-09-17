@@ -60,7 +60,7 @@ export default function PaymentCallback() {
     <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 text-center">
       {status === "verifying" && (
         <>
-          <Loader2 className="h-16 w-16 animate-spin text-orange-500 mb-4" />
+          <Loader2 className="h-16 w-16 animate-spin text-primary mb-4" />
           <h1 className="text-2xl font-bold text-gray-900">Verifying Payment...</h1>
           <p className="mt-2 text-gray-500">Please do not refresh or close this page.</p>
         </>
@@ -81,7 +81,7 @@ export default function PaymentCallback() {
           <p className="mt-2 text-gray-500">{errorMessage}</p>
           <button
             onClick={() => navigate("/profile")}
-            className="mt-6 rounded-lg bg-orange-500 px-8 py-3 text-sm font-bold text-white transition hover:bg-orange-600"
+            className="mt-6 rounded-lg bg-primary px-8 py-3 text-sm font-bold text-white transition hover:bg-primary/90"
           >
             Go to My Orders
           </button>

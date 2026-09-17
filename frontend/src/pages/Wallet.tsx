@@ -79,7 +79,7 @@ export default function Wallet() {
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <RefreshCw className="h-8 w-8 animate-spin text-orange-500" />
+        <RefreshCw className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -87,7 +87,7 @@ export default function Wallet() {
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-        <WalletIcon className="h-6 w-6 text-orange-500" /> My Wallet
+        <WalletIcon className="h-6 w-6 text-primary" /> My Wallet
       </h1>
 
       <Card className="overflow-hidden rounded-3xl bg-gradient-to-br from-gray-900 to-gray-800 text-white shadow-xl">
@@ -100,7 +100,7 @@ export default function Wallet() {
           <div className="mt-8 flex gap-4">
             <button
               onClick={() => setShowFundModal(true)}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 font-bold text-white transition hover:bg-orange-600 cursor-pointer"
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 font-bold text-white transition hover:bg-primary/90 cursor-pointer"
             >
               <Plus className="h-5 w-5" /> Add Funds
             </button>
@@ -127,7 +127,7 @@ export default function Wallet() {
                   min="100"
                   value={fundAmount}
                   onChange={(e) => setFundAmount(e.target.value)}
-                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-lg outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-lg outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                   placeholder="e.g. 5000"
                 />
               </div>

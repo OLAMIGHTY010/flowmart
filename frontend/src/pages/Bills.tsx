@@ -106,15 +106,15 @@ const NETWORK_STYLES: Record<string, { bg: string; text: string; ring: string }>
   "9MOBILE": { bg: "bg-emerald-600", text: "text-white", ring: "ring-emerald-300" },
   ETISALAT: { bg: "bg-emerald-600", text: "text-white", ring: "ring-emerald-300" },
   // Electricity discos
-  IKEJA: { bg: "bg-blue-500", text: "text-white", ring: "ring-blue-300" },
-  EKO: { bg: "bg-orange-500", text: "text-white", ring: "ring-orange-300" },
-  ABUJA: { bg: "bg-purple-500", text: "text-white", ring: "ring-purple-300" },
+  IKEJA: { bg: "bg-primary", text: "text-white", ring: "ring-blue-300" },
+  EKO: { bg: "bg-primary", text: "text-white", ring: "ring-primary-300" },
+  ABUJA: { bg: "bg-primary", text: "text-white", ring: "ring-purple-300" },
   PORTHARCOURT: { bg: "bg-teal-500", text: "text-white", ring: "ring-teal-300" },
   PH: { bg: "bg-teal-500", text: "text-white", ring: "ring-teal-300" },
   // Cable
-  DSTV: { bg: "bg-blue-600", text: "text-white", ring: "ring-blue-300" },
+  DSTV: { bg: "bg-primary/90", text: "text-white", ring: "ring-blue-300" },
   GOTV: { bg: "bg-yellow-500", text: "text-yellow-900", ring: "ring-yellow-300" },
-  STARTIMES: { bg: "bg-orange-600", text: "text-white", ring: "ring-orange-300" },
+  STARTIMES: { bg: "bg-primary/90", text: "text-white", ring: "ring-primary-300" },
 };
 
 function getNetworkStyle(name: string) {
