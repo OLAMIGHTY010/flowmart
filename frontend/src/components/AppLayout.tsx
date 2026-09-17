@@ -6,6 +6,7 @@ import {
 import {
   Outlet,
   useLocation,
+  useSearchParams,
 } from "react-router-dom";
 
 import Navbar from "@/components/Navbar";
@@ -23,20 +24,52 @@ type SortKey =
 
 const AppLayout = () => {
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { data: categories = ["All"] } = useCategories();
 
-  const [query, setQuery] = useState("");
-  const [showFilters, setShowFilters] =
-    useState(true);
-  const [sort, setSort] =
-    useState<SortKey>("default");
-  const [selectedCategory, setSelectedCategory] =
-    useState("All");
-  const [selectedTab, setSelectedTab] =
-    useState("all");
-  const [quickFilters, setQuickFilters] = useState<
-    string[]
-  >([]);
+  const query = searchParams.get("q") || "";
+  const setQuery = (val: string | ((prev: string) => string)) => {
+    const nextVal = typeof val === 'function' ? val(query) : val;
+    setSearchParams(prev => {
+      if (nextVal) prev.set("q", nextVal);
+      else prev.delete("q");
+      return prev;
+    }, { replace: true });
+  };
+
+  const [showFilters, setShowFilters] = useState(true);
+
+  const sort = (searchParams.get("sort") as SortKey) || "default";
+  const setSort = (val: SortKey | ((prev: SortKey) => SortKey)) => {
+    const nextVal = typeof val === 'function' ? val(sort) : val;
+    setSearchParams(prev => {
+      if (nextVal !== "default") prev.set("sort", nextVal);
+      else prev.delete("sort");
+      return prev;
+    }, { replace: true });
+  };
+
+  const selectedCategory = searchParams.get("category") || "All";
+  const setSelectedCategory = (val: string | ((prev: string) => string)) => {
+    const nextVal = typeof val === 'function' ? val(selectedCategory) : val;
+    setSearchParams(prev => {
+      if (nextVal !== "All") prev.set("category", nextVal);
+      else prev.delete("category");
+      return prev;
+    }, { replace: true });
+  };
+
+  const selectedTab = searchParams.get("tab") || "all";
+  const setSelectedTab = (val: string | ((prev: string) => string)) => {
+    const nextVal = typeof val === 'function' ? val(selectedTab) : val;
+    setSearchParams(prev => {
+      if (nextVal !== "all") prev.set("tab", nextVal);
+      else prev.delete("tab");
+      return prev;
+    }, { replace: true });
+  };
+
+  const [quickFilters, setQuickFilters] = useState<string[]>([]);
   const [offers, setOffers] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");

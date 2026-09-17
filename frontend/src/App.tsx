@@ -1,8 +1,9 @@
 import "./App.css";
 import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Loader2 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 
 // Public unified pages
 const Welcome = lazy(() => import("@/pages/Welcome"));
@@ -38,6 +39,77 @@ const queryClient = new QueryClient({
   },
 });
 
+// A wrapper to animate page changes based on location
+function AnimatedRoutes() {
+  const location = useLocation();
+
+  // Create a page transition wrapper
+  const pageVariants = {
+    initial: { opacity: 0, y: 15 },
+    in: { opacity: 1, y: 0 },
+    out: { opacity: 0, y: -15 },
+  };
+
+  const pageTransition = {
+    type: "tween",
+    ease: "anticipate",
+    duration: 0.3,
+  };
+
+  const PageWrapper = ({ children }: { children: React.ReactNode }) => (
+    <motion.div
+      initial="initial"
+      animate="in"
+      exit="out"
+      variants={pageVariants}
+      transition={pageTransition}
+      className="h-full w-full"
+    >
+      {children}
+    </motion.div>
+  );
+
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        {/* Public unified entry point */}
+        <Route path="/" element={<PageWrapper><Welcome /></PageWrapper>} />
+        <Route path="/auth" element={<PageWrapper><Auth /></PageWrapper>} />
+        <Route path="/login" element={<PageWrapper><Login /></PageWrapper>} />
+        <Route path="/register" element={<PageWrapper><Register /></PageWrapper>} />
+
+        {/* Customer Flow */}
+        <Route path="/vendor-profile/:id" element={<PageWrapper><VendorProfile /></PageWrapper>} />
+        
+        <Route element={<ProtectedRoute />}>
+          <Route element={<PageWrapper><AppLayout /></PageWrapper>}>
+            <Route path="/customer/home" element={<Homepage />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/orders" element={<Orders />} />
+            <Route path="/messages" element={<Messages />} />
+            <Route path="/orders/:id/track" element={<OrderTracking />} />
+          </Route>
+        </Route>
+
+        {/* Vendor Flow */}
+        <Route path="/vendor">
+          <Route path="dashboard" element={<PageWrapper><VendorDashboard /></PageWrapper>} />
+          {/* Add more vendor routes here */}
+        </Route>
+
+        {/* Rider Flow */}
+        <Route path="/rider">
+          <Route path="dashboard" element={<PageWrapper><RiderDashboard /></PageWrapper>} />
+          {/* Add more rider routes here */}
+        </Route>
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </AnimatePresence>
+  );
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -47,41 +119,7 @@ function App() {
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         }>
-          <Routes>
-            {/* Public unified entry point */}
-            <Route path="/" element={<Welcome />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-
-            {/* Customer Flow */}
-            <Route path="/vendor-profile/:id" element={<VendorProfile />} />
-            
-            <Route element={<ProtectedRoute />}>
-              <Route element={<AppLayout />}>
-                <Route path="/customer/home" element={<Homepage />} />
-                <Route path="/checkout" element={<Checkout />} />
-                <Route path="/orders" element={<Orders />} />
-                <Route path="/messages" element={<Messages />} />
-                <Route path="/orders/:id/track" element={<OrderTracking />} />
-              </Route>
-            </Route>
-
-            {/* Vendor Flow */}
-            <Route path="/vendor">
-              <Route path="dashboard" element={<VendorDashboard />} />
-              {/* Add more vendor routes here */}
-            </Route>
-
-            {/* Rider Flow */}
-            <Route path="/rider">
-              <Route path="dashboard" element={<RiderDashboard />} />
-              {/* Add more rider routes here */}
-            </Route>
-
-            {/* Fallback */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+          <AnimatedRoutes />
         </Suspense>
       </BrowserRouter>
     </QueryClientProvider>

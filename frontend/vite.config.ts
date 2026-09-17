@@ -20,17 +20,35 @@ export default defineConfig({
       manifest: {
         name: 'Flowmart',
         short_name: 'Flowmart',
-        description: 'Your One-Stop Shop',
-        theme_color: '#ffffff',
+        description: 'Nigeria\'s Super App: E-Commerce, Deliveries & Bills',
+        theme_color: '#16A34A', // FlowMart Green
         background_color: '#ffffff',
         start_url: '/',
         scope: '/',
         display: 'standalone',
+        orientation: 'portrait',
         icons: [
           { src: '/hero.png', sizes: '192x192', type: 'image/png' },
-          { src: '/hero.png', sizes: '512x512', type: 'image/png' }
+          { src: '/hero.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
         ]
       },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/api\.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api-cache',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 // 24 hours
+              },
+              cacheableResponse: { statuses: [0, 200] }
+            }
+          }
+        ]
+      }
     })
   ],
 
