@@ -158,17 +158,61 @@ export default function ProductsTab() {
     return true;
   });
 
+  const handleSeedDemoProducts = async () => {
+    if (!window.confirm("Seed 10 demo products?")) return;
+    
+    const demoProducts = [
+      { name: "Premium Wireless Headphones", category: "Electronics", price: 45000, oldPrice: 60000, stockQuantity: 25, description: "High-quality noise-canceling headphones with 30-hour battery life.", condition: "new", isNegotiable: false },
+      { name: "Organic Jollof Rice Pack", category: "Groceries", price: 4500, oldPrice: 0, stockQuantity: 100, description: "Authentic Nigerian Jollof rice ingredients pack.", condition: "new", isNegotiable: false },
+      { name: "Men's Casual Sneakers", category: "Fashion", price: 15000, oldPrice: 20000, stockQuantity: 12, description: "Comfortable and stylish sneakers for everyday wear.", condition: "new", isNegotiable: true },
+      { name: "Smart Fitness Watch", category: "Electronics", price: 25000, oldPrice: 35000, stockQuantity: 40, description: "Track your heart rate, steps, and sleep with this smartwatch.", condition: "new", isNegotiable: false },
+      { name: "Locally Sourced Palm Oil (5L)", category: "Groceries", price: 8000, oldPrice: 0, stockQuantity: 50, description: "Pure, unadulterated palm oil direct from the farm.", condition: "new", isNegotiable: false },
+      { name: "Women's Ankara Dress", category: "Fashion", price: 12000, oldPrice: 15000, stockQuantity: 8, description: "Beautifully tailored Ankara dress. Available in multiple sizes.", condition: "new", isNegotiable: true },
+      { name: "Bluetooth Speaker", category: "Electronics", price: 18000, oldPrice: 22000, stockQuantity: 30, description: "Portable waterproof speaker with deep bass.", condition: "new", isNegotiable: false },
+      { name: "Fresh Yam Tubers (Pack of 5)", category: "Groceries", price: 10000, oldPrice: 12000, stockQuantity: 20, description: "Large, fresh yam tubers for pounding or boiling.", condition: "new", isNegotiable: true },
+      { name: "Designer Sunglasses", category: "Fashion", price: 5000, oldPrice: 7000, stockQuantity: 15, description: "UV400 protection stylish sunglasses.", condition: "new", isNegotiable: false },
+      { name: "Laptop Stand", category: "Electronics", price: 8500, oldPrice: 10000, stockQuantity: 60, description: "Ergonomic aluminum laptop stand.", condition: "new", isNegotiable: false }
+    ];
+
+    for (const prod of demoProducts) {
+      await createMutation.mutateAsync({
+        name: prod.name,
+        category: prod.category,
+        price: prod.price,
+        oldPrice: prod.oldPrice || undefined,
+        stockQuantity: prod.stockQuantity,
+        description: prod.description,
+        condition: prod.condition,
+        isNegotiable: prod.isNegotiable,
+        sku: `DEMO-${Math.floor(Math.random() * 10000)}`,
+        brand: "DemoBrand",
+        weight: 1,
+        images: "https://placehold.co/400?text=Product+Image"
+      });
+    }
+    alert("Seed complete!");
+  };
+
   return (
     <div className="flex-1 flex flex-col bg-background font-body pb-24">
       {/* Products Top Header */}
       <div className="flex items-center justify-between px-5 pt-6 pb-4">
         <h1 className="text-xl font-headings font-extrabold text-foreground" style={{ fontWeight: 800 }}>Products</h1>
-        <button 
-          onClick={openAddModal}
-          className="w-10 h-10 bg-[#064e3b] text-white rounded-xl flex items-center justify-center hover:opacity-90 active:scale-95 transition-all cursor-pointer shadow-sm"
-        >
-          <Plus size={20} />
-        </button>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={handleSeedDemoProducts}
+            disabled={createMutation.isPending}
+            className="px-3 h-10 bg-secondary text-secondary-foreground text-xs font-semibold rounded-xl flex items-center justify-center hover:opacity-90 active:scale-95 transition-all cursor-pointer shadow-sm disabled:opacity-50"
+          >
+            {createMutation.isPending ? "Seeding..." : "Seed Demo Data"}
+          </button>
+          <button 
+            onClick={openAddModal}
+            className="w-10 h-10 bg-[#064e3b] text-white rounded-xl flex items-center justify-center hover:opacity-90 active:scale-95 transition-all cursor-pointer shadow-sm"
+          >
+            <Plus size={20} />
+          </button>
+        </div>
       </div>
 
       {/* Search Input */}
