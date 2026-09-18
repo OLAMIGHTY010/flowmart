@@ -49,23 +49,23 @@ class ApiClient {
     );
   }
 
-  get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
+  get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
     return this.axiosInstance.get<T>(url, config).then(res => res.data);
   }
 
-  post<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
+  post<T = any>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
     return this.axiosInstance.post<T>(url, data, config).then(res => res.data);
   }
 
-  put<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
+  put<T = any>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
     return this.axiosInstance.put<T>(url, data, config).then(res => res.data);
   }
 
-  patch<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
+  patch<T = any>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
     return this.axiosInstance.patch<T>(url, data, config).then(res => res.data);
   }
 
-  delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
+  delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
     return this.axiosInstance.delete<T>(url, config).then(res => res.data);
   }
 }

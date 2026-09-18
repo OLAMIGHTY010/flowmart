@@ -124,11 +124,14 @@ export default function Wishlist() {
               <button
                 onClick={() => addToCart({
                   id: item.product.id,
+                  sku: item.product.sku || item.product.id,
+                  vendorId: item.product.vendorId || '',
                   name: item.product.name,
+                  description: item.product.description || '',
                   price: parseFloat(item.product.price),
                   imageUrl: item.product.images?.[0] || "",
-                  quantity: 1,
-                })}
+                  stockQuantity: item.product.stockQuantity || 10,
+                } as any, 1)}
                 className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-primary/90"
               >
                 <ShoppingCart className="h-4 w-4" />

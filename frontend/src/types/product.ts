@@ -31,4 +31,9 @@ export interface Product {
   modifiers?: any[];
   variants?: any[];
   dietaryTags?: string[];
+  condition?: string;
+  isNegotiable?: boolean;
+  isSponsored?: boolean;
+  quantity?: number;
+  categoryId?: string;
 }
