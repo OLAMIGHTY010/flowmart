@@ -13,7 +13,7 @@
  * @module backend/db/schema
  */
 
-import { pgTable, uuid, varchar, timestamp, pgEnum, integer, decimal, text, boolean, jsonb, date, AnyPgColumn } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, timestamp, pgEnum, integer, decimal, text, boolean, jsonb, date, AnyPgColumn, index } from 'drizzle-orm/pg-core';
 
 /** User System Role Definitions */
 export const roleEnum = pgEnum('role', [
@@ -71,7 +71,11 @@ export const users = pgTable('users', {
 
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+}, (table) => [
+  index('users_email_idx').on(table.email),
+  index('users_role_idx').on(table.role),
+  index('users_status_idx').on(table.status),
+]);
 
 export const kycSubmissions = pgTable('kyc_submissions', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -121,7 +125,12 @@ export const products = pgTable('products', {
   dietaryTags: jsonb('dietary_tags').default([]),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+}, (table) => [
+  index('products_vendor_id_idx').on(table.vendorId),
+  index('products_category_id_idx').on(table.categoryId),
+  index('products_product_type_idx').on(table.productType),
+  index('products_name_idx').on(table.name),
+]);
 
 export const orderStatusEnum = pgEnum('order_status', [
   'pending',    
@@ -147,7 +156,12 @@ export const orders = pgTable('orders', {
   deliveryPin: varchar('delivery_pin', { length: 6 }),                  
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+}, (table) => [
+  index('orders_user_created_idx').on(table.userId, table.createdAt),
+  index('orders_vendor_status_idx').on(table.vendorId, table.status),
+  index('orders_rider_id_idx').on(table.riderId),
+  index('orders_order_ref_idx').on(table.orderRef),
+]);
 
 export const orderItems = pgTable('order_items', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -199,7 +213,10 @@ export const vendorProfiles = pgTable('vendor_profiles', {
   vendorCommissionPct: integer('vendor_commission_pct'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+}, (table) => [
+  index('vendor_profiles_vendor_id_idx').on(table.vendorId),
+  index('vendor_profiles_region_city_idx').on(table.stateRegion, table.city),
+]);
 
 export const vendorKyc = pgTable('vendor_kyc', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -490,7 +507,11 @@ export const escrowTransactions = pgTable('escrow_transactions', {
   releasedAt: timestamp('released_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+}, (table) => [
+  index('escrow_buyer_id_idx').on(table.buyerId),
+  index('escrow_vendor_id_idx').on(table.vendorId),
+  index('escrow_status_idx').on(table.status),
+]);
 
 // --- Bill Payment Transactions ---
 export const billTransactions = pgTable('bill_transactions', {
