@@ -118,6 +118,15 @@ app.get("/api/v1/fix-db", async (req, res) => {
   }
 });
 
+import swaggerUi from 'swagger-ui-express';
+import { swaggerSpec } from './config/swagger.config';
+
+app.use('/api/v1/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.get('/api/v1/docs.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
+
 app.use("/api/v1", globalApiLimiter, routes);
 
 const PORT = process.env.PORT || 5000;
