@@ -1,3 +1,8 @@
+/**
+ * Product & Marketplace Catalog Controller
+ * Handles product creation, inventory queries, filtering by category/type, and public vendor profile listings.
+ */
+
 import { Request, Response } from "express";
 import { db } from "../../db";
 import { products, vendorProfiles, users, vendorKyc, categories } from "../../db/schema";

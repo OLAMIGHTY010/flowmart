@@ -1,3 +1,8 @@
+/**
+ * Order & Checkout Controller
+ * Manages cart checkout, delivery fee calculation, PIN verification, escrow allocation, and Paystack webhooks.
+ */
+
 import { Request, Response } from "express";
 import { db } from "../../db";
 import { products, orders, orderItems, users, vendorProfiles, vendorKyc } from "../../db/schema";
