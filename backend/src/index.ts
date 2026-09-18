@@ -20,6 +20,8 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
       'http://localhost:5174'
     ];
 
+import { globalApiLimiter } from "./middleware/rateLimiter.middleware";
+
 app.use(cors({
   origin: function (origin, callback) {
     if (
@@ -37,7 +39,15 @@ app.use(cors({
   },
   credentials: true
 }));
-app.use(helmet());
+
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+  xContentTypeOptions: true,
+  dnsPrefetchControl: { allow: false },
+  hidePoweredBy: true,
+}));
+
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
@@ -108,7 +118,7 @@ app.get("/api/v1/fix-db", async (req, res) => {
   }
 });
 
-app.use("/api/v1", routes);
+app.use("/api/v1", globalApiLimiter, routes);
 
 const PORT = process.env.PORT || 5000;
 

@@ -12,6 +12,8 @@ import {
   forgotPasswordSchema, resetPasswordSchema, googleAuthSchema 
 } from '../schemas/auth.schema';
 
+import { authApiLimiter } from '../middleware/rateLimiter.middleware';
+
 const router = Router();
 
 // ==========================================
@@ -22,16 +24,16 @@ const router = Router();
 router.post('/google', validateRequest({ body: googleAuthSchema }), googleAuth);
 
 // Admins / Staff 
-router.post('/register', validateRequest({ body: registerSchema }), register);
-router.post('/login', validateRequest({ body: loginSchema }), login);
+router.post('/register', authApiLimiter, validateRequest({ body: registerSchema }), register);
+router.post('/login', authApiLimiter, validateRequest({ body: loginSchema }), login);
 router.post('/logout', authenticateJWT, logout);
 router.post('/sync', authenticateJWT, syncSession);
 
 // Password recovery / Verification (Staff predominantly, except verifyOtp if needed)
 router.post('/verify-otp', validateRequest({ body: verifyOtpSchema }), verifyOtp);
 router.post('/resend-otp', validateRequest({ body: resendOtpSchema }), resendOtp);
-router.post('/forgot-password', validateRequest({ body: forgotPasswordSchema }), forgotPassword);
-router.post('/reset-password', validateRequest({ body: resetPasswordSchema }), resetPassword);
+router.post('/forgot-password', authApiLimiter, validateRequest({ body: forgotPasswordSchema }), forgotPassword);
+router.post('/reset-password', authApiLimiter, validateRequest({ body: resetPasswordSchema }), resetPassword);
 
 // ==========================================
 // PROTECTED ROUTES

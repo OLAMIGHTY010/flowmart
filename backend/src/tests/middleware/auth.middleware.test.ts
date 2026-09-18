@@ -8,6 +8,14 @@ import {
 
 // 1. Tell Jest to replace the real 'jsonwebtoken' library with a fake one we can control
 jest.mock("jsonwebtoken");
+jest.mock("../../../db", () => ({
+	db: {
+		select: jest.fn().mockReturnThis(),
+		from: jest.fn().mockReturnThis(),
+		where: jest.fn().mockReturnThis(),
+		limit: jest.fn().mockResolvedValue([{ id: "123", email: "test@test.com", role: "dispatch_rider" }]),
+	},
+}));
 
 describe("Auth Middleware", () => {
 	// Setup our fake Express objects
@@ -32,8 +40,8 @@ describe("Auth Middleware", () => {
 	});
 
 	describe("authenticateJWT", () => {
-		it("should return 401 if no authorization header is present", () => {
-			authenticateJWT(
+		it("should return 401 if no authorization header is present", async () => {
+			await authenticateJWT(
 				mockRequest as AuthenticatedRequest,
 				mockResponse as Response,
 				mockNext
@@ -47,10 +55,10 @@ describe("Auth Middleware", () => {
 			expect(mockNext).not.toHaveBeenCalled();
 		});
 
-		it('should return 401 if the header does not start with "Bearer "', () => {
+		it('should return 401 if the header does not start with "Bearer "', async () => {
 			mockRequest.headers = { authorization: "Basic some-token-here" };
 
-			authenticateJWT(
+			await authenticateJWT(
 				mockRequest as AuthenticatedRequest,
 				mockResponse as Response,
 				mockNext
@@ -60,7 +68,7 @@ describe("Auth Middleware", () => {
 			expect(mockNext).not.toHaveBeenCalled();
 		});
 
-		it("should return 403 if the token is invalid or expired", () => {
+		it("should return 403 if the token is invalid or expired", async () => {
 			mockRequest.headers = { authorization: "Bearer bad-token" };
 			// Force the fake jwt library to throw an error (simulating an expired token)
 			(jwt.verify as jest.Mock).mockImplementation(() => {
@@ -81,7 +89,7 @@ describe("Auth Middleware", () => {
 			expect(mockNext).not.toHaveBeenCalled();
 		});
 
-		it("should attach the user payload to the request and call next() if token is valid", () => {
+		it("should attach the user payload to the request and call next() if token is valid", async () => {
 			const mockUserPayload = {
 				id: "123",
 				email: "test@test.com",
@@ -92,7 +100,7 @@ describe("Auth Middleware", () => {
 			// Force the fake jwt library to return our mock user
 			(jwt.verify as jest.Mock).mockReturnValue(mockUserPayload);
 
-			authenticateJWT(
+			await authenticateJWT(
 				mockRequest as AuthenticatedRequest,
 				mockResponse as Response,
 				mockNext
