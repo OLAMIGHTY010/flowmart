@@ -53,3 +53,25 @@ jobs:
 
       - name: Run Backend Unit & Middleware Tests
         run: npx --prefix backend jest src/tests/middleware/
+
+  e2e-tests:
+    name: Frontend E2E Tests (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Frontend Dependencies
+        run: npm --prefix frontend install
+
+      - name: Install Playwright Browsers
+        run: npx --prefix frontend playwright install --with-deps chromium
+
+      - name: Run Playwright E2E Tests
+        run: npm --prefix frontend run test:e2e
