@@ -122,16 +122,19 @@ export default function Wishlist() {
                 ₦{parseFloat(item.product.price).toLocaleString()}
               </p>
               <button
-                onClick={() => addToCart({
-                  id: item.product.id,
-                  sku: item.product.sku || item.product.id,
-                  vendorId: item.product.vendorId || '',
-                  name: item.product.name,
-                  description: item.product.description || '',
-                  price: parseFloat(item.product.price),
-                  imageUrl: item.product.images?.[0] || "",
-                  stockQuantity: item.product.stockQuantity || 10,
-                } as any, 1)}
+                onClick={() => {
+                  const p = item.product as any;
+                  addToCart({
+                    id: p.id,
+                    sku: p.sku || p.id,
+                    vendorId: p.vendorId || '',
+                    name: p.name,
+                    description: p.description || '',
+                    price: parseFloat(p.price),
+                    imageUrl: p.images?.[0] || "",
+                    stockQuantity: p.stockQuantity || 10,
+                  } as any, 1);
+                }}
                 className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-primary/90"
               >
                 <ShoppingCart className="h-4 w-4" />
