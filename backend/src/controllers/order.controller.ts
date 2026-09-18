@@ -8,7 +8,7 @@ import { db } from "../../db";
 import { products, orders, orderItems, users, vendorProfiles, vendorKyc } from "../../db/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { AuthenticatedRequest } from "../middleware/auth.middleware";
-import { sendInAppNotification, broadcastNewDelivery } from "../services/websocket";
+import { sendInAppNotification, broadcastNewDelivery, emitOrderStatusUpdate, emitEscrowStatusUpdate } from "../services/websocket";
 import { emailService } from "../services/email.service";
 import crypto from "crypto";
 
@@ -369,6 +369,7 @@ export const updateOrderStatus = async (req: AuthenticatedRequest, res: Response
 			orderId,
 			status,
 		});
+		emitOrderStatusUpdate(orderId, status, { vendorId: existingOrder.vendorId, userId: existingOrder.userId });
 
         // Broadcast to riders if the vendor just published it for delivery
         if (status === "confirmed") {
@@ -457,6 +458,8 @@ export const confirmOrderReceived = async (req: AuthenticatedRequest, res: Respo
 			orderId,
 			status: "received_and_paid",
 		});
+		emitOrderStatusUpdate(orderId, "received_and_paid", { vendorId: existingOrder.vendorId, userId: existingOrder.userId });
+		emitEscrowStatusUpdate(orderId, "released", { vendorId: existingOrder.vendorId, userId: existingOrder.userId, payoutStatus: "complete" });
 
 		return res.status(200).json({
 			success: true,

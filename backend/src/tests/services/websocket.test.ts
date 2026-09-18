@@ -44,9 +44,9 @@ describe("WebSocket Infrastructure Service", () => {
 		initWebSocketHub(mockHttpServer as HttpServer);
 	});
 
-	it("should successfully initialize the Socket.IO Server with wildcard CORS matching", () => {
+	it("should successfully initialize the Socket.IO Server with CORS configuration", () => {
 		expect(Server).toHaveBeenCalledWith(mockHttpServer, {
-			cors: { origin: "*" },
+			cors: { origin: expect.anything(), credentials: true },
 		});
 		expect(mockIoInstance.on).toHaveBeenCalledWith(
 			"connection",

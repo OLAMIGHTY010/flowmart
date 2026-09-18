@@ -21,6 +21,7 @@ export const initWebSocketHub = (server: HttpServer) => {
     
     if (userId) {
       connectedUsers.set(userId, socket.id);
+      if (socket.join) socket.join(`user:${userId}`);
       console.log(`User ${userId} connected.`);
     }
 
@@ -149,9 +150,23 @@ export const emitRiderLocation = (orderId: string, position: { lat: number; lng:
   }
 };
 
-export const emitOrderStatusUpdate = (orderId: string, status: string) => {
+export const emitOrderStatusUpdate = (orderId: string, status: string, payload?: any) => {
   if (io) {
-    io.to(`order:${orderId}`).emit('order:statusUpdate', { orderId, status });
+    io.to(`order:${orderId}`).emit('order:statusUpdate', { orderId, status, ...payload });
+  }
+};
+
+export const emitEscrowStatusUpdate = (escrowId: string, status: string, payload?: any) => {
+  if (io) {
+    io.emit('escrow:statusUpdate', { escrowId, status, ...payload });
+    io.to(`escrow:${escrowId}`).emit('escrow:statusUpdate', { escrowId, status, ...payload });
+  }
+};
+
+export const emitDisputeUpdate = (disputeId: string, status: string, payload?: any) => {
+  if (io) {
+    io.emit('dispute:update', { disputeId, status, ...payload });
+    io.to(`dispute:${disputeId}`).emit('dispute:update', { disputeId, status, ...payload });
   }
 };
 

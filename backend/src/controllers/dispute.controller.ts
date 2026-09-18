@@ -3,6 +3,7 @@ import { db } from "../../db";
 import { disputes, escrowTransactions, wallets } from "../../db/schema";
 import { eq, sql } from "drizzle-orm";
 import { AuthenticatedRequest } from "../middleware/auth.middleware";
+import { emitDisputeUpdate, emitEscrowStatusUpdate, sendInAppNotification } from "../services/websocket";
 
 export const openDispute = async (req: AuthenticatedRequest, res: Response) => {
 	try {
@@ -35,6 +36,11 @@ export const openDispute = async (req: AuthenticatedRequest, res: Response) => {
 			status: 'open'
 		}).returning();
 
+		emitDisputeUpdate(dispute.id, 'open', { escrowId, raisedById: userId });
+		emitEscrowStatusUpdate(escrowId, 'disputed', { disputeId: dispute.id });
+		sendInAppNotification(escrow.buyerId, 'dispute:update', { disputeId: dispute.id, status: 'open' });
+		sendInAppNotification(escrow.vendorId, 'dispute:update', { disputeId: dispute.id, status: 'open' });
+
 		return res.status(201).json({ success: true, dispute });
 	} catch (error) {
 		console.error("Open Dispute Error:", error);
@@ -58,17 +64,25 @@ export const resolveDispute = async (req: AuthenticatedRequest, res: Response) =
 
 		const [escrow] = await db.select().from(escrowTransactions).where(eq(escrowTransactions.id, dispute.escrowId)).limit(1);
 
+		let resolvedStatus: 'resolved_buyer_refunded' | 'resolved_vendor_paid';
 		if (resolution === 'refund_buyer') {
+			resolvedStatus = 'resolved_buyer_refunded';
 			await db.update(wallets).set({ balance: sql`${wallets.balance} + ${escrow.amount}` }).where(eq(wallets.userId, escrow.buyerId));
 			await db.update(escrowTransactions).set({ status: 'refunded' }).where(eq(escrowTransactions.id, escrow.id));
-			await db.update(disputes).set({ status: 'resolved_buyer_refunded', resolutionNotes: notes }).where(eq(disputes.id, dispute.id));
+			await db.update(disputes).set({ status: resolvedStatus, resolutionNotes: notes }).where(eq(disputes.id, dispute.id));
 		} else if (resolution === 'pay_vendor') {
+			resolvedStatus = 'resolved_vendor_paid';
 			await db.update(wallets).set({ balance: sql`${wallets.balance} + ${escrow.amount}` }).where(eq(wallets.userId, escrow.vendorId));
 			await db.update(escrowTransactions).set({ status: 'released' }).where(eq(escrowTransactions.id, escrow.id));
-			await db.update(disputes).set({ status: 'resolved_vendor_paid', resolutionNotes: notes }).where(eq(disputes.id, dispute.id));
+			await db.update(disputes).set({ status: resolvedStatus, resolutionNotes: notes }).where(eq(disputes.id, dispute.id));
 		} else {
 			return res.status(400).json({ success: false, message: "Invalid resolution type" });
 		}
+
+		emitDisputeUpdate(dispute.id, resolvedStatus, { resolution, notes });
+		emitEscrowStatusUpdate(escrow.id, resolution === 'refund_buyer' ? 'refunded' : 'released');
+		sendInAppNotification(escrow.buyerId, 'dispute:update', { disputeId: dispute.id, status: resolvedStatus });
+		sendInAppNotification(escrow.vendorId, 'dispute:update', { disputeId: dispute.id, status: resolvedStatus });
 
 		return res.status(200).json({ success: true, message: "Dispute resolved successfully" });
 	} catch (error) {
