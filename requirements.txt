@@ -1,0 +1,115 @@
+# ==============================================================================
+# FLOWMART PLATFORM DEPENDENCY REQUIREMENTS
+# ==============================================================================
+# Project: FlowMart Multi-Vendor E-Commerce Platform
+# System Requirements: Node.js >= 20.x, npm >= 10.x, PostgreSQL >= 15.x
+
+# ------------------------------------------------------------------------------
+# BACKEND API REQUIREMENTS (backend/package.json)
+# ------------------------------------------------------------------------------
+express==4.21.2
+drizzle-orm==0.40.1
+pg==8.14.1
+zod==3.25.76
+helmet==8.1.0
+express-rate-limit==7.5.0
+jsonwebtoken==9.0.3
+bcryptjs==3.0.3
+socket.io==4.8.3
+swagger-ui-express==5.0.1
+swagger-jsdoc==6.2.8
+cloudinary==2.10.0
+nodemailer==9.0.0
+handlebars==4.7.9
+google-auth-library==10.7.0
+@google/generative-ai==0.21.0
+openai==4.80.0
+axios==1.13.2
+cors==2.8.5
+dotenv==16.6.1
+express-session==1.18.1
+json2csv==6.0.0-alpha.2
+morgan==1.10.0
+node-cron==4.4.1
+redis==4.7.0
+
+# Backend Dev & Build Dependencies
+typescript==5.8.2
+drizzle-kit==0.31.1
+jest==30.4.2
+ts-jest==29.4.11
+supertest==7.2.2
+nodemon==3.1.9
+ts-node==10.9.2
+@types/node==22.13.10
+@types/express==5.0.1
+@types/jsonwebtoken==9.0.10
+@types/bcryptjs==2.4.6
+@types/cors==2.8.17
+@types/morgan==1.9.9
+@types/nodemailer==8.0.1
+@types/pg==8.11.11
+@types/supertest==7.2.0
+@types/swagger-ui-express==4.1.8
+@types/swagger-jsdoc==6.0.4
+
+# ------------------------------------------------------------------------------
+# FRONTEND STOREFRONT REQUIREMENTS (frontend/package.json)
+# ------------------------------------------------------------------------------
+react==19.2.6
+react-dom==19.2.6
+react-router==7.17.0
+react-router-dom==7.17.0
+@tanstack/react-query==5.101.0
+tailwindcss==4.3.0
+zustand==5.0.14
+framer-motion==13.4.0
+lucide-react==1.17.0
+socket.io-client==4.8.3
+axios==1.17.0
+leaflet==1.9.4
+react-leaflet==5.0.0
+@react-oauth/google==0.12.1
+@supabase/supabase-js==2.116.0
+@radix-ui/react-accordion==1.2.16
+@radix-ui/react-label==2.1.10
+@radix-ui/react-select==2.3.1
+@radix-ui/react-slot==1.3.0
+class-variance-authority==0.7.1
+clsx==2.1.1
+country-state-city==3.2.1
+date-fns==4.4.0
+input-otp==1.4.2
+react-phone-number-input==3.4.17
+recharts==3.8.1
+shadcn==4.11.0
+tailwind-merge==3.6.0
+tw-animate-css==1.4.0
+
+# Frontend Dev & Test Dependencies
+vite==8.0.12
+@playwright/test==1.51.0
+@vitejs/plugin-react==6.0.2
+@vitejs/plugin-react-swc==4.3.1
+vite-plugin-pwa==1.3.0
+eslint==10.3.0
+typescript==6.0.3
+
+# ------------------------------------------------------------------------------
+# FRONTEND ADMIN DASHBOARD REQUIREMENTS (frontend-admin/package.json)
+# ------------------------------------------------------------------------------
+react==19.2.6
+react-dom==19.2.6
+react-router==7.17.0
+@tanstack/react-query==5.101.0
+socket.io-client==4.8.3
+axios==1.18.0
+leaflet==1.9.4
+react-leaflet==5.0.0
+lucide-react==1.18.0
+recharts==3.8.0
+shadcn==4.11.0
+tailwind-merge==3.6.0
+vite-plugin-pwa==1.3.0
+vite==8.0.12
+typescript==6.0.2
