@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ShieldAlert, CheckCircle2, ChevronRight, MessageSquare, ExternalLink } from "lucide-react";
+import { ShieldAlert, CheckCircle2, ExternalLink } from "lucide-react";
 import { apiClient } from "@/services/api";
 
 interface Dispute {
@@ -52,7 +52,7 @@ export default function Disputes() {
     
     try {
       setResolving(id);
-      const res = await apiClient.post(`/disputes/${id}/resolve`, {
+      const res = await apiClient.post<{ success?: boolean }>(`/disputes/${id}/resolve`, {
         resolution,
         notes: `Admin manually resolved. Action: ${resolution}`
       });

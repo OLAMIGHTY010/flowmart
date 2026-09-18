@@ -40,11 +40,7 @@ export default function SideBanner() {
           Nigeria's Super App
         </div>
         <h1 className="text-3xl font-extrabold tracking-tight leading-tight">
-<<<<<<<< HEAD:frontend/src/components/rider/RiderSideBanner.tsx
           FlowMart Holy Ghost Congress 2025
-========
-          Shop Smarter, Live Better 🇳🇬
->>>>>>>> origin/main:frontend/src/components/SideBanner.tsx
         </h1>
         <p className="text-sm text-white/80 leading-relaxed font-light">
           <strong className="font-bold text-white">E-Commerce • Bills • Delivery</strong>

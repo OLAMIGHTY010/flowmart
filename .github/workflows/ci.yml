@@ -1,0 +1,55 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [ main, master, 'feat/*' ]
+  pull_request:
+    branches: [ main, master, 'feat/*' ]
+
+jobs:
+  typecheck-and-build:
+    name: Type Check & Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: |
+          npm --prefix backend install
+          npm --prefix frontend install
+          npm --prefix frontend-admin install
+
+      - name: Type Check Backend
+        run: npx --prefix backend tsc --noEmit
+
+      - name: Build Frontend Storefront
+        run: npm --prefix frontend run build
+
+      - name: Build Frontend Admin Dashboard
+        run: npm --prefix frontend-admin run build
+
+  backend-tests:
+    name: Backend Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Backend Dependencies
+        run: npm --prefix backend install
+
+      - name: Run Backend Unit & Middleware Tests
+        run: npx --prefix backend jest src/tests/middleware/

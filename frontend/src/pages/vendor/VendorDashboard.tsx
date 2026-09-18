@@ -4,21 +4,16 @@ import { useAuth } from '@/hooks/useAuth';
 import { useDashboardStats, useOrders, useKYCStatus } from '@/hooks/vendor/useVendorQueries';
 import StatCard from '@/components/vendor/StatCard';
 import Icon from '@/components/Icon';
-<<<<<<<< HEAD:frontend/src/pages/vendor/VendorDashboard.tsx
 import ProductsTab from '@/components/vendor/ProductsTab';
 import OrdersTab from '@/components/vendor/OrdersTab';
 import StoreTab from '@/components/vendor/StoreTab';
 import Profile from '@/pages/user/Profile';
-========
-import ProductsTab from '@/components/ProductsTab';
-import OrdersTab from '@/components/OrdersTab';
-import StoreTab from '@/components/StoreTab';
-import CouponsTab from '@/components/CouponsTab';
-import WalletTab from '@/components/WalletTab';
-import ReviewsTab from '@/components/ReviewsTab';
-import { DashboardSkeleton, Skeleton } from "@/components/ui/Skeleton";
->>>>>>>> origin/main:frontend/src/pages/vendor/Dashboard.tsx
 
+
+import CouponsTab from '@/components/vendor/CouponsTab';
+import WalletTab from '@/components/vendor/WalletTab';
+import ReviewsTab from '@/components/vendor/ReviewsTab';
+import DashboardSkeleton from '@/components/vendor/ui/DashboardSkeleton';
 
 export default function VendorDashboard() {
   const navigate = useNavigate();
@@ -40,13 +35,8 @@ export default function VendorDashboard() {
     }
   }, [kycStatus, kycLoading, user, navigate]);
 
-<<<<<<<< HEAD:frontend/src/pages/vendor/VendorDashboard.tsx
-  // Tab State: 'dashboard' | 'products' | 'orders' | 'store' | 'profile'
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'orders' | 'store' | 'profile'>('dashboard');
-========
-  // Tab State
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'orders' | 'coupons' | 'wallet' | 'reviews' | 'store'>('dashboard');
->>>>>>>> origin/main:frontend/src/pages/vendor/Dashboard.tsx
+  // Tab State: 'dashboard' | 'products' | 'orders' | 'coupons' | 'wallet' | 'reviews' | 'store' | 'profile'
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'orders' | 'coupons' | 'wallet' | 'reviews' | 'store' | 'profile'>('dashboard');
 
   // Fetch dashboard queries
   const { data: stats, isLoading: statsLoading } = useDashboardStats();

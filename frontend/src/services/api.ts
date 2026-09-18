@@ -1,10 +1,12 @@
 import axios from "axios";
 import type { AxiosRequestConfig, AxiosError, AxiosInstance, InternalAxiosRequestConfig } from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL || "https://flowmart-backend-2s2d.vercel.app/api/v1";
+
+class ApiClient {
+  private axiosInstance: AxiosInstance;
 
   constructor() {
-    const API_URL = import.meta.env.VITE_API_URL || "https://flowmart-backend-2s2d.vercel.app/api/v1";
     this.axiosInstance = axios.create({
       baseURL: API_URL,
       headers: {
@@ -47,23 +49,23 @@ const API_URL = import.meta.env.VITE_API_URL;
     );
   }
 
-  get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
+  get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
     return this.axiosInstance.get<T>(url, config).then(res => res.data);
   }
 
-  post<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
+  post<T = any>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
     return this.axiosInstance.post<T>(url, data, config).then(res => res.data);
   }
 
-  put<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
+  put<T = any>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
     return this.axiosInstance.put<T>(url, data, config).then(res => res.data);
   }
 
-  patch<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
+  patch<T = any>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
     return this.axiosInstance.patch<T>(url, data, config).then(res => res.data);
   }
 
-  delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
+  delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
     return this.axiosInstance.delete<T>(url, config).then(res => res.data);
   }
 }

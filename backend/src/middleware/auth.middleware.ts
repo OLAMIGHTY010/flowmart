@@ -2,6 +2,9 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
 // Extend the Express Request to include our user payload
+/**
+ * Extended Express Request object containing authenticated user context.
+ */
 export interface AuthenticatedRequest extends Request {
   user?: {
     id: string;
@@ -14,7 +17,10 @@ import { db } from '../../db';
 import { users } from '../../db/schema';
 import { eq } from 'drizzle-orm';
 
-// 1. Verify the JWT Token
+/**
+ * Middleware: Mandatory JWT Authentication Guard
+ * Validates the Authorization Bearer header, verifies JWT payload, and confirms user existence in Database.
+ */
 export const authenticateJWT = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
 

@@ -53,7 +53,7 @@ export class GlobalErrorBoundary extends React.Component<Props, State> {
           </button>
 
           {/* Development only error stack */}
-          {process.env.NODE_ENV === "development" && this.state.error && (
+          {import.meta.env.DEV && this.state.error && (
             <div className="mt-12 w-full max-w-2xl rounded-xl bg-gray-900 p-4 text-left shadow-lg overflow-auto">
               <p className="font-mono text-xs text-red-400 font-bold mb-2">
                 {this.state.error.toString()}

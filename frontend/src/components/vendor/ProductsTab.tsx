@@ -40,6 +40,30 @@ export default function ProductsTab() {
   const [variants, setVariants] = useState<any[]>([]);
   const [dietaryTags, setDietaryTags] = useState<string[]>([]);
 
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this product?')) {
+      await deleteMutation.mutateAsync(id);
+    }
+  };
+
+  const openAddModal = () => {
+    setEditingProduct(null);
+    setName('');
+    setCategory('Food & Catering');
+    setPrice('');
+    setStockQuantity('10');
+    setDescription('');
+    setImageUrl('');
+    setSku('');
+    setBrand('');
+    setWeight('');
+    setOldPrice('');
+    setImages('');
+    setProductType('retail');
+    setPreparationTime('');
+    setModifiers([]);
+    setVariants([]);
+    setDietaryTags([]);
     setIsModalOpen(true);
   };
 
@@ -93,6 +117,28 @@ export default function ProductsTab() {
     setModifiers(Array.isArray(prod.modifiers) ? prod.modifiers : []);
     setVariants(Array.isArray(prod.variants) ? prod.variants : []);
     setDietaryTags(Array.isArray(prod.dietaryTags) ? prod.dietaryTags : []);
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const data = {
+      name,
+      category,
+      price: parseFloat(price),
+      stockQuantity: parseInt(stockQuantity, 10),
+      description,
+      imageUrl,
+      sku,
+      brand,
+      weight: weight ? parseFloat(weight) : undefined,
+      oldPrice: oldPrice ? parseFloat(oldPrice) : undefined,
+      images: images.split(',').map((s) => s.trim()).filter(Boolean),
+      productType,
+      preparationTime: preparationTime ? parseInt(preparationTime, 10) : undefined,
+      modifiers,
+      variants,
+      dietaryTags,
     };
 
     try {

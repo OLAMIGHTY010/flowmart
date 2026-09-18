@@ -6,6 +6,12 @@ import {
 } from '../controllers/auth.controller';
 import { authenticateJWT, authorizeRoles } from '../middleware/auth.middleware';
 
+import { validateRequest } from '../middleware/validate.middleware';
+import { 
+  registerSchema, loginSchema, verifyOtpSchema, resendOtpSchema, 
+  forgotPasswordSchema, resetPasswordSchema, googleAuthSchema 
+} from '../schemas/auth.schema';
+
 const router = Router();
 
 // ==========================================
@@ -13,19 +19,19 @@ const router = Router();
 // ==========================================
 
 // Normal Users (Users, Vendors, Riders)
-router.post('/google', googleAuth);
+router.post('/google', validateRequest({ body: googleAuthSchema }), googleAuth);
 
 // Admins / Staff 
-router.post('/register', register);
-router.post('/login', login);
+router.post('/register', validateRequest({ body: registerSchema }), register);
+router.post('/login', validateRequest({ body: loginSchema }), login);
 router.post('/logout', authenticateJWT, logout);
 router.post('/sync', authenticateJWT, syncSession);
 
 // Password recovery / Verification (Staff predominantly, except verifyOtp if needed)
-router.post('/verify-otp', verifyOtp);
-router.post('/resend-otp', resendOtp);
-router.post('/forgot-password', forgotPassword);
-router.post('/reset-password', resetPassword);
+router.post('/verify-otp', validateRequest({ body: verifyOtpSchema }), verifyOtp);
+router.post('/resend-otp', validateRequest({ body: resendOtpSchema }), resendOtp);
+router.post('/forgot-password', validateRequest({ body: forgotPasswordSchema }), forgotPassword);
+router.post('/reset-password', validateRequest({ body: resetPasswordSchema }), resetPassword);
 
 // ==========================================
 // PROTECTED ROUTES

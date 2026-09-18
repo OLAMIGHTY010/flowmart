@@ -1,3 +1,8 @@
+/**
+ * Authentication Controller
+ * Handles user registration, JWT login, OTP verification, password recovery, and Google OAuth.
+ */
+
 import { Request, Response } from 'express';
 import { db } from '../../db'; 
 import { users } from '../../db/schema';

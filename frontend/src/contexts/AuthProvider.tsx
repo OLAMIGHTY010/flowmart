@@ -95,32 +95,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-<<<<<<< HEAD
-=======
-  // 📝 4. Register logic
-  const register = async (data: RegisterRequest) => {
-    try {
-      const response = await authService.register(data);
-      const responseData = (response as any).data || response;
-      
-      if (responseData && responseData.token) {
-        localStorage.setItem("accessToken", responseData.token);
-        const mappedUser = mapApiUser(responseData.user);
-        setUser(mappedUser);
-        localStorage.setItem("currentUser", JSON.stringify(mappedUser));
-        
-        return { success: true, error: "", user: mappedUser };
-      }
-      
-      return { success: false, error: 'Invalid registration response' };
-    } catch (err: any) {
-      const errorMsg = err.response?.data?.message || err.message || 'Registration failed';
-      return { success: false, error: errorMsg };
-    }
-  };
-
-  // 🔒 5. Clean Logout
->>>>>>> origin/main
+  // 5. Clean Logout
   const logout = async () => {
     try {
       await authService.logout();

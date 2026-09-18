@@ -1,3 +1,8 @@
+/**
+ * FlowMart Super Admin & Staff Portal App Router
+ * Handles staff login, role-based route guards, vendor approvals, rider KYC, and logistics pricing.
+ */
+
 import "./App.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router";

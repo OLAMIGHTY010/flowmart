@@ -1,3 +1,18 @@
+/**
+ * ============================================================================
+ * MAIN APPLICATION ROUTER & CONTEXT PROVIDER (React + Vite)
+ * ============================================================================
+ *
+ * Configures global React Query client, Google OAuth Provider, and React Router:
+ * - Public Auth: `/get-started` (Role selection), `/login`
+ * - Shopper App: Marketplace, Product Details, Cart, Checkout, Profile, Tracking
+ * - Vendor App: `/vendor/dashboard`, Store Inventory, Products, KYC Onboarding
+ * - Rider App: `/rider/dashboard`, Active Deliveries, Earnings, Shortage Reports
+ * - Admin App: `/admin/kyc/vendors`, `/admin/kyc/riders`
+ *
+ * @module frontend/src/App
+ */
+
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { GoogleOAuthProvider } from "@react-oauth/google";

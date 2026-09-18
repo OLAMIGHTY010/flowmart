@@ -50,8 +50,8 @@ export default function Auth() {
       setLoading(true);
       setError(null);
       
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider,
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: (provider === 'microsoft' ? 'azure' : provider) as any,
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
           queryParams: {

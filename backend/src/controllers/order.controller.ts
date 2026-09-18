@@ -1,9 +1,14 @@
+/**
+ * Order & Checkout Controller
+ * Manages cart checkout, delivery fee calculation, PIN verification, escrow allocation, and Paystack webhooks.
+ */
+
 import { Request, Response } from "express";
 import { db } from "../../db";
 import { products, orders, orderItems, users, vendorProfiles, vendorKyc } from "../../db/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { AuthenticatedRequest } from "../middleware/auth.middleware";
-import { sendInAppNotification, broadcastNewDelivery } from "../services/websocket";
+import { sendInAppNotification, broadcastNewDelivery, emitOrderStatusUpdate, emitEscrowStatusUpdate } from "../services/websocket";
 import { emailService } from "../services/email.service";
 import crypto from "crypto";
 
@@ -60,14 +65,14 @@ export const calculateDelivery = async (req: Request, res: Response) => {
 	}
 };
 
-// 1. Place a New Order (Users)
+// 1. Place a New Order
 export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
 	try {
 		const userId = req.user?.id;
 		let { items, productId, quantity, deliveryZone, zone, payment_method } = req.body;
 		const finalZone = deliveryZone || zone;
 
-        // Gracefully support old single-item structure
+        // Backward Compatibility: Normalize single-item legacy payloads into uniform items array
         if (!items && productId && quantity) {
             items = [{ productId, quantity }];
         }
@@ -80,7 +85,11 @@ export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
 		const paymentMethod = payment_method || 'pay_on_delivery';
 		const sessionTxRef = `SESSION-${Date.now()}-${crypto.randomInt(1000, 9999)}`;
 
+		// Database Transaction: Ensure multi-vendor splitting and stock deductions complete atomically.
 		await db.transaction(async (tx) => {
+			// BUSINESS RULE: A single shopper cart may contain items from different vendors.
+			// We split the checkout into distinct order records per vendor so each merchant 
+			// manages their own fulfillment status, dispute scope, and escrow payout independently.
 			const vendorItemsMap = new Map<string, any[]>();
 			
 			for (const item of items) {
@@ -360,6 +369,7 @@ export const updateOrderStatus = async (req: AuthenticatedRequest, res: Response
 			orderId,
 			status,
 		});
+		emitOrderStatusUpdate(orderId, status, { vendorId: existingOrder.vendorId, userId: existingOrder.userId });
 
         // Broadcast to riders if the vendor just published it for delivery
         if (status === "confirmed") {
@@ -448,6 +458,8 @@ export const confirmOrderReceived = async (req: AuthenticatedRequest, res: Respo
 			orderId,
 			status: "received_and_paid",
 		});
+		emitOrderStatusUpdate(orderId, "received_and_paid", { vendorId: existingOrder.vendorId, userId: existingOrder.userId });
+		emitEscrowStatusUpdate(orderId, "released", { vendorId: existingOrder.vendorId, userId: existingOrder.userId, payoutStatus: "complete" });
 
 		return res.status(200).json({
 			success: true,
