@@ -1,3 +1,17 @@
+/**
+ * ============================================================================
+ * AI ENGINE & NATURAL LANGUAGE CONTROLLER
+ * ============================================================================
+ *
+ * Powers AI-assisted features for FlowMart:
+ * 1. OpenRouter / Gemini / OpenAI fallback orchestration for intelligent chat.
+ * 2. Conversational Shopping Assistant with live cart actions & routing.
+ * 3. Semantic Search & Voice Command parsing.
+ * 4. Sentiment Analysis for Support Ticket Routing.
+ *
+ * @module backend/src/controllers/ai.controller
+ */
+
 import { Response } from 'express';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import { db } from '../../db';

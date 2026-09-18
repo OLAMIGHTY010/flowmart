@@ -1,8 +1,14 @@
 import axios from "axios";
 import type { AxiosRequestConfig, AxiosError, AxiosInstance, InternalAxiosRequestConfig } from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL || '/api/v1';
 
+class ApiClient {
+  private axiosInstance: AxiosInstance;
+
+  constructor() {
+    this.axiosInstance = axios.create({
+      baseURL: API_URL,
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
@@ -65,7 +71,4 @@ const API_URL = import.meta.env.VITE_API_URL;
 }
 
 export const apiClient = new ApiClient();
-<<<<<<< HEAD
-=======
 export const api = apiClient;
->>>>>>> origin/main

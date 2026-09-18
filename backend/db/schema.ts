@@ -1,5 +1,21 @@
+/**
+ * ============================================================================
+ * FLOWMART DATABASE SCHEMA (Drizzle ORM / PostgreSQL)
+ * ============================================================================
+ *
+ * This file defines the relational database architecture for FlowMart, including:
+ * 1. User Authentication & Staff Hierarchy (users, staffProfiles, verificationOtps)
+ * 2. Multi-Vendor Marketplace (vendorProfiles, vendorKyc, categories, products)
+ * 3. E-Commerce Transactions & Logistics (orders, orderItems, deliveryZones, pricingRules)
+ * 4. Escrow & Wallets (wallets, walletTransactions, payouts, escrowTransactions)
+ * 5. Value Added Services (billTransactions, sponsoredAds, disputes, conversations, messages)
+ *
+ * @module backend/db/schema
+ */
+
 import { pgTable, uuid, varchar, timestamp, pgEnum, integer, decimal, text, boolean, jsonb, date, AnyPgColumn } from 'drizzle-orm/pg-core';
 
+/** User System Role Definitions */
 export const roleEnum = pgEnum('role', [
   'super_admin', 
   'admin',

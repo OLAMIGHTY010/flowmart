@@ -1,3 +1,22 @@
+/**
+ * ============================================================================
+ * CENTRAL API ROUTER REGISTRY
+ * ============================================================================
+ *
+ * Mounts all sub-routers under the `/api/v1` namespace:
+ * - `/auth`: Authentication, registration, OTP, Google OAuth & password resets.
+ * - `/users`: Profile management, user settings, active sessions.
+ * - `/products`, `/categories`: Marketplace inventory, product search & catalog.
+ * - `/orders`, `/cart`: Cart manipulation, order creation, escrow funding.
+ * - `/vendors`, `/vendor`: Vendor storefronts, KYC submission & store metrics.
+ * - `/rider`, `/riders`: Dispatch rider tracking, order acceptances & shortage reporting.
+ * - `/payment`, `/finance`, `/wallet`: Paystack webhooks, payouts & wallet transfers.
+ * - `/ai`, `/search`: OpenRouter AI Chat Widget, voice search & semantic discovery.
+ * - `/bills`, `/ads`, `/disputes`, `/chat`: Value added services & buyer-vendor negotiation.
+ *
+ * @module backend/src/routes/index
+ */
+
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 
