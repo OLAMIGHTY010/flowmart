@@ -2,6 +2,7 @@ import nodemailer, { Transporter } from 'nodemailer';
 import fs from 'fs/promises';
 import path from 'path';
 import handlebars from 'handlebars';
+import { templates } from '../templates';
 
 // Define Types for our Template Payloads
 interface OTPData {
@@ -85,7 +86,6 @@ class EmailService {
   // 2. Template Compiler Helper
   private async compileTemplate(templateName: string, data: any): Promise<string> {
     try {
-      const { templates } = await import('../templates');
       const templateContent = templates[templateName];
       if (!templateContent) {
         throw new Error(`Template not found: ${templateName}`);

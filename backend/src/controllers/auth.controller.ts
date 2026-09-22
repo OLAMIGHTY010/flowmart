@@ -107,7 +107,7 @@ export const googleAuth = async (req: Request, res: Response) => {
       
       user = newUser;
 
-      emailService.sendOtpEmail(user.email, { fullName: user.fullName, otp: otpCode }).catch(console.error);
+      await emailService.sendOtpEmail(user.email, { fullName: user.fullName, otp: otpCode }).catch(console.error);
     } else {
       // Prevent local users from logging in with Google unexpectedly
       if (user.authProvider === 'local') {
@@ -180,7 +180,7 @@ export const register = async (req: Request, res: Response) => {
           otpExpiry: expiresAt,
         }).where(eq(users.id, user.id));
 
-        emailService.sendOtpEmail(user.email, { fullName: user.fullName, otp: otpCode }).catch(console.error);
+        await emailService.sendOtpEmail(user.email, { fullName: user.fullName, otp: otpCode }).catch(console.error);
 
         const token = jwt.sign(
           { id: user.id, email: user.email, role: user.role },
@@ -231,7 +231,7 @@ export const register = async (req: Request, res: Response) => {
       otpExpiry: expiresAt,
     }).returning();
 
-    emailService.sendOtpEmail(newUser.email, { fullName: newUser.fullName, otp: otpCode }).catch(console.error);
+    await emailService.sendOtpEmail(newUser.email, { fullName: newUser.fullName, otp: otpCode }).catch(console.error);
 
     return res.status(201).json({
       success: true,
@@ -496,7 +496,7 @@ export const resendOtp = async (req: Request, res: Response) => {
       otpExpiry: expiresAt,
     }).where(eq(users.id, userRecord.id));
 
-    emailService.sendOtpEmail(userRecord.email, { fullName: userRecord.fullName, otp: otpCode }).catch(console.error);
+    await emailService.sendOtpEmail(userRecord.email, { fullName: userRecord.fullName, otp: otpCode }).catch(console.error);
 
     return res.status(200).json({
       success: true,
@@ -534,7 +534,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
       otpExpiry: expiresAt,
     }).where(eq(users.id, userRecord.id));
 
-    emailService.sendOtpEmail(userRecord.email, { fullName: userRecord.fullName, otp: otpCode }).catch(console.error);
+    await emailService.sendOtpEmail(userRecord.email, { fullName: userRecord.fullName, otp: otpCode }).catch(console.error);
 
     return res.status(200).json({
       success: true,
