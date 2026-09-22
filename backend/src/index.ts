@@ -51,6 +51,19 @@ app.use(helmet({
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
+app.use((req, res, next) => {
+  if (req.path === '/debug') {
+    return res.json({
+      url: req.url,
+      originalUrl: req.originalUrl,
+      path: req.path,
+      baseUrl: req.baseUrl,
+      headers: req.headers
+    });
+  }
+  next();
+});
+
 // 👉 Root Welcome Route
 app.get("/", (req, res) => {
   res.status(200).json({ 
