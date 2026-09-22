@@ -85,10 +85,11 @@ class EmailService {
   // 2. Template Compiler Helper
   private async compileTemplate(templateName: string, data: any): Promise<string> {
     try {
-      // Use process.cwd() for reliable path resolution in Vercel serverless environment
-      const templatePath = path.join(process.cwd(), 'src', 'templates', `${templateName}.html`);
-      const templateContent = await fs.readFile(templatePath, 'utf-8');
-
+      const { templates } = await import('../templates');
+      const templateContent = templates[templateName];
+      if (!templateContent) {
+        throw new Error(`Template not found: ${templateName}`);
+      }
       const compiledTemplate = handlebars.compile(templateContent);
       return compiledTemplate(data);
     } catch (error) {
