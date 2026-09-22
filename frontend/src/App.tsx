@@ -22,67 +22,69 @@ import AppLayout from "@/components/AppLayout";
 import ProtectedRoute from "@/routes/vendor/ProtectedRoute";
 import AIChatWidget from "@/components/AIChatWidget";
 
+import { lazy, Suspense } from "react";
+
 // Auth Pages
-import RoleSelector from "@/pages/auth/RoleSelector";
-import Login from "@/pages/auth/Login";
+const RoleSelector = lazy(() => import("@/pages/auth/RoleSelector"));
+const Login = lazy(() => import("@/pages/auth/Login"));
 
 // Shopper (User) Pages
-import Homepage from "@/pages/user/Homepage";
-import Marketplace from "@/pages/user/Marketplace";
-import ProductDetails from "@/pages/user/ProductDetails";
-import Cart from "@/pages/user/Cart";
-import Checkout from "@/pages/user/Checkout";
-import Orders from "@/pages/user/Orders";
-import Profile from "@/pages/user/Profile";
-import ActiveSessions from "@/pages/user/ActiveSessions";
-import Alerts from "@/pages/user/Alerts";
-import ChangePassword from "@/pages/user/ChangePassword";
-import EditProfile from "@/pages/user/EditProfile";
-import HelpSupport from "@/pages/user/HelpSupport";
-import OrderConfirmation from "@/pages/user/OrderConfirmation";
-import OrderTracking from "@/pages/user/OrderTracking";
-import PaymentCallback from "@/pages/user/PaymentCallback";
-import PrivacySecurity from "@/pages/user/PrivacySecurity";
-import Terms from "@/pages/user/Terms";
-import TwoFactorAuth from "@/pages/user/TwoFactorAuth";
-import VendorProfile from "@/pages/user/VendorProfile";
+const Homepage = lazy(() => import("@/pages/user/Homepage"));
+const Marketplace = lazy(() => import("@/pages/user/Marketplace"));
+const ProductDetails = lazy(() => import("@/pages/user/ProductDetails"));
+const Cart = lazy(() => import("@/pages/user/Cart"));
+const Checkout = lazy(() => import("@/pages/user/Checkout"));
+const Orders = lazy(() => import("@/pages/user/Orders"));
+const Profile = lazy(() => import("@/pages/user/Profile"));
+const ActiveSessions = lazy(() => import("@/pages/user/ActiveSessions"));
+const Alerts = lazy(() => import("@/pages/user/Alerts"));
+const ChangePassword = lazy(() => import("@/pages/user/ChangePassword"));
+const EditProfile = lazy(() => import("@/pages/user/EditProfile"));
+const HelpSupport = lazy(() => import("@/pages/user/HelpSupport"));
+const OrderConfirmation = lazy(() => import("@/pages/user/OrderConfirmation"));
+const OrderTracking = lazy(() => import("@/pages/user/OrderTracking"));
+const PaymentCallback = lazy(() => import("@/pages/user/PaymentCallback"));
+const PrivacySecurity = lazy(() => import("@/pages/user/PrivacySecurity"));
+const Terms = lazy(() => import("@/pages/user/Terms"));
+const TwoFactorAuth = lazy(() => import("@/pages/user/TwoFactorAuth"));
+const VendorProfile = lazy(() => import("@/pages/user/VendorProfile"));
 
 // Vendor Pages
-import VendorLayout from "@/components/vendor/VendorLayout";
-import VendorDashboard from "@/pages/vendor/VendorDashboard";
-import VendorKYC from "@/pages/vendor/VendorKYC";
-import VendorProducts from "@/pages/vendor/VendorProducts";
-import VendorProductNew from "@/pages/vendor/VendorProductNew";
-// import VendorAddProduct from "@/pages/vendor/VendorAddProduct";
-import VendorOrders from "@/pages/vendor/VendorOrders";
+const VendorLayout = lazy(() => import("@/components/vendor/VendorLayout"));
+const VendorDashboard = lazy(() => import("@/pages/vendor/VendorDashboard"));
+const VendorKYC = lazy(() => import("@/pages/vendor/VendorKYC"));
+const VendorProducts = lazy(() => import("@/pages/vendor/VendorProducts"));
+const VendorProductNew = lazy(() => import("@/pages/vendor/VendorProductNew"));
+const VendorOrders = lazy(() => import("@/pages/vendor/VendorOrders"));
+
+const VendorProfileSetup = lazy(() => import("@/pages/vendor/VendorProfileSetUp"));
+const VendorKYCInfo = lazy(() => import("@/pages/vendor/VendorKYCInfo"));
+const VendorKYCSubmit = lazy(() => import("@/pages/vendor/VendorKYCSubmit"));
+const VendorKYCReview = lazy(() => import("@/pages/vendor/VendorKYCReview"));
+const VendorKYCVerification = lazy(() => import("@/pages/vendor/VendorKYCVerification"));
 
 // Rider Pages
-import RiderLayout from "@/components/rider/RiderLayout";
-import RiderDashboard from "@/pages/rider/RiderDashboard";
-import RiderDeliveries from "@/pages/rider/RiderDeliveries";
-import RiderEarnings from "@/pages/rider/RiderEarnings";
-import RiderProfile from "@/pages/rider/RiderProfile";
-import RiderProfileSetup from "@/pages/rider/RiderProfileSetup";
-import RiderKYCInfo from "@/pages/rider/RiderKYCInfo";
-import RiderKYCSubmit from "@/pages/rider/RiderKYCSubmit";
-import RiderKYCReview from "@/pages/rider/RiderKYCReview";
-import RiderKYCVerification from "@/pages/rider/RiderKYCVerification";
-import RiderOrders from "@/pages/rider/RiderOrders";
-import RiderDeliveryDetails from "@/pages/rider/RiderDeliveryDetails";
-import RiderNewDelivery from "@/pages/rider/RiderNewDelivery";
-import RiderShortageReport from "@/pages/rider/RiderShortageReport";
+const RiderLayout = lazy(() => import("@/components/rider/RiderLayout"));
+const RiderDashboard = lazy(() => import("@/pages/rider/RiderDashboard"));
+const RiderDeliveries = lazy(() => import("@/pages/rider/RiderDeliveries"));
+const RiderEarnings = lazy(() => import("@/pages/rider/RiderEarnings"));
+const RiderProfile = lazy(() => import("@/pages/rider/RiderProfile"));
+const RiderProfileSetup = lazy(() => import("@/pages/rider/RiderProfileSetup"));
+const RiderKYCInfo = lazy(() => import("@/pages/rider/RiderKYCInfo"));
+const RiderKYCSubmit = lazy(() => import("@/pages/rider/RiderKYCSubmit"));
+const RiderKYCReview = lazy(() => import("@/pages/rider/RiderKYCReview"));
+const RiderKYCVerification = lazy(() => import("@/pages/rider/RiderKYCVerification"));
+const RiderOrders = lazy(() => import("@/pages/rider/RiderOrders"));
+const RiderDeliveryDetails = lazy(() => import("@/pages/rider/RiderDeliveryDetails"));
+const RiderNewDelivery = lazy(() => import("@/pages/rider/RiderNewDelivery"));
+const RiderShortageReport = lazy(() => import("@/pages/rider/RiderShortageReport"));
 
 // Admin Pages
-import AdminLayout from "./components/admin/AdminLayout";
-import AdminVendorKYC from "./pages/admin/AdminVendorKYC";
-import AdminRiderKYC from "./pages/admin/AdminRiderKYC";
+const AdminLayout = lazy(() => import("./components/admin/AdminLayout"));
+const AdminVendorKYC = lazy(() => import("./pages/admin/AdminVendorKYC"));
+const AdminRiderKYC = lazy(() => import("./pages/admin/AdminRiderKYC"));
 
-import VendorProfileSetup from "./pages/vendor/VendorProfileSetUp";
-import VendorKYCInfo from "./pages/vendor/VendorKYCInfo";
-import VendorKYCSubmit from "./pages/vendor/VendorKYCSubmit";
-import VendorKYCReview from "./pages/vendor/VendorKYCReview";
-import VendorKYCVerification from "./pages/vendor/VendorKYCVerification";
-import ProfileLayout from "./components/user/ProfileLayout";
+const ProfileLayout = lazy(() => import("./components/user/ProfileLayout"));
 
 // React Query
 const queryClient = new QueryClient({
@@ -108,9 +110,10 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <AIChatWidget />
-          <Routes>
-            {/* ═══ PUBLIC AUTH ROUTES ═══ */}
-            <Route path="/get-started" element={<RoleSelector />} />
+          <Suspense fallback={<div className="flex h-screen w-full items-center justify-center"><div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div></div>}>
+            <Routes>
+              {/* ═══ PUBLIC AUTH ROUTES ═══ */}
+              <Route path="/get-started" element={<RoleSelector />} />
             <Route path="/login" element={<Login />} />
 
             {/* ═══ SHOPPER ROUTES (with Navbar + Footer) ═══ */}
@@ -205,6 +208,7 @@ function App() {
             {/* Catch-all */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          </Suspense>
         </BrowserRouter>
       </QueryClientProvider>
     </GoogleOAuthProvider>
