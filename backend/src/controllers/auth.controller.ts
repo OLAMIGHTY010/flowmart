@@ -486,9 +486,6 @@ export const resendOtp = async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    if (userRecord.authProvider === 'google') {
-       return res.status(400).json({ success: false, message: 'Google users do not need OTPs. Please sign in with Google.' });
-    }
 
     const otpCode = generateSecureOTP();
     const hashedOtp = await hashPassword(otpCode);
