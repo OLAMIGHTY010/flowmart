@@ -59,6 +59,7 @@ export default function KYCReview() {
 
         // Guarantor & IDs
         govIdType: kycSubmitData.govIdType,
+        guarantors: kycSubmitData.guarantors || [],
         guarantorName: kycSubmitData.guarantorName,
         guarantorPhone: kycSubmitData.guarantorPhone,
         guarantorNin: kycSubmitData.guarantorNin,

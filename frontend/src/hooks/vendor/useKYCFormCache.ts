@@ -19,6 +19,7 @@ export interface ProfileSetupFormData {
   avatar: string;
   dob?: string;
   gender?: string;
+  homeAddress?: string;
 }
 
 const PROFILE_SETUP_KEY = ["profileSetupForm"] as const;
@@ -134,6 +135,7 @@ export interface KYCSubmitFormData {
   guarantorPhone: string;
   guarantorNin: string;
   guarantorRelationship: string;
+  guarantors?: any[];
   documents: {
     id: string;
     title: string;

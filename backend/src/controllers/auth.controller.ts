@@ -87,6 +87,10 @@ export const googleAuth = async (req: Request, res: Response) => {
       // Create new Google User
       const requestedRole = ['user', 'vendor', 'dispatch_rider'].includes(role) ? role : 'user';
       
+      const otpCode = generateSecureOTP();
+      const hashedOtp = await hashPassword(otpCode);
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+
       const [newUser] = await db.insert(users).values({
         fullName: name || 'Google User',
         email,
@@ -96,12 +100,14 @@ export const googleAuth = async (req: Request, res: Response) => {
         role: requestedRole,
         gender: gender || null,
         dateOfBirth: birthdate ? new Date(birthdate).toISOString().split('T')[0] : null,
-        isVerified: requestedRole === 'user',
+        isVerified: false,
+        otp: hashedOtp,
+        otpExpiry: expiresAt,
       }).returning();
       
       user = newUser;
 
-      emailService.sendWelcomeEmail(user.email, { fullName: user.fullName, role: user.role }).catch(console.error);
+      emailService.sendOtpEmail(user.email, { fullName: user.fullName, otp: otpCode }).catch(console.error);
     } else {
       // Prevent local users from logging in with Google unexpectedly
       if (user.authProvider === 'local') {

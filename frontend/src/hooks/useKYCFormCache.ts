@@ -7,12 +7,15 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
  * Data is also persisted to sessionStorage for cross-session durability.
  */
 
+import type { Guarantor } from "@/types/api";
+
 // ── Profile Setup Form Cache ──
 export interface ProfileSetupFormData {
   displayName: string;
   phone: string;
   stateRegion: string;
   city: string;
+  homeAddress: string;
   bio: string;
   avatar: string;
   dob?: string;
@@ -32,6 +35,7 @@ function loadProfileSetupFromStorage(): ProfileSetupFormData {
     phone: '',
     stateRegion: '',
     city: '',
+    homeAddress: '',
     bio: '',
     avatar: '',
     dob: '',
@@ -185,10 +189,11 @@ export function useKYCInfoFormCache() {
 // ── KYCSubmit Form Cache ──
 export interface KYCSubmitFormData {
   govIdType: string;
-  guarantorName: string;
-  guarantorPhone: string;
-  guarantorNin: string;
-  guarantorRelationship: string;
+  guarantors: Guarantor[];
+  guarantorName?: string;
+  guarantorPhone?: string;
+  guarantorNin?: string;
+  guarantorRelationship?: string;
   documents: {
     id: string;
     title: string;
@@ -206,10 +211,10 @@ const KYC_SUBMIT_STORAGE_KEY = "rider_kyc_submit_form";
 function loadKYCSubmitFromStorage(): KYCSubmitFormData {
   const defaultState: KYCSubmitFormData = {
     govIdType: 'national_id',
-    guarantorName: '',
-    guarantorPhone: '',
-    guarantorNin: '',
-    guarantorRelationship: '',
+    guarantors: [
+      { name: '', phone: '', nin: '', relationship: '', address: '', occupation: '' },
+      { name: '', phone: '', nin: '', relationship: '', address: '', occupation: '' }
+    ],
     documents: [
       { id: 'government_id', title: 'Government ID', subtitle: 'Upload a valid government-issued ID', status: 'upload' },
       { id: 'guarantor_id', title: 'Guarantor ID', subtitle: "Upload guarantor's government-issued ID", status: 'upload' },

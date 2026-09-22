@@ -31,14 +31,15 @@ export default function VendorProfileSetup({ onNext }: ProfileSetupProps) {
   const [businessPhone, setBusinessPhone] = useState(formData.businessPhone || user?.phone || '');
   const [stateRegion, setStateRegion] = useState(formData.stateRegion);
   const [city, setCity] = useState(formData.city);
+  const [homeAddress, setHomeAddress] = useState(formData.homeAddress || '');
   const [bio, setBio] = useState(formData.bio);
   
   const [dob, setDob] = useState(formData.dob || user?.dateOfBirth || '');
   const [gender, setGender] = useState(formData.gender || user?.gender || '');
   
   React.useEffect(() => {
-    updateForm({ businessName, businessPhone, stateRegion, city, bio, avatar: profileImage || '', dob, gender });
-  }, [businessName, businessPhone, stateRegion, city, bio, profileImage, dob, gender]);
+    updateForm({ businessName, businessPhone, stateRegion, city, homeAddress, bio, avatar: profileImage || '', dob, gender });
+  }, [businessName, businessPhone, stateRegion, city, homeAddress, bio, profileImage, dob, gender]);
 
   // Read-only personal info from registration
   // Read-only personal info from registration
@@ -72,7 +73,7 @@ export default function VendorProfileSetup({ onNext }: ProfileSetupProps) {
     e.preventDefault();
     setErrorMsg('');
 
-    if (!businessName || !businessPhone || !stateRegion || !city) {
+    if (!businessName || !businessPhone || !stateRegion || !city || !homeAddress) {
       setErrorMsg('Please fill in all required fields.');
       return;
     }
@@ -279,6 +280,21 @@ export default function VendorProfileSetup({ onNext }: ProfileSetupProps) {
                   setCity(data.city);
                 }}
               />
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-semibold text-foreground" htmlFor="homeAddress">
+                  Home Address (Personal) <span className="text-destructive">*</span>
+                </label>
+                <textarea
+                  id="homeAddress"
+                  placeholder="Enter your personal home address for verification..."
+                  value={homeAddress}
+                  onChange={(e) => setHomeAddress(e.target.value)}
+                  rows={2}
+                  required
+                  className="w-full rounded-xl border border-border bg-input px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none transition focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
+                />
+              </div>
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-semibold text-foreground" htmlFor="bio">

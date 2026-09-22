@@ -92,6 +92,7 @@ export default function VendorKYCReview() {
         { label: 'Full Name', value: personalInfo.fullName},
         { label: 'Date of Birth', value: formatDob(personalInfo.dob) },
         { label: 'Gender', value: personalInfo.gender},
+        { label: 'Home Address', value: profileData.homeAddress || '—' },
       ],
     },
     {
@@ -122,17 +123,28 @@ export default function VendorKYCReview() {
         { label: 'Account Name', value: infoData.accountName || '—' },
       ],
     },
-    {
-      heading: 'Guarantor Details',
+    ...(submitData.guarantors?.length ? submitData.guarantors.map((g, idx) => ({
+      heading: `Guarantor ${idx + 1} Details`,
       icon: 'users',
       path: '/kyc/submit',
       items: [
-        { label: 'Guarantor Name', value: submitData.guarantorName || '—' },
-        { label: 'Phone', value: submitData.guarantorPhone || '—' },
-        { label: 'NIN', value: submitData.guarantorNin || '—' },
-        { label: 'Relationship', value: submitData.guarantorRelationship || '—' },
+        { label: 'Name', value: g.name || '—' },
+        { label: 'Phone', value: g.phone || '—' },
+        { label: 'NIN', value: g.nin || '—' },
+        { label: 'Relationship', value: g.relationship || '—' },
+        { label: 'Address', value: g.address || '—' },
+        { label: 'Occupation', value: g.occupation || '—' },
       ],
-    },
+    })) : [
+      {
+        heading: 'Guarantor Details',
+        icon: 'users',
+        path: '/kyc/submit',
+        items: [
+          { label: 'Guarantor Name', value: '—' },
+        ],
+      }
+    ])
   ];
 
   const docStatuses = submitData.documents.map(doc => ({
@@ -189,6 +201,7 @@ export default function VendorKYCReview() {
         
         // KYC Submit Fields
         govIdType: submitData.govIdType,
+        guarantors: submitData.guarantors || [],
         guarantorName: submitData.guarantorName,
         guarantorPhone: submitData.guarantorPhone,
         guarantorNin: submitData.guarantorNin,

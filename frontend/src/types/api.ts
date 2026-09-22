@@ -75,6 +75,7 @@ export interface ProfileSetupRequest {
   phone?: string;
   stateRegion: string;
   city: string;
+  homeAddress?: string;
   bio: string;
   avatar?: string; // Base64 or URL
 }
@@ -121,6 +122,16 @@ export interface KYCSubmitRequest {
 }
 
 
+export interface Guarantor {
+  name: string;
+  phone: string;
+  nin: string;
+  relationship: string;
+  address: string;
+  occupation: string;
+  idCardFile?: string; // Base64
+}
+
 export interface KYCSubmitPayload {
   // Profile Setup fields
   displayName: string;
@@ -129,6 +140,7 @@ export interface KYCSubmitPayload {
   phone?: string;
   stateRegion: string;
   city: string;
+  homeAddress?: string;
   bio: string;
   avatar?: string;
 
@@ -153,10 +165,11 @@ export interface KYCSubmitPayload {
   
   // KYC Submit fields
   govIdType: string;
-  guarantorName: string;
-  guarantorPhone: string;
+  guarantors: Guarantor[];
+  guarantorName?: string;
+  guarantorPhone?: string;
   guarantorNin?: string;
-  guarantorRelationship: string;
+  guarantorRelationship?: string;
   governmentIdFile?: string;
   businessLicenseFile?: string;
   guarantorIdFile?: string;

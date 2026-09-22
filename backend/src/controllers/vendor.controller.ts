@@ -85,6 +85,7 @@ export const submitKYC = async (req: AuthenticatedRequest, res: Response) => {
       businessPhone,
       stateRegion,
       city,
+      homeAddress,
       bio,
       avatar,
       
@@ -106,6 +107,7 @@ export const submitKYC = async (req: AuthenticatedRequest, res: Response) => {
       guarantorPhone,
       guarantorNin,
       guarantorRelationship,
+      guarantors,
       governmentIdFile,
       businessLicenseFile,
       businessPermitFile,
@@ -114,8 +116,12 @@ export const submitKYC = async (req: AuthenticatedRequest, res: Response) => {
       cacDocumentFile,
     } = req.body;
 
-    if (!businessName || !bankName || !accountNumber || !accountName || !govIdType || !guarantorName || !guarantorPhone || !businessPhone || !stateRegion || !city) {
+    if (!businessName || !bankName || !accountNumber || !accountName || !govIdType || !businessPhone || !stateRegion || !city) {
       return res.status(400).json({ success: false, message: "Missing required profile or KYC fields" });
+    }
+
+    if (!guarantors || !Array.isArray(guarantors) || guarantors.length < 2) {
+      return res.status(400).json({ success: false, message: "At least two guarantors are required" });
     }
 
     // 1. CREATE OR UPDATE VENDOR PROFILE
@@ -134,6 +140,7 @@ export const submitKYC = async (req: AuthenticatedRequest, res: Response) => {
           businessPhone,
           stateRegion,
           city,
+          homeAddress,
           bio: bio || null,
           avatar: avatar || null,
           updatedAt: new Date(),
@@ -147,6 +154,7 @@ export const submitKYC = async (req: AuthenticatedRequest, res: Response) => {
         businessPhone,
         stateRegion,
         city,
+        homeAddress,
         bio: bio || null,
         avatar: avatar || null,
       });
@@ -183,10 +191,11 @@ export const submitKYC = async (req: AuthenticatedRequest, res: Response) => {
       accountNumber,
       accountName,
       governmentIdType: govIdType,
-      guarantorName,
-      guarantorPhone,
-      guarantorNin,
-      guarantorRelationship,
+      guarantorName: guarantorName || '',
+      guarantorPhone: guarantorPhone || '',
+      guarantorNin: guarantorNin || null,
+      guarantorRelationship: guarantorRelationship || '',
+      guarantors: guarantors || [],
       governmentIdFile: governmentIdFile || null,
       businessLicenseFile: businessLicenseFile || businessPermitFile || null,
       businessPermitFile: businessPermitFile || businessLicenseFile || null,

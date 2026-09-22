@@ -6,11 +6,17 @@ import { GoogleLogin } from "@react-oauth/google";
 import { Leaf, ArrowLeft, CheckCircle2 } from "lucide-react";
 import type { UserRole } from "@/types/api";
 
+import { authService } from "@/services/AuthServices";
+
 const Login = () => {
-  const { loginWithGoogle } = useAuth();
+  const { loginWithGoogle, refreshUser } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [showOtp, setShowOtp] = useState(false);
+  const [otpValue, setOtpValue] = useState("");
+  const [unverifiedEmail, setUnverifiedEmail] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
 
   const selectedRole = (localStorage.getItem("selectedRole") as UserRole) || "user";
 
@@ -27,31 +33,68 @@ const Login = () => {
     const result = await loginWithGoogle(credentialResponse.credential, selectedRole);
 
     if (result.success && result.user) {
-      showToast("Welcome to FlowMart!", "success");
-
-      // Role-based redirect
-      switch (result.user.role) {
-        case "vendor":
-          if (!result.user.profileCompleted) {
-            navigate("/profile-setup");
-          } else {
-            navigate("/vendor/dashboard");
-          }
-          break;
-        case "dispatch_rider":
-          if (!result.user.profileCompleted) {
-            navigate("/rider/profile-setup");
-          } else {
-            navigate("/rider/dashboard");
-          }
-          break;
-        default:
-          navigate("/products");
+      if (result.user.isVerified === false) {
+        setShowOtp(true);
+        setUnverifiedEmail(result.user.email);
+        showToast("Please check your email for the verification code.", "success");
+        setIsLoading(false);
+        return;
       }
+
+      showToast("Welcome to FlowMart!", "success");
+      routeUser(result.user);
     } else {
       showToast(result.error || "Login failed. Please try again.", "error");
     }
     setIsLoading(false);
+  };
+
+  const routeUser = (u: any) => {
+    switch (u.role) {
+      case "vendor":
+        if (!u.profileCompleted) navigate("/profile-setup");
+        else navigate("/vendor/dashboard");
+        break;
+      case "dispatch_rider":
+        if (!u.profileCompleted) navigate("/rider/profile-setup");
+        else navigate("/rider/dashboard");
+        break;
+      default:
+        navigate("/products");
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otpValue || otpValue.length < 6) {
+      showToast("Please enter a valid 6-digit OTP", "error");
+      return;
+    }
+    setIsVerifying(true);
+    try {
+      const response = await authService.verifyOtp({ email: unverifiedEmail, otp: otpValue });
+      const data = (response as any).data || response;
+      if (data.success && data.user) {
+        localStorage.setItem("accessToken", data.token);
+        localStorage.setItem("currentUser", JSON.stringify(data.user));
+        await refreshUser();
+        showToast("Email verified successfully!", "success");
+        routeUser(data.user);
+      } else {
+        showToast(data.message || "Invalid OTP", "error");
+      }
+    } catch (err: any) {
+      showToast(err.response?.data?.message || err.message || "Verification failed", "error");
+    }
+    setIsVerifying(false);
+  };
+
+  const handleResendOtp = async () => {
+    try {
+      await authService.resendOtp({ email: unverifiedEmail });
+      showToast("OTP resent! Please check your email.", "success");
+    } catch (err: any) {
+      showToast(err.response?.data?.message || "Failed to resend OTP", "error");
+    }
   };
 
   return (
@@ -150,74 +193,127 @@ const Login = () => {
               marginBottom: 8,
               letterSpacing: "-0.02em",
             }}>
-              Welcome back
+              {showOtp ? "Verify Email" : "Welcome back"}
             </h2>
             <p style={{
               fontSize: "1rem",
               color: "var(--color-text-muted)",
               marginBottom: 40,
             }}>
-              Sign in to your FlowMart account to continue
+              {showOtp ? "Enter the 6-digit code sent to your email." : "Sign in to your FlowMart account to continue"}
             </p>
 
-            {/* Google OAuth Button */}
-            <div style={{ marginBottom: 32 }}>
-              {isLoading ? (
-                <div className="btn-google" style={{ justifyContent: "center", opacity: 0.7, cursor: "not-allowed", height: 44 }}>
-                  <div style={{
-                    width: 20,
-                    height: 20,
-                    border: "2px solid var(--color-border)",
-                    borderTopColor: "var(--color-primary)",
-                    borderRadius: "50%",
-                    animation: "spin 0.8s linear infinite",
-                  }} />
-                  Signing in...
+            {showOtp ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 32 }}>
+                <input 
+                  type="text" 
+                  value={otpValue} 
+                  onChange={(e) => setOtpValue(e.target.value)} 
+                  placeholder="Enter 6-digit OTP" 
+                  maxLength={6}
+                  style={{
+                    padding: "16px",
+                    borderRadius: "8px",
+                    border: "1px solid var(--color-border)",
+                    fontSize: "1.25rem",
+                    textAlign: "center",
+                    letterSpacing: "4px",
+                    width: "100%",
+                    outline: "none",
+                  }}
+                />
+                <button 
+                  onClick={handleVerifyOtp}
+                  disabled={isVerifying}
+                  style={{
+                    padding: "16px",
+                    borderRadius: "8px",
+                    backgroundColor: "var(--color-primary)",
+                    color: "white",
+                    fontWeight: 600,
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: "1rem",
+                  }}
+                >
+                  {isVerifying ? "Verifying..." : "Verify OTP"}
+                </button>
+                <button 
+                  onClick={handleResendOtp}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "var(--color-primary)",
+                    cursor: "pointer",
+                    fontWeight: 600,
+                    textDecoration: "underline",
+                  }}
+                >
+                  Resend Code
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* Google OAuth Button */}
+                <div style={{ marginBottom: 32 }}>
+                  {isLoading ? (
+                    <div className="btn-google" style={{ justifyContent: "center", opacity: 0.7, cursor: "not-allowed", height: 44 }}>
+                      <div style={{
+                        width: 20,
+                        height: 20,
+                        border: "2px solid var(--color-border)",
+                        borderTopColor: "var(--color-primary)",
+                        borderRadius: "50%",
+                        animation: "spin 0.8s linear infinite",
+                      }} />
+                      Signing in...
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", justifyContent: "center", width: "100%" }}>
+                      <GoogleLogin
+                        onSuccess={handleGoogleSuccess}
+                        onError={() => showToast("Google login failed. Please ensure cookies/pop-ups are enabled.", "error")}
+                        text="continue_with"
+                        shape="rectangular"
+                        size="large"
+                        width="400"
+                        logo_alignment="center"
+                      />
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div style={{ display: "flex", justifyContent: "center", width: "100%" }}>
-                  <GoogleLogin
-                    onSuccess={handleGoogleSuccess}
-                    onError={() => showToast("Google login failed. Please ensure cookies/pop-ups are enabled.", "error")}
-                    text="continue_with"
-                    shape="rectangular"
-                    size="large"
-                    width="400"
-                    logo_alignment="center"
-                  />
+
+                {/* Divider */}
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 16,
+                  marginBottom: 32,
+                }}>
+                  <div style={{ flex: 1, height: 1, backgroundColor: "var(--color-border)" }} />
+                  <span style={{ fontSize: "0.813rem", color: "var(--color-text-light)", textTransform: "uppercase", letterSpacing: 1 }}>
+                    Secure Login
+                  </span>
+                  <div style={{ flex: 1, height: 1, backgroundColor: "var(--color-border)" }} />
                 </div>
-              )}
-            </div>
 
-            {/* Divider */}
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 16,
-              marginBottom: 32,
-            }}>
-              <div style={{ flex: 1, height: 1, backgroundColor: "var(--color-border)" }} />
-              <span style={{ fontSize: "0.813rem", color: "var(--color-text-light)", textTransform: "uppercase", letterSpacing: 1 }}>
-                Secure Login
-              </span>
-              <div style={{ flex: 1, height: 1, backgroundColor: "var(--color-border)" }} />
-            </div>
-
-            {/* Info box */}
-            <div style={{
-              padding: "20px",
-              backgroundColor: "var(--color-primary-surface)",
-              borderRadius: "var(--radius-lg)",
-              border: "1px solid var(--color-primary-muted)",
-            }}>
-              <p style={{
-                fontSize: "0.875rem",
-                color: "var(--color-primary-hover)",
-                lineHeight: 1.5,
-              }}>
-                <strong>Passwordless Security.</strong> FlowMart uses Google OAuth to authenticate you securely. We never store or see your passwords.
-              </p>
-            </div>
+                {/* Info box */}
+                <div style={{
+                  padding: "20px",
+                  backgroundColor: "var(--color-primary-surface)",
+                  borderRadius: "var(--radius-lg)",
+                  border: "1px solid var(--color-primary-muted)",
+                }}>
+                  <p style={{
+                    fontSize: "0.875rem",
+                    color: "var(--color-primary-hover)",
+                    lineHeight: 1.5,
+                  }}>
+                    <strong>Passwordless Security.</strong> FlowMart uses Google OAuth to authenticate you securely. We never store or see your passwords.
+                  </p>
+                </div>
+              </>
+            )}
           </div>
 
           <p style={{
