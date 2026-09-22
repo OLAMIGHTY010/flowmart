@@ -77,7 +77,12 @@ export default function KYCReview() {
 
       await submitKYC(payload);
       await refreshUser();
+      
       setShowSuccessPopup(true);
+      setTimeout(() => {
+        setShowSuccessPopup(false);
+        navigate('/rider/kyc/verification');
+      }, 1500);
     } catch (err: any) {
       const backendMessage = err.response?.data?.message;
       setErrorMsg(backendMessage || err.message || 'Failed to submit KYC application. Please try again.');
@@ -86,6 +91,16 @@ export default function KYCReview() {
 
   return (
     <div className="min-h-screen bg-muted/20 flex flex-col lg:flex-row">
+      {/* Toast Alert */}
+      {showSuccessPopup && (
+        <div className="fixed top-5 right-5 z-50 bg-neutral-900 text-white px-4 py-3.5 rounded-xl shadow-lg flex items-center gap-2 animate-bounce">
+          <div className="w-5 h-5 rounded-full bg-[#16a34a] flex items-center justify-center text-white">
+            <Icon i="check" size={12} />
+          </div>
+          <span className="text-sm font-semibold">Verification Request Submitted!</span>
+        </div>
+      )}
+
       <SideBanner />
 
       <div className="flex-1 p-4 sm:p-6 lg:p-12 overflow-y-auto max-w-4xl mx-auto w-full">
@@ -220,31 +235,6 @@ export default function KYCReview() {
           </RiderButton>
         </div>
       </div>
-
-      {showSuccessPopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl flex flex-col items-center text-center animate-in zoom-in-95 duration-200">
-            <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mb-6">
-              <Icon i="check" size={40} className="text-emerald-600 stroke-[3]" />
-            </div>
-            
-            <h3 className="text-2xl font-headings font-bold text-slate-800 mb-2">Application Submitted!</h3>
-            <p className="text-sm text-slate-500 leading-relaxed mb-8">
-              Your FlowMart rider account is under review. Please wait for approval. We'll notify you once your documents are verified.
-            </p>
-            
-            <RiderButton 
-              onClick={() => {
-                setShowSuccessPopup(false);
-                navigate('/');
-              }} 
-              className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold"
-            >
-              Go to Home
-            </RiderButton>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
