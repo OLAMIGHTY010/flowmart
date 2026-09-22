@@ -3,13 +3,14 @@ import logoImg from '@/assets/flowmart-logo.png';
 export default function SideBanner() {
   return (
     <div className="relative hidden lg:flex lg:w-2/5 xl:w-1/3 bg-dark-header text-white p-8 flex-col justify-between overflow-hidden sticky top-0 h-screen">
-      {/* Background Decorative Overlay */}
-      <div className="absolute inset-0 opacity-25 mix-blend-overlay">
+      {/* Background Image with Dark Overlay for Readability */}
+      <div className="absolute inset-0 z-0">
         <img
           src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80&w=1200"
           alt="Nigerian marketplace background"
           className="w-full h-full object-cover"
         />
+        <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-[2px]"></div>
       </div>
 
       {/* Top Branding */}
@@ -22,7 +23,7 @@ export default function SideBanner() {
 
       {/* Main Display */}
       <div className="relative z-10 my-auto py-12 flex flex-col gap-4">
-        <div className="bg-white/10 backdrop-blur-md px-3.5 py-1.5 rounded-full text-[10px] font-bold tracking-widest uppercase text-primary bg-secondary/90 w-fit">
+        <div className="bg-white/10 border border-white/20 backdrop-blur-md px-3.5 py-1.5 rounded-full text-[10px] font-bold tracking-widest uppercase text-white w-fit">
           Vendor & Logistics Partner
         </div>
         <h1 className="text-3xl font-extrabold tracking-tight leading-tight">
