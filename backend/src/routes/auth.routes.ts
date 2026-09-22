@@ -41,6 +41,12 @@ router.post('/reset-password', authApiLimiter, validateRequest({ body: resetPass
 router.post('/logout', authenticateJWT, logout);
 router.get('/me', authenticateJWT, getMe);
 router.post('/force-change-password', authenticateJWT, forceChangePassword);
-router.patch('/assign-role', authenticateJWT, authorizeRoles('super_admin'), assignRole);
+router.get('/debug-env', (req, res) => {
+  res.json({
+    hasSmtpHost: !!process.env.SMTP_HOST,
+    hasSmtpUser: !!process.env.SMTP_USER,
+    hasSmtpPass: !!process.env.SMTP_PASS,
+  });
+});
 
 export default router;
