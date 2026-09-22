@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/contexts/ToastContext";
 import { User, Mail, Phone, LogOut, Save, Calendar, Users, Lock, Key, ShieldCheck, Smartphone, Settings, MapPin, Bell, HelpCircle, FileText, ChevronRight, ArrowLeft } from "lucide-react";
@@ -54,13 +54,14 @@ const RiderProfile = () => {
     }
   };
 
+  const navigate = useNavigate();
+
   const menuItems = [
     { label: "Edit Profile", icon: User, action: () => setActiveView('edit') },
     { label: "Notifications", icon: Bell, action: () => showToast("🔔 New delivery request assigned to you! Check your dashboard.", "success") },
     { label: "Privacy & Security", icon: Lock, action: () => setActiveView('privacy') },
-    { label: "My Zones", icon: MapPin, action: () => showToast("My Zones coming soon", "info") },
-    { label: "Help & Support", icon: HelpCircle, action: () => showToast("Help & Support coming soon", "info") },
-    { label: "Terms of Service", icon: FileText, action: () => showToast("Terms of Service coming soon", "info") },
+    { label: "Help & Support", icon: HelpCircle, action: () => navigate('/rider/help-support') },
+    { label: "Terms of Service", icon: FileText, action: () => navigate('/terms') },
   ];
 
   return (
@@ -88,7 +89,7 @@ const RiderProfile = () => {
               </p>
               
               <div className="flex items-center gap-1.5 text-gray-700 text-xs font-semibold mb-4">
-                <MapPin size={14} /> Zone A1 Rider
+                <MapPin size={14} /> {user?.city || "Ebute Ikorodu"}, {user?.stateRegion || "Lagos"}
               </div>
 
               <div className="bg-white px-3 py-1.5 rounded-full flex items-center gap-2 shadow-sm">
