@@ -19,6 +19,7 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
 
       - name: Install Dependencies
         run: |
@@ -47,6 +48,7 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
 
       - name: Install Backend Dependencies
         run: npm --prefix backend install
@@ -66,6 +68,7 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
 
       - name: Install Frontend Dependencies
         run: npm --prefix frontend install
