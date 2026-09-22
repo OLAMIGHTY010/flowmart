@@ -84,7 +84,7 @@ app.get('/api/v1/docs.json', (req, res) => {
 });
 
 import { emailService } from './services/email.service';
-app.get('/api/v1/test-smtp', async (req, res) => {
+app.get(['/api/v1/test-smtp', '/v1/test-smtp'], async (req, res) => {
   try {
     await (emailService as any).transporter.verify();
     res.json({ success: true, message: 'SMTP connected successfully!', env: { host: process.env.SMTP_HOST, port: process.env.SMTP_PORT, user: process.env.SMTP_USER ? 'SET' : 'UNSET' } });
@@ -93,7 +93,14 @@ app.get('/api/v1/test-smtp', async (req, res) => {
   }
 });
 
+// Since Vercel rewrites "/(.*) -> /server/index.ts", Express receives req.url = "/server/index.ts".
+// We must normalize it. Wait! Earlier we saw Express log "Cannot POST /v1/auth/google".
+// Which means Express DOES receive the correct req.url from Vercel!
+// BUT if we mount on app.use('/v1', ...), Express's router parses it relative to /v1.
+// However, the internal routes expect the original paths!
+// Let's just mount app.use('/v1', globalApiLimiter, routes);
 app.use("/api/v1", globalApiLimiter, routes);
+app.use("/v1", globalApiLimiter, routes);
 
 const PORT = process.env.PORT || 5000;
 
