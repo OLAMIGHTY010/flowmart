@@ -71,7 +71,7 @@ app.get('/api/v1/docs.json', (req, res) => {
 });
 
 import { emailService } from './services/email.service';
-app.get('/api/v1/test-smtp', async (req, res) => {
+app.get(['/api/v1/test-smtp', '/v1/test-smtp'], async (req, res) => {
   try {
     await (emailService as any).transporter.verify();
     res.json({ success: true, message: 'SMTP connected successfully!', env: { host: process.env.SMTP_HOST, port: process.env.SMTP_PORT, user: process.env.SMTP_USER ? 'SET' : 'UNSET' } });
@@ -81,6 +81,7 @@ app.get('/api/v1/test-smtp', async (req, res) => {
 });
 
 app.use("/api/v1", globalApiLimiter, routes);
+app.use("/v1", globalApiLimiter, routes);
 
 const PORT = process.env.PORT || 5000;
 
