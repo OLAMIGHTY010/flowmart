@@ -187,7 +187,7 @@ export default function KYCInfo() {
     const defaults = [
       { id: 'insurance', title: 'Upload Vehicle Insurance', subtitle: 'Valid insurance document', status: 'upload' },
       { id: 'road_worthiness', title: 'Upload Road Worthiness Certificate', subtitle: 'Valid road worthiness cert', status: 'upload' },
-      { id: 'car_image', title: 'Upload Car Image', subtitle: 'Clear photo of your vehicle showing the plate number', status: 'upload' },
+      { id: 'car_image', title: 'Upload Vehicle Image', subtitle: 'Clear photo of your vehicle showing the plate number', status: 'upload' },
     ] as UploadDoc[];
     return defaults.map(def => formData.documents.find(d => d.id === def.id) || def);
   });
@@ -573,9 +573,9 @@ export default function KYCInfo() {
                 </div>
 
                 <div className="flex flex-col gap-2 mt-2">
-                  <label className="text-sm font-semibold text-foreground">Upload Car Image</label>
+                  <label className="text-sm font-semibold text-foreground">Upload Vehicle Image</label>
                   {renderUploadCard(
-                    documents.find(d => d.id === 'car_image') || { id: 'car_image', title: 'Car Image', subtitle: 'Clear photo', status: 'upload' },
+                    documents.find(d => d.id === 'car_image') || { id: 'car_image', title: 'Vehicle Image', subtitle: 'Clear photo', status: 'upload' },
                     uploadingId,
                     handleCardClick,
                     'border-primary/30 bg-primary/10/50 text-primary/90 hover:bg-primary/10'

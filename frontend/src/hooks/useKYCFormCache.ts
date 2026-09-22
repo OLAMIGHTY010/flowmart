@@ -112,7 +112,7 @@ function loadKYCInfoFromStorage(): KYCInfoFormData {
     documents: [
       { id: 'insurance', title: 'Upload Vehicle Insurance', subtitle: 'Valid insurance document', status: 'upload' },
       { id: 'road_worthiness', title: 'Upload Road Worthiness Certificate', subtitle: 'Valid road worthiness cert', status: 'upload' },
-      { id: 'car_image', title: 'Upload Car Image', subtitle: 'Clear photo of your vehicle showing the plate number', status: 'upload' },
+      { id: 'car_image', title: 'Upload Vehicle Image', subtitle: 'Clear photo of your vehicle showing the plate number', status: 'upload' },
     ],
   };
 
