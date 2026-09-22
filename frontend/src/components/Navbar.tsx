@@ -23,7 +23,7 @@ const Navbar = () => {
     <nav className="bg-slate-900 sticky top-0 z-50">
       <div className="container mx-auto px-4 md:px-6 h-16 flex items-center justify-between gap-5">
         {/* Logo */}
-        <Link to="/products" className="flex items-center gap-2 shrink-0">
+        <Link to="/" className="flex items-center gap-2 shrink-0">
           <img 
             src={logo} 
             alt="FlowMart Logo" 
