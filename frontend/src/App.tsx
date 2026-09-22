@@ -21,6 +21,7 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import AppLayout from "@/components/AppLayout";
 import ProtectedRoute from "@/routes/vendor/ProtectedRoute";
 import AIChatWidget from "@/components/AIChatWidget";
+import LogoLoader from "@/components/ui/LogoLoader";
 
 import { lazy, Suspense } from "react";
 
@@ -110,7 +111,7 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <AIChatWidget />
-          <Suspense fallback={<div className="flex h-screen w-full items-center justify-center"><div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div></div>}>
+          <Suspense fallback={<LogoLoader />}>
             <Routes>
               {/* ═══ PUBLIC AUTH ROUTES ═══ */}
               <Route path="/get-started" element={<RoleSelector />} />

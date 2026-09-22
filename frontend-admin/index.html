@@ -1,13 +1,55 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FlowMart</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/png" href="/flowmart.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FlowMart Admin</title>
+  <style>
+    /* Global Splash Screen Styles */
+    #global-loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: #ffffff; /* Light mode background */
+      z-index: 99999;
+    }
+    @media (prefers-color-scheme: dark) {
+      #global-loader {
+        background-color: #0f172a; /* Dark mode background (matches Tailwind slate-900) */
+      }
+    }
+    .pulse-logo {
+      width: 100px;
+      height: 100px;
+      object-fit: contain;
+      animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+      50% {
+        opacity: 0.6;
+        transform: scale(0.92);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="root">
+    <!-- This loader is instantly replaced when React mounts -->
+    <div id="global-loader">
+      <img src="/flowmart.png" alt="FlowMart Logo" class="pulse-logo" />
+    </div>
+  </div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
 </html>
