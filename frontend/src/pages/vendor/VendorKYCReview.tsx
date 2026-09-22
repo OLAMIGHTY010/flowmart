@@ -177,6 +177,19 @@ export default function VendorKYCReview() {
       if (bankReferenceFile) bankReferenceFile = await compressBase64Image(bankReferenceFile);
       if (cacDocumentFile) cacDocumentFile = await compressBase64Image(cacDocumentFile);
 
+      // Compress guarantor ID cards
+      let compressedGuarantors = submitData.guarantors || [];
+      if (compressedGuarantors.length > 0) {
+        compressedGuarantors = await Promise.all(
+          compressedGuarantors.map(async (g) => {
+            if (g.idCardFile) {
+              return { ...g, idCardFile: await compressBase64Image(g.idCardFile) };
+            }
+            return g;
+          })
+        );
+      }
+
       await submitKYC({
         // Profile Setup Fields
         displayName: personalInfo.fullName,
@@ -201,7 +214,8 @@ export default function VendorKYCReview() {
         
         // KYC Submit Fields
         govIdType: submitData.govIdType,
-        guarantors: submitData.guarantors || [],
+        guarantors: compressedGuarantors,
+        homeAddress: profileData.homeAddress,
         guarantorName: submitData.guarantorName,
         guarantorPhone: submitData.guarantorPhone,
         guarantorNin: submitData.guarantorNin,

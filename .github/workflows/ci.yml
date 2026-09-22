@@ -28,7 +28,7 @@ jobs:
           npm --prefix frontend-admin install
 
       - name: Type Check Backend
-        run: npx --prefix backend tsc --noEmit
+        run: cd backend && npx tsc --noEmit
 
       - name: Build Frontend Storefront
         run: npm --prefix frontend run build
@@ -54,7 +54,7 @@ jobs:
         run: npm --prefix backend install
 
       - name: Run Backend Unit & Middleware Tests
-        run: npx --prefix backend jest src/tests/middleware/
+        run: cd backend && npx jest src/tests/middleware/
 
   e2e-tests:
     name: Frontend E2E Tests (Playwright)
