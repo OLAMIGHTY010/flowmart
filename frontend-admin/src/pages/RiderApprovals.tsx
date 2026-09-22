@@ -437,7 +437,7 @@ function ChecklistItem({ label, checked, fileUrl }: { label: string, checked: bo
       <div className="flex items-center gap-3">
         {fileUrl && checked && (
           <a 
-            href={fileUrl.startsWith('http') ? fileUrl : `https://flowmart-bucket.s3.amazonaws.com/${fileUrl}`} 
+            href={(fileUrl.startsWith('http') || fileUrl.startsWith('data:')) ? fileUrl : `https://flowmart-bucket.s3.amazonaws.com/${fileUrl}`} 
             target="_blank" 
             rel="noopener noreferrer"
             className="text-[10px] font-bold text-primary/90 hover:text-primary underline uppercase"
