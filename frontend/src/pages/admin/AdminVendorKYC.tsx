@@ -181,8 +181,37 @@ export default function AdminVendorKYC() {
                     <p><span className="text-text-muted">Full Name:</span> <span className="font-medium">{detailsData.data.user.fullName}</span></p>
                     <p><span className="text-text-muted">Email:</span> <span className="font-medium">{detailsData.data.user.email}</span></p>
                     <p><span className="text-text-muted">Phone:</span> <span className="font-medium">{detailsData.data.user.phone || 'N/A'}</span></p>
+                    <p><span className="text-text-muted">Home Address:</span> <span className="font-medium">{detailsData.data.profile?.homeAddress || 'N/A'}</span></p>
                   </div>
                 </div>
+
+                {detailsData.data.kyc?.guarantors && detailsData.data.kyc.guarantors.length > 0 && (
+                  <div className="bg-secondary/30 p-4 rounded-xl border border-border">
+                    <h3 className="font-bold mb-3 flex items-center gap-2 border-b border-border pb-2"><CheckCircle2 size={16}/> Guarantors ({detailsData.data.kyc.guarantors.length})</h3>
+                    <div className="space-y-4">
+                      {detailsData.data.kyc.guarantors.map((g: any, i: number) => (
+                        <div key={i} className="text-sm bg-background p-3 rounded-lg border border-border">
+                          <p className="font-semibold text-primary mb-1">Guarantor {i + 1}</p>
+                          <p><span className="text-text-muted">Name:</span> <span className="font-medium">{g.name || 'N/A'}</span></p>
+                          <p><span className="text-text-muted">Phone:</span> <span className="font-medium">{g.phone || 'N/A'}</span></p>
+                          <p><span className="text-text-muted">NIN:</span> <span className="font-medium">{g.nin || 'N/A'}</span></p>
+                          <p><span className="text-text-muted">Relationship:</span> <span className="font-medium">{g.relationship || 'N/A'}</span></p>
+                          <p><span className="text-text-muted">Address:</span> <span className="font-medium">{g.address || 'N/A'}</span></p>
+                          <p><span className="text-text-muted">Occupation:</span> <span className="font-medium">{g.occupation || 'N/A'}</span></p>
+                          
+                          {g.idCardFile && (
+                            <div className="mt-2">
+                              <p className="text-xs font-bold text-text-muted mb-1">ID Card</p>
+                              <a href={g.idCardFile} target="_blank" rel="noreferrer" className="block w-full h-24 bg-secondary rounded-lg overflow-hidden border border-border hover:opacity-90 transition-opacity">
+                                <img src={g.idCardFile} alt={`Guarantor ${i + 1} ID`} className="w-full h-full object-cover" />
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-6">
