@@ -89,7 +89,7 @@ const RiderProfile = () => {
               </p>
               
               <div className="flex items-center gap-1.5 text-gray-700 text-xs font-semibold mb-4">
-                <MapPin size={14} /> {user?.city || "Ebute Ikorodu"}, {user?.stateRegion || "Lagos"}
+                <MapPin size={14} /> {(user as any)?.city || "Ebute Ikorodu"}, {(user as any)?.stateRegion || "Lagos"}
               </div>
 
               <div className="bg-white px-3 py-1.5 rounded-full flex items-center gap-2 shadow-sm">

@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ScrollText, ShieldAlert, Balance, Truck, Store, AlertCircle } from "lucide-react";
+import { ArrowLeft, ScrollText, ShieldAlert, BookOpen, Truck, Store, AlertCircle } from "lucide-react";
 
 export default function Terms() {
   const navigate = useNavigate();
@@ -156,7 +156,7 @@ export default function Terms() {
 
         <section>
           <h2 className="text-xl font-headings font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <Balance size={22} className="text-primary" /> 9. Governing Law and Dispute Resolution
+            <BookOpen size={22} className="text-primary" /> 9. Governing Law and Dispute Resolution
           </h2>
           <p>
             These Terms shall be governed by and construed in accordance with the laws of the Federal Republic of Nigeria. 
