@@ -61,6 +61,12 @@ export const users = pgTable('users', {
   passwordChangedAt: timestamp('password_changed_at').defaultNow().notNull(),
   lastLogin: timestamp('last_login'),
   
+  // Referrals & Anti-Fraud
+  referralCode: varchar('referral_code', { length: 20 }).unique(),
+  referredById: uuid('referred_by_id'), // Self-referencing FK done manually or in app logic
+  registrationIp: varchar('registration_ip', { length: 50 }),
+  deviceFingerprint: varchar('device_fingerprint', { length: 255 }),
+
   otp: varchar('otp', { length: 255 }),
   otpExpiry: timestamp('otp_expiry'),
   resetToken: varchar('reset_token', { length: 255 }),
@@ -611,4 +617,15 @@ export const promotions = pgTable('promotions', {
   startDate: timestamp('start_date').defaultNow().notNull(),
   endDate: timestamp('end_date').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const referrals = pgTable('referrals', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  referrerId: uuid('referrer_id').references(() => users.id).notNull(),
+  referredUserId: uuid('referred_user_id').references(() => users.id).notNull(),
+  status: varchar('status', { length: 50 }).default('pending').notNull(), // 'pending', 'completed', 'invalid'
+  rewardAmount: decimal('reward_amount', { precision: 10, scale: 2 }).default('1000.00').notNull(),
+  friendRewardAmount: decimal('friend_reward_amount', { precision: 10, scale: 2 }).default('500.00').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  completedAt: timestamp('completed_at'),
 });

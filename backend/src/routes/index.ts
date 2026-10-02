@@ -54,6 +54,7 @@ import corporateRoutes from './corporate.routes';
 import fleetRoutes from './fleet.routes';
 import escrowRoutes from './escrow.routes';
 import marketingRoutes from './marketing.routes';
+import referralRoutes from './referral.routes';
 
 // Controller & Middleware Imports
 import { authenticateJWT } from '../middleware/auth.middleware';
@@ -86,6 +87,7 @@ router.use('/wishlist', wishlistRoutes);
 router.use('/wallet', walletRoutes);
 router.use('/escrow', escrowRoutes);
 router.use('/marketing', marketingRoutes);
+router.use('/referral', referralRoutes);
 router.use('/coupons', couponRoutes);
 router.use('/reviews', reviewRoutes);
 router.use('/payment', paymentRoutes); 

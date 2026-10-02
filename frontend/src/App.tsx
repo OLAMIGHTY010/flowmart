@@ -56,6 +56,7 @@ const PrivacySecurity = lazy(() => import("@/pages/user/PrivacySecurity"));
 const Terms = lazy(() => import("@/pages/user/Terms"));
 const TwoFactorAuth = lazy(() => import("@/pages/user/TwoFactorAuth"));
 const VendorProfile = lazy(() => import("@/pages/user/VendorProfile"));
+const Referrals = lazy(() => import("@/pages/user/Referrals"));
 
 // Vendor Pages
 const VendorLayout = lazy(() => import("@/components/vendor/VendorLayout"));
@@ -152,6 +153,7 @@ function App() {
               <Route element={<ProtectedRoute><ProfileLayout /></ProtectedRoute>}>
                 <Route path="profile" element={<Profile />} />
                 <Route path="edit-profile" element={<EditProfile />} />
+                <Route path="referrals" element={<Referrals />} />
                 <Route path="privacy-security" element={<PrivacySecurity />} />
                 <Route path="change-password" element={<ChangePassword />} />
                 <Route path="two-factor-auth" element={<TwoFactorAuth />} />
