@@ -50,6 +50,10 @@ import categoryRoutes from './category.routes';
 import adRoutes from './ad.routes';
 import disputeRoutes from './dispute.routes';
 import chatRoutes from './chat.routes';
+import corporateRoutes from './corporate.routes';
+import fleetRoutes from './fleet.routes';
+import escrowRoutes from './escrow.routes';
+import marketingRoutes from './marketing.routes';
 
 // Controller & Middleware Imports
 import { authenticateJWT } from '../middleware/auth.middleware';
@@ -80,6 +84,8 @@ router.use('/search', searchRoutes);
 router.use('/ai', aiRoutes);
 router.use('/wishlist', wishlistRoutes);
 router.use('/wallet', walletRoutes);
+router.use('/escrow', escrowRoutes);
+router.use('/marketing', marketingRoutes);
 router.use('/coupons', couponRoutes);
 router.use('/reviews', reviewRoutes);
 router.use('/payment', paymentRoutes); 
@@ -98,6 +104,8 @@ router.use('/vendors', vendorRoutes);
 router.use('/vendor', vendorRoutes); // Alias for safety
 router.use('/rider', riderRoutes); 
 router.use('/riders', riderRoutes); // Alias for safety
+router.use('/corporate', corporateRoutes);
+router.use('/fleet', fleetRoutes);
 router.use('/welfare', welfareRoutes);
 
 // Admin & Sync

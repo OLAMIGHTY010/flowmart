@@ -4,13 +4,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { 
   LayoutDashboard, Package, ShoppingCart, 
   Settings, LogOut, Menu, X, Leaf,
-  UserCheck, ShieldAlert
+  UserCheck, ShieldAlert, Megaphone
 } from "lucide-react";
 
 const navItems = [
   { path: "/vendor/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { path: "/vendor/products", label: "My Products", icon: Package },
   { path: "/vendor/orders", label: "Orders", icon: ShoppingCart },
+  { path: "/vendor/marketing", label: "Marketing & Ads", icon: Megaphone },
   { path: "/vendor/kyc", label: "KYC Verification", icon: ShieldAlert },
   { path: "/vendor/settings", label: "Settings", icon: Settings },
 ];

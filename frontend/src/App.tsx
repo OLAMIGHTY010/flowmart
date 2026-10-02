@@ -33,11 +33,15 @@ const Login = lazy(() => import("@/pages/auth/Login"));
 const FoodOrdering = lazy(() => import("@/pages/FoodOrdering"));
 const Pharmacy = lazy(() => import("@/pages/Pharmacy"));
 const ServicesBooking = lazy(() => import("@/pages/ServicesBooking"));
+const RealEstate = lazy(() => import("@/pages/RealEstate"));
+const Vehicles = lazy(() => import("@/pages/Vehicles"));
 const Homepage = lazy(() => import("@/pages/user/Homepage"));
 const Marketplace = lazy(() => import("@/pages/user/Marketplace"));
 const ProductDetails = lazy(() => import("@/pages/user/ProductDetails"));
 const Cart = lazy(() => import("@/pages/user/Cart"));
 const Checkout = lazy(() => import("@/pages/user/Checkout"));
+const EscrowCheckout = lazy(() => import("@/pages/escrow/EscrowCheckout"));
+const EscrowManagement = lazy(() => import("@/pages/escrow/EscrowManagement"));
 const Orders = lazy(() => import("@/pages/user/Orders"));
 const Profile = lazy(() => import("@/pages/user/Profile"));
 const ActiveSessions = lazy(() => import("@/pages/user/ActiveSessions"));
@@ -56,6 +60,7 @@ const VendorProfile = lazy(() => import("@/pages/user/VendorProfile"));
 // Vendor Pages
 const VendorLayout = lazy(() => import("@/components/vendor/VendorLayout"));
 const VendorDashboard = lazy(() => import("@/pages/vendor/VendorDashboard"));
+const VendorMarketing = lazy(() => import("@/pages/vendor/VendorMarketing"));
 const VendorKYC = lazy(() => import("@/pages/vendor/VendorKYC"));
 const VendorProducts = lazy(() => import("@/pages/vendor/VendorProducts"));
 const VendorProductNew = lazy(() => import("@/pages/vendor/VendorProductNew"));
@@ -82,6 +87,10 @@ const RiderOrders = lazy(() => import("@/pages/rider/RiderOrders"));
 const RiderDeliveryDetails = lazy(() => import("@/pages/rider/RiderDeliveryDetails"));
 const RiderNewDelivery = lazy(() => import("@/pages/rider/RiderNewDelivery"));
 const RiderShortageReport = lazy(() => import("@/pages/rider/RiderShortageReport"));
+
+// Corporate & Fleet Pages
+const CorporateDashboard = lazy(() => import("@/pages/corporate/CorporateDashboard"));
+const FleetDashboard = lazy(() => import("@/pages/fleet/FleetDashboard"));
 
 // Admin Pages
 const AdminLayout = lazy(() => import("./components/admin/AdminLayout"));
@@ -128,11 +137,15 @@ function App() {
               <Route path="groceries" element={<Marketplace />} />
               <Route path="pharmacy" element={<Pharmacy />} />
               <Route path="services" element={<ServicesBooking />} />
+              <Route path="real-estate" element={<RealEstate />} />
+              <Route path="vehicles" element={<Vehicles />} />
               <Route path="products/:id" element={<ProductDetails />} />
               <Route path="cart" element={<Cart />} />
 
               <Route element={<ProtectedRoute />}>
                 <Route path="checkout" element={<Checkout />} />
+                <Route path="escrow/checkout/:productId" element={<EscrowCheckout />} />
+                <Route path="escrow/manage" element={<EscrowManagement />} />
                 <Route path="orders/:id/track" element={<OrderTracking />} />
               </Route>
 
@@ -171,6 +184,7 @@ function App() {
               </ProtectedRoute>
             }>
               <Route path="dashboard" element={<VendorDashboard />} />
+              <Route path="marketing" element={<VendorMarketing />} />
               <Route path="kyc" element={<VendorKYC />} />
               <Route path="products" element={<VendorProducts />} />
               <Route path="products/new" element={<VendorProductNew />} />
@@ -198,6 +212,15 @@ function App() {
             <Route path="/rider/kyc/submit" element={<RiderKYCSubmit />} />
             <Route path="/rider/kyc/review" element={<RiderKYCReview />} />
             <Route path="/rider/kyc/verification" element={<RiderKYCVerification />} />
+
+            {/* ═══ CORPORATE & FLEET ROUTES ═══ */}
+            <Route element={<ProtectedRoute allowedRoles={["corporate_buyer"]} />}>
+              <Route path="/corporate/dashboard" element={<CorporateDashboard />} />
+            </Route>
+
+            <Route element={<ProtectedRoute allowedRoles={["fleet_manager"]} />}>
+              <Route path="/fleet/dashboard" element={<FleetDashboard />} />
+            </Route>
 
             {/*  ? ? ? ADMIN ROUTES  ? ? ? */}
             <Route path="/admin" element={

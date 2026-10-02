@@ -29,13 +29,15 @@ export const roleEnum = pgEnum('role', [
   'customer',
   'finance',
   'auditor',
-  'customer_service'
+  'customer_service',
+  'corporate_buyer',
+  'fleet_manager'
 ]);
 
 export const paymentMethodEnum = pgEnum('payment_method', ['bank_transfer', 'pay_on_delivery', 'paystack', 'flutterwave']);
 export const kycStatusEnum = pgEnum('kyc_status', ['unsubmitted', 'pending', 'under_review', 'approved', 'rejected']);
 export const authProviderEnum = pgEnum('auth_provider', ['local', 'google']);
-export const productTypeEnum = pgEnum('product_type', ['food', 'retail', 'grocery', 'service', 'pharmacy']);
+export const productTypeEnum = pgEnum('product_type', ['food', 'retail', 'grocery', 'service', 'pharmacy', 'real_estate', 'vehicle']);
 export const productConditionEnum = pgEnum('product_condition', ['new', 'used_like_new', 'used_good', 'used_fair']);
 export const disputeStatusEnum = pgEnum('dispute_status', ['open', 'under_review', 'resolved_buyer_refunded', 'resolved_vendor_paid']);
 export const offerStatusEnum = pgEnum('offer_status', ['pending', 'accepted', 'rejected', 'withdrawn']);
@@ -116,6 +118,7 @@ export const products = pgTable('products', {
   condition: productConditionEnum('condition').default('new').notNull(),
   isNegotiable: boolean('is_negotiable').default(false).notNull(),
   isSponsored: boolean('is_sponsored').default(false).notNull(),
+  sponsoredUntil: timestamp('sponsored_until'),
   images: jsonb('images').default([]), 
   stockQuantity: integer('stock_quantity').default(0),
   productType: productTypeEnum('product_type').default('retail').notNull(),
@@ -412,10 +415,32 @@ export const staffProfiles = pgTable('staff_profiles', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+export const corporateProfiles = pgTable('corporate_profiles', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').references(() => users.id).notNull().unique(),
+  companyName: varchar('company_name', { length: 255 }).notNull(),
+  taxId: varchar('tax_id', { length: 100 }),
+  industry: varchar('industry', { length: 100 }),
+  companyAddress: text('company_address'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const fleetProfiles = pgTable('fleet_profiles', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').references(() => users.id).notNull().unique(),
+  companyName: varchar('company_name', { length: 255 }).notNull(),
+  fleetSize: integer('fleet_size').default(0).notNull(),
+  managerPhone: varchar('manager_phone', { length: 50 }).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
 export const wallets = pgTable('wallets', {
   id: uuid('id').defaultRandom().primaryKey(),
   userId: uuid('user_id').references(() => users.id).notNull().unique(),
   balance: decimal('balance', { precision: 12, scale: 2 }).default('0.00').notNull(),
+  creditLimit: decimal('credit_limit', { precision: 12, scale: 2 }).default('0.00').notNull(),
   currency: varchar('currency', { length: 10 }).default('NGN').notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -573,5 +598,17 @@ export const messages = pgTable('messages', {
   isOffer: boolean('is_offer').default(false).notNull(),
   offerAmount: decimal('offer_amount', { precision: 12, scale: 2 }),
   offerStatus: offerStatusEnum('offer_status'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const promotions = pgTable('promotions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  vendorId: uuid('vendor_id').references(() => users.id).notNull(),
+  productId: uuid('product_id').references(() => products.id).notNull(),
+  amountPaid: decimal('amount_paid', { precision: 10, scale: 2 }).notNull(),
+  durationDays: integer('duration_days').notNull(),
+  status: varchar('status', { length: 50 }).default('active').notNull(),
+  startDate: timestamp('start_date').defaultNow().notNull(),
+  endDate: timestamp('end_date').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
