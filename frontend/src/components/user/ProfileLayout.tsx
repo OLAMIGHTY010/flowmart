@@ -8,9 +8,10 @@ import {
   FileText,
   LogOut,
   ShieldCheck,
-  ChevronRight,
   Wallet as WalletIcon,
   Heart as HeartIcon,
+  Users,
+  ChevronRight
 } from "lucide-react";
 // import Navbar from "@/components/Navbar";
 
@@ -27,6 +28,7 @@ export default function ProfileLayout() {
   const menuItems = [
     { label: "Profile Overview", icon: User, path: "/profile" },
     { label: "Edit Profile", icon: User, path: "/edit-profile" },
+    { label: "Refer & Earn", icon: Users, path: "/referrals" },
     { label: "Notifications", icon: Bell, path: "/alerts" },
     { label: "Order History", icon: FileText, path: "/orders" },
     { label: "My Wishlist", icon: HeartIcon, path: "/wishlist" },
