@@ -30,6 +30,9 @@ const RoleSelector = lazy(() => import("@/pages/auth/RoleSelector"));
 const Login = lazy(() => import("@/pages/auth/Login"));
 
 // Shopper (User) Pages
+const FoodOrdering = lazy(() => import("@/pages/FoodOrdering"));
+const Pharmacy = lazy(() => import("@/pages/Pharmacy"));
+const ServicesBooking = lazy(() => import("@/pages/ServicesBooking"));
 const Homepage = lazy(() => import("@/pages/user/Homepage"));
 const Marketplace = lazy(() => import("@/pages/user/Marketplace"));
 const ProductDetails = lazy(() => import("@/pages/user/ProductDetails"));
@@ -121,10 +124,10 @@ function App() {
             <Route element={<AppLayout />}>
               <Route index element={<Homepage />} />
               <Route path="products" element={<Marketplace />} />
-              <Route path="food" element={<Marketplace />} />
+              <Route path="food" element={<FoodOrdering />} />
               <Route path="groceries" element={<Marketplace />} />
-              <Route path="pharmacy" element={<Marketplace />} />
-              <Route path="services" element={<Marketplace />} />
+              <Route path="pharmacy" element={<Pharmacy />} />
+              <Route path="services" element={<ServicesBooking />} />
               <Route path="products/:id" element={<ProductDetails />} />
               <Route path="cart" element={<Cart />} />
 
