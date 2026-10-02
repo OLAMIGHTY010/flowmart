@@ -53,6 +53,7 @@ import chatRoutes from './chat.routes';
 import corporateRoutes from './corporate.routes';
 import fleetRoutes from './fleet.routes';
 import escrowRoutes from './escrow.routes';
+import marketingRoutes from './marketing.routes';
 
 // Controller & Middleware Imports
 import { authenticateJWT } from '../middleware/auth.middleware';
@@ -84,6 +85,7 @@ router.use('/ai', aiRoutes);
 router.use('/wishlist', wishlistRoutes);
 router.use('/wallet', walletRoutes);
 router.use('/escrow', escrowRoutes);
+router.use('/marketing', marketingRoutes);
 router.use('/coupons', couponRoutes);
 router.use('/reviews', reviewRoutes);
 router.use('/payment', paymentRoutes); 

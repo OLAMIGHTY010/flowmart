@@ -118,6 +118,7 @@ export const products = pgTable('products', {
   condition: productConditionEnum('condition').default('new').notNull(),
   isNegotiable: boolean('is_negotiable').default(false).notNull(),
   isSponsored: boolean('is_sponsored').default(false).notNull(),
+  sponsoredUntil: timestamp('sponsored_until'),
   images: jsonb('images').default([]), 
   stockQuantity: integer('stock_quantity').default(0),
   productType: productTypeEnum('product_type').default('retail').notNull(),
@@ -597,5 +598,17 @@ export const messages = pgTable('messages', {
   isOffer: boolean('is_offer').default(false).notNull(),
   offerAmount: decimal('offer_amount', { precision: 12, scale: 2 }),
   offerStatus: offerStatusEnum('offer_status'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const promotions = pgTable('promotions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  vendorId: uuid('vendor_id').references(() => users.id).notNull(),
+  productId: uuid('product_id').references(() => products.id).notNull(),
+  amountPaid: decimal('amount_paid', { precision: 10, scale: 2 }).notNull(),
+  durationDays: integer('duration_days').notNull(),
+  status: varchar('status', { length: 50 }).default('active').notNull(),
+  startDate: timestamp('start_date').defaultNow().notNull(),
+  endDate: timestamp('end_date').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });

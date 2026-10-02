@@ -60,6 +60,7 @@ const VendorProfile = lazy(() => import("@/pages/user/VendorProfile"));
 // Vendor Pages
 const VendorLayout = lazy(() => import("@/components/vendor/VendorLayout"));
 const VendorDashboard = lazy(() => import("@/pages/vendor/VendorDashboard"));
+const VendorMarketing = lazy(() => import("@/pages/vendor/VendorMarketing"));
 const VendorKYC = lazy(() => import("@/pages/vendor/VendorKYC"));
 const VendorProducts = lazy(() => import("@/pages/vendor/VendorProducts"));
 const VendorProductNew = lazy(() => import("@/pages/vendor/VendorProductNew"));
@@ -183,6 +184,7 @@ function App() {
               </ProtectedRoute>
             }>
               <Route path="dashboard" element={<VendorDashboard />} />
+              <Route path="marketing" element={<VendorMarketing />} />
               <Route path="kyc" element={<VendorKYC />} />
               <Route path="products" element={<VendorProducts />} />
               <Route path="products/new" element={<VendorProductNew />} />
