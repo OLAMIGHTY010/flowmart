@@ -33,6 +33,8 @@ const Login = lazy(() => import("@/pages/auth/Login"));
 const FoodOrdering = lazy(() => import("@/pages/FoodOrdering"));
 const Pharmacy = lazy(() => import("@/pages/Pharmacy"));
 const ServicesBooking = lazy(() => import("@/pages/ServicesBooking"));
+const RealEstate = lazy(() => import("@/pages/RealEstate"));
+const Vehicles = lazy(() => import("@/pages/Vehicles"));
 const Homepage = lazy(() => import("@/pages/user/Homepage"));
 const Marketplace = lazy(() => import("@/pages/user/Marketplace"));
 const ProductDetails = lazy(() => import("@/pages/user/ProductDetails"));
@@ -83,6 +85,10 @@ const RiderDeliveryDetails = lazy(() => import("@/pages/rider/RiderDeliveryDetai
 const RiderNewDelivery = lazy(() => import("@/pages/rider/RiderNewDelivery"));
 const RiderShortageReport = lazy(() => import("@/pages/rider/RiderShortageReport"));
 
+// Corporate & Fleet Pages
+const CorporateDashboard = lazy(() => import("@/pages/corporate/CorporateDashboard"));
+const FleetDashboard = lazy(() => import("@/pages/fleet/FleetDashboard"));
+
 // Admin Pages
 const AdminLayout = lazy(() => import("./components/admin/AdminLayout"));
 const AdminVendorKYC = lazy(() => import("./pages/admin/AdminVendorKYC"));
@@ -128,6 +134,8 @@ function App() {
               <Route path="groceries" element={<Marketplace />} />
               <Route path="pharmacy" element={<Pharmacy />} />
               <Route path="services" element={<ServicesBooking />} />
+              <Route path="real-estate" element={<RealEstate />} />
+              <Route path="vehicles" element={<Vehicles />} />
               <Route path="products/:id" element={<ProductDetails />} />
               <Route path="cart" element={<Cart />} />
 
@@ -198,6 +206,15 @@ function App() {
             <Route path="/rider/kyc/submit" element={<RiderKYCSubmit />} />
             <Route path="/rider/kyc/review" element={<RiderKYCReview />} />
             <Route path="/rider/kyc/verification" element={<RiderKYCVerification />} />
+
+            {/* ═══ CORPORATE & FLEET ROUTES ═══ */}
+            <Route element={<ProtectedRoute allowedRoles={["corporate_buyer"]} />}>
+              <Route path="/corporate/dashboard" element={<CorporateDashboard />} />
+            </Route>
+
+            <Route element={<ProtectedRoute allowedRoles={["fleet_manager"]} />}>
+              <Route path="/fleet/dashboard" element={<FleetDashboard />} />
+            </Route>
 
             {/*  ? ? ? ADMIN ROUTES  ? ? ? */}
             <Route path="/admin" element={
