@@ -63,7 +63,17 @@ export default function Auth() {
       if (error) throw error;
       
     } catch (err: any) {
-      setError(err.message || "Authentication failed.");
+      const msg = err?.message || "Authentication failed.";
+      if (
+        msg.toLowerCase().includes("database") ||
+        msg.toLowerCase().includes("timeout") ||
+        msg.toLowerCase().includes("network") ||
+        msg.toLowerCase().includes("failed to fetch")
+      ) {
+        setError("Connecting to database... It may be waking up from sleep. Please wait a few seconds and try again.");
+      } else {
+        setError(msg);
+      }
       setLoading(false);
     }
   };

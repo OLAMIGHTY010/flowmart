@@ -138,8 +138,21 @@ export const googleAuth = async (req: Request, res: Response) => {
       }
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Google Auth Error:', error);
+    const isDbAsleep = error?.code === 'ECONNREFUSED' || 
+                       error?.code === 'ETIMEDOUT' || 
+                       error?.message?.toLowerCase().includes('timeout') ||
+                       error?.message?.toLowerCase().includes('connect') ||
+                       error?.message?.toLowerCase().includes('database');
+
+    if (isDbAsleep) {
+      return res.status(503).json({
+        success: false,
+        message: 'The database is currently waking up from sleep. Please wait 10-15 seconds and try again.'
+      });
+    }
+
     return res.status(500).json({ success: false, message: 'Authentication failed' });
   }
 };
