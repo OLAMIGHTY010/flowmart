@@ -7,6 +7,8 @@ import {
   CheckCircle2,
   Circle,
   Loader2,
+  ShieldCheck,
+  Lock,
 } from "lucide-react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
@@ -16,6 +18,8 @@ import { useRiderTracking } from "@/hooks/useRiderTracking";
 import type { OrderStatus } from "@/types/order";
 import { useEffect, useState } from "react";
 import DisputeModal from "@/components/orders/DisputeModal";
+import { InstantMicroDisputeCard } from "@/components/user/InstantMicroDisputeCard";
+import { DiasporaGiftingCard } from "@/components/user/DiasporaGiftingCard";
 
 /* ── Leaflet icon fix (Vite bundler workaround) ── */
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
@@ -227,6 +231,24 @@ export default function OrderTracking() {
             </div>
           </div>
 
+          {/* FlowMart Escrow Intelligence Protection Badge */}
+          <div className="rounded-xl border border-violet-200/80 bg-violet-50/60 p-3.5 flex items-start gap-3">
+            <span className="p-2 rounded-lg bg-violet-100 text-violet-700 shrink-0 mt-0.5">
+              <ShieldCheck size={18} />
+            </span>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-bold text-violet-900">Protected by FlowMart Escrow</span>
+                <span className="px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-violet-200/70 text-violet-800">
+                  <Lock size={10} className="inline mr-0.5" /> Locked
+                </span>
+              </div>
+              <p className="text-[11px] text-violet-700/90 leading-tight mt-0.5">
+                Your payment of ₦{Number(order.totalAmount).toLocaleString()} is held securely in escrow custody. Funds are only released to the vendor after you inspect and confirm delivery.
+              </p>
+            </div>
+          </div>
+
           {/* Bottom Actions */}
           <div className="flex gap-3">
             <button className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 cursor-pointer">
@@ -250,6 +272,17 @@ export default function OrderTracking() {
           >
             Raise Dispute
           </button>
+
+          {/* Autonomous Operations: Instant Micro-Dispute Fast-Track */}
+          <InstantMicroDisputeCard
+            orderId={order.id}
+            orderTotalNgn={Number(order.totalAmount)}
+          />
+
+          {/* Autonomous Operations: Diaspora & Multi-Currency Switcher */}
+          <DiasporaGiftingCard
+            cartTotalNgn={Number(order.totalAmount)}
+          />
         </div>
 
         {/* Right Column: Progress Timeline & confirmation */}

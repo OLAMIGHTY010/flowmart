@@ -23,6 +23,7 @@ import {
 } from 'recharts';
 import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { AdminDashboardServices } from '@/services/AdminDashboardServices';
+import { AdminAutomationControlPanel } from '@/components/AdminAutomationControlPanel';
 
 const chartConfig = {
   deliveries: {
@@ -176,6 +177,9 @@ export default function Dashboard() {
           );
         })}
       </div>
+
+      {/* Autonomous Operations Control Plane */}
+      <AdminAutomationControlPanel />
 
       {/* Middle Section: Chart & Alerts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -1,12 +1,16 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Loader2, UploadCloud, X } from "lucide-react";
+import { ArrowLeft, Loader2, UploadCloud, X, Sparkles, TrendingUp, Check } from "lucide-react";
 import { uploadServices } from "@/services/UploadServices";
 import { productServices } from "@/services/ProductServices";
+import { aiServices, type MerchantPricingAdviceResult } from "@/services/AIServices";
 
 export default function VendorProductNew() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [pricingAdvice, setPricingAdvice] = useState<MerchantPricingAdviceResult | null>(null);
+  const [aiGeneratedSuccess, setAiGeneratedSuccess] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   
@@ -28,6 +32,54 @@ export default function VendorProductNew() {
       const file = e.target.files[0];
       setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleAIGenerate = async () => {
+    if (!formData.name.trim()) {
+      alert("Please enter a rough product name first (e.g. 'Air fryer 5L' or 'Jollof rice chicken')");
+      return;
+    }
+
+    try {
+      setAiGenerating(true);
+      setAiGeneratedSuccess(false);
+
+      // Call AI Copilot for listing generation
+      const listing = await aiServices.generateMerchantListing({
+        title: formData.name,
+        category: formData.category,
+        brand: formData.brand,
+        roughNotes: formData.description,
+        productType,
+      });
+
+      if (listing) {
+        setFormData((prev) => ({
+          ...prev,
+          name: listing.optimizedTitle || prev.name,
+          description: listing.description || prev.description,
+          category: listing.suggestedCategory || prev.category,
+        }));
+
+        // Fetch dynamic pricing advice
+        try {
+          const advice = await aiServices.getPricingAdvice({
+            currentPrice: formData.price ? parseFloat(formData.price) : undefined,
+          });
+          if (advice) setPricingAdvice(advice);
+        } catch (e) {
+          // Fallback silently on pricing advice
+        }
+
+        setAiGeneratedSuccess(true);
+        setTimeout(() => setAiGeneratedSuccess(false), 4000);
+      }
+    } catch (err: any) {
+      console.error("AI Generation error:", err);
+      alert("AI Copilot is currently offline. You can continue filling the form manually.");
+    } finally {
+      setAiGenerating(false);
     }
   };
 
@@ -79,6 +131,76 @@ export default function VendorProductNew() {
       </div>
 
       <div className="card" style={{ maxWidth: 800, padding: 32 }}>
+        {/* AI Copilot Action Card */}
+        <div className="mb-6 rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 via-amber-50/40 to-transparent p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-white shadow-xs">
+              <Sparkles className="h-5 w-5" />
+            </span>
+            <div>
+              <h4 className="text-sm font-bold text-gray-900">FlowMart AI Merchant Copilot</h4>
+              <p className="text-xs text-gray-600">Type a product name below and let AI craft SEO descriptions and competitive pricing.</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleAIGenerate}
+            disabled={aiGenerating}
+            className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-white shadow-xs hover:opacity-95 transition disabled:opacity-50 shrink-0"
+          >
+            {aiGenerating ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Generating...
+              </>
+            ) : aiGeneratedSuccess ? (
+              <>
+                <Check className="h-3.5 w-3.5 text-emerald-300" />
+                AI Generated!
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-3.5 w-3.5" />
+                Auto-Fill with AI
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Pricing Intelligence Banner if available */}
+        {pricingAdvice && (
+          <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50/60 p-4 text-xs text-amber-900">
+            <div className="flex items-center gap-2 font-bold mb-1">
+              <TrendingUp className="h-4 w-4 text-amber-600" />
+              <span>AI Market Pricing Intelligence:</span>
+            </div>
+            <p className="mb-2 text-amber-800">{pricingAdvice.pricePositionSummary}</p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, price: String(pricingAdvice.recommendations.competitivePrice) })}
+                className="rounded-lg bg-white px-2.5 py-1 font-semibold text-gray-800 border border-amber-200 hover:bg-amber-100 transition"
+              >
+                Competitive: ₦{pricingAdvice.recommendations.competitivePrice.toLocaleString()} (Click to Apply)
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, price: String(pricingAdvice.recommendations.optimalPrice) })}
+                className="rounded-lg bg-primary text-white px-2.5 py-1 font-semibold shadow-xs hover:opacity-90 transition"
+              >
+                Optimal: ₦{pricingAdvice.recommendations.optimalPrice.toLocaleString()} (Click to Apply)
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, price: String(pricingAdvice.recommendations.premiumPrice) })}
+                className="rounded-lg bg-white px-2.5 py-1 font-semibold text-gray-800 border border-amber-200 hover:bg-amber-100 transition"
+              >
+                Premium: ₦{pricingAdvice.recommendations.premiumPrice.toLocaleString()} (Click to Apply)
+              </button>
+            </div>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 24 }}>
           
           {/* Product Type Toggle */}
@@ -178,7 +300,12 @@ export default function VendorProductNew() {
               Cancel
             </button>
             <button type="submit" className="btn-primary" disabled={loading} style={{ minWidth: 150 }}>
-              {loading ? <Loader2 className="animate-spin" size={20} /> : "Save Product"}
+              {loading ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" style={{ marginRight: 8 }} />
+                  Saving...
+                </>
+              ) : "Create Product"}
             </button>
           </div>
         </form>

@@ -4,6 +4,7 @@ import { Star, CheckCircle2, Loader2 } from "lucide-react";
 import { UserInput } from "@/components/ui/input";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { productServices } from "@/services/ProductServices";
+import AIReviewSummaryCard from "./AIReviewSummaryCard";
 
 interface ProductReviewsProps {
   productId: string;
@@ -49,6 +50,9 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
   return (
     <div className="mt-12 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
       <h2 className="text-xl font-bold text-gray-900 mb-6">Customer Reviews</h2>
+
+      {/* AI Review Digest */}
+      <AIReviewSummaryCard productId={productId} />
 
       {/* Review Form - Only for verified users */}
       <div className="mb-10 rounded-xl bg-gray-50 p-6 border border-gray-100">

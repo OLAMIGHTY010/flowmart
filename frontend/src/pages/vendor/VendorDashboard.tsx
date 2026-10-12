@@ -13,6 +13,8 @@ import Profile from '@/pages/user/Profile';
 import CouponsTab from '@/components/vendor/CouponsTab';
 import WalletTab from '@/components/vendor/WalletTab';
 import ReviewsTab from '@/components/vendor/ReviewsTab';
+import AnalyticsTab from '@/components/vendor/AnalyticsTab';
+import { AutonomousOpsCard } from '@/components/vendor/AutonomousOpsCard';
 import DashboardSkeleton from '@/components/vendor/ui/DashboardSkeleton';
 
 export default function VendorDashboard() {
@@ -35,8 +37,8 @@ export default function VendorDashboard() {
     }
   }, [kycStatus, kycLoading, user, navigate]);
 
-  // Tab State: 'dashboard' | 'products' | 'orders' | 'coupons' | 'wallet' | 'reviews' | 'store' | 'profile'
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'orders' | 'coupons' | 'wallet' | 'reviews' | 'store' | 'profile'>('dashboard');
+  // Tab State: 'dashboard' | 'products' | 'orders' | 'analytics' | 'coupons' | 'wallet' | 'reviews' | 'store' | 'profile'
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'orders' | 'analytics' | 'coupons' | 'wallet' | 'reviews' | 'store' | 'profile'>('dashboard');
 
   // Fetch dashboard queries
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
@@ -65,6 +67,7 @@ export default function VendorDashboard() {
     { id: 'dashboard', icon: 'home', label: 'Dashboard' },
     { id: 'products', icon: 'package', label: 'Products' },
     { id: 'orders', icon: 'shopping-bag', label: 'Orders' },
+    { id: 'analytics', icon: 'bar-chart-2', label: 'Analytics' },
     { id: 'coupons', icon: 'tag', label: 'Coupons' },
     { id: 'wallet', icon: 'credit-card', label: 'Wallet' },
     { id: 'reviews', icon: 'star', label: 'Reviews' },
@@ -78,6 +81,8 @@ export default function VendorDashboard() {
         return <ProductsTab />;
       case 'orders':
         return <OrdersTab />;
+      case 'analytics':
+        return <AnalyticsTab />;
       case 'coupons':
         return <CouponsTab />;
       case 'wallet':
@@ -231,6 +236,32 @@ export default function VendorDashboard() {
                       {statsLoading ? '...' : (stats?.avgOrder || '₦0')}
                     </p>
                   </div>
+                </div>
+
+                {/* AI Intelligence & Copilot Quick Gateway */}
+                <div className="mt-4 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 rounded-2xl p-4 flex flex-col gap-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="inline-flex items-center gap-1.5 text-xs font-extrabold text-primary">
+                      <Icon i="bar-chart-2" size={14} /> AI Intelligence Hub
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary text-primary-foreground">
+                      Live ML
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-snug">
+                    Holt demand forecast projecting +1.5% organic daily velocity. 80/20 Pareto and Copilot ready.
+                  </p>
+                  <button
+                    onClick={() => setActiveTab('analytics')}
+                    className="w-full py-2 px-3 rounded-xl bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    Open Full Analytics Suite
+                  </button>
+                </div>
+
+                {/* Autonomous Operations Engine Card */}
+                <div className="mt-4">
+                  <AutonomousOpsCard />
                 </div>
               </div>
             </div>

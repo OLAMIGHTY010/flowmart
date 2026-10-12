@@ -4,6 +4,7 @@ import { useRecommendationStore } from "@/stores/recommendationStore";
 import { useProducts } from "@/hooks/useProducts";
 import type { Product } from "@/types/product";
 import { Card } from "./ui/card";
+import { aiServices } from "@/services/AIServices";
 
 interface Props {
   currentProduct?: Product;
@@ -23,35 +24,69 @@ export default function CustomersAlsoViewed({
   const { data: allProducts = [] } = useProducts();
 
   useEffect(() => {
-    if (allProducts.length > 0) {
-      if (currentProduct) {
-        const recommended = allProducts.filter(
-          (p) =>
-            p.category === currentProduct.category &&
-            p.id !== currentProduct.id
-        );
+    let isMounted = true;
 
-        if (recommended.length < 5) {
-          const others = allProducts.filter(
+    async function loadAIRecommendations() {
+      if (currentProduct?.id) {
+        try {
+          const aiItems = await aiServices.getRelatedProducts(currentProduct.id, 5);
+          if (isMounted && aiItems && aiItems.length > 0) {
+            const mapped: Product[] = aiItems.map((item) => ({
+              id: item.id,
+              sku: item.id || '',
+              name: item.name,
+              description: item.description || '',
+              price: parseFloat(item.price) || 0,
+              oldPrice: item.oldPrice ? parseFloat(item.oldPrice) : undefined,
+              imageUrl: item.images?.[0] || 'https://placehold.co/400x400?text=FlowMart',
+              category: item.categoryId || '',
+              stockQuantity: item.stockQuantity || 0,
+              vendor: {} as any,
+            }));
+            setRecommendations(mapped);
+            return;
+          }
+        } catch (e) {
+          // Fall through to client filter fallback
+        }
+      }
+
+      if (allProducts.length > 0) {
+        if (currentProduct) {
+          const recommended = allProducts.filter(
             (p) =>
-              p.id !== currentProduct.id &&
-              !recommended.find(
-                (r) => r.id === p.id
-              )
+              p.category === currentProduct.category &&
+              p.id !== currentProduct.id
           );
 
-          recommended.push(...others);
-        }
+          if (recommended.length < 5) {
+            const others = allProducts.filter(
+              (p) =>
+                p.id !== currentProduct.id &&
+                !recommended.find(
+                  (r) => r.id === p.id
+                )
+            );
 
-        setRecommendations(
-          recommended.slice(0, 5)
-        );
-      } else if (products.length === 0) {
-        setRecommendations(
-          allProducts.slice(0, 5)
-        );
+            recommended.push(...others);
+          }
+
+          if (isMounted) {
+            setRecommendations(recommended.slice(0, 5));
+          }
+        } else if (products.length === 0) {
+          if (isMounted) {
+            setRecommendations(allProducts.slice(0, 5));
+          }
+        }
       }
     }
+
+    loadAIRecommendations();
+
+    return () => {
+      isMounted = false;
+    };
   }, [
     allProducts,
     currentProduct,
