@@ -21,6 +21,9 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
     ];
 
 import { globalApiLimiter } from "./middleware/rateLimiter.middleware";
+import { observabilityMiddleware } from "./middleware/observability.middleware";
+
+app.use(observabilityMiddleware);
 
 app.use(cors({
   origin: function (origin, callback) {

@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { apiClient } from "@/services/api";
 import { useAuth } from "@/hooks/useAuth";
+import AIRecommendedFeed from "@/components/user/AIRecommendedFeed";
 
 const categoryIconMap: Record<string, any> = {
   "groceries": Apple,
@@ -153,6 +154,9 @@ const Homepage = () => {
           </div>
         </div>
       </section>
+
+      {/* ═══ AI RECOMMENDED FOR YOU ═══ */}
+      <AIRecommendedFeed />
 
       {/* ═══ ALL PRODUCTS ═══ */}
       <section className="bg-gray-50 min-h-[60vh] py-12" id="products-section">

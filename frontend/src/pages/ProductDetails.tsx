@@ -5,6 +5,7 @@ import ProductInfo from "@/components/product/ProductInfo";
 import PurchaseCard from "@/components/product/PurchaseCard";
 import CustomersAlsoViewed from "@/components/CustomersAlsoViewed";
 import RecentlyViewed from "@/components/RecentlyViewed";
+import FrequentlyBoughtTogether from "@/components/product/FrequentlyBoughtTogether";
 import { useProduct } from "@/hooks/useProduct";
 import { useRecentlyViewedStore } from "@/stores/recentlyViewedStore";
 // import VendorCard from "@/components/product/VendorCard";
@@ -81,6 +82,8 @@ export default function ProductDetails() {
       </div>
 
       <RecentlyViewed />
+
+      {data?.id && <FrequentlyBoughtTogether productId={data.id} />}
 
       <hr className="border-gray-200 mt-3" />
 

@@ -507,3 +507,102 @@ export const getUserDashboardStats = async (req: AuthenticatedRequest, res: Resp
     return res.status(500).json({ success: false, message: 'Failed to fetch user stats' });
   }
 };
+
+// ============================================================================
+// ADVANCED DATA ANALYSIS & VISUALIZATION ENDPOINTS
+// ============================================================================
+
+import {
+  getPredictiveDemandTrajectory,
+  getParetoCategoryAnalysis,
+  getCohortRetentionAnalysis,
+  getLogisticsSlaHeatmap,
+  getEscrowCashFlowFunnel,
+  askYourDataCopilot,
+} from '../services/analytics/data-visualization.service';
+
+/**
+ * 1. Predictive Demand Trajectory & Price Elasticity
+ */
+export const getDemandTrajectoryAnalytics = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const vendorId = req.user?.role === 'vendor' ? req.user.id : (req.query.vendorId as string);
+    const data = await getPredictiveDemandTrajectory(vendorId);
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    console.error('getDemandTrajectoryAnalytics Error:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+/**
+ * 2. 80/20 Pareto Curve & BCG Growth-Share Quadrants
+ */
+export const getParetoMatrixAnalytics = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const vendorId = req.user?.role === 'vendor' ? req.user.id : (req.query.vendorId as string);
+    const data = await getParetoCategoryAnalysis(vendorId);
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    console.error('getParetoMatrixAnalytics Error:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+/**
+ * 3. Customer Cohort Retention & RFM Segmentation
+ */
+export const getCohortRetentionAnalytics = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const data = await getCohortRetentionAnalysis();
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    console.error('getCohortRetentionAnalytics Error:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+/**
+ * 4. Hyper-Local Logistics & SLA Performance
+ */
+export const getLogisticsSlaAnalytics = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const data = await getLogisticsSlaHeatmap();
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    console.error('getLogisticsSlaAnalytics Error:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+/**
+ * 5. Escrow Cash Flow Funnel & Liquidity Timeline
+ */
+export const getEscrowCashFlowAnalytics = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const data = await getEscrowCashFlowFunnel();
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    console.error('getEscrowCashFlowAnalytics Error:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+/**
+ * 6. "Ask Your Data" Conversational NLP Analytics Copilot
+ */
+export const handleAskYourDataCopilot = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { query } = req.body;
+    if (!query || typeof query !== 'string') {
+      return res.status(400).json({ success: false, message: 'Analytics query is required' });
+    }
+    const vendorId = req.user?.role === 'vendor' ? req.user.id : undefined;
+    const result = await askYourDataCopilot(query, vendorId);
+    return res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    console.error('handleAskYourDataCopilot Error:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+

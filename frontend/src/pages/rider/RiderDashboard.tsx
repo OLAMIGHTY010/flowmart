@@ -5,6 +5,8 @@ import { useDashboardStats, useOrders } from '@/hooks/useRiderQueries';
 import { useToast } from "@/contexts/ToastContext";
 import StatCard from '@/components/vendor/StatCard';
 import Icon from '@/components/Icon';
+import RiderLogisticsSlaCard from '@/components/rider/RiderLogisticsSlaCard';
+import { RiderAutonomousOfferModal } from '@/components/rider/RiderAutonomousOfferModal';
 
 export default function RiderDashboard() {
   const { user } = useAuth();
@@ -65,6 +67,9 @@ export default function RiderDashboard() {
         </button>
       </div>
 
+      {/* Autonomous Dispatch Offer Modal (Active when Online) */}
+      {isOnline && <RiderAutonomousOfferModal riderId={user?.id || 'rider-lagos-01'} />}
+
       {/* Stats grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5">
         <StatCard
@@ -97,6 +102,9 @@ export default function RiderDashboard() {
       {/* Layout Split: Left (Deliveries & Quick Actions) | Right (Weekly Revenue Chart) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 flex flex-col gap-6">
+          {/* Live Zone Logistics & SLA Intelligence */}
+          <RiderLogisticsSlaCard />
+
           {/* Active / Assigned Deliveries list */}
           <div>
             <div className="flex items-center justify-between mb-3">

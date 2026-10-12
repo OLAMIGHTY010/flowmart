@@ -8,4 +8,8 @@ module.exports = {
   transform: {
     ...tsJestTransformCfg,
   },
+  moduleNameMapper: {
+    "^\\.\\./\\.\\./db$": "<rootDir>/db",
+    "^\\.\\./db$": "<rootDir>/db",
+  },
 };

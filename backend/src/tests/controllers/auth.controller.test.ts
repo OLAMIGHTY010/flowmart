@@ -31,7 +31,7 @@ jest.mock("../../db", () => ({
 	},
 }));
 
-jest.mock("../utils/password", () => ({
+jest.mock("../../utils/password", () => ({
 	hashPassword: jest.fn(),
 	comparePassword: jest.fn(),
 }));
@@ -41,7 +41,7 @@ jest.mock("jsonwebtoken", () => ({
 }));
 
 // Mock Email Service to silence real SMTP connection errors during testing
-jest.mock("../services/email.service", () => ({
+jest.mock("../../services/email.service", () => ({
 	emailService: {
 		sendOtpEmail: jest.fn().mockResolvedValue(undefined),
 		sendWelcomeEmail: jest.fn().mockResolvedValue(undefined),

@@ -55,6 +55,8 @@ import fleetRoutes from './fleet.routes';
 import escrowRoutes from './escrow.routes';
 import marketingRoutes from './marketing.routes';
 import referralRoutes from './referral.routes';
+import healthRoutes from './health.routes';
+import automationRoutes from './automation.routes';
 
 // Controller & Middleware Imports
 import { authenticateJWT } from '../middleware/auth.middleware';
@@ -116,6 +118,8 @@ router.use('/user-management', userManagementRoutes);
 router.use('/analytics', analyticsRoutes);
 router.use('/sync', syncRoutes);
 router.use('/upload', uploadRoutes);
+router.use('/health', healthRoutes);
+router.use('/automation', automationRoutes);
 
 router.get('/vendors/:id', authenticateJWT, getVendorPublicProfile);
 

@@ -49,5 +49,39 @@ export const AnalyticsServices = {
   getZonePerformance: async (): Promise<ZonePerformance[]> => {
     const res = await apiClient.get<{ success: boolean, data: ZonePerformance[] }>('/admin/analytics/zone-performance');
     return res.data;
+  },
+
+  getDemandTrajectory: async (vendorId?: string) => {
+    const res = await apiClient.get<{ success: boolean, data: any }>('/analytics/demand-trajectory', {
+      params: vendorId ? { vendorId } : {}
+    });
+    return res.data;
+  },
+
+  getParetoMatrix: async (vendorId?: string) => {
+    const res = await apiClient.get<{ success: boolean, data: any }>('/analytics/pareto-matrix', {
+      params: vendorId ? { vendorId } : {}
+    });
+    return res.data;
+  },
+
+  getCohortRetention: async () => {
+    const res = await apiClient.get<{ success: boolean, data: any }>('/analytics/cohort-retention');
+    return res.data;
+  },
+
+  getLogisticsSla: async () => {
+    const res = await apiClient.get<{ success: boolean, data: any }>('/analytics/logistics-sla');
+    return res.data;
+  },
+
+  getEscrowFunnel: async () => {
+    const res = await apiClient.get<{ success: boolean, data: any }>('/analytics/escrow-funnel');
+    return res.data;
+  },
+
+  askDataCopilot: async (query: string) => {
+    const res = await apiClient.post<{ success: boolean, data: any }>('/analytics/ask-data', { query });
+    return res.data;
   }
 };
