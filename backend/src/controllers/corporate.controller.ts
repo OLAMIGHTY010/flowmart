@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 
 export const getCorporateProfile = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.id; // Assuming auth middleware sets req.user
+    const userId = (req as any).user?.id; // Assuming auth middleware sets req.user
     if (!userId) {
       res.status(401).json({ error: "Unauthorized" });
       return;
@@ -33,7 +33,7 @@ export const getCorporateProfile = async (req: Request, res: Response): Promise<
 
 export const updateCreditLimitRequest = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = (req as any).user?.id;
     if (!userId) {
       res.status(401).json({ error: "Unauthorized" });
       return;

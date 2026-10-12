@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { db } from "../../db";
 import { escrowTransactions, wallets, orders } from "../../db/schema";
 import { eq } from "drizzle-orm";
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID } from "crypto";
 
 /**
  * Initiates a standalone Escrow Transaction for high-value items (Real Estate/Vehicles).
@@ -10,7 +10,7 @@ import { v4 as uuidv4 } from "uuid";
  */
 export const initiateHighValueEscrow = async (req: Request, res: Response): Promise<void> => {
   try {
-    const buyerId = req.user?.id;
+    const buyerId = (req as any).user?.id;
     if (!buyerId) {
       res.status(401).json({ error: "Unauthorized" });
       return;
@@ -27,7 +27,7 @@ export const initiateHighValueEscrow = async (req: Request, res: Response): Prom
 
     // Create a mock order to tie to the escrow transaction (for schema compliance)
     const [newOrder] = await db.insert(orders).values({
-      orderRef: `ESC-${uuidv4().substring(0, 8).toUpperCase()}`,
+      orderRef: `ESC-${randomUUID().substring(0, 8).toUpperCase()}`,
       userId: buyerId,
       vendorId: vendorId,
       deliveryZone: "n/a",
@@ -64,8 +64,8 @@ export const initiateHighValueEscrow = async (req: Request, res: Response): Prom
  */
 export const releaseEscrow = async (req: Request, res: Response): Promise<void> => {
   try {
-    const buyerId = req.user?.id;
-    const { escrowId } = req.params;
+    const buyerId = (req as any).user?.id;
+    const escrowId = req.params.escrowId as string;
 
     if (!buyerId) {
       res.status(401).json({ error: "Unauthorized" });
@@ -113,7 +113,7 @@ export const releaseEscrow = async (req: Request, res: Response): Promise<void> 
  */
 export const getMyEscrows = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = (req as any).user?.id;
     if (!userId) {
       res.status(401).json({ error: "Unauthorized" });
       return;

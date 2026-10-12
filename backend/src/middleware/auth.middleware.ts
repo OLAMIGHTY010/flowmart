@@ -86,3 +86,6 @@ export const authorizeRoles = (...allowedRoles: string[]) => {
     next();
   };
 };
+
+// Alias for standard Express route guards
+export const protect = authenticateJWT;

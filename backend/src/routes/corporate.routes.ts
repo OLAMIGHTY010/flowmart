@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { getCorporateProfile, updateCreditLimitRequest } from "../controllers/corporate.controller";
-import { protect } from "../middlewares/auth.middleware"; // Assuming this middleware exists
+import { protect } from "../middleware/auth.middleware";
 
 const router = Router();
 

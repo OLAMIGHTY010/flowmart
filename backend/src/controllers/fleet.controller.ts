@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 
 export const getFleetProfile = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = (req as any).user?.id;
     if (!userId) {
       res.status(401).json({ error: "Unauthorized" });
       return;

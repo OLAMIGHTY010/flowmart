@@ -5,7 +5,7 @@ import { eq, and } from "drizzle-orm";
 
 export const boostProduct = async (req: Request, res: Response): Promise<void> => {
   try {
-    const vendorId = req.user?.id;
+    const vendorId = (req as any).user?.id;
     if (!vendorId) {
       res.status(401).json({ error: "Unauthorized" });
       return;
@@ -65,7 +65,7 @@ export const boostProduct = async (req: Request, res: Response): Promise<void> =
 
 export const getVendorCampaigns = async (req: Request, res: Response): Promise<void> => {
   try {
-    const vendorId = req.user?.id;
+    const vendorId = (req as any).user?.id;
     if (!vendorId) {
       res.status(401).json({ error: "Unauthorized" });
       return;

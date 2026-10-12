@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { getFleetProfile, getFleetRiders } from "../controllers/fleet.controller";
-import { protect } from "../middlewares/auth.middleware";
+import { protect } from "../middleware/auth.middleware";
 
 const router = Router();
 

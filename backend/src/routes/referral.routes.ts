@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { getReferralStats, mockFirstPurchaseTrigger } from "../controllers/referral.controller";
-import { protect } from "../middlewares/auth.middleware"; 
+import { protect } from "../middleware/auth.middleware"; 
 
 const router = Router();
 

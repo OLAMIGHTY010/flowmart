@@ -5,7 +5,7 @@ import { eq, sql } from "drizzle-orm";
 
 export const getReferralStats = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = (req as any).user?.id;
     if (!userId) {
       res.status(401).json({ error: "Unauthorized" });
       return;
@@ -54,7 +54,7 @@ export const getReferralStats = async (req: Request, res: Response): Promise<voi
 // Mock endpoint to test the Anti-Fraud / First Purchase logic
 export const mockFirstPurchaseTrigger = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = (req as any).user?.id;
     if (!userId) {
       res.status(401).json({ error: "Unauthorized" });
       return;
