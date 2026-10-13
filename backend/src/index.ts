@@ -87,12 +87,23 @@ app.get('/api/v1/docs.json', (req, res) => {
 });
 
 import { emailService } from './services/email.service';
+import { syncDatabaseSchema } from '../db/sync-schema';
+
 app.get(['/api/v1/test-smtp', '/v1/test-smtp'], async (req, res) => {
   try {
     await (emailService as any).transporter.verify();
     res.json({ success: true, message: 'SMTP connected successfully!', env: { host: process.env.SMTP_HOST, port: process.env.SMTP_PORT, user: process.env.SMTP_USER ? 'SET' : 'UNSET' } });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message, code: error.code, env: { host: process.env.SMTP_HOST, port: process.env.SMTP_PORT, user: process.env.SMTP_USER ? 'SET' : 'UNSET' } });
+  }
+});
+
+app.all(['/api/v1/system/sync-schema', '/v1/system/sync-schema'], async (req, res) => {
+  try {
+    const results = await syncDatabaseSchema();
+    res.json({ success: true, message: 'Schema synchronization complete', results });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: 'Schema sync failed', error: error.message });
   }
 });
 
@@ -109,7 +120,12 @@ const PORT = process.env.PORT || 5000;
 
 // Only start the server locally. Vercel will use the exported app directly.
 	testDatabaseConnection()
-		.then(() => {
+		.then(async () => {
+			try {
+				await syncDatabaseSchema();
+			} catch (migErr: any) {
+				console.warn('Auto-sync schema non-blocking error:', migErr.message);
+			}
 			initWebSocketHub(server);
 
 		if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {

@@ -42,10 +42,15 @@ router.post('/logout', authenticateJWT, logout);
 router.get('/me', authenticateJWT, getMe);
 router.post('/force-change-password', authenticateJWT, forceChangePassword);
 router.get('/debug-env', (req, res) => {
+  const googleClientId = process.env.GOOGLE_CLIENT_ID?.trim().replace(/^["']|["']$/g, '');
   res.json({
     hasSmtpHost: !!process.env.SMTP_HOST,
     hasSmtpUser: !!process.env.SMTP_USER,
     hasSmtpPass: !!process.env.SMTP_PASS,
+    hasGoogleClientId: !!googleClientId,
+    googleClientIdPrefix: googleClientId ? googleClientId.slice(0, 15) + '...' : null,
+    hasJwtSecret: !!process.env.JWT_SECRET,
+    hasDatabaseUrl: !!process.env.DATABASE_URL,
   });
 });
 

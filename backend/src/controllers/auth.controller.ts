@@ -14,8 +14,8 @@ import { emailService } from '../services/email.service';
 import crypto from 'crypto';
 import { OAuth2Client } from 'google-auth-library';
 
-// Initialize Google Client
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const getGoogleClientId = () => process.env.GOOGLE_CLIENT_ID?.trim().replace(/^["']|["']$/g, '');
+const googleClient = new OAuth2Client(getGoogleClientId());
 
 export const syncSession = async (req: Request, res: Response) => {
   try {
@@ -62,9 +62,10 @@ export const googleAuth = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: 'Google ID token is required' });
     }
 
+    const cleanClientId = getGoogleClientId();
     const ticket = await googleClient.verifyIdToken({
       idToken,
-      audience: process.env.GOOGLE_CLIENT_ID,
+      audience: cleanClientId || undefined,
     });
 
     const payload = ticket.getPayload();
@@ -107,7 +108,11 @@ export const googleAuth = async (req: Request, res: Response) => {
       
       user = newUser;
 
-      await emailService.sendOtpEmail(user.email, { fullName: user.fullName, otp: otpCode });
+      try {
+        await emailService.sendOtpEmail(user.email, { fullName: user.fullName, otp: otpCode });
+      } catch (emailErr: any) {
+        console.error('Failed to send OTP email during Google signup:', emailErr);
+      }
     } else {
       // Prevent local users from logging in with Google unexpectedly
       if (user.authProvider === 'local') {
@@ -153,7 +158,7 @@ export const googleAuth = async (req: Request, res: Response) => {
       });
     }
 
-    return res.status(500).json({ success: false, message: 'Authentication failed' });
+    return res.status(500).json({ success: false, message: error?.message || 'Authentication failed' });
   }
 };
 
