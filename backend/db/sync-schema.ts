@@ -34,6 +34,7 @@ export const syncDatabaseSchema = async () => {
     `DO $$ BEGIN CREATE TYPE product_condition AS ENUM ('new', 'used_like_new', 'used_good', 'used_fair'); EXCEPTION WHEN duplicate_object THEN null; END $$;`,
     `ALTER TABLE products ADD COLUMN IF NOT EXISTS condition product_condition DEFAULT 'new' NOT NULL;`,
     `ALTER TABLE products ADD COLUMN IF NOT EXISTS is_negotiable BOOLEAN DEFAULT false NOT NULL;`,
+    `ALTER TABLE products ADD COLUMN IF NOT EXISTS is_sponsored BOOLEAN DEFAULT false NOT NULL;`,
     `ALTER TABLE products ADD COLUMN IF NOT EXISTS old_price DECIMAL(10, 2);`,
     `ALTER TABLE products ADD COLUMN IF NOT EXISTS brand VARCHAR(100);`,
     `ALTER TABLE products ADD COLUMN IF NOT EXISTS weight DECIMAL(8, 2);`,
@@ -43,6 +44,9 @@ export const syncDatabaseSchema = async () => {
     `ALTER TABLE products ADD COLUMN IF NOT EXISTS modifiers JSONB DEFAULT '[]'::jsonb;`,
     `ALTER TABLE products ADD COLUMN IF NOT EXISTS variants JSONB DEFAULT '[]'::jsonb;`,
     `ALTER TABLE products ADD COLUMN IF NOT EXISTS dietary_tags JSONB DEFAULT '[]'::jsonb;`,
+    `ALTER TABLE products ADD COLUMN IF NOT EXISTS images JSONB DEFAULT '[]'::jsonb;`,
+    `ALTER TABLE products ADD COLUMN IF NOT EXISTS stock_quantity INTEGER DEFAULT 0;`,
+    `ALTER TABLE products ADD COLUMN IF NOT EXISTS sku VARCHAR(100);`,
 
     // 4. Vendor profiles and KYC columns
     `ALTER TABLE vendor_profiles ADD COLUMN IF NOT EXISTS home_address TEXT;`,
