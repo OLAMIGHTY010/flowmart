@@ -31,7 +31,12 @@ export const syncDatabaseSchema = async () => {
     `ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW() NOT NULL;`,
 
     // 3. Products table columns
+    `ALTER TABLE products ADD COLUMN IF NOT EXISTS category_id UUID REFERENCES categories(id);`,
     `ALTER TABLE products ADD COLUMN IF NOT EXISTS sponsored_until TIMESTAMP;`,
+    `ALTER TABLE products ADD COLUMN IF NOT EXISTS preparation_time INTEGER;`,
+    `ALTER TABLE products ADD COLUMN IF NOT EXISTS modifiers JSONB DEFAULT '[]'::jsonb;`,
+    `ALTER TABLE products ADD COLUMN IF NOT EXISTS variants JSONB DEFAULT '[]'::jsonb;`,
+    `ALTER TABLE products ADD COLUMN IF NOT EXISTS dietary_tags JSONB DEFAULT '[]'::jsonb;`,
 
     // 4. Vendor profiles and KYC columns
     `ALTER TABLE vendor_profiles ADD COLUMN IF NOT EXISTS home_address TEXT;`,

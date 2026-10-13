@@ -135,7 +135,7 @@ export const getProducts = async (req: AuthenticatedRequest, res: Response) => {
 		console.error("Get Products Error:", error);
 		return res
 			.status(500)
-			.json({ success: false, message: "Internal Server Error" });
+			.json({ success: false, message: error?.message || "Internal Server Error" });
 	}
 };
 
