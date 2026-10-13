@@ -31,6 +31,12 @@ export const syncDatabaseSchema = async () => {
     `ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW() NOT NULL;`,
 
     // 3. Products table columns
+    `DO $$ BEGIN CREATE TYPE product_condition AS ENUM ('new', 'used_like_new', 'used_good', 'used_fair'); EXCEPTION WHEN duplicate_object THEN null; END $$;`,
+    `ALTER TABLE products ADD COLUMN IF NOT EXISTS condition product_condition DEFAULT 'new' NOT NULL;`,
+    `ALTER TABLE products ADD COLUMN IF NOT EXISTS is_negotiable BOOLEAN DEFAULT false NOT NULL;`,
+    `ALTER TABLE products ADD COLUMN IF NOT EXISTS old_price DECIMAL(10, 2);`,
+    `ALTER TABLE products ADD COLUMN IF NOT EXISTS brand VARCHAR(100);`,
+    `ALTER TABLE products ADD COLUMN IF NOT EXISTS weight DECIMAL(8, 2);`,
     `ALTER TABLE products ADD COLUMN IF NOT EXISTS category_id UUID REFERENCES categories(id);`,
     `ALTER TABLE products ADD COLUMN IF NOT EXISTS sponsored_until TIMESTAMP;`,
     `ALTER TABLE products ADD COLUMN IF NOT EXISTS preparation_time INTEGER;`,
