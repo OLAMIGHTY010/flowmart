@@ -131,7 +131,7 @@ export const getProducts = async (req: AuthenticatedRequest, res: Response) => {
 		return res
 			.status(200)
 			.json({ success: true, products: availableProducts, meta: { page, limit } });
-	} catch (error) {
+	} catch (error: any) {
 		console.error("Get Products Error:", error);
 		return res
 			.status(500)
