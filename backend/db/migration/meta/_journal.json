@@ -29,6 +29,13 @@
       "when": 1782652800000,
       "tag": "0003_rename_enum_and_columns",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793122897545,
+      "tag": "0004_add_postcode_and_zone_mapping",
+      "breakpoints": true
     }
   ]
 }

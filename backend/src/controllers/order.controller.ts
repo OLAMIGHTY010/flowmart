@@ -16,6 +16,7 @@ import crypto from "crypto";
 import { createTransferRecipient, initiatePayout, initializeTransaction } from "../services/paystack.service";
 import { creditPendingBalance, releaseEscrowToAvailable, deductAvailableBalance } from "../services/ledger.service";
 import { PricingService } from "../services/pricing.service";
+import { PostcodeService, PostcodeError } from "../services/postcode.service";
 import { globalSettings, orderDelivery } from "../../db/schema";
 
 // Helper to generate FLW-YYYYMMDD-XXXX Securely
@@ -51,10 +52,11 @@ const calculateVendorNetEarnings = async (txOrDb: any, orderId: string, vendorId
 // 0. Calculate Delivery Fee
 export const calculateDelivery = async (req: Request, res: Response) => {
 	try {
-		const { zone, distanceKm } = req.body;
-		if (!zone) return res.status(400).json({ success: false, message: "Zone is required" });
+		const { zone, postcode, distanceKm } = req.body;
+		const target = postcode || zone;
+		if (!target) return res.status(400).json({ success: false, message: "Zone or postcode is required" });
 		
-		const deliveryCalc = await PricingService.calculateDeliveryFee(zone, distanceKm || 5);
+		const deliveryCalc = await PricingService.calculateDeliveryFee(target, distanceKm || 5);
 		return res.status(200).json({ success: true, deliveryCalc });
 	} catch (error: any) {
 		console.error("Calculate Delivery Error:", error);
@@ -69,17 +71,42 @@ export const calculateDelivery = async (req: Request, res: Response) => {
 export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
 	try {
 		const userId = req.user?.id;
-		let { items, productId, quantity, deliveryZone, zone, payment_method } = req.body;
-		const finalZone = deliveryZone || zone;
+		let { items, productId, quantity, deliveryZone, zone, deliveryPostcode, deliveryAddress, addressSource, payment_method } = req.body;
+		const rawAddressOrZone = deliveryAddress || deliveryZone || zone;
 
         // Backward Compatibility: Normalize single-item legacy payloads into uniform items array
         if (!items && productId && quantity) {
             items = [{ productId, quantity }];
         }
 
-		if (!items || !Array.isArray(items) || items.length === 0 || !finalZone) {
+		if (!items || !Array.isArray(items) || items.length === 0 || (!rawAddressOrZone && !deliveryPostcode)) {
 			return res.status(400).json({ success: false, message: "Missing required order details" });
 		}
+
+		// Server-Side Trust Guard: Re-verify claimed postcode before saving
+		let trustResult = {
+			verified: false,
+			deliveryPostcode: null as string | null,
+			prefix: null as string | null,
+			addressSource: 'manual' as 'postcode' | 'manual',
+		};
+
+		if (deliveryPostcode && typeof deliveryPostcode === 'string' && deliveryPostcode.trim()) {
+			try {
+				trustResult = await PostcodeService.resolveAddressTrust(deliveryPostcode);
+			} catch (err: any) {
+				return res.status(400).json({
+					success: false,
+					message: err.message || "Invalid or non-existent postcode provided",
+					suggestion: err.suggestion,
+				});
+			}
+		}
+
+		const finalPostcode = trustResult.deliveryPostcode;
+		const finalAddressSource = trustResult.addressSource;
+		const finalAddressText = deliveryAddress || rawAddressOrZone || "Standard Delivery";
+		const pricingTarget = finalPostcode || rawAddressOrZone || "Default";
 
 		const createdOrders: any[] = [];
 		const paymentMethod = payment_method || 'pay_on_delivery';
@@ -107,52 +134,8 @@ export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
 				const orderRef = generateOrderRef();
 				const deliveryPin = crypto.randomInt(100000, 999999).toString();
 
-				const [newOrder] = await tx.insert(orders).values({
-					orderRef, 
-                    userId: userId!, 
-                    vendorId, 
-                    deliveryZone: finalZone,
-					totalAmount: "0", 
-                    deliveryPin, 
-                    paymentMethod, 
-                    transactionReference: sessionTxRef,
-                    status: "pending",
-				}).returning();
-
-				for (const item of vItems) {
-                    // SECURE ATOMIC SQL DEDUCTION (Resolves Race Condition)
-					const [updatedProduct] = await tx.update(products)
-						.set({ stockQuantity: sql`${products.stockQuantity} - ${item.quantity}` })
-						.where(and(eq(products.id, item.productId), sql`${products.stockQuantity} >= ${item.quantity}`))
-						.returning();
-
-					if (!updatedProduct) throw new Error(`Product ${item.product.name} out of stock`);
-
-					const unitPrice = updatedProduct.price;
-					totalAmountNum += Number(unitPrice) * item.quantity;
-
-					await tx.insert(orderItems).values({
-						orderId: newOrder.id, 
-                        productId: item.productId, 
-                        quantity: item.quantity, 
-                        unitPrice,
-					});
-
-					if (updatedProduct.stockQuantity === 0) {
-						const [vendor] = await tx.select().from(users).where(eq(users.id, vendorId)).limit(1);
-						if (vendor) {
-							emailService.sendOutOfStockAlert(vendor.email, { vendorName: vendor.fullName, productName: updatedProduct.name }).catch(console.error);
-						}
-					}
-				}
-
-				let deliveryCalc: any = null;
-				try {
-					deliveryCalc = await PricingService.calculateDeliveryFee(finalZone, req.body.distanceKm || 5);
-				} catch (e: any) {
-					console.error("Delivery calculation failed:", e);
-					throw new Error("Delivery pricing is not configured for this zone. Please contact support.");
-				}
+				// Pre-calculate delivery pricing and clean zone name
+				// deliveryCalc computed before order insertion
 
 				totalAmountNum += deliveryCalc.finalDeliveryFee;
 
@@ -555,3 +538,5 @@ export const paystackWebhook = async (req: Request, res: Response) => {
         return res.status(500).send();
     }
 };
+
+

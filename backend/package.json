@@ -8,6 +8,7 @@
     "db:gen": "npx drizzle-kit generate",
     "db:mig": "npx drizzle-kit migrate",
     "studio": "npx drizzle-kit studio",
+    "seed:zones": "ts-node db/seed-postcode-zones.ts",
     "dev": "nodemon src/index.ts",
     "start": "ts-node src/index.ts",
     "build": "echo 'No build step required for backend, Vercel will use api/index.ts'"
@@ -64,3 +65,5 @@
     "typescript": "^5.8.2"
   }
 }
+
+

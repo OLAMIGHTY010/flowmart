@@ -43,6 +43,7 @@ import couponRoutes from './coupon.routes';
 import reviewRoutes from './review.routes';
 import aiRoutes from './ai.routes';
 import searchRoutes from './search.routes';
+import postcodeRoutes from './postcode.routes';
 import uploadRoutes from './upload.routes';
 import weatherRoutes from './weather.routes';
 import billsRoutes from './bills.routes';
@@ -82,6 +83,7 @@ router.use('/users', userRoutes);
 // Core Commerce
 router.use('/products', productRoutes);
 router.use('/orders', orderRoutes);
+router.use('/postcode', postcodeRoutes);
 router.use('/cart', cartRoutes);
 router.use('/search', searchRoutes);
 router.use('/ai', aiRoutes);

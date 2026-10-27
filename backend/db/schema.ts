@@ -101,6 +101,7 @@ export const kycSubmissions = pgTable('kyc_submissions', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+
 export const categories = pgTable('categories', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: varchar('name', { length: 100 }).notNull(),
@@ -157,6 +158,9 @@ export const orders = pgTable('orders', {
   vendorId: uuid('vendor_id').references(() => users.id).notNull(),     
   riderId: uuid('rider_id').references(() => users.id),                 
   deliveryZone: varchar('delivery_zone', { length: 100 }).notNull(),    
+  deliveryAddress: text('delivery_address'),
+  deliveryPostcode: varchar('delivery_postcode', { length: 20 }),
+  addressSource: varchar('address_source', { length: 20 }),
   status: orderStatusEnum('status').default('pending').notNull(),
   totalAmount: decimal('total_amount', { precision: 10, scale: 2 }).notNull(),
   paymentMethod: paymentMethodEnum('payment_method').default('pay_on_delivery').notNull(),
@@ -375,6 +379,17 @@ export const pricingRules = pgTable('pricing_rules', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+export const postcodeZoneMap = pgTable('postcode_zone_map', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  prefix: varchar('prefix', { length: 10 }).notNull().unique(), // e.g. 'EK-01', 'LA-11'
+  zoneId: uuid('zone_id').references(() => deliveryZones.id).notNull(),
+  active: boolean('active').default(true).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => [
+  index('postcode_zone_prefix_idx').on(table.prefix),
+]);
+
 export const orderDelivery = pgTable('order_delivery', {
   id: uuid('id').defaultRandom().primaryKey(),
   orderId: uuid('order_id').references(() => orders.id).notNull().unique(),
@@ -520,6 +535,7 @@ export const addresses = pgTable('addresses', {
   userId: uuid('user_id').references(() => users.id).notNull(),
   label: varchar('label', { length: 50 }).notNull(), // 'Home', 'Work', 'Other'
   address: text('address').notNull(),
+  postcode: varchar('postcode', { length: 20 }),
   landmark: text('landmark'), // e.g. "Behind Shoprite, beside the yellow gate"
   latitude: decimal('latitude', { precision: 10, scale: 7 }).notNull(),
   longitude: decimal('longitude', { precision: 10, scale: 7 }).notNull(),

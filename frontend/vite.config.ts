@@ -20,6 +20,10 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 15000000,
         runtimeCaching: [
           {
+            urlPattern: /^https?:\/\/.*\/api\/v1\/postcode\/.*/i,
+            handler: 'NetworkOnly',
+          },
+          {
             urlPattern: /^https:\/\/.*\/api\/v1\/.*/i,
             handler: 'NetworkFirst',
             options: {

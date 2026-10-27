@@ -1,25 +1,61 @@
-import { db } from '../../db';
-import { globalSettings, deliveryZones, pricingRules, orderDelivery } from '../../db/schema';
+﻿import { db } from '../../db';
+import { globalSettings, deliveryZones, pricingRules, orderDelivery, postcodeZoneMap } from '../../db/schema';
 import { eq, and, asc } from 'drizzle-orm';
+import { extractPostcodePrefix } from '../utils/postcode.util';
 
 export class PricingService {
   /**
-   * Calculates delivery fees and splits
+   * Calculates delivery fees and splits.
+   * Resolves the pricing zone from the postcode prefix (via postcode_zone_map)
+   * or direct zone name match, falling back to 'Default' zone.
+   *
+   * @param zoneOrPostcode Either a full postcode, a 2-segment prefix (e.g. 'LA-11'), or a legacy zone name.
+   * @param distanceKm Estimated delivery distance in KM.
    */
-  static async calculateDeliveryFee(zoneName: string, distanceKm: number) {
-    // 1. Fetch zone
-    let zoneRecord = await db.query.deliveryZones.findFirst({
-      where: eq(deliveryZones.zoneName, zoneName),
-    });
+  static async calculateDeliveryFee(zoneOrPostcode: string, distanceKm: number = 5) {
+    let zoneRecord: any = null;
 
+    // 1. Attempt resolution via Postcode Prefix mapping
+    if (zoneOrPostcode) {
+      const prefix = extractPostcodePrefix(zoneOrPostcode);
+      if (prefix) {
+        try {
+          const mapping = await db.query.postcodeZoneMap.findFirst({
+            where: and(eq(postcodeZoneMap.prefix, prefix), eq(postcodeZoneMap.active, true)),
+          });
+
+          if (mapping && mapping.zoneId) {
+            zoneRecord = await db.query.deliveryZones.findFirst({
+              where: and(eq(deliveryZones.id, mapping.zoneId), eq(deliveryZones.active, true)),
+            });
+          }
+        } catch (err) {
+          console.warn(`[PricingService] Failed to resolve prefix ${prefix} from postcode_zone_map:`, err);
+        }
+      }
+    }
+
+    // 2. Fallback to direct zoneName match (for legacy requests e.g. 'Default', 'Lagos Central')
+    if (!zoneRecord && zoneOrPostcode) {
+      // Truncate to 100 characters to safely prevent database column length violations on legacy free-text addresses
+      const safeZoneName = zoneOrPostcode.trim().substring(0, 100);
+      try {
+        zoneRecord = await db.query.deliveryZones.findFirst({
+          where: eq(deliveryZones.zoneName, safeZoneName),
+        });
+      } catch (err) {
+        console.warn(`[PricingService] Direct zoneName lookup failed for "${safeZoneName}":`, err);
+      }
+    }
+
+    // 3. Fallback to 'Default' zone
     if (!zoneRecord) {
-      // Fallback to 'Default' zone
       zoneRecord = await db.query.deliveryZones.findFirst({
         where: eq(deliveryZones.zoneName, 'Default'),
       });
       
       if (!zoneRecord) {
-        // Create 'Default' zone dynamically for MVP
+        // Create 'Default' zone dynamically if missing
         const [newZone] = await db.insert(deliveryZones).values({
           zoneName: 'Default',
           baseFee: "500", // e.g., 500 NGN
@@ -36,13 +72,18 @@ export class PricingService {
     const distanceFee = distanceKm * perKmFee;
     let subtotal = baseFee + distanceFee;
 
-    // 2. Fetch Active Rules for this zone (or global)
-    const rules = await db.query.pricingRules.findMany({
-      where: and(
-        eq(pricingRules.active, true),
-      ),
-      orderBy: [asc(pricingRules.priority)],
-    });
+    // 4. Fetch Active Rules for this zone (or global)
+    let rules: any[] = [];
+    try {
+      rules = await db.query.pricingRules.findMany({
+        where: and(
+          eq(pricingRules.active, true),
+        ),
+        orderBy: [asc(pricingRules.priority)],
+      });
+    } catch (err) {
+      console.warn("[PricingService] Failed to fetch pricingRules:", err);
+    }
 
     const appliedAdjustments: any[] = [];
     let currentTotal = subtotal;
@@ -62,7 +103,6 @@ export class PricingService {
       } else if (rule.ruleType === 'distance_multiplier') {
         if (distanceKm > (condition?.minDistance || 0)) applies = true;
       } else if (rule.ruleType === 'surge_pricing') {
-        // Logistics-configured surge pricing
         applies = true;
       } else {
         applies = true;
@@ -89,7 +129,7 @@ export class PricingService {
 
     const finalDeliveryFee = currentTotal;
 
-    // 3. Calculate splits
+    // 5. Calculate splits
     const riderSharePct = zoneRecord.riderCommissionPct;
     const platformSharePct = zoneRecord.platformCommissionPct;
 
@@ -97,6 +137,8 @@ export class PricingService {
     const platformShare = finalDeliveryFee * (platformSharePct / 100);
 
     return {
+      resolvedZone: zoneRecord.zoneName, // The clean zone name (e.g. 'Lagos Central', 'Default')
+      zoneId: zoneRecord.id,
       distanceKm,
       baseFee,
       distanceFee,

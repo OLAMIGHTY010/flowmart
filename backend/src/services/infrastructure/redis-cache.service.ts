@@ -34,11 +34,15 @@ class RedisCacheService {
   }
 
   private async initRedis() {
-    const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+    const redisUrl = process.env.REDIS_URL;
+    if (!redisUrl) {
+      // Operate with in-memory store in dev/test
+      return;
+    }
+
     try {
       this.client = createClient({ url: redisUrl });
-      this.client.on('error', (err) => {
-        // Silently fall back to high-speed in-memory store in dev/test environments
+      this.client.on('error', () => {
         this.isConnected = false;
       });
       this.client.on('connect', () => {
@@ -110,13 +114,32 @@ class RedisCacheService {
     this.memoryStore.delete(key);
   }
 
+  public async del(key: string): Promise<void> {
+    return this.delete(key);
+  }
+
+  public async clear(): Promise<void> {
+    if (this.isConnected && this.client) {
+      try {
+        await this.client.flushAll();
+      } catch {}
+    }
+    this.memoryStore.clear();
+  }
+
+  public async disconnect(): Promise<void> {
+    if (this.isConnected && this.client) {
+      try {
+        await this.client.disconnect();
+      } catch {}
+      this.isConnected = false;
+    }
+  }
+
   // ==========================================================================
   // 2. GEOSPATIAL DISPATCH INDEX (FIND NEAREST RIDERS)
   // ==========================================================================
 
-  /**
-   * Index or update live GPS coordinates of an active dispatch rider
-   */
   public async updateRiderLocation(riderId: string, latitude: number, longitude: number): Promise<void> {
     const loc: RiderLocation = {
       riderId,
@@ -127,7 +150,6 @@ class RedisCacheService {
 
     if (this.isConnected && this.client) {
       try {
-        // Redis GEOADD: longitude, latitude, member
         await this.client.geoAdd('flowmart:riders:geo', {
           longitude,
           latitude,
@@ -139,16 +161,12 @@ class RedisCacheService {
     this.riderGeoStore.set(riderId, loc);
   }
 
-  /**
-   * Find nearest available dispatch riders within radiusKm (e.g. 5km)
-   */
   public async getNearestRiders(
     centerLat: number,
     centerLng: number,
     radiusKm = 5,
     limit = 5
   ): Promise<RiderLocation[]> {
-    // Memory Haversine calculation (guaranteed deterministic & fast)
     const results: RiderLocation[] = [];
 
     for (const rider of this.riderGeoStore.values()) {
@@ -161,13 +179,12 @@ class RedisCacheService {
       }
     }
 
-    // Sort by closest distance
     results.sort((a, b) => (a.distanceKm || 0) - (b.distanceKm || 0));
     return results.slice(0, limit);
   }
 
   private haversineDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
-    const R = 6371; // Earth radius in km
+    const R = 6371;
     const dLat = ((lat2 - lat1) * Math.PI) / 180;
     const dLon = ((lon2 - lon1) * Math.PI) / 180;
     const a =
@@ -184,9 +201,6 @@ class RedisCacheService {
   // 3. DISTRIBUTED CONCURRENCY LOCK (REDLOCK FLASH-SALE SAFETY)
   // ==========================================================================
 
-  /**
-   * Acquire exclusive lock for item stock decrement during checkout
-   */
   public async acquireLock(lockKey: string, ttlMs = 5000): Promise<boolean> {
     const fullKey = `flowmart:lock:${lockKey}`;
     const expiresAt = Date.now() + ttlMs;
@@ -201,19 +215,15 @@ class RedisCacheService {
       } catch {}
     }
 
-    // In-memory atomic check
     const currentLock = this.lockStore.get(fullKey);
     if (currentLock && Date.now() < currentLock) {
-      return false; // Already locked
+      return false;
     }
 
     this.lockStore.set(fullKey, expiresAt);
     return true;
   }
 
-  /**
-   * Release exclusive lock
-   */
   public async releaseLock(lockKey: string): Promise<void> {
     const fullKey = `flowmart:lock:${lockKey}`;
     if (this.isConnected && this.client) {
@@ -226,3 +236,4 @@ class RedisCacheService {
 }
 
 export const redisCacheService = new RedisCacheService();
+export const cacheService = redisCacheService;

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+﻿import { z } from 'zod';
 
 const orderItemSchema = z.object({
   productId: z.string().min(1, 'Product ID is required'),
@@ -11,6 +11,10 @@ export const placeOrderSchema = z.object({
   quantity: z.number().int().positive().optional(),
   deliveryZone: z.string().optional(),
   zone: z.string().optional(),
+  deliveryPostcode: z.string().optional(),
+  deliveryAddress: z.string().optional(),
+  addressSource: z.enum(['postcode', 'manual']).optional(),
+  phone: z.string().optional(),
   payment_method: z.enum(['paystack', 'escrow', 'wallet', 'pay_on_delivery']).optional(),
 }).refine(data => data.items || (data.productId && data.quantity), {
   message: 'Order must contain either items array or a productId/quantity pair',
@@ -22,6 +26,9 @@ export const updateOrderStatusSchema = z.object({
 });
 
 export const calculateDeliverySchema = z.object({
-  zone: z.string().min(1, 'Zone is required'),
+  zone: z.string().optional(),
+  postcode: z.string().optional(),
   distanceKm: z.number().nonnegative().optional(),
+}).refine(data => !!(data.zone || data.postcode), {
+  message: 'Either zone or postcode must be provided',
 });
