@@ -11,6 +11,16 @@ import {
   RefreshCw,
   X,
   Sparkles,
+  Home,
+  Briefcase,
+  Clock,
+  Heart,
+  Smile,
+  FileText,
+  ChevronRight,
+  Package,
+  DoorOpen,
+  ShieldAlert,
 } from "lucide-react";
 import { useCartStore } from "@/stores/cartStore";
 import { useToast } from "@/contexts/ToastContext";
@@ -74,6 +84,14 @@ interface SuggestionItem {
   description?: string;
 }
 
+interface SavedAddressProfile {
+  street: string;
+  unit?: string;
+  postcode?: string;
+  notes?: string;
+  dropoff?: string;
+}
+
 const Checkout = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -81,6 +99,9 @@ const Checkout = () => {
 
   // Mode: Digital Postcode (Primary) vs Manual Map/GPS (Fallback)
   const [deliveryMode, setDeliveryMode] = useState<"postcode" | "manual">("postcode");
+
+  // Address Tag (Chowdeck feature: Home / Work / Other)
+  const [addressTag, setAddressTag] = useState<"home" | "work" | "other">("home");
 
   // Postcode Integration State
   const [postcodeQuery, setPostcodeQuery] = useState("");
@@ -90,10 +111,25 @@ const Checkout = () => {
   const [postcodeSuggestions, setPostcodeSuggestions] = useState<SuggestionItem[]>([]);
   const [showSuggestionsDropdown, setShowSuggestionsDropdown] = useState(false);
   const [verifiedPostcode, setVerifiedPostcode] = useState<string | null>(null);
+
+  // Address Specifics
   const [streetAddress, setStreetAddress] = useState("");
+  const [unitApartment, setUnitApartment] = useState("");
   const [postcodeError, setPostcodeError] = useState<string | null>(null);
   const [postcodeSuggestion, setPostcodeSuggestion] = useState<string | null>(null);
   const [resolvedZone, setResolvedZone] = useState<string | null>(null);
+
+  // Drop-off Preference (Chowdeck signature: Hand it to me / Door / Security)
+  const [dropoffOption, setDropoffOption] = useState<"hand_to_me" | "leave_at_door" | "leave_with_security">(
+    "hand_to_me"
+  );
+
+  // Delivery Notes & Quick Chips
+  const [deliveryNotes, setDeliveryNotes] = useState("");
+
+  // Rider Tipping (Chowdeck signature: 0, 200, 500, 1000, custom)
+  const [tipPreset, setTipPreset] = useState<number | "custom">(500);
+  const [customTip, setCustomTip] = useState<string>("");
 
   // Manual fallback state
   const [address, setAddress] = useState("");
@@ -115,7 +151,7 @@ const Checkout = () => {
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Pre-fill user profile
+  // Pre-fill user profile and load saved address for tag
   useEffect(() => {
     if (user) {
       setFullName(user.fullName || "");
@@ -123,7 +159,30 @@ const Checkout = () => {
     }
   }, [user]);
 
-  // Close dropdown on outside click
+  // Load saved address from localStorage when tag changes
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("flowmart_saved_addresses");
+      if (raw) {
+        const parsed: Record<string, SavedAddressProfile> = JSON.parse(raw);
+        if (parsed[addressTag]) {
+          const profile = parsed[addressTag];
+          setStreetAddress(profile.street || "");
+          setUnitApartment(profile.unit || "");
+          if (profile.postcode) {
+            setPostcodeQuery(profile.postcode);
+            verifyPostcodeCode(profile.postcode);
+          }
+          if (profile.notes) setDeliveryNotes(profile.notes);
+          if (profile.dropoff) setDropoffOption(profile.dropoff as any);
+        }
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }, [addressTag]);
+
+  // Close suggestions dropdown on click outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -148,7 +207,6 @@ const Checkout = () => {
       return;
     }
 
-    // If query matches current verified postcode, do not re-search
     if (verifiedPostcode && trimmed === verifiedPostcode) {
       return;
     }
@@ -177,7 +235,7 @@ const Checkout = () => {
         }
       } catch (err: any) {
         if (err?.name === "CanceledError" || err?.code === "ERR_CANCELED") {
-          return; // Ignore aborted requests
+          return;
         }
         if (err?.response?.status === 503) {
           setPostcodeStatus("unavailable");
@@ -227,7 +285,6 @@ const Checkout = () => {
         const msg = data.errors[0].message;
         setPostcodeError(msg);
         setPostcodeStatus("not-found");
-        // Look for 'Did you mean "..."?'
         const match = msg.match(/Did you mean \"([^\"]+)\"/);
         if (match && match[1]) {
           setPostcodeSuggestion(match[1]);
@@ -268,6 +325,12 @@ const Checkout = () => {
     setPostcodeSuggestion(null);
     setPostcodeSuggestions([]);
     setShowSuggestionsDropdown(false);
+  };
+
+  // Append quick delivery note
+  const handleAddNotePreset = (preset: string) => {
+    if (deliveryNotes.includes(preset)) return;
+    setDeliveryNotes((prev) => (prev ? `${prev}, ${preset}` : preset));
   };
 
   // Manual Geolocation Handler
@@ -396,8 +459,11 @@ const Checkout = () => {
   const cart = useCartStore((s) => s.cart);
   const clearCart = useCartStore((s) => s.clearCart);
 
+  // Compute Tip Amount
+  const tipAmount = tipPreset === "custom" ? (Number(customTip) || 0) : tipPreset;
+
   const subtotal = cart.reduce((sum, item) => sum + Number(item.price) * item.qty, 0);
-  const totalAmount = subtotal + deliveryFee;
+  const totalAmount = subtotal + deliveryFee + tipAmount;
 
   const isAddressComplete =
     deliveryMode === "postcode"
@@ -424,9 +490,32 @@ const Checkout = () => {
     setIsSubmitting(true);
     try {
       const isPostcodeMode = deliveryMode === "postcode" && !!verifiedPostcode;
+      
+      // Synthesize clean address text with unit/apartment details
+      let formattedStreet = streetAddress.trim();
+      if (unitApartment.trim()) {
+        formattedStreet = `${unitApartment.trim()}, ${formattedStreet}`;
+      }
+
       const finalAddressSnapshot = isPostcodeMode
-        ? `${streetAddress.trim()}, ${verifiedPostcode}`
+        ? `${formattedStreet}, ${verifiedPostcode}`
         : address.trim();
+
+      // Save address profile locally for next time
+      try {
+        const raw = localStorage.getItem("flowmart_saved_addresses");
+        const existing: Record<string, SavedAddressProfile> = raw ? JSON.parse(raw) : {};
+        existing[addressTag] = {
+          street: streetAddress.trim(),
+          unit: unitApartment.trim(),
+          postcode: verifiedPostcode || undefined,
+          notes: deliveryNotes.trim() || undefined,
+          dropoff: dropoffOption,
+        };
+        localStorage.setItem("flowmart_saved_addresses", JSON.stringify(existing));
+      } catch {
+        // ignore
+      }
 
       const payload = {
         items: cart.map((item) => ({
@@ -438,6 +527,10 @@ const Checkout = () => {
         deliveryAddress: finalAddressSnapshot,
         zone: isPostcodeMode ? (resolvedZone || "Default") : address.trim(),
         phone: phone,
+        tipAmount: tipAmount > 0 ? tipAmount : undefined,
+        dropoffOption,
+        deliveryNotes: deliveryNotes.trim() || undefined,
+        addressTag,
       };
 
       const res = await apiClient.post<{ success: boolean; paymentUrl?: string }>(
@@ -461,29 +554,68 @@ const Checkout = () => {
   };
 
   return (
-    <div className="container" style={{ padding: "32px 24px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 32 }}>
-        <Link to="/cart" style={{ color: "var(--color-text-muted)", fontSize: "0.875rem" }}>
+    <div className="container" style={{ padding: "32px 24px 100px 24px" }}>
+      {/* Top Breadcrumb & Live Dispatch Pill */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: 24,
+          flexWrap: "wrap",
+          gap: 12,
+        }}
+      >
+        <Link
+          to="/cart"
+          style={{
+            color: "var(--color-primary)",
+            fontSize: "0.875rem",
+            fontWeight: 600,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+          }}
+        >
           ← Back to Cart
         </Link>
+
+        {/* Chowdeck-Style Express Dispatch Banner */}
+        <div
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            padding: "6px 14px",
+            borderRadius: 9999,
+            backgroundColor: "var(--color-primary-surface)",
+            color: "var(--color-primary)",
+            fontSize: "0.813rem",
+            fontWeight: 700,
+          }}
+        >
+          <Clock size={14} className="animate-pulse" />
+          <span>⚡ FlowMart Express • Est. Delivery 25 - 40 Mins</span>
+        </div>
       </div>
 
       <h1
         style={{
           fontSize: "2rem",
-          fontWeight: 700,
+          fontWeight: 800,
           color: "var(--color-text-primary)",
-          marginBottom: 32,
+          marginBottom: 28,
+          letterSpacing: "-0.02em",
         }}
       >
         Checkout
       </h1>
 
       <form onSubmit={handlePlaceOrder} style={{ display: "grid", gap: 32 }} className="checkout-grid">
-        {/* Left: Forms */}
+        {/* Left: Interactive Forms */}
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-          {/* Section: Delivery Address */}
-          <div className="card" style={{ padding: 24 }}>
+          {/* Card: Delivery Address & Profiles */}
+          <div className="card" style={{ padding: 24, borderRadius: 16 }}>
             <div
               style={{
                 display: "flex",
@@ -497,8 +629,8 @@ const Checkout = () => {
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <div
                   style={{
-                    width: 36,
-                    height: 36,
+                    width: 38,
+                    height: 38,
                     borderRadius: "50%",
                     backgroundColor: "var(--color-primary-surface)",
                     display: "flex",
@@ -509,9 +641,9 @@ const Checkout = () => {
                   <MapPin size={18} style={{ color: "var(--color-primary)" }} />
                 </div>
                 <div>
-                  <h2 style={{ fontSize: "1.25rem", fontWeight: 600 }}>Delivery Details</h2>
+                  <h2 style={{ fontSize: "1.25rem", fontWeight: 700 }}>Delivery Address</h2>
                   <p style={{ fontSize: "0.813rem", color: "var(--color-text-muted)" }}>
-                    Verify your destination using Nigeria's National Digital Postcode
+                    Select saved location or verify national digital postcode
                   </p>
                 </div>
               </div>
@@ -533,7 +665,7 @@ const Checkout = () => {
                     padding: "6px 14px",
                     borderRadius: "var(--radius-md, 6px)",
                     fontSize: "0.813rem",
-                    fontWeight: 600,
+                    fontWeight: 700,
                     cursor: "pointer",
                     border: "none",
                     transition: "all var(--transition-fast, 0.2s)",
@@ -541,8 +673,8 @@ const Checkout = () => {
                       deliveryMode === "postcode" ? "var(--color-bg-primary, #ffffff)" : "transparent",
                     color:
                       deliveryMode === "postcode"
-                        ? "var(--color-primary, #15803d)"
-                        : "var(--color-text-muted, #6b7280)",
+                        ? "var(--color-primary)"
+                        : "var(--color-text-muted)",
                     boxShadow:
                       deliveryMode === "postcode" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
                     display: "flex",
@@ -560,7 +692,7 @@ const Checkout = () => {
                     padding: "6px 14px",
                     borderRadius: "var(--radius-md, 6px)",
                     fontSize: "0.813rem",
-                    fontWeight: 600,
+                    fontWeight: 700,
                     cursor: "pointer",
                     border: "none",
                     transition: "all var(--transition-fast, 0.2s)",
@@ -568,8 +700,8 @@ const Checkout = () => {
                       deliveryMode === "manual" ? "var(--color-bg-primary, #ffffff)" : "transparent",
                     color:
                       deliveryMode === "manual"
-                        ? "var(--color-primary, #15803d)"
-                        : "var(--color-text-muted, #6b7280)",
+                        ? "var(--color-primary)"
+                        : "var(--color-text-muted)",
                     boxShadow:
                       deliveryMode === "manual" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
                     display: "flex",
@@ -583,32 +715,88 @@ const Checkout = () => {
               </div>
             </div>
 
+            {/* Chowdeck Feature: Saved Address Profile Chips */}
+            <div style={{ marginBottom: 20 }}>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "0.813rem",
+                  fontWeight: 600,
+                  color: "var(--color-text-muted)",
+                  marginBottom: 8,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                }}
+              >
+                Deliver to
+              </label>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                {[
+                  { id: "home", label: "Home", icon: Home },
+                  { id: "work", label: "Work", icon: Briefcase },
+                  { id: "other", label: "Other", icon: MapPin },
+                ].map((item) => {
+                  const Icon = item.icon;
+                  const isActive = addressTag === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setAddressTag(item.id as any)}
+                      style={{
+                        padding: "8px 16px",
+                        borderRadius: 9999,
+                        fontSize: "0.875rem",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        border: `1.5px solid ${
+                          isActive ? "var(--color-primary)" : "var(--color-border)"
+                        }`,
+                        backgroundColor: isActive
+                          ? "var(--color-primary-surface)"
+                          : "var(--color-bg-primary)",
+                        color: isActive ? "var(--color-primary)" : "var(--color-text-secondary)",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        transition: "all 0.2s ease",
+                      }}
+                    >
+                      <Icon size={14} />
+                      {item.label}
+                      {isActive && <CheckCircle2 size={14} style={{ color: "var(--color-primary)" }} />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16 }}>
               {/* Recipient Full Name */}
-              <div>
-                <label
-                  style={{
-                    display: "block",
-                    fontSize: "0.875rem",
-                    fontWeight: 500,
-                    marginBottom: 6,
-                  }}
-                >
-                  Full Name
-                </label>
-                <input
-                  required
-                  type="text"
-                  className="input-field"
-                  value={fullName}
-                  readOnly
-                  style={{ backgroundColor: "var(--color-bg-secondary)", opacity: 0.85 }}
-                />
-              </div>
-
-              {/* Recipient Phone */}
-              <div>
-                <PhoneInput label="Phone Number" value={phone} onChange={setPhone} required />
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: "0.875rem",
+                      fontWeight: 600,
+                      marginBottom: 6,
+                    }}
+                  >
+                    Full Name
+                  </label>
+                  <input
+                    required
+                    type="text"
+                    className="input-field"
+                    value={fullName}
+                    readOnly
+                    style={{ backgroundColor: "var(--color-bg-secondary)", opacity: 0.85 }}
+                  />
+                </div>
+                <div>
+                  <PhoneInput label="Phone Number" value={phone} onChange={setPhone} required />
+                </div>
               </div>
 
               {/* -------------------- TAB 1: DIGITAL POSTCODE -------------------- */}
@@ -619,7 +807,7 @@ const Checkout = () => {
                     flexDirection: "column",
                     gap: 16,
                     padding: 16,
-                    borderRadius: "var(--radius-lg, 12px)",
+                    borderRadius: 12,
                     backgroundColor: "var(--color-bg-secondary, #fafafa)",
                     border: "1px solid var(--color-border, #e5e7eb)",
                   }}
@@ -637,7 +825,7 @@ const Checkout = () => {
                       <label
                         style={{
                           fontSize: "0.875rem",
-                          fontWeight: 600,
+                          fontWeight: 700,
                           color: "var(--color-text-primary)",
                           display: "flex",
                           alignItems: "center",
@@ -650,8 +838,8 @@ const Checkout = () => {
                             fontSize: "0.7rem",
                             padding: "2px 6px",
                             borderRadius: 4,
-                            backgroundColor: "rgba(21, 128, 61, 0.1)",
-                            color: "var(--color-primary, #15803d)",
+                            backgroundColor: "var(--color-primary-surface)",
+                            color: "var(--color-primary)",
                             fontWeight: 700,
                           }}
                         >
@@ -659,7 +847,7 @@ const Checkout = () => {
                         </span>
                       </label>
                       <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
-                        Format: AA-99-H77-BB-55 or area (e.g. LA-11)
+                        e.g. LA-11 or full AA-99-H77-BB-55
                       </span>
                     </div>
 
@@ -668,7 +856,7 @@ const Checkout = () => {
                         <input
                           type="text"
                           className="input-field"
-                          placeholder="Type postcode or area (e.g. LA-11 or FC-01)..."
+                          placeholder="Type area (e.g. LA-11 or FC-01)..."
                           value={postcodeQuery}
                           onChange={(e) => {
                             setPostcodeQuery(e.target.value.toUpperCase());
@@ -684,18 +872,18 @@ const Checkout = () => {
                           style={{
                             textTransform: "uppercase",
                             letterSpacing: "1px",
-                            fontWeight: 600,
+                            fontWeight: 700,
                             paddingRight: 40,
                             borderColor:
                               postcodeStatus === "verified"
-                                ? "#16a34a"
+                                ? "var(--color-primary)"
                                 : postcodeStatus === "not-found"
                                 ? "#dc2626"
                                 : undefined,
                           }}
                         />
 
-                        {/* Clear or Status Icon */}
+                        {/* Status Icon */}
                         <div
                           style={{
                             position: "absolute",
@@ -739,25 +927,19 @@ const Checkout = () => {
                         disabled={postcodeStatus === "loading" || !postcodeQuery.trim()}
                         className="btn-primary"
                         style={{
-                          padding: "0 20px",
+                          padding: "0 22px",
                           height: "auto",
                           fontSize: "0.875rem",
-                          fontWeight: 600,
+                          fontWeight: 700,
                           borderRadius: "var(--radius-md, 8px)",
                           whiteSpace: "nowrap",
-                          cursor:
-                            postcodeStatus === "loading" || !postcodeQuery.trim()
-                              ? "not-allowed"
-                              : "pointer",
-                          opacity:
-                            postcodeStatus === "loading" || !postcodeQuery.trim() ? 0.6 : 1,
                         }}
                       >
                         Verify
                       </button>
                     </div>
 
-                    {/* Autocomplete Suggestions Dropdown */}
+                    {/* Autocomplete Dropdown */}
                     {showSuggestionsDropdown && postcodeSuggestions.length > 0 && (
                       <div
                         style={{
@@ -767,11 +949,10 @@ const Checkout = () => {
                           right: 0,
                           zIndex: 50,
                           marginTop: 4,
-                          backgroundColor: "var(--color-bg-primary, #ffffff)",
-                          borderRadius: "var(--radius-lg, 8px)",
-                          boxShadow:
-                            "0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)",
-                          border: "1px solid var(--color-border, #e5e7eb)",
+                          backgroundColor: "var(--color-bg-primary)",
+                          borderRadius: 12,
+                          boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)",
+                          border: "1px solid var(--color-border)",
                           maxHeight: 260,
                           overflowY: "auto",
                         }}
@@ -780,9 +961,9 @@ const Checkout = () => {
                           style={{
                             padding: "8px 12px",
                             fontSize: "0.75rem",
-                            fontWeight: 600,
+                            fontWeight: 700,
                             color: "var(--color-text-muted)",
-                            borderBottom: "1px solid var(--color-border, #e5e7eb)",
+                            borderBottom: "1px solid var(--color-border)",
                           }}
                         >
                           Matching National Postcodes:
@@ -800,11 +981,10 @@ const Checkout = () => {
                               borderBottom:
                                 idx === postcodeSuggestions.length - 1
                                   ? "none"
-                                  : "1px solid #f3f4f6",
-                              transition: "background-color 0.15s ease",
+                                  : "1px solid var(--color-border-light, #f3f4f6)",
                             }}
                             onMouseEnter={(e) => {
-                              (e.currentTarget as HTMLElement).style.backgroundColor = "#f8fafc";
+                              (e.currentTarget as HTMLElement).style.backgroundColor = "var(--color-bg-secondary)";
                             }}
                             onMouseLeave={(e) => {
                               (e.currentTarget as HTMLElement).style.backgroundColor = "transparent";
@@ -815,7 +995,7 @@ const Checkout = () => {
                                 style={{
                                   fontWeight: 700,
                                   fontSize: "0.938rem",
-                                  color: "var(--color-primary, #15803d)",
+                                  color: "var(--color-primary)",
                                 }}
                               >
                                 {item.code}
@@ -825,7 +1005,7 @@ const Checkout = () => {
                                   style={{
                                     marginLeft: 8,
                                     fontSize: "0.813rem",
-                                    color: "var(--color-text-secondary, #4b5563)",
+                                    color: "var(--color-text-secondary)",
                                   }}
                                 >
                                   {item.description}
@@ -839,9 +1019,9 @@ const Checkout = () => {
                                     fontSize: "0.7rem",
                                     padding: "2px 8px",
                                     borderRadius: 12,
-                                    backgroundColor: "#e0e7ff",
-                                    color: "#3730a3",
-                                    fontWeight: 600,
+                                    backgroundColor: "var(--color-primary-surface)",
+                                    color: "var(--color-primary)",
+                                    fontWeight: 700,
                                   }}
                                 >
                                   {item.state}
@@ -853,8 +1033,8 @@ const Checkout = () => {
                                     fontSize: "0.7rem",
                                     padding: "2px 8px",
                                     borderRadius: 12,
-                                    backgroundColor: "#f3f4f6",
-                                    color: "#374151",
+                                    backgroundColor: "var(--color-bg-tertiary)",
+                                    color: "var(--color-text-secondary)",
                                   }}
                                 >
                                   {item.lga}
@@ -872,9 +1052,9 @@ const Checkout = () => {
                     <div
                       style={{
                         padding: "12px 16px",
-                        borderRadius: "var(--radius-md, 8px)",
-                        backgroundColor: "#ecfdf5",
-                        border: "1px solid #a7f3d0",
+                        borderRadius: 10,
+                        backgroundColor: "var(--color-primary-surface)",
+                        border: "1px solid var(--color-primary-muted)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "space-between",
@@ -882,12 +1062,12 @@ const Checkout = () => {
                       }}
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <CheckCircle2 size={20} style={{ color: "#059669", flexShrink: 0 }} />
+                        <CheckCircle2 size={20} style={{ color: "var(--color-primary)", flexShrink: 0 }} />
                         <div>
-                          <div style={{ fontWeight: 700, color: "#065f46", fontSize: "0.875rem" }}>
+                          <div style={{ fontWeight: 700, color: "var(--color-primary-hover)", fontSize: "0.875rem" }}>
                             Verified Postcode: {verifiedPostcode}
                           </div>
-                          <div style={{ fontSize: "0.75rem", color: "#047857" }}>
+                          <div style={{ fontSize: "0.75rem", color: "var(--color-primary)" }}>
                             Verified via NIPOST National Registry
                             {resolvedZone && ` • Delivery Zone: ${resolvedZone}`}
                           </div>
@@ -896,8 +1076,8 @@ const Checkout = () => {
                       <span
                         style={{
                           fontSize: "0.75rem",
-                          backgroundColor: "#d1fae5",
-                          color: "#065f46",
+                          backgroundColor: "var(--color-primary)",
+                          color: "#ffffff",
                           fontWeight: 700,
                           padding: "4px 10px",
                           borderRadius: 9999,
@@ -913,7 +1093,7 @@ const Checkout = () => {
                     <div
                       style={{
                         padding: "12px 16px",
-                        borderRadius: "var(--radius-md, 8px)",
+                        borderRadius: 10,
                         backgroundColor: "#fef2f2",
                         border: "1px solid #fecaca",
                         display: "flex",
@@ -923,8 +1103,8 @@ const Checkout = () => {
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         <AlertCircle size={18} style={{ color: "#dc2626", flexShrink: 0 }} />
-                        <div style={{ fontSize: "0.813rem", color: "#991b1b", fontWeight: 500 }}>
-                          {postcodeError || "Postcode was not recognized in the national database."}
+                        <div style={{ fontSize: "0.813rem", color: "#991b1b", fontWeight: 600 }}>
+                          {postcodeError || "Postcode was not recognized in the national registry."}
                         </div>
                       </div>
                       {postcodeSuggestion && (
@@ -936,7 +1116,7 @@ const Checkout = () => {
                             style={{
                               background: "none",
                               border: "none",
-                              color: "var(--color-primary, #15803d)",
+                              color: "var(--color-primary)",
                               fontWeight: 700,
                               textDecoration: "underline",
                               cursor: "pointer",
@@ -951,12 +1131,12 @@ const Checkout = () => {
                     </div>
                   )}
 
-                  {/* Verification Banner: SERVICE UNAVAILABLE FALLBACK */}
+                  {/* Verification Banner: UNAVAILABLE */}
                   {postcodeStatus === "unavailable" && (
                     <div
                       style={{
                         padding: "12px 16px",
-                        borderRadius: "var(--radius-md, 8px)",
+                        borderRadius: 10,
                         backgroundColor: "#fffbeb",
                         border: "1px solid #fde68a",
                         display: "flex",
@@ -968,7 +1148,7 @@ const Checkout = () => {
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         <AlertCircle size={18} style={{ color: "#d97706", flexShrink: 0 }} />
                         <div style={{ fontSize: "0.813rem", color: "#92400e" }}>
-                          National postcode verification is currently unreachable.
+                          National postcode verification is unreachable right now.
                         </div>
                       </div>
                       <button
@@ -981,7 +1161,7 @@ const Checkout = () => {
                           color: "#ffffff",
                           border: "none",
                           borderRadius: 6,
-                          fontWeight: 600,
+                          fontWeight: 700,
                           cursor: "pointer",
                         }}
                       >
@@ -990,40 +1170,57 @@ const Checkout = () => {
                     </div>
                   )}
 
-                  {/* Street & House Details (Required for Courier delivery) */}
-                  <div>
-                    <label
-                      style={{
-                        display: "block",
-                        fontSize: "0.875rem",
-                        fontWeight: 500,
-                        marginBottom: 6,
-                        color: "var(--color-text-primary)",
-                      }}
-                    >
-                      Street Address, Building, or Apartment Details *
-                    </label>
-                    <textarea
-                      required
-                      className="input-field"
-                      rows={2}
-                      placeholder="e.g. Flat 3B, Plot 12, Admiralty Way, Lekki Phase 1..."
-                      value={streetAddress}
-                      onChange={(e) => setStreetAddress(e.target.value)}
-                    />
-                    <p style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", marginTop: 4 }}>
-                      Your verified postcode anchors delivery pricing and district routing; your street
-                      details guide the courier directly to your door.
-                    </p>
+                  {/* Street & Apartment Inputs (Chowdeck Experience) */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
+                    <div>
+                      <label
+                        style={{
+                          display: "block",
+                          fontSize: "0.875rem",
+                          fontWeight: 600,
+                          marginBottom: 6,
+                        }}
+                      >
+                        Street Address & House / Plot Number *
+                      </label>
+                      <input
+                        required
+                        type="text"
+                        className="input-field"
+                        placeholder="e.g. 15 Admiralty Way, Lekki Phase 1"
+                        value={streetAddress}
+                        onChange={(e) => setStreetAddress(e.target.value)}
+                      />
+                    </div>
+
+                    <div>
+                      <label
+                        style={{
+                          display: "block",
+                          fontSize: "0.875rem",
+                          fontWeight: 600,
+                          marginBottom: 6,
+                        }}
+                      >
+                        Apartment, Suite, Unit, or Landmark (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        className="input-field"
+                        placeholder="e.g. Flat 3B, Emerald Block, Gate 2"
+                        value={unitApartment}
+                        onChange={(e) => setUnitApartment(e.target.value)}
+                      />
+                    </div>
                   </div>
                 </div>
               )}
 
-              {/* -------------------- TAB 2: MANUAL MAP / GPS ENTRY -------------------- */}
+              {/* -------------------- TAB 2: MANUAL MAP ENTRY -------------------- */}
               {deliveryMode === "manual" && (
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <label style={{ fontSize: "0.875rem", fontWeight: 500 }}>
+                    <label style={{ fontSize: "0.875rem", fontWeight: 600 }}>
                       Street Address / Manual Location
                     </label>
                     <button
@@ -1049,7 +1246,7 @@ const Checkout = () => {
                   <textarea
                     required
                     className="input-field"
-                    rows={3}
+                    rows={2}
                     placeholder="Type your address to locate it on the map (e.g. 123 Main Street, Lagos)..."
                     value={address}
                     onChange={(e) => {
@@ -1061,7 +1258,7 @@ const Checkout = () => {
                   <div
                     style={{
                       marginTop: 8,
-                      height: 240,
+                      height: 220,
                       borderRadius: "var(--radius-lg)",
                       overflow: "hidden",
                       border: "1px solid var(--color-border)",
@@ -1081,22 +1278,142 @@ const Checkout = () => {
                       />
                     </MapContainer>
                   </div>
-
-                  <p style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
-                    Click anywhere on the map to pin your location, or type it manually.
-                  </p>
                 </div>
               )}
+
+              {/* Chowdeck Feature: Drop-off Delivery Preference Cards */}
+              <div style={{ marginTop: 8 }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "0.875rem",
+                    fontWeight: 700,
+                    marginBottom: 10,
+                  }}
+                >
+                  Drop-Off Preference
+                </label>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 10 }}>
+                  {[
+                    { id: "hand_to_me", label: "Hand it to me", desc: "Rider hands to you", icon: Package },
+                    { id: "leave_at_door", label: "Leave at door/gate", desc: "Contactless drop", icon: DoorOpen },
+                    { id: "leave_with_security", label: "Leave with security", desc: "Building concierge", icon: ShieldAlert },
+                  ].map((opt) => {
+                    const Icon = opt.icon;
+                    const isSelected = dropoffOption === opt.id;
+                    return (
+                      <div
+                        key={opt.id}
+                        onClick={() => setDropoffOption(opt.id as any)}
+                        style={{
+                          padding: 14,
+                          borderRadius: 12,
+                          border: `1.5px solid ${
+                            isSelected ? "var(--color-primary)" : "var(--color-border)"
+                          }`,
+                          backgroundColor: isSelected
+                            ? "var(--color-primary-surface)"
+                            : "var(--color-bg-primary)",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "flex-start",
+                          gap: 12,
+                          transition: "all 0.15s ease",
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: 8,
+                            backgroundColor: isSelected
+                              ? "var(--color-primary)"
+                              : "var(--color-bg-tertiary)",
+                            color: isSelected ? "#ffffff" : "var(--color-text-secondary)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexShrink: 0,
+                          }}
+                        >
+                          <Icon size={16} />
+                        </div>
+                        <div>
+                          <div
+                            style={{
+                              fontWeight: 700,
+                              fontSize: "0.875rem",
+                              color: isSelected ? "var(--color-primary)" : "var(--color-text-primary)",
+                            }}
+                          >
+                            {opt.label}
+                          </div>
+                          <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
+                            {opt.desc}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Chowdeck Feature: Courier Delivery Notes & Fast Presets */}
+              <div>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "0.875rem",
+                    fontWeight: 700,
+                    marginBottom: 6,
+                  }}
+                >
+                  Notes for Delivery Courier (Optional)
+                </label>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="e.g. Call when outside the gate, beware of dog..."
+                  value={deliveryNotes}
+                  onChange={(e) => setDeliveryNotes(e.target.value)}
+                />
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
+                  {[
+                    "📞 Call on arrival",
+                    "🤫 Do not ring doorbell",
+                    "🛡️ Leave with gate security",
+                    "🐕 Beware of dog",
+                  ].map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => handleAddNotePreset(preset)}
+                      style={{
+                        padding: "4px 10px",
+                        borderRadius: 9999,
+                        fontSize: "0.75rem",
+                        fontWeight: 600,
+                        backgroundColor: "var(--color-bg-tertiary)",
+                        border: "1px solid var(--color-border)",
+                        color: "var(--color-text-secondary)",
+                        cursor: "pointer",
+                      }}
+                    >
+                      {preset}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Section: Payment Method */}
-          <div className="card" style={{ padding: 24 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+          {/* Chowdeck Signature Feature: Rider Tipping Card */}
+          <div className="card" style={{ padding: 24, borderRadius: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
               <div
                 style={{
-                  width: 32,
-                  height: 32,
+                  width: 38,
+                  height: 38,
                   borderRadius: "50%",
                   backgroundColor: "var(--color-primary-surface)",
                   display: "flex",
@@ -1104,86 +1421,222 @@ const Checkout = () => {
                   justifyContent: "center",
                 }}
               >
-                <CreditCard size={16} style={{ color: "var(--color-primary)" }} />
+                <Heart size={18} style={{ color: "var(--color-primary)" }} />
               </div>
-              <h2 style={{ fontSize: "1.25rem", fontWeight: 600 }}>Payment Method</h2>
+              <div>
+                <h2 style={{ fontSize: "1.25rem", fontWeight: 700 }}>Tip Your Delivery Rider</h2>
+                <p style={{ fontSize: "0.813rem", color: "var(--color-text-muted)" }}>
+                  100% of your tip goes directly to the courier delivering your order
+                </p>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              {[
+                { val: 0, label: "No Tip" },
+                { val: 200, label: "₦200" },
+                { val: 500, label: "₦500", popular: true },
+                { val: 1000, label: "₦1,000" },
+              ].map((item) => {
+                const isSelected = tipPreset === item.val;
+                return (
+                  <button
+                    key={item.val}
+                    type="button"
+                    onClick={() => {
+                      setTipPreset(item.val);
+                      setCustomTip("");
+                    }}
+                    style={{
+                      flex: "1 1 80px",
+                      padding: "12px 14px",
+                      borderRadius: 12,
+                      fontSize: "0.875rem",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      border: `1.5px solid ${
+                        isSelected ? "var(--color-primary)" : "var(--color-border)"
+                      }`,
+                      backgroundColor: isSelected
+                        ? "var(--color-primary-surface)"
+                        : "var(--color-bg-primary)",
+                      color: isSelected ? "var(--color-primary)" : "var(--color-text-primary)",
+                      position: "relative",
+                      transition: "all 0.15s ease",
+                    }}
+                  >
+                    {item.popular && (
+                      <span
+                        style={{
+                          position: "absolute",
+                          top: -8,
+                          right: 8,
+                          fontSize: "0.625rem",
+                          backgroundColor: "var(--color-primary)",
+                          color: "#ffffff",
+                          padding: "2px 6px",
+                          borderRadius: 9999,
+                          fontWeight: 800,
+                        }}
+                      >
+                        POPULAR
+                      </span>
+                    )}
+                    {item.label}
+                  </button>
+                );
+              })}
+
+              <button
+                type="button"
+                onClick={() => setTipPreset("custom")}
+                style={{
+                  flex: "1 1 80px",
+                  padding: "12px 14px",
+                  borderRadius: 12,
+                  fontSize: "0.875rem",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  border: `1.5px solid ${
+                    tipPreset === "custom" ? "var(--color-primary)" : "var(--color-border)"
+                  }`,
+                  backgroundColor:
+                    tipPreset === "custom"
+                      ? "var(--color-primary-surface)"
+                      : "var(--color-bg-primary)",
+                  color:
+                    tipPreset === "custom" ? "var(--color-primary)" : "var(--color-text-primary)",
+                }}
+              >
+                Custom
+              </button>
+            </div>
+
+            {tipPreset === "custom" && (
+              <div style={{ marginTop: 12, maxWidth: 200 }}>
+                <input
+                  type="number"
+                  min="0"
+                  step="100"
+                  placeholder="Enter tip (₦)..."
+                  className="input-field"
+                  value={customTip}
+                  onChange={(e) => setCustomTip(e.target.value)}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Section: Payment Method Selection */}
+          <div className="card" style={{ padding: 24, borderRadius: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+              <div
+                style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: "50%",
+                  backgroundColor: "var(--color-primary-surface)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <CreditCard size={18} style={{ color: "var(--color-primary)" }} />
+              </div>
+              <div>
+                <h2 style={{ fontSize: "1.25rem", fontWeight: 700 }}>Payment Method</h2>
+                <p style={{ fontSize: "0.813rem", color: "var(--color-text-muted)" }}>
+                  Choose your preferred payment channel
+                </p>
+              </div>
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {[
-                { id: "card", label: "Credit/Debit Card", desc: "Pay securely via Paystack" },
-                { id: "bank_transfer", label: "Bank Transfer", desc: "Direct transfer to our bank account" },
+                { id: "card", label: "Credit/Debit Card (Paystack)", desc: "Instant & Secure via Paystack" },
+                { id: "bank_transfer", label: "Direct Bank Transfer", desc: "Transfer directly to verified FlowMart account" },
                 {
                   id: "pay_on_delivery",
                   label: "Pay on Delivery",
-                  desc: "Pay via POS or cash when your order arrives",
+                  desc: "Pay via POS or Cash when package arrives",
                 },
-              ].map((method) => (
-                <div key={method.id} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              ].map((method) => {
+                const isSelected = paymentMethod === method.id;
+                return (
                   <label
+                    key={method.id}
                     style={{
                       display: "flex",
-                      alignItems: "flex-start",
+                      alignItems: "center",
                       gap: 16,
                       padding: 16,
                       border: `1.5px solid ${
-                        paymentMethod === method.id ? "var(--color-primary)" : "var(--color-border)"
+                        isSelected ? "var(--color-primary)" : "var(--color-border)"
                       }`,
-                      borderRadius: "var(--radius-lg)",
-                      backgroundColor:
-                        paymentMethod === method.id
-                          ? "var(--color-primary-surface)"
-                          : "var(--color-bg-primary)",
+                      borderRadius: 12,
+                      backgroundColor: isSelected
+                        ? "var(--color-primary-surface)"
+                        : "var(--color-bg-primary)",
                       cursor: "pointer",
-                      transition: "all var(--transition-fast)",
+                      transition: "all 0.15s ease",
                     }}
                   >
                     <input
                       type="radio"
                       name="payment"
                       value={method.id}
-                      checked={paymentMethod === method.id}
+                      checked={isSelected}
                       onChange={(e) => setPaymentMethod(e.target.value as any)}
-                      style={{ marginTop: 4, accentColor: "var(--color-primary)" }}
+                      style={{ accentColor: "var(--color-primary)", width: 18, height: 18 }}
                     />
                     <div>
-                      <div style={{ fontWeight: 600, fontSize: "1rem" }}>{method.label}</div>
+                      <div style={{ fontWeight: 700, fontSize: "1rem" }}>{method.label}</div>
                       <div style={{ fontSize: "0.813rem", color: "var(--color-text-muted)" }}>
                         {method.desc}
                       </div>
                     </div>
                   </label>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
 
-        {/* Right: Order Summary Sidebar */}
+        {/* Right: Order Summary Sidebar (Desktop) */}
         <div>
-          <div className="card" style={{ padding: 24, position: "sticky", top: 88 }}>
-            <h2 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: 20 }}>Order Summary</h2>
+          <div
+            className="card"
+            style={{
+              padding: 24,
+              borderRadius: 16,
+              position: "sticky",
+              top: 88,
+            }}
+          >
+            <h2 style={{ fontSize: "1.25rem", fontWeight: 800, marginBottom: 20 }}>Order Summary</h2>
 
             {/* Items mini list */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 24 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 20 }}>
               {cart.map((item) => (
                 <div
                   key={item.id}
                   style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
                 >
                   <span style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>
-                    {item.qty}x {item.name}
+                    <strong style={{ color: "var(--color-primary)", marginRight: 6 }}>{item.qty}x</strong>
+                    {item.name}
                   </span>
-                  <span style={{ fontSize: "0.875rem", fontWeight: 600 }}>
+                  <span style={{ fontSize: "0.875rem", fontWeight: 700 }}>
                     ₦{(Number(item.price) * item.qty).toLocaleString()}
                   </span>
                 </div>
               ))}
             </div>
 
-            <div style={{ height: 1, backgroundColor: "var(--color-border)", marginBottom: 20 }} />
+            <div style={{ height: 1, backgroundColor: "var(--color-border)", marginBottom: 16 }} />
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 24 }}>
+            {/* Financial Breakdown */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
               <div
                 style={{
                   display: "flex",
@@ -1192,11 +1645,12 @@ const Checkout = () => {
                   color: "var(--color-text-secondary)",
                 }}
               >
-                <span>Subtotal</span>
-                <span style={{ fontWeight: 600, color: "var(--color-text-primary)" }}>
+                <span>Items Subtotal</span>
+                <span style={{ fontWeight: 700, color: "var(--color-text-primary)" }}>
                   ₦{subtotal.toLocaleString()}
                 </span>
               </div>
+
               <div
                 style={{
                   display: "flex",
@@ -1211,15 +1665,38 @@ const Checkout = () => {
                     <span className="text-primary text-xs ml-2">(calculating...)</span>
                   )}
                 </span>
-                <span style={{ fontWeight: 600, color: "var(--color-text-primary)" }}>
+                <span style={{ fontWeight: 700, color: "var(--color-text-primary)" }}>
                   ₦{deliveryFee.toLocaleString()}
                 </span>
               </div>
+
               {resolvedZone && (
-                <div style={{ fontSize: "0.75rem", color: "var(--color-primary, #15803d)" }}>
-                  ✓ Zone: {resolvedZone}
+                <div
+                  style={{
+                    fontSize: "0.75rem",
+                    color: "var(--color-primary)",
+                    fontWeight: 700,
+                  }}
+                >
+                  ✓ Pricing Zone: {resolvedZone}
                 </div>
               )}
+
+              {tipAmount > 0 && (
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    fontSize: "0.938rem",
+                    color: "var(--color-primary)",
+                    fontWeight: 700,
+                  }}
+                >
+                  <span>Courier Tip ❤️</span>
+                  <span>+₦{tipAmount.toLocaleString()}</span>
+                </div>
+              )}
+
               {deliveryError && (
                 <div style={{ fontSize: "0.75rem", color: "var(--color-destructive, #ef4444)" }}>
                   ⚠️ {deliveryError}
@@ -1229,17 +1706,22 @@ const Checkout = () => {
 
             <div style={{ height: 1, backgroundColor: "var(--color-border)", marginBottom: 20 }} />
 
+            {/* Total */}
             <div
               style={{
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                marginBottom: 28,
+                marginBottom: 24,
               }}
             >
-              <span style={{ fontSize: "1.125rem", fontWeight: 600 }}>Total to Pay</span>
+              <span style={{ fontSize: "1.125rem", fontWeight: 700 }}>Total to Pay</span>
               <span
-                style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--color-primary)" }}
+                style={{
+                  fontSize: "1.625rem",
+                  fontWeight: 800,
+                  color: "var(--color-primary)",
+                }}
               >
                 ₦{totalAmount.toLocaleString()}
               </span>
@@ -1252,35 +1734,94 @@ const Checkout = () => {
               style={{
                 width: "100%",
                 padding: "16px 24px",
+                fontSize: "1rem",
+                fontWeight: 700,
+                borderRadius: 12,
                 opacity: isSubmitting || !!deliveryError || !isAddressComplete ? 0.6 : 1,
                 cursor:
                   isSubmitting || !!deliveryError || !isAddressComplete
                     ? "not-allowed"
                     : "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
               }}
             >
               <ShieldCheck size={20} />
-              {isSubmitting ? "Processing..." : "Place Order securely"}
+              {isSubmitting ? "Processing Order..." : `Place Order • ₦${totalAmount.toLocaleString()}`}
             </button>
-            <p
+
+            <div
               style={{
-                textAlign: "center",
-                fontSize: "0.75rem",
-                color: "var(--color-text-muted)",
-                marginTop: 12,
+                marginTop: 16,
+                padding: "10px 14px",
+                borderRadius: 8,
+                backgroundColor: "var(--color-bg-secondary)",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
               }}
             >
-              Your personal data will be used to process your order, support your experience
-              throughout this website, and for other purposes described in our privacy policy.
-            </p>
+              <ShieldCheck size={16} style={{ color: "var(--color-primary)" }} />
+              <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
+                FlowMart Escrow Protection Guarantee
+              </span>
+            </div>
           </div>
         </div>
       </form>
+
+      {/* Chowdeck Mobile Floating Bottom Dock */}
+      <div className="mobile-checkout-dock">
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>Total to Pay</span>
+          <span style={{ fontSize: "1.25rem", fontWeight: 800, color: "var(--color-primary)" }}>
+            ₦{totalAmount.toLocaleString()}
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={handlePlaceOrder}
+          disabled={isSubmitting || !!deliveryError || !isAddressComplete}
+          className="btn-primary"
+          style={{
+            padding: "12px 24px",
+            fontSize: "0.938rem",
+            fontWeight: 700,
+            borderRadius: 10,
+            opacity: isSubmitting || !!deliveryError || !isAddressComplete ? 0.6 : 1,
+          }}
+        >
+          {isSubmitting ? "Placing..." : "Place Order"}
+        </button>
+      </div>
 
       <style>{`
         .checkout-grid { grid-template-columns: 1fr; }
         @media (min-width: 1024px) {
           .checkout-grid { grid-template-columns: 2fr 1fr; }
+        }
+
+        .mobile-checkout-dock {
+          display: none;
+        }
+
+        @media (max-width: 1023px) {
+          .mobile-checkout-dock {
+            display: flex;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background-color: var(--color-bg-primary);
+            border-top: 1px solid var(--color-border);
+            padding: 14px 20px;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+            justify-content: space-between;
+            align-items: center;
+          }
         }
       `}</style>
     </div>

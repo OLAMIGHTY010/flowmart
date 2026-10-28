@@ -1,4 +1,4 @@
-﻿import { z } from 'zod';
+import { z } from 'zod';
 
 const orderItemSchema = z.object({
   productId: z.string().min(1, 'Product ID is required'),
@@ -15,6 +15,10 @@ export const placeOrderSchema = z.object({
   deliveryAddress: z.string().optional(),
   addressSource: z.enum(['postcode', 'manual']).optional(),
   phone: z.string().optional(),
+  tipAmount: z.number().nonnegative().optional(),
+  dropoffOption: z.string().optional(),
+  deliveryNotes: z.string().optional(),
+  addressTag: z.string().optional(),
   payment_method: z.enum(['paystack', 'escrow', 'wallet', 'pay_on_delivery']).optional(),
 }).refine(data => data.items || (data.productId && data.quantity), {
   message: 'Order must contain either items array or a productId/quantity pair',

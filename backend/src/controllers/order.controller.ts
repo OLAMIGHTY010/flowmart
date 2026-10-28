@@ -71,7 +71,7 @@ export const calculateDelivery = async (req: Request, res: Response) => {
 export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
 	try {
 		const userId = req.user?.id;
-		let { items, productId, quantity, deliveryZone, zone, deliveryPostcode, deliveryAddress, addressSource, payment_method } = req.body;
+		let { items, productId, quantity, deliveryZone, zone, deliveryPostcode, deliveryAddress, addressSource, payment_method, tipAmount, dropoffOption, deliveryNotes, addressTag } = req.body;
 		const rawAddressOrZone = deliveryAddress || deliveryZone || zone;
 
         // Backward Compatibility: Normalize single-item legacy payloads into uniform items array
@@ -105,7 +105,21 @@ export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
 
 		const finalPostcode = trustResult.deliveryPostcode;
 		const finalAddressSource = trustResult.addressSource;
-		const finalAddressText = deliveryAddress || rawAddressOrZone || "Standard Delivery";
+		let finalAddressText = deliveryAddress || rawAddressOrZone || "Standard Delivery";
+		const extraMeta: string[] = [];
+		if (addressTag) extraMeta.push(`Tag: ${addressTag}`);
+		if (dropoffOption) {
+			const dropoffMap: Record<string, string> = {
+				hand_to_me: 'Hand it to me',
+				leave_at_door: 'Leave at door/gate',
+				leave_with_security: 'Leave with security/concierge',
+			};
+			extraMeta.push(`Dropoff: ${dropoffMap[dropoffOption] || dropoffOption}`);
+		}
+		if (deliveryNotes) extraMeta.push(`Note: ${deliveryNotes}`);
+		if (extraMeta.length > 0) {
+			finalAddressText = `${finalAddressText} [${extraMeta.join(' • ')}]`;
+		}
 		const pricingTarget = finalPostcode || rawAddressOrZone || "Default";
 
 		const createdOrders: any[] = [];
@@ -129,6 +143,7 @@ export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
 				vendorItemsMap.get(product.vendorId)!.push({ ...item, product });
 			}
 
+			let tipApplied = false;
 			for (const [vendorId, vItems] of vendorItemsMap.entries()) {
 				let totalAmountNum = 0;
 				const orderRef = generateOrderRef();
@@ -138,6 +153,10 @@ export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
 				// deliveryCalc computed before order insertion
 
 				totalAmountNum += deliveryCalc.finalDeliveryFee;
+				if (!tipApplied && tipAmount && Number(tipAmount) > 0) {
+					totalAmountNum += Number(tipAmount);
+					tipApplied = true;
+				}
 
 				const [finalOrder] = await tx.update(orders).set({ totalAmount: totalAmountNum.toString() }).where(eq(orders.id, newOrder.id)).returning();
 				createdOrders.push(finalOrder);
