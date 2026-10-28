@@ -6,6 +6,7 @@ import { AuthenticatedRequest } from "../middleware/auth.middleware";
 
 export const getCategories = async (req: Request, res: Response) => {
 	try {
+		res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400');
 		const allCategories = await db.select().from(categories);
 		return res.status(200).json({ success: true, categories: allCategories });
 	} catch (error) {

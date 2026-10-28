@@ -18,6 +18,7 @@ import { creditPendingBalance, releaseEscrowToAvailable, deductAvailableBalance 
 import { PricingService } from "../services/pricing.service";
 import { dispatchEngineService } from "../services/logistics/dispatch-engine.service";
 import { PostcodeService, PostcodeError } from "../services/postcode.service";
+import { maskPhoneNumber } from "../utils/privacy.util";
 import { globalSettings, orderDelivery } from "../../db/schema";
 
 // Helper to generate FLW-YYYYMMDD-XXXX Securely

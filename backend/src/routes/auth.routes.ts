@@ -21,7 +21,7 @@ const router = Router();
 // ==========================================
 
 // Normal Users (Users, Vendors, Riders)
-router.post('/google', validateRequest({ body: googleAuthSchema }), googleAuth);
+router.post('/google', authApiLimiter, validateRequest({ body: googleAuthSchema }), googleAuth);
 
 // Admins / Staff 
 router.post('/register', authApiLimiter, validateRequest({ body: registerSchema }), register);
@@ -30,8 +30,8 @@ router.post('/logout', authenticateJWT, logout);
 router.post('/sync', authenticateJWT, syncSession);
 
 // Password recovery / Verification (Staff predominantly, except verifyOtp if needed)
-router.post('/verify-otp', validateRequest({ body: verifyOtpSchema }), verifyOtp);
-router.post('/resend-otp', validateRequest({ body: resendOtpSchema }), resendOtp);
+router.post('/verify-otp', authApiLimiter, validateRequest({ body: verifyOtpSchema }), verifyOtp);
+router.post('/resend-otp', authApiLimiter, validateRequest({ body: resendOtpSchema }), resendOtp);
 router.post('/forgot-password', authApiLimiter, validateRequest({ body: forgotPasswordSchema }), forgotPassword);
 router.post('/reset-password', authApiLimiter, validateRequest({ body: resetPasswordSchema }), resetPassword);
 

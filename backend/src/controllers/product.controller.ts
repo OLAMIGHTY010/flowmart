@@ -111,6 +111,9 @@ export const getProducts = async (req: AuthenticatedRequest, res: Response) => {
 			return res.status(200).json({ success: true, products: vendorProducts, meta: { page, limit } });
 		}
 
+		// Edge CDN micro-cache for public catalog requests
+		res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=3600');
+
 		// Only fetch products where stockQuantity is greater than 0 OR is null (unlimited stock for food)
 		const availableProductsRaw = await db
 			.select({

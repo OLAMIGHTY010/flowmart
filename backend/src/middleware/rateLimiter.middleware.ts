@@ -43,3 +43,26 @@ export const postcodeVerifyLimiter = rateLimit({
     message: 'Too many postcode verification attempts, please try again in a moment.',
   },
 });
+
+
+export const checkoutLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10, // Max 10 order placements per minute per user/IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Too many order placement requests. Please slow down.',
+  },
+});
+
+export const publicBrowseLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 120, // 120 browse/search requests per minute
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Too many requests. Please slow down.',
+  },
+});

@@ -2,13 +2,14 @@ import { Router } from 'express';
 import { placeOrder, getOrders, getOrderById, updateOrderStatus, confirmOrderReceived, getVendorBankDetails, paystackWebhook, calculateDelivery } from '../controllers/order.controller';
 import { authenticateJWT, authorizeRoles } from '../middleware/auth.middleware';
 import { validateRequest } from '../middleware/validate.middleware';
+import { checkoutLimiter } from '../middleware/rateLimiter.middleware';
 import { placeOrderSchema, updateOrderStatusSchema, calculateDeliverySchema } from '../schemas/order.schema';
 
 const router = Router();
 
 router.get('/', authenticateJWT, getOrders);
 router.get('/:id', authenticateJWT, getOrderById);
-router.post('/', authenticateJWT, authorizeRoles('user'), validateRequest({ body: placeOrderSchema }), placeOrder);
+router.post('/', authenticateJWT, authorizeRoles('user'), checkoutLimiter, validateRequest({ body: placeOrderSchema }), placeOrder);
 router.post('/calculate-delivery', authenticateJWT, authorizeRoles('user'), validateRequest({ body: calculateDeliverySchema }), calculateDelivery);
 router.patch('/:id/received', authenticateJWT, authorizeRoles('user'), confirmOrderReceived);
 router.patch('/:id/status', authenticateJWT, authorizeRoles('vendor', 'super_admin'), validateRequest({ body: updateOrderStatusSchema }), updateOrderStatus);
