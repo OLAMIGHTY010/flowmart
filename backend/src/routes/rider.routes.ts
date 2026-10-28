@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getOrders, getOrderById, updateOrderStatus, getAvailableDeliveries, acceptDelivery, confirmDelivery, confirmDeliveryViaQR, submitKYC, getKYCStatus } from '../controllers/rider.controller';
+import { getOrders, getOrderById, updateOrderStatus, getAvailableDeliveries, acceptDelivery, confirmDelivery, confirmDeliveryViaQR, submitKYC, getKYCStatus, updateLocation } from '../controllers/rider.controller';
 import { authenticateJWT, authorizeRoles } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -10,6 +10,7 @@ router.get('/orders', getOrders);
 router.get('/orders/:id', getOrderById);
 router.patch('/orders/:id/status', updateOrderStatus);
 router.post('/orders/:id/accept', acceptDelivery);
+router.post('/location', updateLocation);
 router.get('/available', getAvailableDeliveries); // Keep legacy just in case
 router.post('/:id/accept', acceptDelivery);       // Keep legacy just in case
 router.post('/:id/confirm', confirmDelivery);

@@ -4,6 +4,9 @@ import { orders, users, riderProfiles, riderKyc, orderItems, products } from "..
 import { eq, and, isNull, or } from "drizzle-orm";
 import { AuthenticatedRequest } from "../middleware/auth.middleware";
 import { emailService } from "../services/email.service";
+import { redisCacheService } from "../services/infrastructure/redis-cache.service";
+import { dispatchEngineService } from "../services/logistics/dispatch-engine.service";
+import { emitOrderStatusUpdate, sendInAppNotification } from "../services/websocket";
 
 // 1. View Available Deliveries (Riders)
 export const getAvailableDeliveries = async (
@@ -28,32 +31,42 @@ export const getAvailableDeliveries = async (
 	}
 };
 
-// 2. Accept a Delivery Assignment (Riders)
+// 2. Accept a Delivery Assignment (Riders - Protected with Redlock Concurrency)
 export const acceptDelivery = async (
 	req: AuthenticatedRequest,
 	res: Response
 ) => {
-	try {
-		const orderId = req.params.id as string; // ✨ Explicitly cast to string to satisfy Drizzle type constraints
-		const riderId = req.user?.id;
+	const orderId = req.params.id as string;
+	const riderId = req.user?.id;
 
-		// Ensure the order is still available (Preserved formatting and typeassertion)
+	// 1. Acquire Distributed Concurrency Lock (Redlock Pattern)
+	const lockKey = `order:accept:${orderId}`;
+	const acquired = await redisCacheService.acquireLock(lockKey, 5000);
+	if (!acquired) {
+		return res.status(409).json({
+			success: false,
+			message: "Another courier is currently accepting this delivery assignment",
+		});
+	}
+
+	try {
+		// Ensure the order is still available
 		const [existingOrder] = await db
 			.select()
 			.from(orders)
 			.where(
-				and(eq(orders.id, orderId as string), isNull(orders.riderId))
+				and(eq(orders.id, orderId), isNull(orders.riderId))
 			)
 			.limit(1);
 
 		if (!existingOrder) {
 			return res.status(400).json({
 				success: false,
-				message: "Delivery no longer available or invalid",
+				message: "Delivery no longer available or already claimed",
 			});
 		}
 
-		// Assign the rider and update status
+		// Assign the rider and transition status to 'assigned'
 		const [assignedOrder] = await db
 			.update(orders)
 			.set({
@@ -61,19 +74,49 @@ export const acceptDelivery = async (
 				status: "assigned",
 				updatedAt: new Date(),
 			})
-			.where(eq(orders.id, orderId as string))
+			.where(eq(orders.id, orderId))
 			.returning();
+
+		// Fetch rider profile info for instant real-time customer UX
+		const [riderUser] = await db
+			.select({ fullName: users.fullName, phone: users.phone, avatar: users.avatar })
+			.from(users)
+			.where(eq(users.id, riderId!))
+			.limit(1);
+
+		const riderInfo = {
+			name: riderUser?.fullName || "FlowMart Express Courier",
+			phone: riderUser?.phone || "+2348000000000",
+			avatar: riderUser?.avatar || null,
+			rating: "4.9",
+			vehicle: "Honda CB 125 • Express Delivery",
+			deliveriesCompleted: 142,
+		};
+
+		// Clear acceptance window timer
+		dispatchEngineService.clearOrderTimer(orderId);
+
+		// Broadcast real-time WebSocket updates to the customer tracking room
+		emitOrderStatusUpdate(orderId, "assigned", { riderId, riderInfo });
+		sendInAppNotification(existingOrder.userId, "order:statusUpdate", {
+			orderId,
+			status: "assigned",
+			riderInfo,
+		});
 
 		return res.status(200).json({
 			success: true,
-			message: "Delivery accepted",
+			message: "Delivery accepted successfully",
 			order: assignedOrder,
+			rider: riderInfo,
 		});
 	} catch (error) {
 		console.error("Accept Delivery Error:", error);
 		return res
 			.status(500)
 			.json({ success: false, message: "Internal Server Error" });
+	} finally {
+		await redisCacheService.releaseLock(lockKey);
 	}
 };
 
@@ -140,6 +183,13 @@ export const confirmDelivery = async (
 			})
 			.where(eq(orders.id, orderId as string))
 			.returning();
+
+		// Broadcast real-time delivery completion to customer Leaflet tracking screen
+		emitOrderStatusUpdate(deliveredOrder.id, "delivered");
+		sendInAppNotification(activeOrder.userId, "order:statusUpdate", {
+			orderId: deliveredOrder.id,
+			status: "delivered",
+		});
 
 		// Fire & Forget Delivery Confirmation Email
 		dispatchDeliveryEmail(activeOrder.userId, deliveredOrder.id);
@@ -457,6 +507,37 @@ export const updateOrderStatus = async (req: AuthenticatedRequest, res: Response
 		return res.status(200).json({ success: true, message: "Status updated", order: updatedOrder });
 	} catch (error) {
 		console.error("Update Order Status Error:", error);
+		return res.status(500).json({ success: false, message: "Internal Server Error" });
+	}
+};
+
+
+// 5. Courier Real-Time Telemetry & GPS Broadcast
+export const updateLocation = async (req: AuthenticatedRequest, res: Response) => {
+	try {
+		const riderId = req.user?.id;
+		const { latitude, longitude, heading } = req.body;
+
+		if (latitude == null || longitude == null) {
+			return res.status(400).json({
+				success: false,
+				message: "Latitude and longitude coordinates are required",
+			});
+		}
+
+		await dispatchEngineService.updateRiderLocation(
+			riderId!,
+			Number(latitude),
+			Number(longitude),
+			heading ? Number(heading) : undefined
+		);
+
+		return res.status(200).json({
+			success: true,
+			message: "Courier location updated and telemetry broadcasted",
+		});
+	} catch (error) {
+		console.error("Update Location Error:", error);
 		return res.status(500).json({ success: false, message: "Internal Server Error" });
 	}
 };

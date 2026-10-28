@@ -16,6 +16,7 @@ import crypto from "crypto";
 import { createTransferRecipient, initiatePayout, initializeTransaction } from "../services/paystack.service";
 import { creditPendingBalance, releaseEscrowToAvailable, deductAvailableBalance } from "../services/ledger.service";
 import { PricingService } from "../services/pricing.service";
+import { dispatchEngineService } from "../services/logistics/dispatch-engine.service";
 import { PostcodeService, PostcodeError } from "../services/postcode.service";
 import { globalSettings, orderDelivery } from "../../db/schema";
 
@@ -149,8 +150,55 @@ export const placeOrder = async (req: AuthenticatedRequest, res: Response) => {
 				const orderRef = generateOrderRef();
 				const deliveryPin = crypto.randomInt(100000, 999999).toString();
 
-				// Pre-calculate delivery pricing and clean zone name
-				// deliveryCalc computed before order insertion
+				const [newOrder] = await tx.insert(orders).values({
+					orderRef,
+					userId: userId!,
+					vendorId,
+					deliveryZone: rawAddressOrZone || "Standard Delivery",
+					deliveryAddress: finalAddressText,
+					deliveryPostcode: finalPostcode,
+					addressSource: finalAddressSource,
+					totalAmount: "0",
+					deliveryPin,
+					paymentMethod,
+					transactionReference: sessionTxRef,
+					status: "pending",
+				}).returning();
+
+				for (const item of vItems) {
+					// SECURE ATOMIC SQL DEDUCTION (Resolves Race Condition)
+					const [updatedProduct] = await tx.update(products)
+						.set({ stockQuantity: sql`${products.stockQuantity} - ${item.quantity}` })
+						.where(and(eq(products.id, item.productId), sql`${products.stockQuantity} >= ${item.quantity}`))
+						.returning();
+
+					if (!updatedProduct) throw new Error(`Product ${item.product.name} out of stock`);
+
+					const unitPrice = updatedProduct.price;
+					totalAmountNum += Number(unitPrice) * item.quantity;
+
+					await tx.insert(orderItems).values({
+						orderId: newOrder.id,
+						productId: item.productId,
+						quantity: item.quantity,
+						unitPrice,
+					});
+
+					if (updatedProduct.stockQuantity === 0) {
+						const [vendor] = await tx.select().from(users).where(eq(users.id, vendorId)).limit(1);
+						if (vendor) {
+							emailService.sendOutOfStockAlert(vendor.email, { vendorName: vendor.fullName, productName: updatedProduct.name }).catch(console.error);
+						}
+					}
+				}
+
+				let deliveryCalc: any = null;
+				try {
+					deliveryCalc = await PricingService.calculateDeliveryFee(pricingTarget, req.body.distanceKm || 5);
+				} catch (e: any) {
+					console.error("Delivery calculation failed:", e);
+					throw new Error("Delivery pricing is not configured for this zone/postcode. Please contact support.");
+				}
 
 				totalAmountNum += deliveryCalc.finalDeliveryFee;
 				if (!tipApplied && tipAmount && Number(tipAmount) > 0) {
