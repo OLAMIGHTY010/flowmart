@@ -54,7 +54,7 @@ jobs:
         run: npm --prefix backend install
 
       - name: Run Backend Unit & Middleware Tests
-        run: cd backend && npx jest src/tests/middleware/
+        run: cd backend && npx jest --detectOpenHandles --forceExit --testPathPatterns="middleware|privacy|dispatch|postcode"
 
   e2e-tests:
     name: Frontend E2E Tests (Playwright)
