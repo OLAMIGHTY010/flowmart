@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { placeOrder, getOrders, getOrderById, updateOrderStatus, confirmOrderReceived, getVendorBankDetails, paystackWebhook, calculateDelivery } from '../controllers/order.controller';
+import { placeOrder, getOrders, getOrderById, updateOrderStatus, confirmOrderReceived, getVendorBankDetails, paystackWebhook, calculateDelivery, getPayForMeOrder, initializePayForMePayment } from '../controllers/order.controller';
 import { authenticateJWT, authorizeRoles } from '../middleware/auth.middleware';
 import { validateRequest } from '../middleware/validate.middleware';
 import { checkoutLimiter } from '../middleware/rateLimiter.middleware';
@@ -9,6 +9,8 @@ const router = Router();
 
 router.get('/', authenticateJWT, getOrders);
 router.get('/:id', authenticateJWT, getOrderById);
+router.get('/:id/pay-for-me', getPayForMeOrder);
+router.post('/:id/pay-for-me/initialize', initializePayForMePayment);
 router.post('/', authenticateJWT, authorizeRoles('user'), checkoutLimiter, validateRequest({ body: placeOrderSchema }), placeOrder);
 router.post('/calculate-delivery', authenticateJWT, authorizeRoles('user'), validateRequest({ body: calculateDeliverySchema }), calculateDelivery);
 router.patch('/:id/received', authenticateJWT, authorizeRoles('user'), confirmOrderReceived);

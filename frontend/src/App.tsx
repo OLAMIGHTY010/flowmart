@@ -40,6 +40,7 @@ const Marketplace = lazy(() => import("@/pages/user/Marketplace"));
 const ProductDetails = lazy(() => import("@/pages/user/ProductDetails"));
 const Cart = lazy(() => import("@/pages/user/Cart"));
 const Checkout = lazy(() => import("@/pages/user/Checkout"));
+const PayForMe = lazy(() => import("@/pages/user/PayForMe"));
 const EscrowCheckout = lazy(() => import("@/pages/escrow/EscrowCheckout"));
 const EscrowManagement = lazy(() => import("@/pages/escrow/EscrowManagement"));
 const Orders = lazy(() => import("@/pages/user/Orders"));
@@ -129,6 +130,7 @@ function App() {
               {/* ═══ PUBLIC AUTH ROUTES ═══ */}
               <Route path="/get-started" element={<RoleSelector />} />
             <Route path="/login" element={<Login />} />
+              <Route path="/pay-for-me/:id" element={<PayForMe />} />
 
             {/* ═══ SHOPPER ROUTES (with Navbar + Footer) ═══ */}
             <Route element={<AppLayout />}>

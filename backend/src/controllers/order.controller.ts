@@ -6,7 +6,7 @@
 import { Request, Response } from "express";
 import { db } from "../../db";
 import { products, orders, orderItems, users, vendorProfiles, vendorKyc } from "../../db/schema";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, or } from "drizzle-orm";
 import { AuthenticatedRequest } from "../middleware/auth.middleware";
 import { sendInAppNotification, broadcastNewDelivery, emitOrderStatusUpdate, emitEscrowStatusUpdate } from "../services/websocket";
 import { emailService } from "../services/email.service";
@@ -18,7 +18,7 @@ import { creditPendingBalance, releaseEscrowToAvailable, deductAvailableBalance 
 import { PricingService } from "../services/pricing.service";
 import { dispatchEngineService } from "../services/logistics/dispatch-engine.service";
 import { PostcodeService, PostcodeError } from "../services/postcode.service";
-import { maskPhoneNumber } from "../utils/privacy.util";
+import { maskPhoneNumber, maskFullName } from "../utils/privacy.util";
 import { globalSettings, orderDelivery } from "../../db/schema";
 
 // Helper to generate FLW-YYYYMMDD-XXXX Securely
@@ -644,3 +644,109 @@ export const paystackWebhook = async (req: Request, res: Response) => {
 };
 
 
+
+
+// 6. Pay-For-Me: Public Preview for Sponsor/Payer
+export const getPayForMeOrder = async (req: Request, res: Response) => {
+	try {
+		const orderId = req.params.id as string;
+
+		const [order] = await db
+			.select()
+			.from(orders)
+			.where(or(eq(orders.id, orderId), eq(orders.orderRef, orderId)))
+			.limit(1);
+
+		if (!order) {
+			return res.status(404).json({ success: false, message: "Order not found or link has expired" });
+		}
+
+		const [buyer] = await db
+			.select({ fullName: users.fullName })
+			.from(users)
+			.where(eq(users.id, order.userId))
+			.limit(1);
+
+		const items = await db
+			.select({
+				id: orderItems.id,
+				quantity: orderItems.quantity,
+				unitPrice: orderItems.unitPrice,
+				productName: products.name,
+			})
+			.from(orderItems)
+			.leftJoin(products, eq(orderItems.productId, products.id))
+			.where(eq(orderItems.orderId, order.id));
+
+		return res.status(200).json({
+			success: true,
+			order: {
+				id: order.id,
+				orderRef: order.orderRef,
+				buyerName: buyer?.fullName ? maskFullName(buyer.fullName) : "FlowMart Customer",
+				totalAmount: order.totalAmount,
+				status: order.status,
+				deliveryZone: order.deliveryZone,
+				items: items.map((i) => ({
+					id: i.id,
+					name: i.productName || "Product Item",
+					quantity: i.quantity,
+					price: i.unitPrice,
+				})),
+				createdAt: order.createdAt,
+			},
+		});
+	} catch (error) {
+		console.error("Get Pay-For-Me Order Error:", error);
+		return res.status(500).json({ success: false, message: "Internal Server Error" });
+	}
+};
+
+// 7. Pay-For-Me: Initialize Payment by Third-Party Sponsor
+export const initializePayForMePayment = async (req: Request, res: Response) => {
+	try {
+		const orderId = req.params.id as string;
+		const { payerEmail, payerName } = req.body;
+
+		if (!payerEmail) {
+			return res.status(400).json({ success: false, message: "Payer email address is required" });
+		}
+
+		const [order] = await db
+			.select()
+			.from(orders)
+			.where(or(eq(orders.id, orderId), eq(orders.orderRef, orderId)))
+			.limit(1);
+
+		if (!order) {
+			return res.status(404).json({ success: false, message: "Order not found" });
+		}
+
+		if (order.status !== "pending") {
+			return res.status(400).json({
+				success: false,
+				message: `This order is already ${order.status}. No additional payment needed!`,
+			});
+		}
+
+		// Initialize Paystack checkout
+		const paystackData = await initializeTransaction(
+			payerEmail,
+			Number(order.totalAmount),
+			order.orderRef
+		);
+
+		return res.status(200).json({
+			success: true,
+			message: "Pay-For-Me checkout initialized",
+			authorizationUrl: paystackData.authorization_url,
+			reference: paystackData.reference,
+		});
+	} catch (error: any) {
+		console.error("Pay-For-Me Init Error:", error);
+		return res.status(500).json({
+			success: false,
+			message: error.message || "Failed to initialize sponsor payment",
+		});
+	}
+};

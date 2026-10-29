@@ -1,6 +1,7 @@
-import { Link } from "react-router-dom";
-import { Package, ChevronRight, Clock, CheckCircle2, Truck, Loader2 } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Package, ChevronRight, Clock, CheckCircle2, Truck, Loader2, RotateCcw } from "lucide-react";
 import { useOrders } from "@/hooks/useOrders";
+import { useCartStore } from "@/stores/cartStore";
 
 const statusConfig: Record<string, { label: string; icon: any; color: string; bg: string }> = {
   pending: { label: "Processing", icon: Clock, color: "var(--color-accent-amber)", bg: "#FFFBEB" },
@@ -13,6 +14,14 @@ const statusConfig: Record<string, { label: string; icon: any; color: string; bg
 
 const Orders = () => {
   const { data: orders = [], isLoading } = useOrders();
+  const navigate = useNavigate();
+  const reorderItems = useCartStore((state) => state.reorderItems);
+
+  const handleReorder = (order: any) => {
+    if (!order.items || order.items.length === 0) return;
+    reorderItems(order.items);
+    navigate("/checkout");
+  };
 
   if (isLoading) {
     return (
@@ -30,9 +39,9 @@ const Orders = () => {
 
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         {orders.length === 0 ? (
-          <div style={{ textAlign: "center", padding: 60, backgroundColor: "var(--color-bg-secondary)", borderRadius: "var(--radius-xl)" }}>
-            <Package size={48} style={{ color: "var(--color-text-muted)", margin: "0 auto 16px" }} />
-            <h3 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: 8 }}>No orders yet</h3>
+          <div className="card" style={{ padding: 48, textAlign: "center" }}>
+            <Package size={48} style={{ margin: "0 auto 16px", color: "var(--color-text-muted)" }} />
+            <h3 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: 8 }}>No orders found</h3>
             <p style={{ color: "var(--color-text-muted)", marginBottom: 24 }}>You haven't placed any orders. Start exploring our products!</p>
             <Link to="/products" className="btn-primary">Start Shopping</Link>
           </div>
@@ -67,13 +76,35 @@ const Orders = () => {
                     ))}
                   </div>
 
-                  <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
                     <div style={{ textAlign: "right" }}>
                       <p style={{ fontSize: "0.813rem", color: "var(--color-text-muted)" }}>Total Amount</p>
                       <p style={{ fontSize: "1.125rem", fontWeight: 700, color: "var(--color-primary)" }}>
                         ₦{parseFloat(order.totalAmount || "0").toLocaleString()}
                       </p>
                     </div>
+
+                    {/* Chowdeck 1-Tap Quick Reorder */}
+                    <button
+                      type="button"
+                      onClick={() => handleReorder(order)}
+                      className="btn-primary"
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 6,
+                        padding: "8px 16px",
+                        fontSize: "0.875rem",
+                        fontWeight: 700,
+                        borderRadius: 10,
+                        cursor: "pointer",
+                      }}
+                      title="Re-populate cart and reorder this meal"
+                    >
+                      <RotateCcw size={15} />
+                      Order Again
+                    </button>
+
                     <Link to={`/orders/${order.id}/track`} className="btn-secondary" style={{ padding: "8px 16px" }}>
                       View Details <ChevronRight size={16} />
                     </Link>

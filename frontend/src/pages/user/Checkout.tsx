@@ -21,6 +21,9 @@ import {
   Package,
   DoorOpen,
   ShieldAlert,
+  Share2,
+  Copy,
+  Check,
 } from "lucide-react";
 import { useCartStore } from "@/stores/cartStore";
 import { useToast } from "@/contexts/ToastContext";
@@ -138,6 +141,10 @@ const Checkout = () => {
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
 
   // General checkout state
+  const [showPayForMeModal, setShowPayForMeModal] = useState(false);
+  const [payForMeOrder, setPayForMeOrder] = useState<any>(null);
+  const [copiedLink, setCopiedLink] = useState(false);
+
   const [paymentMethod, setPaymentMethod] = useState<"card" | "bank_transfer" | "pay_on_delivery">(
     "card"
   );
@@ -553,7 +560,89 @@ const Checkout = () => {
     }
   };
 
-  return (
+    const handlePayForMe = async (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    if (cart.length === 0) {
+      return showToast("Your cart is empty", "error");
+    }
+    if (deliveryError) {
+      return showToast("Cannot place order: " + deliveryError, "error");
+    }
+    if (!isAddressComplete) {
+      return showToast(
+        deliveryMode === "postcode"
+          ? "Please verify your postcode and enter your street address"
+          : "Please enter your delivery address",
+        "error"
+      );
+    }
+
+    setIsSubmitting(true);
+    try {
+      const isPostcodeMode = deliveryMode === "postcode" && !!verifiedPostcode;
+      let formattedStreet = streetAddress.trim();
+      if (unitApartment.trim()) {
+        formattedStreet = `${unitApartment.trim()}, ${formattedStreet}`;
+      }
+
+      const finalAddressSnapshot = isPostcodeMode
+        ? `${formattedStreet}, ${verifiedPostcode}`
+        : address.trim();
+
+      const payload = {
+        items: cart.map((item) => ({
+          productId: (item as any).originalProductId || item.id.substring(0, 36),
+          quantity: item.qty,
+        })),
+        payment_method: "paystack",
+        deliveryPostcode: isPostcodeMode ? verifiedPostcode : null,
+        deliveryAddress: finalAddressSnapshot,
+        zone: isPostcodeMode ? (resolvedZone || "Default") : address.trim(),
+        phone: phone,
+        tipAmount: tipAmount > 0 ? tipAmount : undefined,
+        dropoffOption,
+        deliveryNotes: deliveryNotes.trim() || undefined,
+        addressTag,
+      };
+
+      const res: any = await apiClient.post("/orders", payload);
+      const orderData = res?.order || res?.data?.order || { id: res?.id, orderRef: res?.orderRef };
+
+      if (orderData?.id) {
+        clearCart();
+        setPayForMeOrder(orderData);
+        setShowPayForMeModal(true);
+      } else {
+        showToast("Order initialized but missing reference. Redirecting to tracking...", "info");
+        clearCart();
+        navigate("/orders");
+      }
+    } catch (err: any) {
+      const errMsg = err.response?.data?.message || "Error setting up Pay For Me. Please try again.";
+      showToast(errMsg, "error");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const copyShareLink = () => {
+    if (!payForMeOrder?.id) return;
+    const shareUrl = `${window.location.origin}/pay-for-me/${payForMeOrder.id}`;
+    navigator.clipboard.writeText(shareUrl);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2500);
+  };
+
+  const shareViaWhatsApp = () => {
+    if (!payForMeOrder?.id) return;
+    const shareUrl = `${window.location.origin}/pay-for-me/${payForMeOrder.id}`;
+    const message = encodeURIComponent(
+      `Hey! I just placed an order on FlowMart (Ref: ${payForMeOrder.orderRef || payForMeOrder.id.slice(0, 8)}). Could you kindly sponsor/pay for it here? ${shareUrl}`
+    );
+    window.open(`https://api.whatsapp.com/send?text=${message}`, "_blank");
+  };
+
+return (
     <div className="container" style={{ padding: "32px 24px 100px 24px" }}>
       {/* Top Breadcrumb & Live Dispatch Pill */}
       <div
@@ -1752,6 +1841,39 @@ const Checkout = () => {
               {isSubmitting ? "Processing Order..." : `Place Order • ₦${totalAmount.toLocaleString()}`}
             </button>
 
+            <div style={{ margin: "14px 0 10px 0", textAlign: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                <div style={{ flex: 1, height: 1, backgroundColor: "var(--color-border)" }} />
+                <span style={{ fontSize: "0.688rem", color: "var(--color-text-muted)", textTransform: "uppercase", fontWeight: 800, letterSpacing: "0.05em" }}>OR VIRAL SOCIAL CHECKOUT</span>
+                <div style={{ flex: 1, height: 1, backgroundColor: "var(--color-border)" }} />
+              </div>
+
+              <button
+                type="button"
+                onClick={handlePayForMe}
+                disabled={isSubmitting || !!deliveryError || !isAddressComplete}
+                style={{
+                  width: "100%",
+                  padding: "13px 18px",
+                  fontSize: "0.875rem",
+                  fontWeight: 700,
+                  borderRadius: 12,
+                  border: "1.5px solid var(--color-primary)",
+                  backgroundColor: "var(--color-primary-surface, #eef2ff)",
+                  color: "var(--color-primary)",
+                  cursor: isSubmitting || !!deliveryError || !isAddressComplete ? "not-allowed" : "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  transition: "all 0.2s ease",
+                }}
+              >
+                <Sparkles size={16} />
+                Pay For Me (Ask Someone to Pay)
+              </button>
+            </div>
+
             <div
               style={{
                 marginTop: 16,
@@ -1796,6 +1918,178 @@ const Checkout = () => {
           {isSubmitting ? "Placing..." : "Place Order"}
         </button>
       </div>
+
+      {/* Chowdeck-Grade "Pay For Me" Social Checkout Modal */}
+      {showPayForMeModal && payForMeOrder && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 1000,
+            backgroundColor: "rgba(15, 23, 42, 0.75)",
+            backdropFilter: "blur(4px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 16,
+          }}
+        >
+          <div
+            className="card"
+            style={{
+              maxWidth: 500,
+              width: "100%",
+              borderRadius: 24,
+              padding: 28,
+              position: "relative",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+              animation: "fadeInUp 0.2s ease-out",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 14,
+                    backgroundColor: "var(--color-primary-surface, #eef2ff)",
+                    color: "var(--color-primary)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Sparkles size={24} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: "1.25rem", fontWeight: 800 }}>Pay For Me Link Created!</h3>
+                  <p style={{ fontSize: "0.813rem", color: "var(--color-text-muted)" }}>
+                    Ref: #{payForMeOrder.orderRef || payForMeOrder.id?.slice(0, 8)}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowPayForMeModal(false);
+                  navigate(`/orders/${payForMeOrder.id}/track`);
+                }}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "var(--color-text-muted)",
+                  cursor: "pointer",
+                  padding: 4,
+                }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <p style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)", lineHeight: 1.5, marginBottom: 20 }}>
+              Your order is safely reserved! Share the link below with a friend, partner, or sponsor. Once they settle the bill via Card or Bank Transfer, your kitchen begins preparing your order immediately.
+            </p>
+
+            {/* Share URL Box */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "10px 14px",
+                borderRadius: 12,
+                backgroundColor: "var(--color-bg-secondary, #f8fafc)",
+                border: "1px solid var(--color-border)",
+                marginBottom: 20,
+              }}
+            >
+              <span
+                style={{
+                  fontSize: "0.813rem",
+                  fontFamily: "monospace",
+                  color: "var(--color-text-secondary)",
+                  flex: 1,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {`${window.location.origin}/pay-for-me/${payForMeOrder.id}`}
+              </span>
+              <button
+                type="button"
+                onClick={copyShareLink}
+                className="btn-secondary"
+                style={{
+                  padding: "6px 12px",
+                  fontSize: "0.75rem",
+                  fontWeight: 700,
+                  borderRadius: 8,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                  cursor: "pointer",
+                }}
+              >
+                {copiedLink ? <Check size={14} style={{ color: "#10b981" }} /> : <Copy size={14} />}
+                {copiedLink ? "Copied!" : "Copy"}
+              </button>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <button
+                type="button"
+                onClick={shareViaWhatsApp}
+                style={{
+                  width: "100%",
+                  padding: "13px 18px",
+                  borderRadius: 12,
+                  backgroundColor: "#25D366",
+                  color: "#ffffff",
+                  fontSize: "0.938rem",
+                  fontWeight: 700,
+                  border: "none",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  boxShadow: "0 4px 12px rgba(37, 211, 102, 0.2)",
+                }}
+              >
+                <Share2 size={18} />
+                Share on WhatsApp
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setShowPayForMeModal(false);
+                  navigate(`/orders/${payForMeOrder.id}/track`);
+                }}
+                className="btn-primary"
+                style={{
+                  width: "100%",
+                  padding: "12px 18px",
+                  borderRadius: 12,
+                  fontSize: "0.875rem",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 6,
+                }}
+              >
+                Watch Order Status Live
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`
         .checkout-grid { grid-template-columns: 1fr; }
