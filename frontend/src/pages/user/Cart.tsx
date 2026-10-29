@@ -1,15 +1,105 @@
-import { Link, useNavigate } from "react-router-dom";
-import { Trash2, Minus, Plus, ArrowRight, ShoppingBag, ShieldCheck, Sparkles } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import {
+  Trash2,
+  Minus,
+  Plus,
+  ArrowRight,
+  ShoppingBag,
+  ShieldCheck,
+  Users,
+  Check,
+  PlusCircle,
+} from "lucide-react";
 import { useCartStore } from "@/stores/cartStore";
+import { GroupOrderModal } from "@/components/cart/GroupOrderModal";
+import type { Product } from "@/types/product";
+
+const UPSELL_REFRESHMENTS: {
+  id: string;
+  name: string;
+  price: number;
+  category: string;
+  image: string;
+}[] = [
+  {
+    id: "upsell-coke-500",
+    name: "Chilled Coca-Cola (500ml)",
+    price: 650,
+    category: "Drinks",
+    image: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=300",
+  },
+  {
+    id: "upsell-water-750",
+    name: "Eva Bottled Spring Water (750ml)",
+    price: 400,
+    category: "Drinks",
+    image: "https://images.unsplash.com/photo-1548839140-29a749e1bc4e?w=300",
+  },
+  {
+    id: "upsell-zobo-cold",
+    name: "Chilled Zobo Berry Cooler (500ml)",
+    price: 850,
+    category: "Specialty Drinks",
+    image: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=300",
+  },
+  {
+    id: "upsell-cupcake-vanilla",
+    name: "Glazed Vanilla Pastry & Cake",
+    price: 950,
+    category: "Dessert",
+    image: "https://images.unsplash.com/photo-1587314168485-3236d6710814?w=300",
+  },
+  {
+    id: "upsell-yam-fries",
+    name: "Crispy Yam Fries & Pepper Dip",
+    price: 1300,
+    category: "Sides",
+    image: "https://images.unsplash.com/photo-1576107232684-1279f3908594?w=300",
+  },
+];
 
 const Cart = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const groupCodeParam = searchParams.get("group") || undefined;
+
   const cart = useCartStore((s) => s.cart);
+  const addToCart = useCartStore((s) => s.addToCart);
   const increaseQty = useCartStore((s) => s.increaseQty);
   const decreaseQty = useCartStore((s) => s.decreaseQty);
   const removeFromCart = useCartStore((s) => s.removeFromCart);
   const subtotal = useCartStore((s) => s.getCartSubtotal());
   const total = useCartStore((s) => s.getCartTotal());
+
+  const [isGroupModalOpen, setIsGroupModalOpen] = useState(Boolean(groupCodeParam));
+  const [addedUpsellId, setAddedUpsellId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (groupCodeParam) {
+      setIsGroupModalOpen(true);
+    }
+  }, [groupCodeParam]);
+
+  const handleAddUpsell = (item: (typeof UPSELL_REFRESHMENTS)[0]) => {
+    const mockProduct: Product = {
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      images: [item.image],
+      category: item.category,
+      description: item.name,
+      rating: 4.8,
+      stock: 50,
+      vendorId: "flowmart-express",
+    } as any;
+
+    addToCart(mockProduct, 1);
+    setAddedUpsellId(item.id);
+    setTimeout(() => {
+      setAddedUpsellId(null);
+    }, 1500);
+  };
 
   if (cart.length === 0) {
     return (
@@ -39,16 +129,31 @@ const Cart = () => {
         <p className="text-gray-500 mb-8 text-sm sm:text-base max-w-md text-center leading-relaxed">
           Discover fresh meals, local market ingredients, and daily essentials from verified FlowMart merchants.
         </p>
-        <Link
-          to="/products"
-          style={{
-            backgroundColor: "var(--color-primary, #4f46e5)",
-            color: "#ffffff",
-          }}
-          className="px-8 py-3.5 rounded-xl font-extrabold text-sm sm:text-base shadow-lg shadow-indigo-600/25 transition hover:opacity-95"
-        >
-          Start Exploring Deals
-        </Link>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Link
+            to="/products"
+            style={{
+              backgroundColor: "var(--color-primary, #4f46e5)",
+              color: "#ffffff",
+            }}
+            className="px-8 py-3.5 rounded-xl font-extrabold text-sm sm:text-base shadow-lg shadow-indigo-600/25 transition hover:opacity-95 text-center"
+          >
+            Start Exploring Deals
+          </Link>
+          <button
+            onClick={() => setIsGroupModalOpen(true)}
+            className="px-6 py-3.5 rounded-xl font-extrabold text-sm sm:text-base bg-white border border-indigo-200 text-indigo-700 hover:bg-indigo-50 shadow-sm transition flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <Users size={18} className="text-indigo-600" />
+            <span>Order with Friends</span>
+          </button>
+        </div>
+
+        <GroupOrderModal
+          isOpen={isGroupModalOpen}
+          onClose={() => setIsGroupModalOpen(false)}
+          activeSessionCode={groupCodeParam}
+        />
       </div>
     );
   }
@@ -60,9 +165,10 @@ const Cart = () => {
     >
       <div className="flex flex-col lg:grid lg:grid-cols-[2fr_1fr] gap-8 items-start">
         {/* ================= LEFT COLUMN: CART ITEMS ================= */}
-        <div className="flex flex-col gap-4 w-full">
+        <div className="flex flex-col gap-5 w-full">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200/80 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white">
+            {/* Header with Group Order Pill */}
+            <div className="px-6 py-4 border-b border-gray-100 flex flex-wrap justify-between items-center gap-3 bg-white">
               <div className="flex items-center gap-2.5">
                 <h1 className="text-xl font-extrabold text-gray-900 m-0">
                   Your Basket
@@ -71,12 +177,25 @@ const Cart = () => {
                   {cart.length} {cart.length === 1 ? "item" : "items"}
                 </span>
               </div>
+
+              {/* Chowdeck-Style "Order with Friends" Button */}
+              <button
+                onClick={() => setIsGroupModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 transition shadow-sm cursor-pointer"
+              >
+                <Users size={14} className="text-indigo-600" />
+                <span>Order with Friends</span>
+              </button>
             </div>
 
+            {/* Cart Items List */}
             <div className="flex flex-col bg-white divide-y divide-gray-100">
               {cart.map((item) => {
                 const itemId = item.cartItemId || item.id || "";
-                const unitPrice = item.unitPriceWithModifiers != null ? item.unitPriceWithModifiers : Number(item.price || 0);
+                const unitPrice =
+                  item.unitPriceWithModifiers != null
+                    ? item.unitPriceWithModifiers
+                    : Number(item.price || 0);
 
                 return (
                   <div key={itemId} className="p-5 sm:p-6 flex flex-col gap-4">
@@ -87,14 +206,16 @@ const Cart = () => {
                           <img
                             src={
                               (item.imageUrl || item.images?.[0] || "").startsWith("http")
-                                ? (item.imageUrl || item.images?.[0])
+                                ? item.imageUrl || item.images?.[0]
                                 : `https://flowmart-bucket.s3.amazonaws.com/${item.imageUrl || item.images?.[0]}`
                             }
                             alt={item.name}
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <ShoppingBag size={28} className="text-gray-300" />
+                          <div className="w-full h-full flex items-center justify-center text-gray-400">
+                            <ShoppingBag size={24} />
+                          </div>
                         )}
                       </div>
 
@@ -186,6 +307,71 @@ const Cart = () => {
               })}
             </div>
           </div>
+
+          {/* ================= CHOWDECK-STYLE SMART IN-CART DRINKS & SIDES UPSELL TRAY ================= */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200/80 p-5">
+            <div className="flex items-center justify-between mb-3.5">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🥤</span>
+                <div>
+                  <h3 className="text-sm font-extrabold text-gray-900 flex items-center gap-2">
+                    Pair with Drinks & Refreshments
+                    <span className="text-[10px] font-black uppercase tracking-wider text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">
+                      Chowdeck Pick
+                    </span>
+                  </h3>
+                  <p className="text-xs text-gray-500 font-medium">
+                    1-tap chilled additions frequently paired with your meal
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
+              {UPSELL_REFRESHMENTS.map((item) => {
+                const isJustAdded = addedUpsellId === item.id;
+                return (
+                  <div
+                    key={item.id}
+                    className="min-w-[175px] max-w-[175px] bg-gray-50/70 hover:bg-gray-50 border border-gray-200/80 rounded-2xl p-3 flex flex-col justify-between shrink-0 transition shadow-xs"
+                  >
+                    <div>
+                      <div className="w-full h-24 rounded-xl overflow-hidden mb-2 bg-gray-100 border border-gray-100">
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <span className="text-[10px] font-extrabold uppercase text-gray-400 block mb-0.5">
+                        {item.category}
+                      </span>
+                      <h4 className="text-xs font-bold text-gray-900 leading-tight line-clamp-2 mb-1">
+                        {item.name}
+                      </h4>
+                    </div>
+
+                    <div className="mt-3 flex items-center justify-between pt-2 border-t border-gray-200/60">
+                      <span className="text-xs font-black text-gray-900">
+                        ₦{item.price.toLocaleString()}
+                      </span>
+                      <button
+                        onClick={() => handleAddUpsell(item)}
+                        className={`p-1.5 rounded-lg flex items-center justify-center transition cursor-pointer ${
+                          isJustAdded
+                            ? "bg-emerald-500 text-white"
+                            : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs"
+                        }`}
+                        title="Add to basket"
+                      >
+                        {isJustAdded ? <Check size={14} /> : <PlusCircle size={14} />}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
         {/* ================= RIGHT COLUMN: SUMMARY ================= */}
@@ -254,6 +440,12 @@ const Cart = () => {
           </div>
         </div>
       </div>
+
+      <GroupOrderModal
+        isOpen={isGroupModalOpen}
+        onClose={() => setIsGroupModalOpen(false)}
+        activeSessionCode={groupCodeParam}
+      />
     </div>
   );
 };

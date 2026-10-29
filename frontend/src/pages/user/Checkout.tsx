@@ -26,6 +26,8 @@ import {
   Share2,
   Copy,
   Check,
+  Calendar,
+  Zap,
 } from "lucide-react";
 import { useCartStore } from "@/stores/cartStore";
 import { useToast } from "@/contexts/ToastContext";
@@ -98,6 +100,15 @@ interface SavedAddressProfile {
   dropoff?: string;
 }
 
+
+const SCHEDULED_DELIVERY_SLOTS = [
+  { id: "today-lunch", day: "Today", time: "1:00 PM - 1:30 PM", label: "Lunch Express Rush" },
+  { id: "today-dinner", day: "Today", time: "5:30 PM - 6:00 PM", label: "Early Dinner" },
+  { id: "today-latenight", day: "Today", time: "7:30 PM - 8:00 PM", label: "Evening Comfort" },
+  { id: "tomorrow-breakfast", day: "Tomorrow", time: "8:30 AM - 9:00 AM", label: "Morning Kickoff" },
+  { id: "tomorrow-lunch", day: "Tomorrow", time: "12:30 PM - 1:00 PM", label: "Office Lunch Rush" },
+];
+
 const Checkout = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -105,6 +116,8 @@ const Checkout = () => {
 
   // Mode: Digital Postcode (Primary) vs Manual Map/GPS (Fallback)
   const [deliveryMode, setDeliveryMode] = useState<"postcode" | "manual">("postcode");
+  const [deliveryTiming, setDeliveryTiming] = useState<"express" | "scheduled">("express");
+  const [scheduledSlot, setScheduledSlot] = useState<string>("today-lunch");
 
   // Address Tag (Chowdeck feature: Home / Work / Other)
   const [addressTag, setAddressTag] = useState<"home" | "work" | "other">("home");
@@ -551,6 +564,9 @@ const Checkout = () => {
         dropoffOption,
         deliveryNotes: deliveryNotes.trim() || undefined,
         addressTag,
+        scheduledDeliverySlot: deliveryTiming === "scheduled"
+          ? SCHEDULED_DELIVERY_SLOTS.find((s) => s.id === scheduledSlot)?.time
+          : "Standard Express",
       };
 
       const res = await apiClient.post<{ success: boolean; paymentUrl?: string }>(
@@ -1507,6 +1523,186 @@ return (
                 </div>
               </div>
             </div>
+          </div>
+
+          
+          {/* Chowdeck Signature Feature: Delivery Timing & Scheduled Slots */}
+          <div className="card" style={{ padding: 24, borderRadius: 16 }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: 16,
+                flexWrap: "wrap",
+                gap: 12,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div
+                  style={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: "50%",
+                    backgroundColor: "var(--color-primary-surface)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Clock size={18} style={{ color: "var(--color-primary)" }} />
+                </div>
+                <div>
+                  <h2 style={{ fontSize: "1.25rem", fontWeight: 700, margin: 0 }}>
+                    Delivery Timing
+                  </h2>
+                  <p
+                    style={{
+                      fontSize: "0.813rem",
+                      color: "var(--color-text-muted)",
+                      margin: 0,
+                    }}
+                  >
+                    Select immediate dispatch or lock a guaranteed delivery window
+                  </p>
+                </div>
+              </div>
+
+              {/* Toggle: Standard Express vs. Schedule */}
+              <div
+                style={{
+                  display: "inline-flex",
+                  backgroundColor: "var(--color-bg-secondary, #f3f4f6)",
+                  padding: 4,
+                  borderRadius: "var(--radius-lg, 8px)",
+                  gap: 4,
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setDeliveryTiming("express")}
+                  style={{
+                    padding: "6px 14px",
+                    borderRadius: 6,
+                    fontSize: "0.813rem",
+                    fontWeight: 700,
+                    border: "none",
+                    cursor: "pointer",
+                    backgroundColor: deliveryTiming === "express" ? "#ffffff" : "transparent",
+                    color: deliveryTiming === "express" ? "var(--color-primary)" : "var(--color-text-muted)",
+                    boxShadow: deliveryTiming === "express" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                  }}
+                >
+                  ⚡ Standard Express (25-35m)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDeliveryTiming("scheduled")}
+                  style={{
+                    padding: "6px 14px",
+                    borderRadius: 6,
+                    fontSize: "0.813rem",
+                    fontWeight: 700,
+                    border: "none",
+                    cursor: "pointer",
+                    backgroundColor: deliveryTiming === "scheduled" ? "#ffffff" : "transparent",
+                    color: deliveryTiming === "scheduled" ? "var(--color-primary)" : "var(--color-text-muted)",
+                    boxShadow: deliveryTiming === "scheduled" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                  }}
+                >
+                  🕒 Schedule Ahead
+                </button>
+              </div>
+            </div>
+
+            {deliveryTiming === "scheduled" ? (
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
+                  gap: 10,
+                  marginTop: 12,
+                }}
+              >
+                {SCHEDULED_DELIVERY_SLOTS.map((slot) => {
+                  const isSelected = scheduledSlot === slot.id;
+                  return (
+                    <button
+                      key={slot.id}
+                      type="button"
+                      onClick={() => setScheduledSlot(slot.id)}
+                      style={{
+                        padding: "12px 14px",
+                        borderRadius: 12,
+                        textAlign: "left",
+                        cursor: "pointer",
+                        border: `1.5px solid ${
+                          isSelected ? "var(--color-primary)" : "var(--color-border)"
+                        }`,
+                        backgroundColor: isSelected
+                          ? "var(--color-primary-surface)"
+                          : "var(--color-bg-primary)",
+                        color: isSelected ? "var(--color-primary)" : "var(--color-text-primary)",
+                        transition: "all 0.15s ease",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          marginBottom: 4,
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: "0.75rem",
+                            fontWeight: 800,
+                            textTransform: "uppercase",
+                            color: "var(--color-primary)",
+                          }}
+                        >
+                          {slot.day}
+                        </span>
+                        <Calendar size={13} style={{ opacity: 0.7 }} />
+                      </div>
+                      <div style={{ fontSize: "0.875rem", fontWeight: 800 }}>{slot.time}</div>
+                      <div
+                        style={{
+                          fontSize: "0.75rem",
+                          color: "var(--color-text-muted)",
+                          marginTop: 2,
+                        }}
+                      >
+                        {slot.label}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div
+                style={{
+                  padding: "12px 16px",
+                  borderRadius: 12,
+                  backgroundColor: "var(--color-bg-secondary)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                }}
+              >
+                <Zap size={16} style={{ color: "var(--color-primary)" }} />
+                <span
+                  style={{
+                    fontSize: "0.813rem",
+                    color: "var(--color-text-secondary)",
+                    fontWeight: 600,
+                  }}
+                >
+                  Immediate dispatch active. Nearest courier will be alerted as soon as the merchant starts preparing your order.
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Chowdeck Signature Feature: Rider Tipping Card */}

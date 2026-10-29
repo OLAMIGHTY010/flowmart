@@ -27,9 +27,10 @@ import { useOrder, useConfirmReceived } from "@/hooks/useOrders";
 import { useRiderTracking } from "@/hooks/useRiderTracking";
 import { RiderChatDrawer } from "@/components/chat/RiderChatDrawer";
 import { TwoTierRatingModal } from "@/components/feedback/TwoTierRatingModal";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Volume2, VolumeX } from "lucide-react";
 import type { OrderStatus } from "@/types/order";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { audioChimes } from "@/utils/audioChimes";
 import DisputeModal from "@/components/orders/DisputeModal";
 import { InstantMicroDisputeCard } from "@/components/user/InstantMicroDisputeCard";
 import { DiasporaGiftingCard } from "@/components/user/DiasporaGiftingCard";
@@ -121,6 +122,22 @@ export default function OrderTracking() {
   const [isDisputeModalOpen, setIsDisputeModalOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const prevStatusRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!order?.status || !soundEnabled) return;
+    if (prevStatusRef.current && prevStatusRef.current !== order.status) {
+      if (order.status === "assigned" || order.status === "picked_up") {
+        audioChimes.riderAssigned();
+      } else if (order.status === "delivered") {
+        audioChimes.orderDelivered();
+      }
+    } else if (!prevStatusRef.current && order.status === "pending") {
+      audioChimes.orderPlaced();
+    }
+    prevStatusRef.current = order.status;
+  }, [order?.status, soundEnabled]);
 
   useEffect(() => {
     if (confirmReceivedMutation.isSuccess) {
@@ -225,6 +242,9 @@ export default function OrderTracking() {
   };
 
   const handleReceived = () => {
+    if (soundEnabled) {
+      audioChimes.orderDelivered();
+    }
     confirmReceivedMutation.mutate(order.id);
   };
 
@@ -254,7 +274,30 @@ export default function OrderTracking() {
           </div>
         </div>
 
-        {/* Chowdeck Live ETA Pill */}
+        
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              const nextState = !soundEnabled;
+              setSoundEnabled(nextState);
+              if (nextState) {
+                audioChimes.orderPlaced();
+              }
+            }}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full border text-xs font-bold transition cursor-pointer"
+            style={{
+              backgroundColor: soundEnabled ? "var(--color-primary-surface, #e0e7ff)" : "#f3f4f6",
+              borderColor: soundEnabled ? "var(--color-primary, #4f46e5)" : "#e5e7eb",
+              color: soundEnabled ? "var(--color-primary, #4f46e5)" : "#6b7280",
+            }}
+            title={soundEnabled ? "Milestone Chimes Active (Click to test/mute)" : "Chimes Muted"}
+          >
+            {soundEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}
+            <span className="hidden sm:inline">{soundEnabled ? "Audio Alerts On" : "Muted"}</span>
+          </button>
+
+          {/* Chowdeck Live ETA Pill */}
         <div
           style={{
             display: "inline-flex",
@@ -271,6 +314,7 @@ export default function OrderTracking() {
         >
           <Clock size={16} className={order.status === "picked_up" ? "animate-spin" : "animate-pulse"} />
           <span>{statusInfo.eta}</span>
+          </div>
         </div>
       </div>
 
