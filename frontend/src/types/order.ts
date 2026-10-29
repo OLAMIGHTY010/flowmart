@@ -19,12 +19,25 @@ export interface OrderItem {
   unitPrice?: string;
 }
 
+export interface RiderProfile {
+  name: string;
+  phone: string;
+  vehicle: string;
+  rating: string;
+  deliveriesCompleted: number;
+  avatar?: string | null;
+}
+
 export interface Order {
   id: string;
+  orderRef?: string;
   userId: string;
   vendorId: string;
   riderId?: string;
   deliveryZone: string;
+  deliveryAddress?: string;
+  deliveryPostcode?: string;
+  addressSource?: string;
   status: OrderStatus;
   totalAmount: string;
   deliveryPin?: string;
@@ -36,4 +49,6 @@ export interface Order {
   distance?: string;
   estimatedTime?: string;
   packsCount?: number;
+  rider?: RiderProfile;
+  riderInfo?: RiderProfile;
 }
