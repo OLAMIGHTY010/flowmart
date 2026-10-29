@@ -204,3 +204,408 @@ export const getRecentActivity = async (req: Request, res: Response) => {
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
+
+// ─── Platform D: Operations & Dispatch Backoffice Engine ──────────────────────
+
+interface FleetRiderTelemetry {
+  id: string;
+  name: string;
+  phone: string;
+  vehicle: string;
+  status: 'idle' | 'in_transit' | 'offline';
+  zone: string;
+  batteryLevel: number;
+  currentLat: number;
+  currentLng: number;
+  activeOrderId?: string;
+  activeOrderRef?: string;
+  slaStatus: 'on_time' | 'delayed' | 'critical';
+  rating: number;
+}
+
+interface RefundRecord {
+  id: string;
+  orderId: string;
+  orderRef: string;
+  customerName: string;
+  customerPhone: string;
+  amount: number;
+  reason: string;
+  channel: 'wallet' | 'card_chargeback';
+  issuedBy: string;
+  issuedAt: string;
+  status: 'settled';
+}
+
+interface ApologyVoucher {
+  id: string;
+  code: string;
+  customerName: string;
+  customerPhone: string;
+  amount: number;
+  reason: string;
+  issuedAt: string;
+  expiresAt: string;
+  status: 'active' | 'redeemed';
+}
+
+interface FraudEntity {
+  id: string;
+  userId: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  deviceFingerprint: string;
+  ipAddress: string;
+  riskScore: number;
+  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH';
+  flags: string[];
+  isBlocked: boolean;
+  createdAt: string;
+}
+
+const fraudDatabase: FraudEntity[] = [
+  {
+    id: "frd-01",
+    userId: "usr-49102",
+    fullName: "Kelechi Obi",
+    email: "kelechi.o99@gmail.com",
+    phone: "+2348039281920",
+    deviceFingerprint: "fp_chrome_win_8492a",
+    ipAddress: "102.89.44.12",
+    riskScore: 84,
+    riskLevel: "HIGH",
+    flags: ["Duplicate Phone Number (+2348039281920 shared across 3 accounts)", "Same Fingerprint Claimed 4 Promo Vouchers"],
+    isBlocked: true,
+    createdAt: new Date(Date.now() - 3 * 3600 * 1000).toISOString(),
+  },
+  {
+    id: "frd-02",
+    userId: "usr-77291",
+    fullName: "Tunde Bakare",
+    email: "tunde.bakare12@yahoo.com",
+    phone: "+2348058291044",
+    deviceFingerprint: "fp_iphone_ios17_2841",
+    ipAddress: "197.210.55.8",
+    riskScore: 58,
+    riskLevel: "MEDIUM",
+    flags: ["Rapid Account Generation (2 accounts within 10 minutes)", "Mismatched Billing vs Dropoff State"],
+    isBlocked: false,
+    createdAt: new Date(Date.now() - 6 * 3600 * 1000).toISOString(),
+  },
+  {
+    id: "frd-03",
+    userId: "usr-88319",
+    fullName: "Chidinma Nwosu",
+    email: "chidinma.nw@gmail.com",
+    phone: "+2348074920194",
+    deviceFingerprint: "fp_android_sm_9182",
+    ipAddress: "105.112.98.24",
+    riskScore: 18,
+    riskLevel: "LOW",
+    flags: ["First-time User Device Check Clear", "Single Verified Postcode"],
+    isBlocked: false,
+    createdAt: new Date(Date.now() - 12 * 3600 * 1000).toISOString(),
+  },
+];
+
+const refundRecords: RefundRecord[] = [
+  {
+    id: "ref-01",
+    orderId: "ord-83921",
+    orderRef: "FLW-83921",
+    customerName: "Folake Adebayo",
+    customerPhone: "+2348028472910",
+    amount: 5400,
+    reason: "Delayed meal prep (>50 mins) - Spilled soup container",
+    channel: "wallet",
+    issuedBy: "Ops Officer #04 (Samuel)",
+    issuedAt: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
+    status: "settled",
+  },
+  {
+    id: "ref-02",
+    orderId: "ord-92041",
+    orderRef: "FLW-92041",
+    customerName: "Emeka Okafor",
+    customerPhone: "+2348092837461",
+    amount: 8200,
+    reason: "Kitchen ran out of Grilled Catfish after payment accepted",
+    channel: "wallet",
+    issuedBy: "Super Admin (Auto-Escrow)",
+    issuedAt: new Date(Date.now() - 5 * 3600 * 1000).toISOString(),
+    status: "settled",
+  },
+];
+
+const apologyVouchers: ApologyVoucher[] = [
+  {
+    id: "vch-01",
+    code: "APOLOGY-FLW-4821",
+    customerName: "Folake Adebayo",
+    customerPhone: "+2348028472910",
+    amount: 1500,
+    reason: "Late Delivery Goodwill Voucher",
+    issuedAt: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
+    expiresAt: new Date(Date.now() + 14 * 24 * 3600 * 1000).toISOString(),
+    status: "active",
+  },
+];
+
+// 1. Live Courier Dispatch Telemetry & Fleet Telemetry Map
+export const getFleetTelemetry = async (_req: Request, res: Response) => {
+  try {
+    const riders: FleetRiderTelemetry[] = [
+      {
+        id: "rdr-01",
+        name: "Tunde Adebayo",
+        phone: "+2348039281726",
+        vehicle: "Honda CB 125 • Dispatch Unit 01",
+        status: "in_transit",
+        zone: "Yaba / Akoka Mainland",
+        batteryLevel: 92,
+        currentLat: 6.518,
+        currentLng: 3.376,
+        activeOrderId: "ord-83921",
+        activeOrderRef: "FLW-83921",
+        slaStatus: "on_time",
+        rating: 4.9,
+      },
+      {
+        id: "rdr-02",
+        name: "Ibrahim Musa",
+        phone: "+2348058291024",
+        vehicle: "Bajaj Boxer 150 • Dispatch Unit 02",
+        status: "in_transit",
+        zone: "Ikeja GRA / Maryland",
+        batteryLevel: 84,
+        currentLat: 6.596,
+        currentLng: 3.351,
+        activeOrderId: "ord-94021",
+        activeOrderRef: "FLW-94021",
+        slaStatus: "on_time",
+        rating: 4.8,
+      },
+      {
+        id: "rdr-03",
+        name: "Chukwudi Eze",
+        phone: "+2348074920182",
+        vehicle: "Yamaha Crux • Dispatch Unit 03",
+        status: "idle",
+        zone: "Victoria Island / Oniru",
+        batteryLevel: 78,
+        currentLat: 6.435,
+        currentLng: 3.442,
+        slaStatus: "on_time",
+        rating: 4.95,
+      },
+      {
+        id: "rdr-04",
+        name: "Segun Alabi",
+        phone: "+2348028472911",
+        vehicle: "TVS Neo 110 • Dispatch Unit 04",
+        status: "in_transit",
+        zone: "Surulere / Stadium",
+        batteryLevel: 65,
+        currentLat: 6.498,
+        currentLng: 3.354,
+        activeOrderId: "ord-71932",
+        activeOrderRef: "FLW-71932",
+        slaStatus: "delayed",
+        rating: 4.7,
+      },
+      {
+        id: "rdr-05",
+        name: "Abubakar Sani",
+        phone: "+2348092837411",
+        vehicle: "Honda Ace 125 • Dispatch Unit 05",
+        status: "idle",
+        zone: "Lekki Phase 1 / Admiralty",
+        batteryLevel: 89,
+        currentLat: 6.448,
+        currentLng: 3.475,
+        slaStatus: "on_time",
+        rating: 4.85,
+      },
+    ];
+
+    const activeRoutes = [
+      {
+        orderRef: "FLW-83921",
+        riderId: "rdr-01",
+        store: { name: "Mama Put Delights", lat: 6.514, lng: 3.372 },
+        destination: { name: "Unilag Faculty of Science", lat: 6.522, lng: 3.381 },
+      },
+      {
+        orderRef: "FLW-94021",
+        riderId: "rdr-02",
+        store: { name: "Ikeja City Grill", lat: 6.601, lng: 3.358 },
+        destination: { name: "GRA Joel Ogunnaike St", lat: 6.592, lng: 3.344 },
+      },
+      {
+        orderRef: "FLW-71932",
+        riderId: "rdr-04",
+        store: { name: "Surulere Wok", lat: 6.495, lng: 3.358 },
+        destination: { name: "Bode Thomas Luxury Apts", lat: 6.502, lng: 3.349 },
+      },
+    ];
+
+    return res.status(200).json({
+      success: true,
+      telemetry: {
+        totalRiders: 24,
+        activeRiders: riders.length,
+        inTransitCount: riders.filter(r => r.status === 'in_transit').length,
+        idleCount: riders.filter(r => r.status === 'idle').length,
+        riders,
+        activeRoutes,
+      }
+    });
+  } catch (error) {
+    console.error("Fleet Telemetry Error:", error);
+    return res.status(500).json({ success: false, message: "Failed to get fleet telemetry" });
+  }
+};
+
+// 2. Force Reassign Courier
+export const reassignCourier = async (req: Request, res: Response) => {
+  try {
+    const { orderId, newRiderId, reason } = req.body;
+    return res.status(200).json({
+      success: true,
+      message: `Order ${orderId || 'target'} successfully reassigned to courier ${newRiderId || 'selected'}`,
+      reason: reason || "Manual SLA bottleneck resolution",
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Failed to reassign courier" });
+  }
+};
+
+// 3. Customer Refund & Vouchers Ledger
+export const getRefundsLedger = async (_req: Request, res: Response) => {
+  try {
+    const totalRefundedAmount = refundRecords.reduce((sum, r) => sum + r.amount, 0);
+    const totalVouchersAmount = apologyVouchers.reduce((sum, v) => sum + v.amount, 0);
+
+    return res.status(200).json({
+      success: true,
+      ledger: {
+        totalRefundedAmount,
+        totalVouchersAmount,
+        refundsCount: refundRecords.length,
+        vouchersCount: apologyVouchers.length,
+        refunds: refundRecords,
+        vouchers: apologyVouchers,
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Failed to get refunds ledger" });
+  }
+};
+
+// 4. Issue Instant Refund
+export const issueInstantRefund = async (req: Request, res: Response) => {
+  try {
+    const { orderId, orderRef, customerName, customerPhone, amount, reason, channel = 'wallet' } = req.body;
+
+    const newRecord: RefundRecord = {
+      id: `ref-${Date.now()}`,
+      orderId: orderId || `ord-${Date.now()}`,
+      orderRef: orderRef || `FLW-${Math.floor(10000 + Math.random() * 90000)}`,
+      customerName: customerName || "Customer",
+      customerPhone: customerPhone || "+2348000000000",
+      amount: Number(amount) || 2500,
+      reason: reason || "Dispute settled by Operations Desk",
+      channel: channel === 'card_chargeback' ? 'card_chargeback' : 'wallet',
+      issuedBy: "Operations Officer",
+      issuedAt: new Date().toISOString(),
+      status: "settled",
+    };
+
+    refundRecords.unshift(newRecord);
+
+    return res.status(201).json({
+      success: true,
+      message: `Instant refund of ₦${newRecord.amount.toLocaleString()} credited to customer wallet`,
+      refund: newRecord,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Failed to issue refund" });
+  }
+};
+
+// 5. Issue Apology / Compensation Voucher
+export const issueCompensationVoucher = async (req: Request, res: Response) => {
+  try {
+    const { customerName, customerPhone, amount = 1500, reason } = req.body;
+    const code = `APOLOGY-FLW-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    const newVoucher: ApologyVoucher = {
+      id: `vch-${Date.now()}`,
+      code,
+      customerName: customerName || "Valued Customer",
+      customerPhone: customerPhone || "+2348000000000",
+      amount: Number(amount),
+      reason: reason || "Operations Goodwill Compensation",
+      issuedAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 14 * 24 * 3600 * 1000).toISOString(),
+      status: "active",
+    };
+
+    apologyVouchers.unshift(newVoucher);
+
+    return res.status(201).json({
+      success: true,
+      message: `Goodwill compensation voucher ${code} (₦${newVoucher.amount.toLocaleString()}) created`,
+      voucher: newVoucher,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Failed to issue voucher" });
+  }
+};
+
+// 6. Fraud & Multi-Accounting Risk Matrix
+export const getFraudMatrix = async (_req: Request, res: Response) => {
+  try {
+    const highRiskCount = fraudDatabase.filter(f => f.riskLevel === 'HIGH').length;
+    const mediumRiskCount = fraudDatabase.filter(f => f.riskLevel === 'MEDIUM').length;
+    const blockedCount = fraudDatabase.filter(f => f.isBlocked).length;
+
+    return res.status(200).json({
+      success: true,
+      matrix: {
+        totalAnalyzed: 1420,
+        highRiskCount,
+        mediumRiskCount,
+        blockedCount,
+        entities: fraudDatabase,
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Failed to analyze fraud matrix" });
+  }
+};
+
+// 7. Toggle Account Freeze / Block
+export const toggleBlockFraudAccount = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const entity = fraudDatabase.find(f => f.id === id || f.userId === id);
+    if (!entity) {
+      return res.status(404).json({ success: false, message: "Entity not found in fraud database" });
+    }
+
+    entity.isBlocked = !entity.isBlocked;
+
+    return res.status(200).json({
+      success: true,
+      message: entity.isBlocked
+        ? `Account ${entity.fullName} (${entity.email}) has been frozen and blocked from orders`
+        : `Account ${entity.fullName} unblocked`,
+      entity,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Failed to toggle account block" });
+  }
+};

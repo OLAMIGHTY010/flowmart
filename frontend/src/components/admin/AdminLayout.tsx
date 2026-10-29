@@ -6,8 +6,11 @@ import {
   Store, 
   Bike, 
   LogOut, 
-  ShieldCheck, 
-  AlertTriangle 
+  ShieldCheck,
+  AlertTriangle,
+  Radio,
+  Wallet,
+  ShieldAlert
 } from "lucide-react";
 
 export default function AdminLayout() {
@@ -20,7 +23,9 @@ export default function AdminLayout() {
   };
 
   const navItems = [
-    { name: "Dashboard", path: "/admin/dashboard", icon: <LayoutDashboard size={20} /> },
+    { name: "Live Dispatch Map", path: "/admin/dispatch", icon: <Radio size={20} /> },
+    { name: "Dispute & Refunds", path: "/admin/refunds", icon: <Wallet size={20} /> },
+    { name: "Fraud Risk Matrix", path: "/admin/fraud", icon: <ShieldAlert size={20} /> },
     { name: "Vendor Approvals", path: "/admin/kyc/vendors", icon: <Store size={20} /> },
     { name: "Rider Approvals", path: "/admin/kyc/riders", icon: <Bike size={20} /> },
   ];

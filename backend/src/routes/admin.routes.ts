@@ -5,7 +5,14 @@ import {
   getDeliveryMetricsChart,
   getCriticalAlerts,
   getRecentActivity,
-  getPlatformHealth
+  getPlatformHealth,
+  getFleetTelemetry,
+  reassignCourier,
+  getRefundsLedger,
+  issueInstantRefund,
+  issueCompensationVoucher,
+  getFraudMatrix,
+  toggleBlockFraudAccount
 } from '../controllers/admin.controller';
 
 import {
@@ -57,6 +64,15 @@ router.get('/dashboard/health', getPlatformHealth);
 router.get('/dashboard/chart', getDeliveryMetricsChart);
 router.get('/dashboard/alerts', getCriticalAlerts);
 router.get('/dashboard/activity', getRecentActivity);
+
+// Platform D: Fleet Dispatch, Refunds, and Fraud Control
+router.get('/dispatch/fleet-telemetry', getFleetTelemetry);
+router.post('/dispatch/reassign', reassignCourier);
+router.get('/refunds/ledger', getRefundsLedger);
+router.post('/refunds/issue', issueInstantRefund);
+router.post('/refunds/issue-voucher', issueCompensationVoucher);
+router.get('/fraud/matrix', getFraudMatrix);
+router.post('/fraud/block/:id', toggleBlockFraudAccount);
 
 // Vendor Approval routes
 router.get('/vendors/stats', getVendorApprovalStats);

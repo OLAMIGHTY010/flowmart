@@ -98,6 +98,9 @@ const FleetDashboard = lazy(() => import("@/pages/fleet/FleetDashboard"));
 const AdminLayout = lazy(() => import("./components/admin/AdminLayout"));
 const AdminVendorKYC = lazy(() => import("./pages/admin/AdminVendorKYC"));
 const AdminRiderKYC = lazy(() => import("./pages/admin/AdminRiderKYC"));
+const AdminDispatchMap = lazy(() => import("./pages/admin/AdminDispatchMap"));
+const AdminRefundsLedger = lazy(() => import("./pages/admin/AdminRefundsLedger"));
+const AdminFraudMatrix = lazy(() => import("./pages/admin/AdminFraudMatrix"));
 
 const ProfileLayout = lazy(() => import("./components/user/ProfileLayout"));
 
@@ -232,6 +235,11 @@ function App() {
                 <AdminLayout />
               </ProtectedRoute>
             }>
+              <Route index element={<Navigate to="/admin/dispatch" replace />} />
+              <Route path="dashboard" element={<Navigate to="/admin/dispatch" replace />} />
+              <Route path="dispatch" element={<AdminDispatchMap />} />
+              <Route path="refunds" element={<AdminRefundsLedger />} />
+              <Route path="fraud" element={<AdminFraudMatrix />} />
               <Route path="kyc/vendors" element={<AdminVendorKYC />} />
               <Route path="kyc/riders" element={<AdminRiderKYC />} />
             </Route>
