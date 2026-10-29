@@ -1,10 +1,16 @@
 import { Router } from 'express';
-import { getOrders, getOrderById, updateOrderStatus, getAvailableDeliveries, acceptDelivery, confirmDelivery, confirmDeliveryViaQR, submitKYC, getKYCStatus, updateLocation } from '../controllers/rider.controller';
+import { getOrders, getOrderById, updateOrderStatus, getAvailableDeliveries, acceptDelivery, confirmDelivery, confirmDeliveryViaQR, submitKYC, getKYCStatus, updateLocation, getRiderEarningsAnalytics, getCashOnDeliveryLedger, remitCashFloat, getDemandHotspots } from '../controllers/rider.controller';
 import { authenticateJWT, authorizeRoles } from '../middleware/auth.middleware';
 
 const router = Router();
 
 router.use(authenticateJWT, authorizeRoles('dispatch_rider', 'super_admin'));
+
+// Platform B: Courier / Champion Experience Endpoints
+router.get('/earnings/analytics', getRiderEarningsAnalytics);
+router.get('/cod/ledger', getCashOnDeliveryLedger);
+router.post('/cod/remit', remitCashFloat);
+router.get('/hotspots', getDemandHotspots);
 
 router.get('/orders', getOrders);
 router.get('/orders/:id', getOrderById);
