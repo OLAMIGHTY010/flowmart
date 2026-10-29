@@ -40,7 +40,9 @@ const Marketplace = lazy(() => import("@/pages/user/Marketplace"));
 const ProductDetails = lazy(() => import("@/pages/user/ProductDetails"));
 const Cart = lazy(() => import("@/pages/user/Cart"));
 const Checkout = lazy(() => import("@/pages/user/Checkout"));
-const PayForMe = lazy(() => import("@/pages/user/PayForMe"));
+const PayForMe = lazy(() => import("./pages/user/PayForMe"));
+const FoodieWrapped = lazy(() => import("./pages/user/FoodieWrapped"));
+const ReferralMilestones = lazy(() => import("./pages/user/ReferralMilestones"));
 const EscrowCheckout = lazy(() => import("@/pages/escrow/EscrowCheckout"));
 const EscrowManagement = lazy(() => import("@/pages/escrow/EscrowManagement"));
 const Orders = lazy(() => import("@/pages/user/Orders"));
@@ -147,6 +149,8 @@ function App() {
               <Route path="vehicles" element={<Vehicles />} />
               <Route path="products/:id" element={<ProductDetails />} />
               <Route path="cart" element={<Cart />} />
+              <Route path="wrapped" element={<FoodieWrapped />} />
+              <Route path="referrals" element={<ReferralMilestones />} />
 
               <Route element={<ProtectedRoute />}>
                 <Route path="checkout" element={<Checkout />} />

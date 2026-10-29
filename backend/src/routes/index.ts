@@ -58,6 +58,7 @@ import marketingRoutes from './marketing.routes';
 import referralRoutes from './referral.routes';
 import healthRoutes from './health.routes';
 import automationRoutes from './automation.routes';
+import gamificationRoutes from './gamification.routes';
 
 // Controller & Middleware Imports
 import { authenticateJWT } from '../middleware/auth.middleware';
@@ -92,6 +93,7 @@ router.use('/wallet', walletRoutes);
 router.use('/escrow', escrowRoutes);
 router.use('/marketing', marketingRoutes);
 router.use('/referral', referralRoutes);
+router.use('/gamification', gamificationRoutes);
 router.use('/coupons', couponRoutes);
 router.use('/reviews', reviewRoutes);
 router.use('/payment', paymentRoutes); 

@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { Search, ShoppingCart, User, Menu, X, MapPin, ChevronDown, Crown } from "lucide-react";
+import { Search, ShoppingCart, User, Menu, X, MapPin, ChevronDown, Crown, Sparkles, Gift } from "lucide-react";
 import { useCartStore } from "@/stores/cartStore";
 import logo from "@/assets/logo.png";
 import { DeliveryAddressModal } from "@/components/navigation/DeliveryAddressModal";
+import FoodieWrappedModal from "@/components/gamification/FoodieWrappedModal";
+import MysteryScratchCardModal from "@/components/gamification/MysteryScratchCardModal";
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -12,6 +14,8 @@ const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+  const [isWrappedOpen, setIsWrappedOpen] = useState(false);
+  const [isScratchCardOpen, setIsScratchCardOpen] = useState(false);
   const cartCount = useCartStore((s) => s.getCartCount());
 
   // Active delivery address state
@@ -116,6 +120,28 @@ const Navbar = () => {
 
         {/* Right Actions: FlowPass Badge, Cart, Profile */}
         <div className="flex items-center gap-2">
+          {/* Wrapped 2026 Trigger */}
+          <button
+            type="button"
+            onClick={() => setIsWrappedOpen(true)}
+            className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-400/30 text-xs font-bold text-indigo-300 transition-all active:scale-95"
+            title="View Your 2026 Foodie Wrapped"
+          >
+            <Sparkles size={13} className="text-amber-400" />
+            <span>2026 Wrapped</span>
+          </button>
+
+          {/* Mystery Scratch & Win Trigger */}
+          <button
+            type="button"
+            onClick={() => setIsScratchCardOpen(true)}
+            className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-500/10 hover:bg-purple-500/20 border border-purple-400/30 text-xs font-bold text-purple-300 transition-all active:scale-95"
+            title="Scratch & Win Mystery Rewards"
+          >
+            <Gift size={13} className="text-pink-400" />
+            <span>Scratch & Win</span>
+          </button>
+
           {/* FlowPass VIP Badge */}
           {isFlowPass && (
             <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-indigo-900/60 to-violet-900/60 border border-indigo-500/30 text-[11px] font-bold text-amber-300">
