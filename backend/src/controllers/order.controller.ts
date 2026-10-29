@@ -5,7 +5,7 @@
 
 import { Request, Response } from "express";
 import { db } from "../../db";
-import { products, orders, orderItems, users, vendorProfiles, vendorKyc, wallets, walletTransactions } from "../../db/schema";
+import { products, orders, orderItems, users, vendorProfiles, vendorKyc, wallets, walletTransactions, reviews } from "../../db/schema";
 import { eq, and, desc, sql, or } from "drizzle-orm";
 import { AuthenticatedRequest } from "../middleware/auth.middleware";
 import { sendInAppNotification, broadcastNewDelivery, emitOrderStatusUpdate, emitEscrowStatusUpdate, emitOrderChatMessage } from "../services/websocket";
@@ -819,5 +819,136 @@ export const sendOrderMessage = async (req: AuthenticatedRequest, res: Response)
     } catch (error) {
         console.error("Send Order Message Error:", error);
         return res.status(500).json({ success: false, message: "Failed to send message" });
+    }
+};
+
+
+// 9. Post-Delivery Two-Tier Rating (Courier + Vendor/Meal)
+interface RatingSubmission {
+    riderRating: number;
+    riderTags?: string[];
+    riderTip?: number;
+    vendorRating: number;
+    vendorTags?: string[];
+    reviewComment?: string;
+}
+
+const orderRatingsStore = new Map<string, RatingSubmission>();
+
+export const rateOrder = async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const orderId = req.params.id as string;
+        const userId = req.user?.id;
+        const { riderRating, riderTags, riderTip, vendorRating, vendorTags, reviewComment } = req.body;
+
+        if (!riderRating || !vendorRating) {
+            return res.status(400).json({ success: false, message: "Both courier and vendor ratings are required (1-5 stars)" });
+        }
+
+        const ratingData: RatingSubmission = {
+            riderRating: Number(riderRating),
+            riderTags: Array.isArray(riderTags) ? riderTags : [],
+            riderTip: riderTip ? Number(riderTip) : 0,
+            vendorRating: Number(vendorRating),
+            vendorTags: Array.isArray(vendorTags) ? vendorTags : [],
+            reviewComment: reviewComment?.trim() || "",
+        };
+
+        orderRatingsStore.set(orderId, ratingData);
+
+        // If order has items, record review in reviews table
+        const items = await db.select().from(orderItems).where(eq(orderItems.orderId, orderId));
+        if (items && items.length > 0 && userId) {
+            for (const item of items) {
+                try {
+                    await db.insert(reviews).values({
+                        productId: item.productId,
+                        userId: userId,
+                        rating: Number(vendorRating),
+                        comment: reviewComment || (riderTags && riderTags.join(", ")) || "Great order!",
+                    });
+                } catch {
+                    // ignore duplicates in test modes
+                }
+            }
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Thank you for your rating! Your feedback helps couriers and chefs improve.",
+            rating: ratingData,
+        });
+    } catch (error) {
+        console.error("Rate Order Error:", error);
+        return res.status(500).json({ success: false, message: "Failed to submit rating" });
+    }
+};
+
+// 10. FlowPass Membership Status & Subscription
+const flowPassMembersStore = new Map<string, { isMember: boolean; expiresAt: string; plan: string; savingsTotal: number }>();
+
+export const getFlowPassStatus = async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const userId = req.user?.id || "guest";
+        const status = flowPassMembersStore.get(userId) || {
+            isMember: false,
+            expiresAt: "",
+            plan: "none",
+            savingsTotal: 0,
+        };
+        return res.status(200).json({ success: true, flowPass: status });
+    } catch (error) {
+        console.error("Get FlowPass Error:", error);
+        return res.status(500).json({ success: false, message: "Failed to fetch FlowPass status" });
+    }
+};
+
+export const subscribeFlowPass = async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const userId = req.user?.id;
+        const { plan = "monthly", paymentMethod = "wallet" } = req.body;
+
+        if (!userId) {
+            return res.status(401).json({ success: false, message: "Authentication required to subscribe" });
+        }
+
+        const planPrice = plan === "annual" ? 28999 : 2999;
+        const durationDays = plan === "annual" ? 365 : 30;
+        const expiryDate = new Date();
+        expiryDate.setDate(expiryDate.getDate() + durationDays);
+
+        // If paying via wallet, deduct balance
+        if (paymentMethod === "wallet") {
+            const [userWallet] = await db.select().from(wallets).where(eq(wallets.userId, userId));
+            if (userWallet && parseFloat(userWallet.balance) >= planPrice) {
+                const newBal = (parseFloat(userWallet.balance) - planPrice).toFixed(2);
+                await db.update(wallets).set({ balance: newBal }).where(eq(wallets.id, userWallet.id));
+                await db.insert(walletTransactions).values({
+                    walletId: userWallet.id,
+                    amount: planPrice.toFixed(2),
+                    type: "payment",
+                    status: "success",
+                    reference: `FP-${Date.now()}`,
+                });
+            }
+        }
+
+        const newStatus = {
+            isMember: true,
+            expiresAt: expiryDate.toISOString(),
+            plan: plan,
+            savingsTotal: 1500, // starting perk voucher
+        };
+
+        flowPassMembersStore.set(userId, newStatus);
+
+        return res.status(200).json({
+            success: true,
+            message: "Welcome to FlowPass! You now enjoy Free Delivery and 0 Surge Fees.",
+            flowPass: newStatus,
+        });
+    } catch (error) {
+        console.error("Subscribe FlowPass Error:", error);
+        return res.status(500).json({ success: false, message: "Subscription failed" });
     }
 };

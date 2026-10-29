@@ -22,6 +22,7 @@ import {
   DoorOpen,
   ShieldAlert,
   Wallet,
+  Crown,
   Share2,
   Copy,
   Check,
@@ -29,6 +30,7 @@ import {
 import { useCartStore } from "@/stores/cartStore";
 import { useToast } from "@/contexts/ToastContext";
 import { apiClient } from "@/services/api";
+import { FlowPassModal } from "@/components/loyalty/FlowPassModal";
 import { useAuth } from "@/hooks/useAuth";
 import { PhoneInput } from "@/components/ui/PhoneInput";
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet";
@@ -147,6 +149,14 @@ const Checkout = () => {
   const [copiedLink, setCopiedLink] = useState(false);
 
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
+  const [isFlowPassModalOpen, setIsFlowPassModalOpen] = useState(false);
+  const [isFlowPassActive, setIsFlowPassActive] = useState(() => {
+    try {
+      return localStorage.getItem("flowmart_flowpass_active") === "true";
+    } catch {
+      return false;
+    }
+  });
   const [paymentMethod, setPaymentMethod] = useState<"card" | "bank_transfer" | "pay_on_delivery" | "wallet">(
     "wallet"
   );
@@ -472,7 +482,8 @@ const Checkout = () => {
   const tipAmount = tipPreset === "custom" ? (Number(customTip) || 0) : tipPreset;
 
   const subtotal = cart.reduce((sum, item) => sum + Number(item.price) * item.qty, 0);
-  const totalAmount = subtotal + deliveryFee + tipAmount;
+  const effectiveDeliveryFee = isFlowPassActive ? 0 : deliveryFee;
+  const totalAmount = subtotal + effectiveDeliveryFee + tipAmount;
 
   const isAddressComplete =
     deliveryMode === "postcode"
@@ -1769,24 +1780,74 @@ return (
                 </span>
               </div>
 
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  fontSize: "0.938rem",
-                  color: "var(--color-text-secondary)",
-                }}
-              >
-                <span>
-                  Delivery Fee{" "}
-                  {isCalculatingDelivery && (
-                    <span className="text-primary text-xs ml-2">(calculating...)</span>
+              {isFlowPassActive ? (
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    fontSize: "0.938rem",
+                    color: "var(--color-text-secondary)",
+                  }}
+                >
+                  <span style={{ display: "flex", alignItems: "center", gap: 6, color: "#6d28d9", fontWeight: 700 }}>
+                    <Crown size={15} style={{ color: "#fbbf24" }} />
+                    FlowPass Free Delivery
+                  </span>
+                  <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ textDecoration: "line-through", color: "var(--color-text-muted)", fontSize: "0.813rem" }}>
+                      ₦{deliveryFee.toLocaleString()}
+                    </span>
+                    <span style={{ fontWeight: 800, color: "#10b981" }}>FREE</span>
+                  </span>
+                </div>
+              ) : (
+                <>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      fontSize: "0.938rem",
+                      color: "var(--color-text-secondary)",
+                    }}
+                  >
+                    <span>
+                      Delivery Fee{" "}
+                      {isCalculatingDelivery && (
+                        <span className="text-primary text-xs ml-2">(calculating...)</span>
+                      )}
+                    </span>
+                    <span style={{ fontWeight: 700, color: "var(--color-text-primary)" }}>
+                      ₦{deliveryFee.toLocaleString()}
+                    </span>
+                  </div>
+
+                  {deliveryFee > 0 && (
+                    <div
+                      onClick={() => setIsFlowPassModalOpen(true)}
+                      style={{
+                        padding: "6px 10px",
+                        borderRadius: 8,
+                        background: "linear-gradient(135deg, #eef2ff 0%, #ede9fe 100%)",
+                        border: "1px dashed var(--color-primary)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <Crown size={13} style={{ color: "var(--color-primary)" }} />
+                        <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--color-primary)" }}>
+                          Save ₦{deliveryFee.toLocaleString()} with FlowPass
+                        </span>
+                      </div>
+                      <span style={{ fontSize: "0.688rem", fontWeight: 800, color: "var(--color-primary)" }}>
+                        Unlock Free Delivery →
+                      </span>
+                    </div>
                   )}
-                </span>
-                <span style={{ fontWeight: 700, color: "var(--color-text-primary)" }}>
-                  ₦{deliveryFee.toLocaleString()}
-                </span>
-              </div>
+                </>
+              )}
 
               {resolvedZone && (
                 <div
@@ -1951,6 +2012,13 @@ return (
           {isSubmitting ? "Placing..." : "Place Order"}
         </button>
       </div>
+
+      {/* FlowPass VIP Membership Modal */}
+      <FlowPassModal
+        isOpen={isFlowPassModalOpen}
+        onClose={() => setIsFlowPassModalOpen(false)}
+        onSubscribed={() => setIsFlowPassActive(true)}
+      />
 
       {/* Chowdeck-Grade "Pay For Me" Social Checkout Modal */}
       {showPayForMeModal && payForMeOrder && (

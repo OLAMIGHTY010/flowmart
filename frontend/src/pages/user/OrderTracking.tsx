@@ -26,6 +26,7 @@ import "leaflet/dist/leaflet.css";
 import { useOrder, useConfirmReceived } from "@/hooks/useOrders";
 import { useRiderTracking } from "@/hooks/useRiderTracking";
 import { RiderChatDrawer } from "@/components/chat/RiderChatDrawer";
+import { TwoTierRatingModal } from "@/components/feedback/TwoTierRatingModal";
 import { MessageCircle } from "lucide-react";
 import type { OrderStatus } from "@/types/order";
 import { useEffect, useState } from "react";
@@ -119,9 +120,11 @@ export default function OrderTracking() {
 
   const [isDisputeModalOpen, setIsDisputeModalOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
 
   useEffect(() => {
     if (confirmReceivedMutation.isSuccess) {
+      setIsRatingModalOpen(true);
       const timer = setTimeout(() => {
         navigate("/products");
       }, 3000);
@@ -688,6 +691,32 @@ export default function OrderTracking() {
                   <span>Confirm Order Received</span>
                 </>
               )}
+            </button>
+          )}
+
+          {/* Chowdeck Two-Tier Rating Prompt */}
+          {order.status === "delivered" && (
+            <button
+              type="button"
+              onClick={() => setIsRatingModalOpen(true)}
+              style={{
+                width: "100%",
+                padding: "14px 20px",
+                borderRadius: 14,
+                backgroundColor: "var(--color-primary-surface, #eef2ff)",
+                color: "var(--color-primary, #4f46e5)",
+                border: "1.5px solid var(--color-primary, #4f46e5)",
+                fontSize: "0.938rem",
+                fontWeight: 800,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+              }}
+            >
+              <Star size={18} className="fill-amber-400 text-amber-400" />
+              <span>Rate Courier & Food Quality</span>
             </button>
           )}
 
