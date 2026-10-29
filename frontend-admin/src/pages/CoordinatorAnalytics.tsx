@@ -21,7 +21,7 @@ import {
 import { CoordinatorAnalyticsServices } from '@/services/CoordinatorAnalyticsServices';
 
 export default function CoordinatorAnalytics() {
-  const [dateRange] = useState('Dec 1 – Dec 31, 2024');
+  const [dateRange] = useState('Dec 1 – Dec 31, 2026');
 
   const { data: overview, isLoading: overviewLoading } = useQuery({
     queryKey: ['coordOverview'],

@@ -29,7 +29,7 @@ export default function VendorKYCVerification() {
     }
   }, [kycData, navigate]);
 
-  const referenceId = kycData?.referenceId || "KYC-2024-00391";
+  const referenceId = kycData?.referenceId || "KYC-2026-00391";
   const status = kycData?.status || "under_review";
   const isApproved = status === "approved";
 

@@ -218,7 +218,7 @@ export const submitKYC = async (req: AuthenticatedRequest, res: Response) => {
     return res.status(200).json({
       success: true,
       message: "KYC submitted successfully for review",
-      referenceId: `KYC-2024-${Math.floor(10000 + Math.random() * 90000)}`
+      referenceId: `KYC-2026-${Math.floor(10000 + Math.random() * 90000)}`
     });
   } catch (error) {
     console.error("Submit KYC Error:", error);
@@ -280,7 +280,7 @@ export const getKYCStatus = async (req: AuthenticatedRequest, res: Response) => 
     return res.status(200).json({
       success: true,
       status: kyc.status,
-      referenceId: `KYC-2024-${kyc.id.substring(0, 5).toUpperCase()}`,
+      referenceId: `KYC-2026-${kyc.id.substring(0, 5).toUpperCase()}`,
       steps
     });
   } catch (error) {

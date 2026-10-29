@@ -261,7 +261,7 @@ export default function Login() {
           </button>
 
           <p className="text-center text-[10px] font-bold text-[#0ca948] mt-3 opacity-90 tracking-wide">
-            © 2024 FlowMart. All rights reserved.
+            © 2026 FlowMart. All rights reserved.
           </p>
         </form>
         )}

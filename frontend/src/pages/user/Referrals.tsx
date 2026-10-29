@@ -3,16 +3,16 @@ import { Users, Copy, Share2, Info, Gift, Clock, CheckCircle, AlertTriangle } fr
 
 export default function Referrals() {
   const [stats, setStats] = useState({
-    referralCode: "FM-WIN-2024",
+    referralCode: "FM-WIN-2026",
     totalEarned: 2000,
     pendingRewards: 1000,
     totalInvited: 3
   });
 
   const [referrals, setReferrals] = useState([
-    { id: 1, name: "Tunde O.", status: "completed", amount: 1000, date: "2024-10-01" },
-    { id: 2, name: "Sarah A.", status: "completed", amount: 1000, date: "2024-10-02" },
-    { id: 3, name: "Emeka U.", status: "pending", amount: 1000, date: "2024-10-02" },
+    { id: 1, name: "Tunde O.", status: "completed", amount: 1000, date: "2026-10-01" },
+    { id: 2, name: "Sarah A.", status: "completed", amount: 1000, date: "2026-10-02" },
+    { id: 3, name: "Emeka U.", status: "pending", amount: 1000, date: "2026-10-02" },
   ]);
 
   const [copied, setCopied] = useState(false);

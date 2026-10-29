@@ -101,7 +101,7 @@ export default function LiveTracker() {
             <span className="w-1.5 h-1.5 rounded-full bg-[#16a34a] animate-pulse"></span> LIVE
           </div>
           <div>
-            <h2 className="text-lg font-black text-slate-800">December Welfare Distribution 2024</h2>
+            <h2 className="text-lg font-black text-slate-800">December Welfare Distribution 2026</h2>
             <div className="flex items-center gap-3 mt-1 text-xs font-medium text-slate-500">
               <span className="flex items-center gap-1"><Clock size={12} /> Started {overview?.avgCompletionTime || '0h 0m'} ago</span>
               <span className="text-slate-300">|</span>
