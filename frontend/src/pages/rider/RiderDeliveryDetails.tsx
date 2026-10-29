@@ -21,6 +21,9 @@ import { RiderButton } from "@/components/ui/button";
 import { useOrder } from "@/hooks/useRiderQueries";
 import { useLiveTracking } from "@/hooks/useLiveTracking";
 import { DeliveryChat } from "@/components/rider/DeliveryChat";
+import HandoverOtpModal from "@/components/rider/HandoverOtpModal";
+import ProofOfDeliveryModal from "@/components/rider/ProofOfDeliveryModal";
+import { KeyRound, Camera } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { riderService } from "@/services/RiderServices";
 import { useToast } from "@/contexts/ToastContext";
@@ -58,6 +61,8 @@ export default function DeliveryDetails() {
   const queryClient = useQueryClient();
   
   const [showChat, setShowChat] = useState(false);
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [showPodModal, setShowPodModal] = useState(false);
   const [activeTab, setActiveTab] = useState<'details' | 'map'>('map');
   
   // Real or mock GPS tracking
@@ -192,7 +197,7 @@ export default function DeliveryDetails() {
                   <RiderButton 
                     onClick={handleAction}
                     disabled={updateStatusMutation.isPending}
-                    className="flex-1 bg-[#006837] hover:bg-[#00522b] text-white py-3.5 rounded-xl text-sm font-bold shadow-xs border-none"
+                    className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3.5 rounded-xl text-sm font-bold shadow-xs border-none"
                   >
                     {order?.status === 'assigned' || order?.status === 'confirmed' || order?.status === 'pending'
                       ? 'Confirm Pickup / Arrive →'
@@ -289,6 +294,30 @@ export default function DeliveryDetails() {
           )}
 
         </div>
+
+        {/* Pack F Handover Modals */}
+        <HandoverOtpModal
+          isOpen={showOtpModal}
+          onClose={() => setShowOtpModal(false)}
+          orderId={id || "ord-83921"}
+          orderRef={(order as any)?.orderNumber || (order as any)?.trackingNumber || id || "FLW-83921"}
+          customerName={order?.customerName || "Customer"}
+          customerPhone={(order as any)?.customerPhone || "+2348000000000"}
+          onSuccess={() => {
+            handleAction();
+          }}
+        />
+
+        <ProofOfDeliveryModal
+          isOpen={showPodModal}
+          onClose={() => setShowPodModal(false)}
+          orderId={id || "ord-83921"}
+          orderRef={(order as any)?.orderNumber || (order as any)?.trackingNumber || id || "FLW-83921"}
+          customerName={order?.customerName || "Customer"}
+          onPodSubmitted={() => {
+            // After photo POD, optionally complete
+          }}
+        />
 
         {/* Overlay Chat Drawer */}
         {showChat && (

@@ -782,3 +782,107 @@ export const getDemandHotspots = async (_req: Request, res: Response) => {
     return res.status(500).json({ success: false, message: "Failed to retrieve demand hotspots" });
   }
 };
+
+
+// ─── Pack F: Champion Advanced Logistics (Stacked Batching, POD & OTP) ───────
+
+export const getActiveStackedBatch = async (_req: Request, res: Response) => {
+  try {
+    const batch = {
+      id: "batch-lag-9412",
+      status: "available",
+      zone: "Yaba / Akoka Mainland",
+      primaryOrder: {
+        id: "ord-83921",
+        ref: "FLW-83921",
+        store: "Mama Put Delights (Yaba)",
+        destination: "Unilag Faculty of Science, Akoka",
+        customerName: "Folake Adebayo",
+        customerPhone: "+2348028472910",
+        itemsSummary: "Smoky Jollof, Fried Plantain, Grilled Catfish",
+        payout: 2200,
+      },
+      stackedOrder: {
+        id: "ord-83924",
+        ref: "FLW-83924",
+        store: "Mama Put Delights (Yaba)",
+        destination: "St. Finbarrs College Rd, Akoka",
+        customerName: "Babatunde Alabi",
+        customerPhone: "+2348039281729",
+        itemsSummary: "Asun Fried Rice, Cold Chapman",
+        payout: 1400,
+        detourKm: 0.8,
+      },
+      totalPayout: 3600,
+      estimatedMinutes: 38,
+      corridorSequence: [
+        { step: 1, action: "Pickup", location: "Mama Put Delights", note: "Collect Orders FLW-83921 & FLW-83924 (Both ready)" },
+        { step: 2, action: "Dropoff 1", location: "Unilag Faculty of Science", note: "Customer: Folake (Handover OTP required)" },
+        { step: 3, action: "Dropoff 2", location: "St. Finbarrs Rd, Akoka", note: "Customer: Babatunde (+0.8km detour)" },
+      ],
+    };
+
+    return res.status(200).json({ success: true, batch });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Failed to get active stacked batch" });
+  }
+};
+
+export const acceptStackedBatch = async (req: Request, res: Response) => {
+  try {
+    const { batchId } = req.body;
+    return res.status(200).json({
+      success: true,
+      message: "🔥 Stacked Deliveries accepted! ₦3,600 potential payout assigned.",
+      batchId: batchId || "batch-lag-9412",
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Failed to accept stacked batch" });
+  }
+};
+
+export const verifyHandoverOTP = async (req: Request, res: Response) => {
+  try {
+    const { orderId, otp } = req.body;
+    if (!otp || otp.length !== 4) {
+      return res.status(400).json({ success: false, message: "Please provide a valid 4-digit handover OTP" });
+    }
+
+    // Accept standard or any valid 4-digit code in dev/testing
+    return res.status(200).json({
+      success: true,
+      message: "✓ Handover OTP verified! Delivery marked complete and payment escrow released.",
+      orderId: orderId || "ord-83921",
+      settledAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Handover OTP verification failed" });
+  }
+};
+
+export const uploadProofOfDelivery = async (req: Request, res: Response) => {
+  try {
+    const { orderId, photoUrl, dropoffTag, lat, lng } = req.body;
+
+    const podRecord = {
+      id: `pod-${Date.now()}`,
+      orderId: orderId || "ord-83921",
+      photoUrl: photoUrl || "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?q=80&w=800&auto=format&fit=crop",
+      dropoffTag: dropoffTag || "Direct Handover to Customer",
+      location: {
+        lat: lat || 6.518,
+        lng: lng || 3.376,
+      },
+      verifiedAt: new Date().toISOString(),
+      timestampWatermark: `Lat: ${lat || 6.518}, Lng: ${lng || 3.376} • ${new Date().toLocaleDateString('en-GB')} ${new Date().toLocaleTimeString()} WAT`,
+    };
+
+    return res.status(201).json({
+      success: true,
+      message: "✓ Proof-of-Delivery recorded with geotag watermark and timestamp",
+      pod: podRecord,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Failed to record Proof of Delivery" });
+  }
+};

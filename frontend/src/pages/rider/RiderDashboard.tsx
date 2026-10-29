@@ -6,6 +6,7 @@ import { useToast } from "@/contexts/ToastContext";
 import StatCard from '@/components/vendor/StatCard';
 import Icon from '@/components/Icon';
 import RiderLogisticsSlaCard from '@/components/rider/RiderLogisticsSlaCard';
+import StackedBatchCard from '@/components/rider/StackedBatchCard';
 import { RiderAutonomousOfferModal } from '@/components/rider/RiderAutonomousOfferModal';
 import {
   Flame,
@@ -300,6 +301,7 @@ export default function RiderDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 flex flex-col gap-6">
           {/* Live Zone Logistics & SLA Intelligence */}
+          <StackedBatchCard />
           <RiderLogisticsSlaCard />
 
           {/* Active / Assigned Deliveries list */}

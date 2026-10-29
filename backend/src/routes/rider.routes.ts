@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getOrders, getOrderById, updateOrderStatus, getAvailableDeliveries, acceptDelivery, confirmDelivery, confirmDeliveryViaQR, submitKYC, getKYCStatus, updateLocation, getRiderEarningsAnalytics, getCashOnDeliveryLedger, remitCashFloat, getDemandHotspots } from '../controllers/rider.controller';
+import { getOrders, getOrderById, updateOrderStatus, getAvailableDeliveries, acceptDelivery, confirmDelivery, confirmDeliveryViaQR, submitKYC, getKYCStatus, updateLocation, getRiderEarningsAnalytics, getCashOnDeliveryLedger, remitCashFloat, getDemandHotspots, getActiveStackedBatch, acceptStackedBatch, verifyHandoverOTP, uploadProofOfDelivery } from '../controllers/rider.controller';
 import { authenticateJWT, authorizeRoles } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -11,6 +11,12 @@ router.get('/earnings/analytics', getRiderEarningsAnalytics);
 router.get('/cod/ledger', getCashOnDeliveryLedger);
 router.post('/cod/remit', remitCashFloat);
 router.get('/hotspots', getDemandHotspots);
+
+// Pack F: Multi-Order Stacked Batching & Proof-of-Delivery
+router.get('/batch/active', getActiveStackedBatch);
+router.post('/batch/accept', acceptStackedBatch);
+router.post('/delivery/verify-otp', verifyHandoverOTP);
+router.post('/delivery/upload-pod', uploadProofOfDelivery);
 
 router.get('/orders', getOrders);
 router.get('/orders/:id', getOrderById);
