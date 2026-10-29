@@ -17,6 +17,7 @@ export default function ProductCard({ product }: Props) {
 
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.preventDefault();
+    if (isSoldOut) return;
     e.stopPropagation();
     
     addToCart(product, 1);
@@ -58,6 +59,7 @@ export default function ProductCard({ product }: Props) {
   // Simulated social proof & distance metrics
   const orderCount = Math.floor((product.name.charCodeAt(0) * 7) % 60) + 15;
   const etaMinutes = 20 + (product.name.charCodeAt(1) % 15);
+  const isSoldOut = (product as any).stockQuantity === 0;
 
   return (
     <Link
@@ -81,6 +83,15 @@ export default function ProductCard({ product }: Props) {
           <Flame size={12} className="text-amber-400 fill-amber-400" />
           <span>{orderCount}+ ordered</span>
         </div>
+
+        {/* Chowdeck Real-Time Item 86 / Sold Out Overlay */}
+        {isSoldOut && (
+          <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-[1px] flex items-center justify-center z-10">
+            <span className="px-3 py-1 rounded-full bg-red-600 text-white text-[11px] font-black uppercase tracking-wider shadow-lg">
+              Sold Out Today
+            </span>
+          </div>
+        )}
 
         {/* Rating chip */}
         <div className="absolute top-2.5 right-2.5 flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/95 backdrop-blur-md text-[11px] font-extrabold text-slate-800 shadow-sm border border-slate-200/60">
@@ -129,8 +140,13 @@ export default function ProductCard({ product }: Props) {
           
           <button 
             onClick={handleQuickAdd}
-            className="w-9 h-9 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100 cursor-pointer transition-all duration-200 hover:bg-indigo-600 hover:text-white hover:scale-105 shadow-sm"
-            title="Quick add to cart"
+            disabled={isSoldOut}
+            className={`w-9 h-9 rounded-full flex items-center justify-center border transition-all duration-200 shadow-sm ${
+              isSoldOut
+                ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-60'
+                : 'bg-indigo-50 text-indigo-600 border-indigo-100 cursor-pointer hover:bg-indigo-600 hover:text-white hover:scale-105'
+            }`}
+            title={isSoldOut ? "Sold out today" : "Quick add to cart"}
           >
             <Plus size={18} strokeWidth={2.5} />
           </button>

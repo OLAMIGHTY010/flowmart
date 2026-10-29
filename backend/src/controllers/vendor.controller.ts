@@ -1,6 +1,6 @@
 import { Response } from "express";
 import { db } from "../../db";
-import { users, vendorProfiles, vendorKyc, products, orders } from "../../db/schema";
+import { users, vendorProfiles, vendorKyc, products, orders, orderItems } from "../../db/schema";
 import { eq } from "drizzle-orm";
 import { AuthenticatedRequest } from "../middleware/auth.middleware";
 
@@ -360,5 +360,226 @@ export const getVendorStats = async (req: AuthenticatedRequest, res: Response) =
   } catch (error) {
     console.error("Get Vendor Stats Error:", error);
     return res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+
+// ─── Platform C: Kitchen Merchant Experience Engine ──────────────────────────
+
+interface KitchenRushState {
+  isPaused: boolean;
+  pausedUntil: string | null;
+  pauseReason: string | null;
+  addedPrepTimeMinutes: number;
+  lastUpdated: string;
+}
+
+const vendorRushStates = new Map<string, KitchenRushState>();
+
+// 1. Get Kitchen Rush & Store Pause Status
+export const getKitchenRushStatus = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const vendorId = req.user?.id || 'vendor-sample';
+    const state = vendorRushStates.get(vendorId) || {
+      isPaused: false,
+      pausedUntil: null,
+      pauseReason: null,
+      addedPrepTimeMinutes: 0,
+      lastUpdated: new Date().toISOString(),
+    };
+
+    // Auto-unpause if pausedUntil has elapsed
+    if (state.isPaused && state.pausedUntil && new Date(state.pausedUntil) <= new Date()) {
+      state.isPaused = false;
+      state.pausedUntil = null;
+      state.pauseReason = null;
+      vendorRushStates.set(vendorId, state);
+    }
+
+    return res.status(200).json({ success: true, rushState: state });
+  } catch (error) {
+    console.error('Get Kitchen Rush Error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to get kitchen rush status' });
+  }
+};
+
+// 2. Update Kitchen Rush & Store Pause Status
+export const updateKitchenRushStatus = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const vendorId = req.user?.id || 'vendor-sample';
+    const { isPaused, pauseDurationMinutes, pauseReason, addedPrepTimeMinutes } = req.body;
+
+    const existing = vendorRushStates.get(vendorId) || {
+      isPaused: false,
+      pausedUntil: null,
+      pauseReason: null,
+      addedPrepTimeMinutes: 0,
+      lastUpdated: new Date().toISOString(),
+    };
+
+    if (isPaused !== undefined) {
+      existing.isPaused = Boolean(isPaused);
+      if (existing.isPaused && pauseDurationMinutes) {
+        existing.pausedUntil = new Date(Date.now() + Number(pauseDurationMinutes) * 60 * 1000).toISOString();
+        existing.pauseReason = pauseReason || 'Kitchen rush - clearing active ticket backlog';
+      } else if (!existing.isPaused) {
+        existing.pausedUntil = null;
+        existing.pauseReason = null;
+      }
+    }
+
+    if (addedPrepTimeMinutes !== undefined) {
+      existing.addedPrepTimeMinutes = Math.max(0, Number(addedPrepTimeMinutes));
+    }
+
+    existing.lastUpdated = new Date().toISOString();
+    vendorRushStates.set(vendorId, existing);
+
+    return res.status(200).json({
+      success: true,
+      message: existing.isPaused
+        ? `Kitchen paused until ${existing.pausedUntil ? new Date(existing.pausedUntil).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'resumed'}`
+        : `Kitchen active with ${existing.addedPrepTimeMinutes}m buffer prep delay`,
+      rushState: existing,
+    });
+  } catch (error) {
+    console.error('Update Kitchen Rush Error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to update kitchen rush status' });
+  }
+};
+
+// 3. 80mm Thermal Receipt Cloud Print API
+export const getOrderThermalTicket = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const orderId = req.params.id as string;
+    const vendorId = req.user?.id;
+
+    const [order] = await db
+      .select()
+      .from(orders)
+      .where(eq(orders.id, orderId))
+      .limit(1);
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    const items = await db
+      .select({
+        id: orderItems.id,
+        quantity: orderItems.quantity,
+        unitPrice: orderItems.unitPrice,
+        name: products.name,
+        modifiers: products.modifiers,
+      })
+      .from(orderItems)
+      .innerJoin(products, eq(orderItems.productId, products.id))
+      .where(eq(orderItems.orderId, orderId));
+
+    const dateFormatted = new Date(order.createdAt).toLocaleString('en-NG', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    const ticketData = {
+      storeName: 'FlowMart Kitchen Express',
+      orderRef: order.orderRef || order.id.substring(0, 8).toUpperCase(),
+      createdAt: dateFormatted,
+      orderType: 'FLOWMART EXPRESS DELIVERY',
+      deliveryPin: order.deliveryPin || '8492',
+      deliveryAddress: order.deliveryAddress || 'Customer Doorstep',
+      deliveryZone: order.deliveryZone || 'Standard Zone',
+      paymentMethod: order.paymentMethod?.toUpperCase() || 'PAID ONLINE',
+      totalAmount: Number(order.totalAmount),
+      items: items.map((it) => ({
+        name: it.name,
+        qty: it.quantity,
+        price: Number(it.unitPrice),
+        modifiers: Array.isArray(it.modifiers) ? (it.modifiers as any[]).map(m => m.name || m.optionName || m) : [],
+      })),
+      notes: 'Please verify delivery PIN with rider upon pickup handover.',
+    };
+
+    // Monospaced 80mm ESC/POS line formatted representation
+    const divider = '------------------------------------------------';
+    const doubleDivider = '================================================';
+    const lines = [
+      doubleDivider,
+      '           FLOWMART KITCHEN DISPATCH TICKET     ',
+      doubleDivider,
+      `Store:     ${ticketData.storeName}`,
+      `Order:     #${ticketData.orderRef}`,
+      `Time:      ${ticketData.createdAt}`,
+      `Type:      ${ticketData.orderType}`,
+      divider,
+      `DELIVERY PIN:  >>> ${ticketData.deliveryPin} <<<`,
+      divider,
+      'ITEMS ORDERED:',
+      ...ticketData.items.map(
+        (it) => `[${it.qty}x] ${it.name.toUpperCase()} - ₦${(it.qty * it.price).toLocaleString()}`
+      ),
+      divider,
+      `Drop Address: ${ticketData.deliveryAddress}`,
+      `Zone:         ${ticketData.deliveryZone}`,
+      divider,
+      `TOTAL PAID:    ₦${ticketData.totalAmount.toLocaleString()} [${ticketData.paymentMethod}]`,
+      doubleDivider,
+      '       HANDOVER WITH DELIVERY PIN VERIFICATION  ',
+      doubleDivider,
+    ];
+
+    const formattedEscPosText = lines.join('\n');
+
+    return res.status(200).json({
+      success: true,
+      ticketData,
+      formattedEscPosText,
+    });
+  } catch (error) {
+    console.error('Thermal Ticket Error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to generate thermal receipt ticket' });
+  }
+};
+
+// 4. Real-time Item 86 / Out-of-Stock Fast-Toggle
+export const toggleProduct86 = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const productId = req.params.id as string;
+    const vendorId = req.user?.id;
+
+    const [product] = await db
+      .select()
+      .from(products)
+      .where(eq(products.id, productId))
+      .limit(1);
+
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+
+    const currentStock = product.stockQuantity ?? 0;
+    const newStock = currentStock > 0 ? 0 : 50;
+    const is86ed = newStock === 0;
+
+    await db
+      .update(products)
+      .set({ stockQuantity: newStock, updatedAt: new Date() })
+      .where(eq(products.id, productId));
+
+    return res.status(200).json({
+      success: true,
+      message: is86ed
+        ? `"${product.name}" has been 86ed (marked Sold Out Today)`
+        : `"${product.name}" is back in stock!`,
+      is86ed,
+      newStock,
+      productId,
+    });
+  } catch (error) {
+    console.error('Toggle 86 Error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to toggle product stock' });
   }
 };

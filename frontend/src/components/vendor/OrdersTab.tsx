@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useOrders } from '@/hooks/vendor/useVendorQueries';
 import { useUpdateOrderStatus } from '@/hooks/vendor/useVendorMutations';
-import { Loader2, ChevronDown, ChevronUp, Check, X, Filter } from 'lucide-react';
+import { Loader2, ChevronDown, ChevronUp, Check, X, Filter, Printer } from 'lucide-react';
+import { KitchenRushControlCard } from '@/components/vendor/KitchenRushControlCard';
+import { ThermalReceiptModal } from '@/components/vendor/ThermalReceiptModal';
 
 export default function OrdersTab() {
   const { data: orders = [], isLoading } = useOrders();
@@ -12,6 +14,9 @@ export default function OrdersTab() {
   
   // Expanded card ID
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [printOrderId, setPrintOrderId] = useState<string>('');
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [selectedOrderForPrint, setSelectedOrderForPrint] = useState<any>(null);
 
   const toggleExpand = (id: string) => {
     if (expandedId === id) {
@@ -67,7 +72,7 @@ export default function OrdersTab() {
             onClick={() => setFilter(t.id as any)}
             className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
               filter === t.id
-                ? 'bg-[#064e3b] text-white'
+                ? 'bg-[#4f46e5] text-white'
                 : 'bg-[#f3f4f6] text-muted-foreground hover:bg-[#e5e7eb]'
             }`}
           >
@@ -78,13 +83,13 @@ export default function OrdersTab() {
 
       {/* Stats Summary Card */}
       <div className="px-5 mb-4 grid grid-cols-2 gap-3">
-        <div className="bg-[#dcfce7] rounded-2xl p-3 text-center border border-[#bbf7d0]">
-          <p className="text-[10px] text-[#15803d] uppercase font-bold tracking-wider">Total Orders</p>
-          <p className="text-lg font-headings font-extrabold text-[#166534] mt-0.5">{totalOrdersCount} orders</p>
+        <div className="bg-[#e0e7ff] rounded-2xl p-3 text-center border border-[#c7d2fe]">
+          <p className="text-[10px] text-[#4338ca] uppercase font-bold tracking-wider">Total Orders</p>
+          <p className="text-lg font-headings font-extrabold text-[#3730a3] mt-0.5">{totalOrdersCount} orders</p>
         </div>
-        <div className="bg-[#dcfce7] rounded-2xl p-3 text-center border border-[#bbf7d0]">
-          <p className="text-[10px] text-[#15803d] uppercase font-bold tracking-wider">Revenue</p>
-          <p className="text-lg font-headings font-extrabold text-[#166534] mt-0.5">₦{totalRevenueAmount.toLocaleString()}</p>
+        <div className="bg-[#e0e7ff] rounded-2xl p-3 text-center border border-[#c7d2fe]">
+          <p className="text-[10px] text-[#4338ca] uppercase font-bold tracking-wider">Revenue</p>
+          <p className="text-lg font-headings font-extrabold text-[#3730a3] mt-0.5">₦{totalRevenueAmount.toLocaleString()}</p>
         </div>
       </div>
 
@@ -101,7 +106,7 @@ export default function OrdersTab() {
             // Format status pills
             let statusPill = 'bg-[#fef9c3] text-[#a16207]'; // pending
             if (['confirmed', 'assigned', 'picked_up'].includes(order.status)) statusPill = 'bg-[#dbeafe] text-[#1e40af]'; // processing
-            if (order.status === 'delivered') statusPill = 'bg-[#dcfce7] text-[#15803d]'; // completed
+            if (order.status === 'delivered') statusPill = 'bg-[#e0e7ff] text-[#4338ca]'; // completed
             if (order.status === 'cancelled') statusPill = 'bg-[#fee2e2] text-[#b91c1c]'; // cancelled
 
             const displayStatus = ['confirmed', 'assigned', 'picked_up'].includes(order.status) ? 'processing' : order.status === 'delivered' ? 'completed' : order.status;
@@ -133,6 +138,22 @@ export default function OrdersTab() {
                       <p className="text-xs text-muted-foreground truncate mt-0.5">{itemsText}</p>
                     )}
                     <p className="text-sm font-bold text-foreground mt-2">₦{parseFloat(order.totalAmount).toLocaleString()}</p>
+                    
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPrintOrderId(order.id);
+                        setSelectedOrderForPrint(order);
+                        setIsPrintModalOpen(true);
+                      }}
+                      className="px-3 py-1.5 rounded-xl text-xs font-black bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 transition flex items-center gap-1.5 cursor-pointer mt-2"
+                      title="Generate 80mm ESC/POS kitchen thermal receipt"
+                    >
+                      <Printer size={13} className="text-indigo-600" />
+                      <span>Print 80mm Ticket</span>
+                    </button>
+
                     <p className="text-[10px] text-muted-foreground mt-1">
                       Today, {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
@@ -187,7 +208,7 @@ export default function OrdersTab() {
                         <button
                           onClick={() => handleUpdateStatus(order.id, 'confirmed')}
                           disabled={updateStatusMutation.isPending}
-                          className="flex-1 bg-[#16a34a] hover:bg-[#15803d] text-white py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95"
+                          className="flex-1 bg-[#16a34a] hover:bg-[#4338ca] text-white py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95"
                         >
                           <Check size={14} />
                           Accept Order

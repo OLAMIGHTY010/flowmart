@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { updateProfile, submitKYC, getKYCStatus, getVendorStats } from "../controllers/vendor.controller";
+import { updateProfile, submitKYC, getKYCStatus, getVendorStats, getKitchenRushStatus, updateKitchenRushStatus, getOrderThermalTicket, toggleProduct86 } from "../controllers/vendor.controller";
 import { authenticateJWT, authorizeRoles } from "../middleware/auth.middleware";
 
 const router = Router();
@@ -12,4 +12,10 @@ router.put("/profile", updateProfile);
 router.post("/kyc/submit", submitKYC);
 router.get("/kyc/status", getKYCStatus);
 router.get("/dashboard/stats", getVendorStats);
+
+// Platform C: Kitchen Merchant Experience Endpoints
+router.get("/kitchen/rush-status", getKitchenRushStatus);
+router.post("/kitchen/rush-status", updateKitchenRushStatus);
+router.get("/orders/:id/thermal-ticket", getOrderThermalTicket);
+router.post("/products/:id/toggle-86", toggleProduct86);
 export default router;

@@ -15,6 +15,7 @@ import WalletTab from '@/components/vendor/WalletTab';
 import ReviewsTab from '@/components/vendor/ReviewsTab';
 import AnalyticsTab from '@/components/vendor/AnalyticsTab';
 import { AutonomousOpsCard } from '@/components/vendor/AutonomousOpsCard';
+import { KitchenRushControlCard } from '@/components/vendor/KitchenRushControlCard';
 import DashboardSkeleton from '@/components/vendor/ui/DashboardSkeleton';
 
 export default function VendorDashboard() {

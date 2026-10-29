@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Search, Package, MapPin, Phone, Truck, Radio, Loader2 } from "lucide-react";
+import { Search, Package, MapPin, Phone, Truck, Radio, Loader2, Printer } from "lucide-react";
+import { KitchenRushControlCard } from "@/components/vendor/KitchenRushControlCard";
+import { ThermalReceiptModal } from "@/components/vendor/ThermalReceiptModal";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/services/api";
 import { useToast } from "@/contexts/ToastContext";
@@ -15,6 +17,9 @@ const statusStyles = {
 
 const VendorOrders = () => {
   const [filter, setFilter] = useState("all");
+  const [printOrderId, setPrintOrderId] = useState<string>('');
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [selectedOrderForPrint, setSelectedOrderForPrint] = useState<any>(null);
   const queryClient = useQueryClient();
   const { showToast } = useToast();
   
@@ -43,6 +48,10 @@ const VendorOrders = () => {
       <h1 style={{ fontSize: "1.75rem", fontWeight: 700, color: "var(--color-text-primary)", marginBottom: 32 }}>
         Orders Management
       </h1>
+
+      <div style={{ marginBottom: 24 }}>
+        <KitchenRushControlCard />
+      </div>
 
       <div className="card">
         {/* Header / Tabs */}
@@ -116,7 +125,34 @@ const VendorOrders = () => {
                           <span>{order.deliveryAddress || "N/A"}</span>
                         </div>
                       </div>
-                      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "flex-end" }}>
+                      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "flex-end", flexWrap: "wrap", gap: 8 }}>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPrintOrderId(order.id);
+                            setSelectedOrderForPrint(order);
+                            setIsPrintModalOpen(true);
+                          }}
+                          style={{
+                            padding: "9px 16px",
+                            fontSize: "0.813rem",
+                            fontWeight: 700,
+                            borderRadius: "var(--radius-md)",
+                            backgroundColor: "var(--color-primary-surface, #e0e7ff)",
+                            color: "var(--color-primary, #4f46e5)",
+                            border: "1px solid var(--color-primary)",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            cursor: "pointer",
+                            marginRight: 8,
+                          }}
+                        >
+                          <Printer size={15} />
+                          <span>80mm Ticket</span>
+                        </button>
+
                         
                         {/* PHASE 4: Broadcast to Riders Action */}
                         {order.status === "ready" && (

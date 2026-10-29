@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { apiClient } from '@/services/api';
+import { useToast } from '@/contexts/ToastContext';
 import { useVendorProducts } from '@/hooks/vendor/useVendorQueries';
 import { useCreateProduct, useUpdateProduct, useDeleteProduct } from '@/hooks/vendor/useVendorMutations';
 import { Loader2, Plus, Edit2, Trash2, Search, X } from 'lucide-react';
@@ -11,6 +14,27 @@ export default function ProductsTab() {
   const createMutation = useCreateProduct();
   const updateMutation = useUpdateProduct();
   const deleteMutation = useDeleteProduct();
+  const queryClient = useQueryClient();
+  const { showToast } = useToast();
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+
+  const handleToggle86 = async (id: string, name: string) => {
+    setTogglingId(id);
+    try {
+      const res = await apiClient.post<{ success: boolean; is86ed: boolean; message: string }>(
+        `/vendor/products/${id}/toggle-86`,
+        {}
+      );
+      if (res.success) {
+        showToast(res.message, res.is86ed ? 'warning' : 'success');
+        queryClient.invalidateQueries({ queryKey: ['vendor-products'] });
+      }
+    } catch (err: any) {
+      showToast(err.message || 'Failed to toggle product status', 'error');
+    } finally {
+      setTogglingId(null);
+    }
+  };
 
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');
@@ -259,7 +283,31 @@ export default function ProductsTab() {
 
                 {/* Actions and Stock */}
                 <div className="flex flex-col items-end gap-2.5">
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-2">
+                  {/* Chowdeck Real-Time Item 86 / Out of Stock Fast-Toggle */}
+                  <button
+                    type="button"
+                    disabled={togglingId === p.id}
+                    onClick={() => handleToggle86(p.id, p.name)}
+                    className={`px-2.5 py-1 rounded-xl text-[10px] font-black transition cursor-pointer flex items-center gap-1.5 ${
+                      p.stockQuantity === 0
+                        ? 'bg-red-50 text-red-700 border border-red-200 hover:bg-red-100'
+                        : 'bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100'
+                    }`}
+                    title={
+                      p.stockQuantity === 0
+                        ? 'Item is 86ed (Sold Out Today). Tap to restore stock.'
+                        : 'In Stock. Tap to 86 item (mark Sold Out Today).'
+                    }
+                  >
+                    <span
+                      className={`w-2 h-2 rounded-full ${
+                        p.stockQuantity === 0 ? 'bg-red-500' : 'bg-indigo-600'
+                      }`}
+                    />
+                    <span>{p.stockQuantity === 0 ? '86ed (Sold Out)' : 'In Stock'}</span>
+                  </button>
+
                     <button 
                       onClick={() => openEditModal(p)}
                       className="p-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-muted/40 transition-all cursor-pointer"

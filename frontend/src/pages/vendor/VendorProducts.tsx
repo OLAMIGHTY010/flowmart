@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Plus, Search, Edit2, Trash2, EyeOff, Eye, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { productServices } from "@/services/ProductServices";
+import { apiClient } from "@/services/api";
 import type { Product } from "@/types/product";
 
 const VendorProducts = () => {
@@ -25,6 +26,20 @@ const VendorProducts = () => {
       console.error("Failed to fetch products:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleToggle86 = async (id: string) => {
+    try {
+      const res = await apiClient.post<{ success: boolean; is86ed: boolean; message: string }>(
+        `/vendor/products/${id}/toggle-86`,
+        {}
+      );
+      if (res.success) {
+        fetchProducts();
+      }
+    } catch (err) {
+      console.error('Toggle 86 failed:', err);
     }
   };
 
