@@ -22,6 +22,12 @@ export const initWebSocketHub = (server: HttpServer) => {
     if (userId) {
       connectedUsers.set(userId, socket.id);
       if (socket.join) socket.join(`user:${userId}`);
+
+    socket.on('join_order_room', (orderId: string) => {
+      if (orderId && socket.join) {
+        socket.join(`order:${orderId}`);
+      }
+    });
       console.log(`User ${userId} connected.`);
     }
 
@@ -173,6 +179,14 @@ export const emitDisputeUpdate = (disputeId: string, status: string, payload?: a
 export const broadcastNewDelivery = (payload: any) => {
   if (io) {
     io.emit('delivery:available', payload);
+  }
+};
+
+
+export const emitOrderChatMessage = (orderId: string, message: any) => {
+  if (io) {
+    io.to(`order:${orderId}`).emit('order:chatMessage', message);
+    io.emit(`order:${orderId}:message`, message);
   }
 };
 

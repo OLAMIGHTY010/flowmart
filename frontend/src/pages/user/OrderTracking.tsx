@@ -25,6 +25,8 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useOrder, useConfirmReceived } from "@/hooks/useOrders";
 import { useRiderTracking } from "@/hooks/useRiderTracking";
+import { RiderChatDrawer } from "@/components/chat/RiderChatDrawer";
+import { MessageCircle } from "lucide-react";
 import type { OrderStatus } from "@/types/order";
 import { useEffect, useState } from "react";
 import DisputeModal from "@/components/orders/DisputeModal";
@@ -116,6 +118,7 @@ export default function OrderTracking() {
   );
 
   const [isDisputeModalOpen, setIsDisputeModalOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   useEffect(() => {
     if (confirmReceivedMutation.isSuccess) {
@@ -478,26 +481,50 @@ export default function OrderTracking() {
                   </div>
                 </div>
 
-                {/* Direct Action: Call Courier */}
-                <a
-                  href={`tel:${rider.phone}`}
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 6,
-                    padding: "10px 18px",
-                    borderRadius: 12,
-                    backgroundColor: "var(--color-primary, #4f46e5)",
-                    color: "#ffffff",
-                    fontSize: "0.875rem",
-                    fontWeight: 700,
-                    textDecoration: "none",
-                    boxShadow: "0 2px 8px rgba(79, 70, 229, 0.25)",
-                  }}
-                >
-                  <Phone size={16} />
-                  <span>Call</span>
-                </a>
+                {/* Direct Actions: Chat & Call Courier */}
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <button
+                    type="button"
+                    onClick={() => setIsChatOpen(true)}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      padding: "10px 16px",
+                      borderRadius: 12,
+                      backgroundColor: "var(--color-primary-surface, #eef2ff)",
+                      color: "var(--color-primary, #4f46e5)",
+                      border: "1.5px solid var(--color-primary, #4f46e5)",
+                      fontSize: "0.875rem",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      boxShadow: "0 2px 8px rgba(79, 70, 229, 0.1)",
+                    }}
+                  >
+                    <MessageCircle size={16} />
+                    <span>Chat</span>
+                  </button>
+
+                  <a
+                    href={`tel:${rider.phone}`}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      padding: "10px 16px",
+                      borderRadius: 12,
+                      backgroundColor: "var(--color-primary, #4f46e5)",
+                      color: "#ffffff",
+                      fontSize: "0.875rem",
+                      fontWeight: 700,
+                      textDecoration: "none",
+                      boxShadow: "0 2px 8px rgba(79, 70, 229, 0.25)",
+                    }}
+                  >
+                    <Phone size={16} />
+                    <span>Call</span>
+                  </a>
+                </div>
               </div>
             </div>
           )}

@@ -5,10 +5,10 @@
 
 import { Request, Response } from "express";
 import { db } from "../../db";
-import { products, orders, orderItems, users, vendorProfiles, vendorKyc } from "../../db/schema";
+import { products, orders, orderItems, users, vendorProfiles, vendorKyc, wallets, walletTransactions } from "../../db/schema";
 import { eq, and, desc, sql, or } from "drizzle-orm";
 import { AuthenticatedRequest } from "../middleware/auth.middleware";
-import { sendInAppNotification, broadcastNewDelivery, emitOrderStatusUpdate, emitEscrowStatusUpdate } from "../services/websocket";
+import { sendInAppNotification, broadcastNewDelivery, emitOrderStatusUpdate, emitEscrowStatusUpdate, emitOrderChatMessage } from "../services/websocket";
 import { emailService } from "../services/email.service";
 import crypto from "crypto";
 
@@ -749,4 +749,75 @@ export const initializePayForMePayment = async (req: Request, res: Response) => 
 			message: error.message || "Failed to initialize sponsor payment",
 		});
 	}
+};
+
+
+// 8. Order-Linked Live Courier & Customer Chat (Chowdeck In-App Courier Chat)
+interface OrderChatMessage {
+    id: string;
+    orderId: string;
+    senderId: string;
+    senderRole: 'buyer' | 'rider';
+    senderName: string;
+    content: string;
+    timestamp: string;
+}
+
+const orderChatStore = new Map<string, OrderChatMessage[]>();
+
+export const getOrderMessages = async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const orderId = req.params.id as string;
+        const messages = orderChatStore.get(orderId) || [];
+        return res.status(200).json({ success: true, messages });
+    } catch (error) {
+        console.error("Get Order Messages Error:", error);
+        return res.status(500).json({ success: false, message: "Failed to retrieve messages" });
+    }
+};
+
+export const sendOrderMessage = async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const orderId = req.params.id as string;
+        const userId = req.user?.id;
+        const role = req.user?.role;
+        const { content, senderRole, senderName } = req.body;
+
+        if (!content || !content.trim()) {
+            return res.status(400).json({ success: false, message: "Message content cannot be empty" });
+        }
+
+        const effectiveRole = (senderRole === 'rider' || role === 'dispatch_rider') ? 'rider' : 'buyer';
+        const effectiveName = senderName || (effectiveRole === 'rider' ? 'FlowMart Courier' : 'Customer');
+
+        const newMessage: OrderChatMessage = {
+            id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+            orderId,
+            senderId: userId || 'anonymous',
+            senderRole: effectiveRole,
+            senderName: effectiveName,
+            content: content.trim(),
+            timestamp: new Date().toISOString(),
+        };
+
+        if (!orderChatStore.has(orderId)) {
+            orderChatStore.set(orderId, []);
+        }
+        orderChatStore.get(orderId)!.push(newMessage);
+
+        if (orderChatStore.get(orderId)!.length > 100) {
+            orderChatStore.get(orderId)!.shift();
+        }
+
+        try {
+            emitOrderChatMessage(orderId, newMessage);
+        } catch {
+            // socket broadcast fallback
+        }
+
+        return res.status(201).json({ success: true, message: newMessage });
+    } catch (error) {
+        console.error("Send Order Message Error:", error);
+        return res.status(500).json({ success: false, message: "Failed to send message" });
+    }
 };

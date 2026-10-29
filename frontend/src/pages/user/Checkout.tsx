@@ -21,6 +21,7 @@ import {
   Package,
   DoorOpen,
   ShieldAlert,
+  Wallet,
   Share2,
   Copy,
   Check,
@@ -145,8 +146,9 @@ const Checkout = () => {
   const [payForMeOrder, setPayForMeOrder] = useState<any>(null);
   const [copiedLink, setCopiedLink] = useState(false);
 
-  const [paymentMethod, setPaymentMethod] = useState<"card" | "bank_transfer" | "pay_on_delivery">(
-    "card"
+  const [walletBalance, setWalletBalance] = useState<number | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "bank_transfer" | "pay_on_delivery" | "wallet">(
+    "wallet"
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deliveryFee, setDeliveryFee] = useState(0);
@@ -1642,6 +1644,16 @@ return (
 
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {[
+                {
+                  id: "wallet",
+                  label: "FlowMart In-App Wallet",
+                  desc: walletBalance !== null
+                    ? (walletBalance >= totalAmount
+                        ? `₦${walletBalance.toLocaleString()} Available • 1-Click Instant Checkout`
+                        : `₦${walletBalance.toLocaleString()} Available • Insufficient balance (Need ₦${(totalAmount - walletBalance).toLocaleString()} more)`)
+                    : "1-Click instant payment from your wallet balance",
+                  badge: walletBalance !== null && walletBalance >= totalAmount ? "1-Click Instant" : null,
+                },
                 { id: "card", label: "Credit/Debit Card (Paystack)", desc: "Instant & Secure via Paystack" },
                 { id: "bank_transfer", label: "Direct Bank Transfer", desc: "Transfer directly to verified FlowMart account" },
                 {
@@ -1679,7 +1691,24 @@ return (
                       style={{ accentColor: "var(--color-primary)", width: 18, height: 18 }}
                     />
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: "1rem" }}>{method.label}</div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div style={{ fontWeight: 700, fontSize: "1rem" }}>{method.label}</div>
+                        {method.badge && (
+                          <span
+                            style={{
+                              fontSize: "0.688rem",
+                              fontWeight: 800,
+                              padding: "2px 8px",
+                              borderRadius: 9999,
+                              backgroundColor: "#ecfdf5",
+                              color: "#059669",
+                              border: "1px solid #a7f3d0",
+                            }}
+                          >
+                            {method.badge}
+                          </span>
+                        )}
+                      </div>
                       <div style={{ fontSize: "0.813rem", color: "var(--color-text-muted)" }}>
                         {method.desc}
                       </div>
@@ -1838,7 +1867,11 @@ return (
               }}
             >
               <ShieldCheck size={20} />
-              {isSubmitting ? "Processing Order..." : `Place Order • ₦${totalAmount.toLocaleString()}`}
+              {isSubmitting
+                ? "Processing Order..."
+                : paymentMethod === "wallet"
+                ? `Pay with Wallet • ₦${totalAmount.toLocaleString()}`
+                : `Place Order • ₦${totalAmount.toLocaleString()}`}
             </button>
 
             <div style={{ margin: "14px 0 10px 0", textAlign: "center" }}>

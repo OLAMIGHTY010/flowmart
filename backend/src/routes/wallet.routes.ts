@@ -6,6 +6,7 @@ const router = Router();
 
 router.use(authenticateJWT);
 
+router.get('/', getWalletBalance);
 router.get('/balance', getWalletBalance);
 router.get('/transactions', getWalletTransactions);
 router.post('/fund', fundWallet);
