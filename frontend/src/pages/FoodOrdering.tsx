@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import {
+  Crown,
   Search,
   Star,
   Clock,
@@ -196,6 +197,7 @@ const FOOD_CATEGORIES = [
 
 // ─── Component ──────────────────────────────────────────────
 export default function FoodOrdering() {
+  const isFlowPass = typeof window !== "undefined" && localStorage.getItem("flowmart_flowpass_active") === "true";
   // State
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
@@ -489,7 +491,15 @@ export default function FoodOrdering() {
                         <span className="h-3 w-px bg-gray-300" />
                         <span className="flex items-center gap-1">
                           <Bike className="h-3.5 w-3.5 text-primary" />
-                          {restaurant.deliveryFee === 0 ? "Free" : formatNaira(restaurant.deliveryFee)}
+                          {isFlowPass ? (
+                          <span className="text-emerald-600 font-bold flex items-center gap-0.5">
+                            <Crown className="h-3 w-3 text-amber-500" /> Free
+                          </span>
+                        ) : restaurant.deliveryFee === 0 ? (
+                          "Free"
+                        ) : (
+                          formatNaira(restaurant.deliveryFee)
+                        )}
                         </span>
                         <span className="h-3 w-px bg-gray-300" />
                         <span className="flex items-center gap-1">
