@@ -804,3 +804,278 @@ export const addEmergencyShiftSlots = async (req: Request, res: Response) => {
     return res.status(500).json({ success: false, message: "Failed to activate emergency slots: " + error.message });
   }
 };
+
+
+// ============================================================================
+// SPRINT M: AI DISPATCH DISPUTE RESOLUTION & PROOF-OF-DELIVERY (POD) AUDIT
+// ============================================================================
+
+interface DisputeClaim {
+  id: string;
+  orderId: string;
+  orderNumber: string;
+  customerName: string;
+  customerPhone: string;
+  restaurantName: string;
+  deliveryAddress: string;
+  claimedAmountNgn: number;
+  claimReason: "ORDER_NOT_DELIVERED" | "WRONG_DOORSTEP" | "DAMAGED_SPILLAGE" | "COLD_FOOD";
+  customerStatement: string;
+  customerPhotoUrl?: string;
+  courierChampion: {
+    id: string;
+    name: string;
+    phone: string;
+    vehiclePlate: string;
+    rating: number;
+    totalDeliveries: number;
+  };
+  podEvidence: {
+    photoUrl: string;
+    timestampWatermark: string;
+    dropoffCoords: { lat: number; lng: number };
+    destinationCoords: { lat: number; lng: number };
+    distanceMeters: number;
+    isGeofenceMatch: boolean;
+    handoverOtpVerified: boolean;
+    otpCode: string;
+    thermalBoxInspected: boolean;
+  };
+  aiEvaluation: {
+    recommendation: "DISMISS_CLAIM" | "COURTESY_CREDIT" | "APPROVE_REFUND";
+    confidenceScorePct: number;
+    courierExonerationProbabilityPct: number;
+    rationaleSummary: string;
+    riskScore: "LOW" | "MEDIUM" | "HIGH";
+  };
+  status: "PENDING_REVIEW" | "RESOLVED_DISMISSED" | "RESOLVED_REFUNDED" | "RESOLVED_COURTESY";
+  resolutionNotes?: string;
+  resolvedAt?: string;
+}
+
+// In-memory claims repository with realistic high-fidelity claims
+const disputeAuditClaimsStore: Record<string, DisputeClaim> = {
+  "disp-89241": {
+    id: "disp-89241",
+    orderId: "ord-89241",
+    orderNumber: "#FM-89241",
+    customerName: "Babajide Sanwo",
+    customerPhone: "+234 802 334 9122",
+    restaurantName: "Mama's Kitchen Bistro • Lekki",
+    deliveryAddress: "Plot 14 Admiralty Way, Lekki Phase 1 (Gate 4)",
+    claimedAmountNgn: 14500,
+    claimReason: "ORDER_NOT_DELIVERED",
+    customerStatement: "Rider marked order delivered, but I checked my gate and nothing is there! I was waiting inside the living room. Need a full refund.",
+    customerPhotoUrl: "https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=800&auto=format&fit=crop",
+    courierChampion: {
+      id: "ch-101",
+      name: "Ibrahim Suleiman",
+      phone: "+234 803 112 4892",
+      vehiclePlate: "LAGOS • KJA-482-XA",
+      rating: 4.9,
+      totalDeliveries: 428
+    },
+    podEvidence: {
+      photoUrl: "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?q=80&w=800&auto=format&fit=crop",
+      timestampWatermark: "Lat: 6.4478, Lng: 3.4721 • 30/10/2026 14:22:15 WAT • FlowMart Security Verified",
+      dropoffCoords: { lat: 6.4478, lng: 3.4721 },
+      destinationCoords: { lat: 6.4476, lng: 3.4720 },
+      distanceMeters: 14,
+      isGeofenceMatch: true,
+      handoverOtpVerified: true,
+      otpCode: "8249",
+      thermalBoxInspected: true
+    },
+    aiEvaluation: {
+      recommendation: "DISMISS_CLAIM",
+      confidenceScorePct: 98,
+      courierExonerationProbabilityPct: 99,
+      rationaleSummary: "Unassailable delivery evidence. Handover OTP 8249 was authenticated on-device at 14:22 WAT, and courier GPS coordinates were 14m from customer door. Package photo matches Admiralty Way black gate. Recommend dismissing claim to protect courier champion.",
+      riskScore: "LOW"
+    },
+    status: "PENDING_REVIEW"
+  },
+  "disp-89230": {
+    id: "disp-89230",
+    orderId: "ord-89230",
+    orderNumber: "#FM-89230",
+    customerName: "Amina Yusuf",
+    customerPhone: "+234 813 902 4410",
+    restaurantName: "Gourmet Grills & Seafood",
+    deliveryAddress: "Block 8, Parkview Estate, Ikoyi",
+    claimedAmountNgn: 22800,
+    claimReason: "DAMAGED_SPILLAGE",
+    customerStatement: "The soup container cracked completely during transit. Palm oil spilled all over the plantain and takeaway bag.",
+    customerPhotoUrl: "https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?q=80&w=800&auto=format&fit=crop",
+    courierChampion: {
+      id: "ch-105",
+      name: "Kayode Adeleke",
+      phone: "+234 809 332 1980",
+      vehiclePlate: "LAGOS • KSF-819-QN",
+      rating: 4.8,
+      totalDeliveries: 312
+    },
+    podEvidence: {
+      photoUrl: "https://images.unsplash.com/photo-1563245372-f21724e3856d?q=80&w=800&auto=format&fit=crop",
+      timestampWatermark: "Lat: 6.4520, Lng: 3.4390 • 30/10/2026 13:45:00 WAT",
+      dropoffCoords: { lat: 6.4520, lng: 3.4390 },
+      destinationCoords: { lat: 6.4519, lng: 3.4391 },
+      distanceMeters: 8,
+      isGeofenceMatch: true,
+      handoverOtpVerified: true,
+      otpCode: "4912",
+      thermalBoxInspected: true
+    },
+    aiEvaluation: {
+      recommendation: "APPROVE_REFUND",
+      confidenceScorePct: 94,
+      courierExonerationProbabilityPct: 50,
+      rationaleSummary: "Legitimate customer photo clearly shows fractured plastic container seal and heavy palm oil leakage. Courier delivered to correct location with OTP, but merchant packaging failure caused damage. Recommend 100% refund funded by merchant packaging penalty.",
+      riskScore: "HIGH"
+    },
+    status: "PENDING_REVIEW"
+  },
+  "disp-89218": {
+    id: "disp-89218",
+    orderId: "ord-89218",
+    orderNumber: "#FM-89218",
+    customerName: "Femi Otedola",
+    customerPhone: "+234 807 554 2209",
+    restaurantName: "Yaba Spice Kitchen",
+    deliveryAddress: "12 Commercial Avenue, Sabo Yaba",
+    claimedAmountNgn: 8500,
+    claimReason: "COLD_FOOD",
+    customerStatement: "Delivery took over 50 minutes from pickup and arrived lukewarm. Not the quality I expect from FlowMart.",
+    courierChampion: {
+      id: "ch-104",
+      name: "Chinedu Eze",
+      phone: "+234 805 441 8933",
+      vehiclePlate: "LAGOS • LSR-421-SM",
+      rating: 4.6,
+      totalDeliveries: 185
+    },
+    podEvidence: {
+      photoUrl: "https://images.unsplash.com/photo-1526367790999-0150786686a2?q=80&w=800&auto=format&fit=crop",
+      timestampWatermark: "Lat: 6.5140, Lng: 3.3710 • 30/10/2026 12:55:00 WAT",
+      dropoffCoords: { lat: 6.5140, lng: 3.3710 },
+      destinationCoords: { lat: 6.5142, lng: 3.3712 },
+      distanceMeters: 22,
+      isGeofenceMatch: true,
+      handoverOtpVerified: true,
+      otpCode: "3019",
+      thermalBoxInspected: true
+    },
+    aiEvaluation: {
+      recommendation: "COURTESY_CREDIT",
+      confidenceScorePct: 88,
+      courierExonerationProbabilityPct: 85,
+      rationaleSummary: "Courier had thermal bag verified and met geofenced handover OTP. However, heavy traffic on Sabo bridge added +18 mins transit delay. Recommend issuing ₦2,000 apology wallet credit to customer without docking courier pay.",
+      riskScore: "MEDIUM"
+    },
+    status: "PENDING_REVIEW"
+  }
+};
+
+export const getDisputeAuditQueue = async (req: Request, res: Response) => {
+  try {
+    const claims = Object.values(disputeAuditClaimsStore);
+
+    const pendingCount = claims.filter(c => c.status === "PENDING_REVIEW").length;
+    const resolvedCount = claims.filter(c => c.status.startsWith("RESOLVED")).length;
+
+    return res.status(200).json({
+      success: true,
+      summary: {
+        pendingAuditClaims: pendingCount,
+        resolvedClaimsToday: resolvedCount + 18,
+        averageAiEvaluationSeconds: 1.4,
+        courierProtectionRatePct: 91.4,
+        autoSettledCourtesyCreditsNgn: 18500
+      },
+      claims
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: "Failed to fetch dispute queue: " + error.message });
+  }
+};
+
+export const getDisputeEvidenceDetails = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const claimId = Array.isArray(id) ? id[0] : (id || "");
+    const claim = disputeAuditClaimsStore[claimId];
+
+    if (!claim) {
+      return res.status(404).json({ success: false, message: "Dispute evidence not found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      claim,
+      auditTimeline: [
+        { time: "13:30 WAT", event: "Kitchen marked order ready for pickup" },
+        { time: "13:35 WAT", event: "Courier champion arrived & thermal box verified" },
+        { time: "13:58 WAT", event: "Courier arrived within 15m of customer doorstep" },
+        { time: "14:22 WAT", event: "Customer entered 4-digit handover OTP 8249" },
+        { time: "14:23 WAT", event: "Geotagged proof-of-delivery photo uploaded to FlowMart cloud" },
+        { time: "14:35 WAT", event: "Customer opened dispute claim via mobile app" },
+        { time: "14:35 WAT", event: "AI Arbiter generated 98% courier exoneration score" }
+      ]
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: "Failed to fetch evidence details: " + error.message });
+  }
+};
+
+export const resolveDisputeAudit = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const claimId = Array.isArray(id) ? id[0] : (id || "");
+    const { resolutionType, adminNotes, waiveCourierPenalty = true } = req.body;
+
+    const claim = disputeAuditClaimsStore[claimId];
+    if (!claim) {
+      return res.status(404).json({ success: false, message: "Dispute claim not found" });
+    }
+
+    if (resolutionType === "DISMISS") {
+      claim.status = "RESOLVED_DISMISSED";
+      claim.resolutionNotes = adminNotes || "Delivery validated by Geofence (14m) & Handover OTP. Claim dismissed.";
+    } else if (resolutionType === "FULL_REFUND") {
+      claim.status = "RESOLVED_REFUNDED";
+      claim.resolutionNotes = adminNotes || "Full refund issued to customer. Packaging liability settled.";
+    } else if (resolutionType === "COURTESY_CREDIT") {
+      claim.status = "RESOLVED_COURTESY";
+      claim.resolutionNotes = adminNotes || "Issued ₦2,000 courtesy wallet credit. Courier champion rating protected.";
+    }
+
+    claim.resolvedAt = new Date().toISOString();
+
+    return res.status(200).json({
+      success: true,
+      message: `Dispute ${claim.orderNumber} successfully resolved with action: ${resolutionType}.`,
+      claim
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: "Failed to resolve dispute: " + error.message });
+  }
+};
+
+export const evaluateDisputeWithAI = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.body;
+    const claimId = Array.isArray(id) ? id[0] : (id || "disp-89241");
+    const claim = disputeAuditClaimsStore[claimId];
+
+    if (!claim) {
+      return res.status(404).json({ success: false, message: "Claim not found for evaluation" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      evaluation: claim.aiEvaluation
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: "AI evaluation failed: " + error.message });
+  }
+};

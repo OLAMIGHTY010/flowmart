@@ -12,7 +12,8 @@ import {
   Wallet,
   ShieldAlert,
   Zap,
-  CalendarClock
+  CalendarClock,
+  Scale
 } from "lucide-react";
 
 export default function AdminLayout() {
@@ -28,6 +29,7 @@ export default function AdminLayout() {
     { name: "Live Dispatch Map", path: "/admin/dispatch", icon: <Radio size={20} /> },
     { name: "Dynamic Surge & Weather", path: "/admin/surge", icon: <Zap size={20} /> },
     { name: "Fleet Shifts & Floor Pay", path: "/admin/shifts", icon: <CalendarClock size={20} /> },
+    { name: "AI Dispute & POD Audit", path: "/admin/disputes", icon: <Scale size={20} /> },
     { name: "Dispute & Refunds", path: "/admin/refunds", icon: <Wallet size={20} /> },
     { name: "Fraud Risk Matrix", path: "/admin/fraud", icon: <ShieldAlert size={20} /> },
     { name: "Vendor Approvals", path: "/admin/kyc/vendors", icon: <Store size={20} /> },

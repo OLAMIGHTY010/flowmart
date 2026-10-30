@@ -18,7 +18,11 @@ import {
   toggleWeatherBroadcast,
   simulateSurgePricing,
   getFleetShiftMatrix,
-  addEmergencyShiftSlots
+  addEmergencyShiftSlots,
+  getDisputeAuditQueue,
+  getDisputeEvidenceDetails,
+  resolveDisputeAudit,
+  evaluateDisputeWithAI
 } from '../controllers/admin.controller';
 
 import {
@@ -89,6 +93,13 @@ router.post('/surge/simulate', simulateSurgePricing);
 // Sprint K: Operations Fleet Shift Attendance & Floor Guarantee Matrix
 router.get('/shifts/fleet-matrix', getFleetShiftMatrix);
 router.post('/shifts/emergency-slots', addEmergencyShiftSlots);
+
+// Sprint M: AI Dispatch Dispute Resolution & Proof-of-Delivery Audit
+router.get('/disputes/audit-queue', getDisputeAuditQueue);
+router.get('/disputes/:id/evidence', getDisputeEvidenceDetails);
+router.post('/disputes/:id/resolve', resolveDisputeAudit);
+router.post('/disputes/ai-evaluate', evaluateDisputeWithAI);
+
 
 
 // Vendor Approval routes
