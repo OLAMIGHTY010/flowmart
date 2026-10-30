@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { 
   LayoutDashboard, Package, ShoppingCart, 
   Settings, LogOut, Menu, X, Leaf,
-  UserCheck, ShieldAlert, Megaphone, Flame
+  UserCheck, ShieldAlert, Megaphone, Flame, Receipt
 } from "lucide-react";
 
 const navItems = [
@@ -12,6 +12,7 @@ const navItems = [
   { path: "/vendor/products", label: "My Products", icon: Package },
   { path: "/vendor/orders", label: "Orders", icon: ShoppingCart },
   { path: "/vendor/kds", label: "Kitchen Display (KDS)", icon: Flame },
+  { path: "/vendor/statements", label: "Payouts & Statements", icon: Receipt },
   { path: "/vendor/marketing", label: "Marketing & Ads", icon: Megaphone },
   { path: "/vendor/kyc", label: "KYC Verification", icon: ShieldAlert },
   { path: "/vendor/settings", label: "Settings", icon: Settings },

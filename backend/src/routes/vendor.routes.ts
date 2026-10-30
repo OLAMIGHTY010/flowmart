@@ -11,7 +11,11 @@ import {
   getKdsTickets,
   updateKdsTicketStatus,
   addKdsTicketDelay,
-  toggleKdsTicketItem
+  toggleKdsTicketItem,
+  getMerchantFinancialStatements,
+  getMerchantPayoutSchedule,
+  requestInstantPayout,
+  updateMerchantBankSettings
 } from "../controllers/vendor.controller";
 import { authenticateJWT, authorizeRoles } from "../middleware/auth.middleware";
 
@@ -31,4 +35,17 @@ router.get("/kitchen/rush-status", getKitchenRushStatus);
 router.post("/kitchen/rush-status", updateKitchenRushStatus);
 router.get("/orders/:id/thermal-ticket", getOrderThermalTicket);
 router.post("/products/:id/toggle-86", toggleProduct86);
+
+// Sprint G: Kitchen Display System (KDS) Endpoints
+router.get("/kds/tickets", getKdsTickets);
+router.post("/kds/tickets/:id/status", updateKdsTicketStatus);
+router.post("/kds/tickets/:id/delay", addKdsTicketDelay);
+router.post("/kds/tickets/:id/item-toggle", toggleKdsTicketItem);
+
+// Sprint J: Kitchen Merchant Financial Statements & Automated Weekly Payouts
+router.get("/financials/statements", getMerchantFinancialStatements);
+router.get("/financials/payout-schedule", getMerchantPayoutSchedule);
+router.post("/financials/request-instant-payout", requestInstantPayout);
+router.post("/financials/bank-settings", updateMerchantBankSettings);
+
 export default router;
