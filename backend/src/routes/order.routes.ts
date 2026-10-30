@@ -1,11 +1,18 @@
 import { Router } from 'express';
-import { placeOrder, getOrders, getOrderById, getOrderTrackingTelemetry, updateOrderStatus, confirmOrderReceived, getVendorBankDetails, paystackWebhook, calculateDelivery, getPayForMeOrder, initializePayForMePayment, getOrderMessages, sendOrderMessage, rateOrder, getFlowPassStatus, subscribeFlowPass } from '../controllers/order.controller';
+import { placeOrder, getOrders, getOrderById, getOrderTrackingTelemetry, updateOrderStatus, confirmOrderReceived, getVendorBankDetails, paystackWebhook, calculateDelivery, getPayForMeOrder, initializePayForMePayment, getOrderMessages, sendOrderMessage, rateOrder, getFlowPassStatus, subscribeFlowPass, createSplitBillSession, getSplitBillSession, contributeToSplitBill, coverRemainingSplitBill } from '../controllers/order.controller';
 import { authenticateJWT, authorizeRoles } from '../middleware/auth.middleware';
 import { validateRequest } from '../middleware/validate.middleware';
 import { checkoutLimiter } from '../middleware/rateLimiter.middleware';
 import { placeOrderSchema, updateOrderStatusSchema, calculateDeliverySchema } from '../schemas/order.schema';
 
 const router = Router();
+
+
+// Sprint L: Live Split-the-Bill Group Checkout Engine
+router.post('/split-bill/create', createSplitBillSession);
+router.get('/split-bill/:code', getSplitBillSession);
+router.post('/split-bill/:code/contribute', contributeToSplitBill);
+router.post('/split-bill/:code/cover-remaining', coverRemainingSplitBill);
 
 router.get('/', authenticateJWT, getOrders);
 router.get('/:id', authenticateJWT, getOrderById);

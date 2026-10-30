@@ -1066,3 +1066,266 @@ export const getOrderTrackingTelemetry = async (req: AuthenticatedRequest, res: 
     return res.status(500).json({ success: false, message: "Failed to fetch telemetry: " + error.message });
   }
 };
+
+
+// ============================================================================
+// SPRINT L: LIVE SPLIT-THE-BILL GROUP CHECKOUT ENGINE
+// ============================================================================
+
+interface SplitParticipant {
+  id: string;
+  name: string;
+  emailOrPhone?: string;
+  targetAmount: number;
+  paidAmount: number;
+  isPaid: boolean;
+  isHost: boolean;
+  paidAt?: string;
+  paymentMethod?: string;
+}
+
+interface SplitBillSession {
+  code: string;
+  orderId?: string;
+  orderRef: string;
+  restaurantName: string;
+  deliveryAddress: string;
+  totalAmount: number;
+  totalPaid: number;
+  remainingBalance: number;
+  progressPct: number;
+  hostName: string;
+  hostUserId?: string;
+  splitMode: "EQUAL" | "CUSTOM";
+  status: "PENDING_PAYMENTS" | "FULLY_FUNDED" | "EXPIRED";
+  createdAt: string;
+  expiresAt: string;
+  participants: SplitParticipant[];
+  items: Array<{ id: string; name: string; quantity: number; price: number }>;
+}
+
+// In-memory split bill sessions repository
+const splitBillSessionsStore: Record<string, SplitBillSession> = {
+  "SPLIT-DEMO-2026": {
+    code: "SPLIT-DEMO-2026",
+    orderRef: "#FM-89240",
+    restaurantName: "Mama's Kitchen Bistro • Lekki",
+    deliveryAddress: "Plot 14 Admiralty Way, Lekki Phase 1, Lagos",
+    totalAmount: 24000,
+    totalPaid: 18000,
+    remainingBalance: 6000,
+    progressPct: 75,
+    hostName: "Chioma Adeleke",
+    splitMode: "EQUAL",
+    status: "PENDING_PAYMENTS",
+    createdAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+    expiresAt: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+    items: [
+      { id: "1", name: "Party Jollof Rice & Grilled Chicken (x3)", quantity: 3, price: 10500 },
+      { id: "2", name: "Slow-Cooked Seafood Okro & Pounded Yam (x1)", quantity: 1, price: 6500 },
+      { id: "3", name: "Crispy Peppered Turkey Wings (x2)", quantity: 2, price: 5000 },
+      { id: "4", name: "Chilled Chapman & Fresh Zobo Bottles (x4)", quantity: 4, price: 2000 }
+    ],
+    participants: [
+      { id: "p-1", name: "Chioma Adeleke (Host)", targetAmount: 6000, paidAmount: 6000, isPaid: true, isHost: true, paidAt: new Date(Date.now() - 4 * 60 * 1000).toISOString(), paymentMethod: "FlowMart Wallet" },
+      { id: "p-2", name: "Tunde Bakare", targetAmount: 6000, paidAmount: 6000, isPaid: true, isHost: false, paidAt: new Date(Date.now() - 3 * 60 * 1000).toISOString(), paymentMethod: "Paystack Card" },
+      { id: "p-3", name: "Amina Yusuf", targetAmount: 6000, paidAmount: 6000, isPaid: true, isHost: false, paidAt: new Date(Date.now() - 1 * 60 * 1000).toISOString(), paymentMethod: "Direct Bank Transfer" },
+      { id: "p-4", name: "Femi Otedola", targetAmount: 6000, paidAmount: 0, isPaid: false, isHost: false }
+    ]
+  }
+};
+
+export const createSplitBillSession = async (req: Request, res: Response) => {
+  try {
+    const { 
+      orderId, 
+      restaurantName = "FlowMart Gourmet Kitchen", 
+      deliveryAddress = "Lekki Phase 1, Lagos",
+      totalAmount = 24000,
+      hostName = "Order Host",
+      splitMode = "EQUAL",
+      participantNames = ["Friend 1", "Friend 2", "Friend 3"],
+      items = []
+    } = req.body;
+
+    const hostUserId = (req as any).user?.id || "guest-host";
+    const numericTotal = Number(totalAmount) || 24000;
+    const sessionCode = "SPLIT-" + Date.now().toString(36).toUpperCase() + "-" + Math.floor(100 + Math.random() * 900);
+    const orderRef = "#FM-" + Math.floor(80000 + Math.random() * 19000);
+
+    // Calculate share amounts
+    const names = [hostName, ...participantNames.filter((n: string) => n && n.trim() !== "")];
+    const perPersonShare = Math.round(numericTotal / Math.max(1, names.length));
+
+    const participants: SplitParticipant[] = names.map((name: string, index: number) => ({
+      id: `part-${index + 1}-${Date.now().toString(36)}`,
+      name: index === 0 ? `${name} (Host)` : name,
+      targetAmount: perPersonShare,
+      paidAmount: 0,
+      isPaid: false,
+      isHost: index === 0
+    }));
+
+    const session: SplitBillSession = {
+      code: sessionCode,
+      orderId,
+      orderRef,
+      restaurantName,
+      deliveryAddress,
+      totalAmount: numericTotal,
+      totalPaid: 0,
+      remainingBalance: numericTotal,
+      progressPct: 0,
+      hostName,
+      hostUserId,
+      splitMode,
+      status: "PENDING_PAYMENTS",
+      createdAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(), // 15 mins expiry
+      participants,
+      items: items.length > 0 ? items : [
+        { id: "item-1", name: "Assorted Group Feast Selection", quantity: names.length, price: numericTotal }
+      ]
+    };
+
+    splitBillSessionsStore[sessionCode] = session;
+
+    const shareUrl = `https://flowmart.ng/split/${sessionCode}`;
+    const whatsappText = encodeURIComponent(`Hey! 🍽️ ${hostName} invited you to split the food bill for ${restaurantName}. Your share is ₦${perPersonShare.toLocaleString()}. Pay securely here so the kitchen can dispatch: ${shareUrl}`);
+
+    return res.status(201).json({
+      success: true,
+      message: "Split-the-bill session created! Share the link with friends to fund the order.",
+      session,
+      shareUrl,
+      whatsappUrl: `https://wa.me/?text=${whatsappText}`,
+      perPersonShare
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: "Failed to create split bill session: " + error.message });
+  }
+};
+
+export const getSplitBillSession = async (req: Request, res: Response) => {
+  try {
+    const { code } = req.params;
+    const sessionCode = Array.isArray(code) ? code[0] : (code || "");
+    const session = splitBillSessionsStore[sessionCode];
+
+    if (!session) {
+      return res.status(404).json({ success: false, message: "Split bill session not found or expired" });
+    }
+
+    // Dynamic progress re-calc
+    const totalPaid = session.participants.reduce((sum: number, p: SplitParticipant) => sum + p.paidAmount, 0);
+    session.totalPaid = totalPaid;
+    session.remainingBalance = Math.max(0, session.totalAmount - totalPaid);
+    session.progressPct = Math.min(100, Math.round((totalPaid / session.totalAmount) * 100));
+
+    if (session.remainingBalance === 0 && session.status !== "FULLY_FUNDED") {
+      session.status = "FULLY_FUNDED";
+    }
+
+    const secondsRemaining = Math.max(0, Math.floor((new Date(session.expiresAt).getTime() - Date.now()) / 1000));
+
+    return res.status(200).json({
+      success: true,
+      session,
+      secondsRemaining,
+      isFullyFunded: session.status === "FULLY_FUNDED"
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: "Failed to get split bill session: " + error.message });
+  }
+};
+
+export const contributeToSplitBill = async (req: Request, res: Response) => {
+  try {
+    const { code } = req.params;
+    const sessionCode = Array.isArray(code) ? code[0] : (code || "");
+    const { participantId, paymentMethod = "wallet", amount } = req.body;
+
+    const session = splitBillSessionsStore[sessionCode];
+    if (!session) {
+      return res.status(404).json({ success: false, message: "Split bill session not found" });
+    }
+
+    if (session.status === "FULLY_FUNDED") {
+      return res.status(400).json({ success: false, message: "Order is already 100% funded and cooking in the kitchen!" });
+    }
+
+    const participant = session.participants.find((p: SplitParticipant) => p.id === participantId);
+    if (!participant) {
+      return res.status(404).json({ success: false, message: "Participant not found in split bill session" });
+    }
+
+    const contributionAmount = Number(amount) || participant.targetAmount;
+    participant.paidAmount = contributionAmount;
+    participant.isPaid = true;
+    participant.paidAt = new Date().toISOString();
+    participant.paymentMethod = paymentMethod === "wallet" ? "FlowMart Wallet" : "Paystack Card";
+
+    // Recompute total
+    const totalPaid = session.participants.reduce((sum: number, p: SplitParticipant) => sum + p.paidAmount, 0);
+    session.totalPaid = totalPaid;
+    session.remainingBalance = Math.max(0, session.totalAmount - totalPaid);
+    session.progressPct = Math.min(100, Math.round((totalPaid / session.totalAmount) * 100));
+
+    const isFullyFunded = session.remainingBalance === 0;
+    if (isFullyFunded) {
+      session.status = "FULLY_FUNDED";
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: isFullyFunded 
+        ? "🎉 100% FUNDED! All shares paid. Order released to kitchen for instant preparation!" 
+        : `Payment of ₦${contributionAmount.toLocaleString()} recorded for ${participant.name}! Remaining to fund: ₦${session.remainingBalance.toLocaleString()}.`,
+      session,
+      isFullyFunded
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: "Payment contribution failed: " + error.message });
+  }
+};
+
+export const coverRemainingSplitBill = async (req: Request, res: Response) => {
+  try {
+    const { code } = req.params;
+    const sessionCode = Array.isArray(code) ? code[0] : (code || "");
+    const session = splitBillSessionsStore[sessionCode];
+
+    if (!session) {
+      return res.status(404).json({ success: false, message: "Split bill session not found" });
+    }
+
+    const remaining = session.remainingBalance;
+    if (remaining <= 0) {
+      return res.status(400).json({ success: false, message: "Order is already fully funded" });
+    }
+
+    // Mark all unpaid participants as covered by host
+    session.participants.forEach((p: SplitParticipant) => {
+      if (!p.isPaid) {
+        p.paidAmount = p.targetAmount;
+        p.isPaid = true;
+        p.paidAt = new Date().toISOString();
+        p.paymentMethod = "Host Covered";
+      }
+    });
+
+    session.totalPaid = session.totalAmount;
+    session.remainingBalance = 0;
+    session.progressPct = 100;
+    session.status = "FULLY_FUNDED";
+
+    return res.status(200).json({
+      success: true,
+      message: `Host covered remaining ₦${remaining.toLocaleString()}! Order is 100% funded and dispatched to kitchen.`,
+      session,
+      isFullyFunded: true
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: "Failed to cover remaining balance: " + error.message });
+  }
+};

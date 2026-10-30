@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
+  Users,
   MapPin,
   CreditCard,
   ShieldCheck,
@@ -33,6 +34,7 @@ import { useCartStore } from "@/stores/cartStore";
 import { useToast } from "@/contexts/ToastContext";
 import { apiClient } from "@/services/api";
 import { FlowPassModal } from "@/components/loyalty/FlowPassModal";
+import { SplitBillModal } from "@/components/cart/SplitBillModal";
 import { useAuth } from "@/hooks/useAuth";
 import { PhoneInput } from "@/components/ui/PhoneInput";
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet";
@@ -163,6 +165,7 @@ const Checkout = () => {
 
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const [isFlowPassModalOpen, setIsFlowPassModalOpen] = useState(false);
+  const [isSplitBillModalOpen, setIsSplitBillModalOpen] = useState(false);
   const [isFlowPassActive, setIsFlowPassActive] = useState(() => {
     try {
       return localStorage.getItem("flowmart_flowpass_active") === "true";
@@ -170,7 +173,7 @@ const Checkout = () => {
       return false;
     }
   });
-  const [paymentMethod, setPaymentMethod] = useState<"card" | "bank_transfer" | "pay_on_delivery" | "wallet">(
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "bank_transfer" | "pay_on_delivery" | "wallet" | "split_bill">(
     "wallet"
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -1871,6 +1874,12 @@ return (
                   label: "Pay on Delivery",
                   desc: "Pay via POS or Cash when package arrives",
                 },
+                {
+                  id: "split_bill",
+                  label: "Split the Bill with Friends",
+                  desc: "Multi-payer group split. Order dispatches when 100% funded!",
+                  badge: "Live Group Pay",
+                },
               ].map((method) => {
                 const isSelected = paymentMethod === method.id;
                 return (
@@ -2165,30 +2174,57 @@ return (
                 <div style={{ flex: 1, height: 1, backgroundColor: "var(--color-border)" }} />
               </div>
 
-              <button
-                type="button"
-                onClick={handlePayForMe}
-                disabled={isSubmitting || !!deliveryError || !isAddressComplete}
-                style={{
-                  width: "100%",
-                  padding: "13px 18px",
-                  fontSize: "0.875rem",
-                  fontWeight: 700,
-                  borderRadius: 12,
-                  border: "1.5px solid var(--color-primary)",
-                  backgroundColor: "var(--color-primary-surface, #eef2ff)",
-                  color: "var(--color-primary)",
-                  cursor: isSubmitting || !!deliveryError || !isAddressComplete ? "not-allowed" : "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8,
-                  transition: "all 0.2s ease",
-                }}
-              >
-                <Sparkles size={16} />
-                Pay For Me (Ask Someone to Pay)
-              </button>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 8 }}>
+                <button
+                  type="button"
+                  onClick={() => setIsSplitBillModalOpen(true)}
+                  disabled={isSubmitting || !!deliveryError || !isAddressComplete}
+                  style={{
+                    width: "100%",
+                    padding: "12px 14px",
+                    fontSize: "0.813rem",
+                    fontWeight: 800,
+                    borderRadius: 12,
+                    border: "1.5px solid var(--color-primary)",
+                    backgroundColor: "var(--color-primary)",
+                    color: "#ffffff",
+                    cursor: isSubmitting || !!deliveryError || !isAddressComplete ? "not-allowed" : "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 6,
+                    transition: "all 0.2s ease",
+                  }}
+                >
+                  <Users size={16} />
+                  Split the Bill
+                </button>
+                <button
+                  type="button"
+                  onClick={handlePayForMe}
+                  disabled={isSubmitting || !!deliveryError || !isAddressComplete}
+                  style={{
+                    width: "100%",
+                    padding: "12px 14px",
+                    fontSize: "0.813rem",
+                    fontWeight: 800,
+                    borderRadius: 12,
+                    border: "1.5px solid var(--color-primary)",
+                    backgroundColor: "var(--color-primary-surface, #eef2ff)",
+                    color: "var(--color-primary)",
+                    cursor: isSubmitting || !!deliveryError || !isAddressComplete ? "not-allowed" : "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 6,
+                    transition: "all 0.2s ease",
+                  }}
+                >
+                  <Sparkles size={16} />
+                  Pay For Me
+                </button>
+              </div>
+              
             </div>
 
             <div
@@ -2210,6 +2246,13 @@ return (
           </div>
         </div>
       </form>
+      <SplitBillModal
+        isOpen={isSplitBillModalOpen}
+        onClose={() => setIsSplitBillModalOpen(false)}
+        totalAmount={totalAmount}
+        restaurantName="Mama's Kitchen Bistro"
+        deliveryAddress={address}
+      />
 
       {/* Chowdeck Mobile Floating Bottom Dock */}
       <div className="mobile-checkout-dock">
