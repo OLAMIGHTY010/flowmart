@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Search, Package, MapPin, Phone, Truck, Radio, Loader2, Printer } from "lucide-react";
+import { Search, Package, MapPin, Phone, Truck, Radio, Loader2, Printer, Tv } from "lucide-react";
+import { Link } from "react-router-dom";
 import { KitchenRushControlCard } from "@/components/vendor/KitchenRushControlCard";
 import { ThermalReceiptModal } from "@/components/vendor/ThermalReceiptModal";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -45,9 +46,37 @@ const VendorOrders = () => {
 
   return (
     <div>
-      <h1 style={{ fontSize: "1.75rem", fontWeight: 700, color: "var(--color-text-primary)", marginBottom: 32 }}>
-        Orders Management
-      </h1>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32, flexWrap: "wrap", gap: 16 }}>
+        <div>
+          <h1 style={{ fontSize: "1.75rem", fontWeight: 700, color: "var(--color-text-primary)", marginBottom: 4 }}>
+            Orders Management
+          </h1>
+          <p style={{ fontSize: "0.875rem", color: "var(--color-text-muted)" }}>
+            Real-time kitchen order tracking and dispatch
+          </p>
+        </div>
+        <Link
+          to="/vendor/kds"
+          target="_blank"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            backgroundColor: "#4f46e5",
+            color: "#ffffff",
+            fontWeight: 700,
+            fontSize: "0.875rem",
+            padding: "10px 18px",
+            borderRadius: 12,
+            textDecoration: "none",
+            boxShadow: "0 4px 14px rgba(79, 70, 229, 0.35)",
+            transition: "transform 0.15s ease"
+          }}
+        >
+          <Tv size={18} />
+          Launch Kitchen Display (KDS) Tablet Mode 📺
+        </Link>
+      </div>
 
       <div style={{ marginBottom: 24 }}>
         <KitchenRushControlCard />

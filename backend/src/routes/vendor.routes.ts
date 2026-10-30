@@ -1,5 +1,18 @@
 import { Router } from "express";
-import { updateProfile, submitKYC, getKYCStatus, getVendorStats, getKitchenRushStatus, updateKitchenRushStatus, getOrderThermalTicket, toggleProduct86 } from "../controllers/vendor.controller";
+import { 
+  updateProfile, 
+  submitKYC, 
+  getKYCStatus, 
+  getVendorStats, 
+  getKitchenRushStatus, 
+  updateKitchenRushStatus, 
+  getOrderThermalTicket, 
+  toggleProduct86,
+  getKdsTickets,
+  updateKdsTicketStatus,
+  addKdsTicketDelay,
+  toggleKdsTicketItem
+} from "../controllers/vendor.controller";
 import { authenticateJWT, authorizeRoles } from "../middleware/auth.middleware";
 
 const router = Router();

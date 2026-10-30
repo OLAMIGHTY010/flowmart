@@ -1,4 +1,4 @@
-import { Response } from "express";
+import { Request, Response } from "express";
 import { db } from "../../db";
 import { users, vendorProfiles, vendorKyc, products, orders, orderItems } from "../../db/schema";
 import { eq } from "drizzle-orm";
@@ -581,5 +581,205 @@ export const toggleProduct86 = async (req: AuthenticatedRequest, res: Response) 
   } catch (error) {
     console.error('Toggle 86 Error:', error);
     return res.status(500).json({ success: false, message: 'Failed to toggle product stock' });
+  }
+};
+
+
+// ─── Sprint G: Kitchen Display System (KDS) Engine ───────────────────────────
+
+export interface KdsTicketItem {
+  id: string;
+  name: string;
+  quantity: number;
+  modifiers?: string[];
+  isCompleted: boolean;
+}
+
+export interface KdsTicket {
+  id: string;
+  orderNumber: string;
+  customerName: string;
+  channel: 'delivery' | 'pickup';
+  orderType: 'express' | 'scheduled';
+  status: 'new' | 'cooking' | 'ready' | 'dispatched';
+  createdAt: string;
+  prepMinutes: number;
+  targetReadyTime: string;
+  delayMinutes: number;
+  items: KdsTicketItem[];
+  courier?: {
+    name: string;
+    phone: string;
+    etaMinutes: number;
+  };
+  specialInstructions?: string;
+}
+
+const activeKdsTickets: KdsTicket[] = [
+  {
+    id: "tkt-01",
+    orderNumber: "FLW-83921",
+    customerName: "Folake Adebayo",
+    channel: "delivery",
+    orderType: "express",
+    status: "cooking",
+    createdAt: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
+    prepMinutes: 20,
+    targetReadyTime: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+    delayMinutes: 0,
+    specialInstructions: "Pack sauce separately in heat-sealed tub. Extra spicy please!",
+    courier: {
+      name: "Tunde Adebayo",
+      phone: "+2348039281726",
+      etaMinutes: 6,
+    },
+    items: [
+      { id: "i1", name: "Smoky Party Jollof Rice", quantity: 2, modifiers: ["Extra Shitto", "No Onions"], isCompleted: true },
+      { id: "i2", name: "Whole Grilled Catfish (Spicy)", quantity: 1, modifiers: ["Spicy Buka Glaze"], isCompleted: false },
+      { id: "i3", name: "Crispy Dodo (Fried Plantain)", quantity: 2, isCompleted: true },
+      { id: "i4", name: "Chilled Chapman Drink", quantity: 2, isCompleted: false },
+    ],
+  },
+  {
+    id: "tkt-02",
+    orderNumber: "FLW-83924",
+    customerName: "Babatunde Alabi",
+    channel: "delivery",
+    orderType: "express",
+    status: "new",
+    createdAt: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
+    prepMinutes: 15,
+    targetReadyTime: new Date(Date.now() + 13 * 60 * 1000).toISOString(),
+    delayMinutes: 0,
+    specialInstructions: "Corporate lunch bag packaging requested.",
+    items: [
+      { id: "i5", name: "Smoky Asun Fried Rice", quantity: 1, modifiers: ["Extra Asun Chunks"], isCompleted: false },
+      { id: "i6", name: "Peppered Turkey Wing", quantity: 1, isCompleted: false },
+      { id: "i7", name: "Bottled Spring Water", quantity: 1, isCompleted: false },
+    ],
+  },
+  {
+    id: "tkt-03",
+    orderNumber: "FLW-83915",
+    customerName: "Chidinma Nwosu",
+    channel: "delivery",
+    orderType: "express",
+    status: "ready",
+    createdAt: new Date(Date.now() - 22 * 60 * 1000).toISOString(),
+    prepMinutes: 20,
+    targetReadyTime: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
+    delayMinutes: 0,
+    courier: {
+      name: "Ibrahim Musa",
+      phone: "+2348058291024",
+      etaMinutes: 2,
+    },
+    items: [
+      { id: "i8", name: "Pounded Yam & Efo Riro", quantity: 1, modifiers: ["Assorted Meat"], isCompleted: true },
+      { id: "i9", name: "Fried Titus Fish", quantity: 1, isCompleted: true },
+    ],
+  },
+];
+
+// 1. Get KDS Active Tickets
+export const getKdsTickets = async (_req: Request, res: Response) => {
+  try {
+    return res.status(200).json({
+      success: true,
+      tickets: activeKdsTickets,
+      metrics: {
+        newCount: activeKdsTickets.filter(t => t.status === 'new').length,
+        cookingCount: activeKdsTickets.filter(t => t.status === 'cooking').length,
+        readyCount: activeKdsTickets.filter(t => t.status === 'ready').length,
+        avgPrepMinutes: 16.5,
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Failed to load KDS tickets" });
+  }
+};
+
+// 2. Update Ticket Status (Accept Cooking, Mark Ready, Handover)
+export const updateKdsTicketStatus = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const ticket = activeKdsTickets.find(t => t.id === id || t.orderNumber === id);
+    if (!ticket) {
+      return res.status(404).json({ success: false, message: "Ticket not found in KDS" });
+    }
+
+    if (['new', 'cooking', 'ready', 'dispatched'].includes(status)) {
+      ticket.status = status;
+      if (status === 'cooking') {
+        ticket.targetReadyTime = new Date(Date.now() + ticket.prepMinutes * 60 * 1000).toISOString();
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Order ${ticket.orderNumber} updated to ${ticket.status.toUpperCase()}`,
+      ticket,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Failed to update ticket status" });
+  }
+};
+
+// 3. Add Prep Delay to Ticket (+5m, +10m, +15m)
+export const addKdsTicketDelay = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { additionalMinutes = 5 } = req.body;
+
+    const ticket = activeKdsTickets.find(t => t.id === id || t.orderNumber === id);
+    if (!ticket) {
+      return res.status(404).json({ success: false, message: "Ticket not found" });
+    }
+
+    ticket.delayMinutes += Number(additionalMinutes);
+    ticket.prepMinutes += Number(additionalMinutes);
+    ticket.targetReadyTime = new Date(new Date(ticket.targetReadyTime).getTime() + additionalMinutes * 60 * 1000).toISOString();
+
+    return res.status(200).json({
+      success: true,
+      message: `Added +${additionalMinutes} mins prep delay to ${ticket.orderNumber}. New target ready: ${new Date(ticket.targetReadyTime).toLocaleTimeString()}`,
+      ticket,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Failed to add prep delay" });
+  }
+};
+
+// 4. Toggle Preparation Item Completed State
+export const toggleKdsTicketItem = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { itemId } = req.body;
+
+    const ticket = activeKdsTickets.find(t => t.id === id || t.orderNumber === id);
+    if (!ticket) {
+      return res.status(404).json({ success: false, message: "Ticket not found" });
+    }
+
+    const item = ticket.items.find(i => i.id === itemId);
+    if (item) {
+      item.isCompleted = !item.isCompleted;
+    }
+
+    // Auto mark ready if all items completed
+    const allDone = ticket.items.every(i => i.isCompleted);
+    if (allDone && ticket.status === 'cooking') {
+      ticket.status = 'ready';
+    }
+
+    return res.status(200).json({
+      success: true,
+      ticket,
+      allDone,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Failed to toggle item state" });
   }
 };

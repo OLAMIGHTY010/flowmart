@@ -69,6 +69,7 @@ const VendorKYC = lazy(() => import("@/pages/vendor/VendorKYC"));
 const VendorProducts = lazy(() => import("@/pages/vendor/VendorProducts"));
 const VendorProductNew = lazy(() => import("@/pages/vendor/VendorProductNew"));
 const VendorOrders = lazy(() => import("@/pages/vendor/VendorOrders"));
+const KitchenDisplaySystem = lazy(() => import("@/pages/vendor/KitchenDisplaySystem"));
 
 const VendorProfileSetup = lazy(() => import("@/pages/vendor/VendorProfileSetUp"));
 const VendorKYCInfo = lazy(() => import("@/pages/vendor/VendorKYCInfo"));
@@ -200,6 +201,7 @@ function App() {
               <Route path="products" element={<VendorProducts />} />
               <Route path="products/new" element={<VendorProductNew />} />
               <Route path="orders" element={<VendorOrders />} />
+              <Route path="kds" element={<KitchenDisplaySystem />} />
             </Route>
 
             {/* ═══ RIDER ROUTES ═══ */}

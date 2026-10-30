@@ -133,7 +133,17 @@ export default function VendorDashboard() {
                 {/* Incoming Orders */}
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <h2 className="text-base font-headings font-extrabold text-foreground" style={{ fontWeight: 800 }}>Incoming Orders</h2>
+                    <div className="flex items-center gap-3">
+                      <h2 className="text-base font-headings font-extrabold text-foreground" style={{ fontWeight: 800 }}>Incoming Orders</h2>
+                      <button
+                        onClick={() => window.open('/vendor/kds', '_blank')}
+                        className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-xs transition"
+                        title="Open Fullscreen Tablet KDS for Kitchen Staff"
+                      >
+                        <Icon i="tv" size={13} />
+                        KDS Tablet View 📺
+                      </button>
+                    </div>
                     <button
                       onClick={() => setActiveTab('orders')}
                       className="text-xs text-primary font-semibold hover:underline cursor-pointer bg-transparent border-none"
