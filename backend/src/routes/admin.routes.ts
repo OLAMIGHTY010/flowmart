@@ -16,7 +16,9 @@ import {
   getSurgeZones,
   updateSurgeZone,
   toggleWeatherBroadcast,
-  simulateSurgePricing
+  simulateSurgePricing,
+  getFleetShiftMatrix,
+  addEmergencyShiftSlots
 } from '../controllers/admin.controller';
 
 import {
@@ -83,6 +85,11 @@ router.get('/surge/zones', getSurgeZones);
 router.put('/surge/zones/:id', updateSurgeZone);
 router.post('/surge/weather-broadcast', toggleWeatherBroadcast);
 router.post('/surge/simulate', simulateSurgePricing);
+
+// Sprint K: Operations Fleet Shift Attendance & Floor Guarantee Matrix
+router.get('/shifts/fleet-matrix', getFleetShiftMatrix);
+router.post('/shifts/emergency-slots', addEmergencyShiftSlots);
+
 
 // Vendor Approval routes
 router.get('/vendors/stats', getVendorApprovalStats);

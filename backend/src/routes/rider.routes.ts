@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getOrders, getOrderById, updateOrderStatus, getAvailableDeliveries, acceptDelivery, confirmDelivery, confirmDeliveryViaQR, submitKYC, getKYCStatus, updateLocation, getRiderEarningsAnalytics, getCashOnDeliveryLedger, remitCashFloat, getDemandHotspots, getActiveStackedBatch, acceptStackedBatch, verifyHandoverOTP, uploadProofOfDelivery } from '../controllers/rider.controller';
+import { getOrders, getOrderById, updateOrderStatus, getAvailableDeliveries, acceptDelivery, confirmDelivery, confirmDeliveryViaQR, submitKYC, getKYCStatus, updateLocation, getRiderEarningsAnalytics, getCashOnDeliveryLedger, remitCashFloat, getDemandHotspots, getActiveStackedBatch, acceptStackedBatch, verifyHandoverOTP, uploadProofOfDelivery, getAvailableShifts, bookShiftSlot, getActiveShiftStatus, checkInShift, checkOutShift, getShiftHistory } from '../controllers/rider.controller';
 import { authenticateJWT, authorizeRoles } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -11,6 +11,15 @@ router.get('/earnings/analytics', getRiderEarningsAnalytics);
 router.get('/cod/ledger', getCashOnDeliveryLedger);
 router.post('/cod/remit', remitCashFloat);
 router.get('/hotspots', getDemandHotspots);
+
+
+// Sprint K: Courier Shift Scheduling & Guaranteed Hourly Floor Pay
+router.get('/shifts/available', getAvailableShifts);
+router.post('/shifts/book', bookShiftSlot);
+router.get('/shifts/active', getActiveShiftStatus);
+router.post('/shifts/check-in', checkInShift);
+router.post('/shifts/check-out', checkOutShift);
+router.get('/shifts/history', getShiftHistory);
 
 // Pack F: Multi-Order Stacked Batching & Proof-of-Delivery
 router.get('/batch/active', getActiveStackedBatch);

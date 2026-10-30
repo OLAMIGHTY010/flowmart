@@ -737,3 +737,70 @@ export const simulateSurgePricing = async (req: Request, res: Response) => {
     return res.status(500).json({ success: false, message: "Simulation failed: " + error.message });
   }
 };
+
+
+// ============================================================================
+// SPRINT K: OPERATIONS FLEET SHIFT ATTENDANCE & FLOOR GUARANTEE MATRIX
+// ============================================================================
+
+export const getFleetShiftMatrix = async (req: Request, res: Response) => {
+  try {
+    const fleetZones = [
+      { id: "zone-lekki", name: "Lekki Phase 1 & Ikate", activeChampions: 16, targetCapacity: 20, checkInRatePct: 95, hourlyFloorRateNgn: 2800, currentSurgeMultiplier: 1.3 },
+      { id: "zone-vi", name: "Victoria Island", activeChampions: 14, targetCapacity: 18, checkInRatePct: 92, hourlyFloorRateNgn: 2800, currentSurgeMultiplier: 1.2 },
+      { id: "zone-ikeja", name: "Ikeja GRA & Allen", activeChampions: 12, targetCapacity: 15, checkInRatePct: 90, hourlyFloorRateNgn: 2600, currentSurgeMultiplier: 1.15 },
+      { id: "zone-yaba", name: "Yaba / Surulere", activeChampions: 11, targetCapacity: 15, checkInRatePct: 88, hourlyFloorRateNgn: 2500, currentSurgeMultiplier: 1.1 },
+      { id: "zone-ikoyi", name: "Ikoyi & Banana Island", activeChampions: 8, targetCapacity: 10, checkInRatePct: 96, hourlyFloorRateNgn: 3000, currentSurgeMultiplier: 1.35 },
+      { id: "zone-marina", name: "Marina & Lagos Island", activeChampions: 6, targetCapacity: 8, checkInRatePct: 87, hourlyFloorRateNgn: 2400, currentSurgeMultiplier: 1.05 },
+      { id: "zone-gbagada", name: "Gbagada & Maryland", activeChampions: 7, targetCapacity: 10, checkInRatePct: 89, hourlyFloorRateNgn: 2400, currentSurgeMultiplier: 1.1 }
+    ];
+
+    const activeRoster = [
+      { id: "ch-101", name: "Ibrahim Suleiman", phone: "+234 803 112 4892", vehiclePlate: "LAGOS • KJA-482-XA", zone: "Lekki Phase 1", shiftLabel: "Lunch Rush Peak", checkInTime: "11:28 WAT", acceptanceRatePct: 100, completedDeliveries: 7, actualEarningsNgn: 9800, floorTargetNgn: 11200, status: "ON_DUTY", floorStatus: "TOP_UP_DUE" },
+      { id: "ch-102", name: "Emeka Okonkwo", phone: "+234 802 884 9210", vehiclePlate: "LAGOS • APP-912-LK", zone: "Victoria Island", shiftLabel: "Lunch Rush Peak", checkInTime: "11:32 WAT", acceptanceRatePct: 100, completedDeliveries: 9, actualEarningsNgn: 13500, floorTargetNgn: 11200, status: "ON_DUTY", floorStatus: "EXCEEDED_FLOOR" },
+      { id: "ch-103", name: "Babatunde Raji", phone: "+234 814 772 3914", vehiclePlate: "LAGOS • EKY-301-BD", zone: "Ikeja GRA", shiftLabel: "Lunch Rush Peak", checkInTime: "11:20 WAT", acceptanceRatePct: 94, completedDeliveries: 6, actualEarningsNgn: 8200, floorTargetNgn: 10400, status: "ON_DUTY", floorStatus: "TOP_UP_DUE" },
+      { id: "ch-104", name: "Chinedu Eze", phone: "+234 805 441 8933", vehiclePlate: "LAGOS • LSR-421-SM", zone: "Yaba Tech Hub", shiftLabel: "Lunch Rush Peak", checkInTime: "11:25 WAT", acceptanceRatePct: 85, completedDeliveries: 5, actualEarningsNgn: 6500, floorTargetNgn: 10000, status: "ON_DUTY", floorStatus: "DISQUALIFIED" },
+      { id: "ch-105", name: "Kayode Adeleke", phone: "+234 809 332 1980", vehiclePlate: "LAGOS • KSF-819-QN", zone: "Ikoyi", shiftLabel: "Lunch Rush Peak", checkInTime: "11:15 WAT", acceptanceRatePct: 100, completedDeliveries: 8, actualEarningsNgn: 12800, floorTargetNgn: 12000, status: "ON_DUTY", floorStatus: "EXCEEDED_FLOOR" }
+    ];
+
+    const totalActiveChampions = fleetZones.reduce((sum, z) => sum + z.activeChampions, 0);
+    const totalTargetCapacity = fleetZones.reduce((sum, z) => sum + z.targetCapacity, 0);
+    const fleetAdherenceRate = Math.round((totalActiveChampions / totalTargetCapacity) * 100);
+
+    return res.status(200).json({
+      success: true,
+      summary: {
+        totalActiveChampionsOnDuty: totalActiveChampions,
+        totalFleetTargetCapacity: totalTargetCapacity,
+        fleetAdherenceRatePct: fleetAdherenceRate,
+        totalGuaranteedFloorLiabilityTodayNgn: 214500,
+        estimatedTopUpDisbursementsTodayNgn: 34800,
+        averageFleetAcceptanceRatePct: 97.4,
+        emergencySlotsActive: false
+      },
+      zones: fleetZones,
+      activeRoster
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: "Failed to fetch fleet shift matrix: " + error.message });
+  }
+};
+
+export const addEmergencyShiftSlots = async (req: Request, res: Response) => {
+  try {
+    const { additionalSlotsPerZone = 5, emergencyBonusHourlyRate = 500 } = req.body;
+
+    return res.status(200).json({
+      success: true,
+      message: `Emergency Shift Slots activated! Added +${additionalSlotsPerZone} champion slots across all Lagos clusters with +₦${emergencyBonusHourlyRate}/hr floor pay bonus.`,
+      settings: {
+        additionalSlotsPerZone,
+        emergencyBonusHourlyRate,
+        activatedAt: new Date().toISOString(),
+        expiresInHours: 4
+      }
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: "Failed to activate emergency slots: " + error.message });
+  }
+};

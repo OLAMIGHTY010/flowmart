@@ -1,10 +1,11 @@
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { Bike, Package, Wallet, Settings, LogOut, Bell } from "lucide-react";
+import { Bike, Package, Wallet, Settings, LogOut, Bell, CalendarClock } from "lucide-react";
 
 const navItems = [
   { path: "/rider/dashboard", label: "Dashboard", icon: Bike },
   { path: "/rider/deliveries", label: "Deliveries", icon: Package },
+  { path: "/rider/shifts", label: "Shifts & Floor Pay", icon: CalendarClock },
   { path: "/rider/earnings", label: "Earnings", icon: Wallet },
   { path: "/rider/profile", label: "Profile", icon: Settings },
 ];
@@ -22,7 +23,10 @@ const RiderLayout = () => {
   let subtitle = "Here's an overview of your performance today.";
   const path = location.pathname;
 
-  if (path.includes("/rider/deliveries")) {
+  if (path.includes("/rider/shifts")) {
+    title = "Shifts & Floor Pay";
+    subtitle = "Book peak meal rush slots & track hourly floor pay guarantee.";
+  } else if (path.includes("/rider/deliveries")) {
     title = "Deliveries";
     subtitle = "Manage your active and completed delivery jobs.";
   } else if (path.includes("/rider/earnings")) {
@@ -46,13 +50,13 @@ const RiderLayout = () => {
       <aside className="hidden lg:flex flex-col w-64 bg-[#090d16] text-white p-6 border-r border-border/10 fixed h-screen z-50">
         {/* User profile section */}
         <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-6 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-emerald-700 flex items-center justify-center font-bold text-sm text-white border border-white/20 shadow-inner flex-shrink-0">
+          <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-sm text-white border border-white/20 shadow-inner flex-shrink-0">
             {initials}
           </div>
           <div className="flex-1 min-w-0">
             <h4 className="text-sm font-bold truncate">{user?.fullName || 'Rider'}</h4>
             <p className="text-[10px] text-muted-foreground truncate">{user?.email}</p>
-            <p className="text-[10px] text-emerald-500 mt-0.5 font-bold truncate">ID: #{user?.id?.substring(0, 8) || 'N/A'}</p>
+            <p className="text-[10px] text-indigo-400 mt-0.5 font-bold truncate">ID: #{user?.id?.substring(0, 8) || 'N/A'}</p>
           </div>
         </div>
 
@@ -68,7 +72,7 @@ const RiderLayout = () => {
                 onClick={() => navigate(item.path)}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all cursor-pointer border-none bg-transparent text-left w-full ${
                   isActive
-                    ? 'bg-emerald-700 text-white shadow-sm'
+                    ? 'bg-indigo-600 text-white shadow-sm'
                     : 'text-muted-foreground hover:bg-white/5 hover:text-white'
                 }`}
               >
@@ -114,7 +118,7 @@ const RiderLayout = () => {
               </button>
               <div 
                 onClick={handleLogoutClick}
-                className="w-9 h-9 lg:w-10 lg:h-10 rounded-full bg-emerald-700 flex items-center justify-center font-bold text-sm text-white border border-white/20 shadow-inner cursor-pointer"
+                className="w-9 h-9 lg:w-10 lg:h-10 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-sm text-white border border-white/20 shadow-inner cursor-pointer"
                 title="Click to logout"
               >
                 {initials}

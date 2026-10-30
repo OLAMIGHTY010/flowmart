@@ -82,6 +82,7 @@ const VendorKYCVerification = lazy(() => import("@/pages/vendor/VendorKYCVerific
 const RiderLayout = lazy(() => import("@/components/rider/RiderLayout"));
 const RiderDashboard = lazy(() => import("@/pages/rider/RiderDashboard"));
 const RiderDeliveries = lazy(() => import("@/pages/rider/RiderDeliveries"));
+const RiderShifts = lazy(() => import("@/pages/rider/RiderShifts"));
 const RiderEarnings = lazy(() => import("@/pages/rider/RiderEarnings"));
 const RiderProfile = lazy(() => import("@/pages/rider/RiderProfile"));
 const RiderProfileSetup = lazy(() => import("@/pages/rider/RiderProfileSetup"));
@@ -106,6 +107,7 @@ const AdminDispatchMap = lazy(() => import("./pages/admin/AdminDispatchMap"));
 const AdminRefundsLedger = lazy(() => import("./pages/admin/AdminRefundsLedger"));
 const AdminFraudMatrix = lazy(() => import("./pages/admin/AdminFraudMatrix"));
 const AdminSurgePricing = lazy(() => import("./pages/admin/AdminSurgePricing"));
+const AdminFleetShifts = lazy(() => import("./pages/admin/AdminFleetShifts"));
 
 const ProfileLayout = lazy(() => import("./components/user/ProfileLayout"));
 
@@ -215,6 +217,7 @@ function App() {
             }>
               <Route path="dashboard" element={<RiderDashboard />} />
               <Route path="deliveries" element={<RiderDeliveries />} />
+              <Route path="shifts" element={<RiderShifts />} />
               <Route path="deliveries/new" element={<RiderNewDelivery />} />
               <Route path="deliveries/:id" element={<RiderDeliveryDetails />} />
               <Route path="deliveries/:id/shortage" element={<RiderShortageReport />} />
@@ -248,6 +251,7 @@ function App() {
               <Route path="dashboard" element={<Navigate to="/admin/dispatch" replace />} />
               <Route path="dispatch" element={<AdminDispatchMap />} />
               <Route path="surge" element={<AdminSurgePricing />} />
+              <Route path="shifts" element={<AdminFleetShifts />} />
               <Route path="refunds" element={<AdminRefundsLedger />} />
               <Route path="fraud" element={<AdminFraudMatrix />} />
               <Route path="kyc/vendors" element={<AdminVendorKYC />} />

@@ -11,7 +11,8 @@ import {
   Radio,
   Wallet,
   ShieldAlert,
-  Zap
+  Zap,
+  CalendarClock
 } from "lucide-react";
 
 export default function AdminLayout() {
@@ -26,6 +27,7 @@ export default function AdminLayout() {
   const navItems = [
     { name: "Live Dispatch Map", path: "/admin/dispatch", icon: <Radio size={20} /> },
     { name: "Dynamic Surge & Weather", path: "/admin/surge", icon: <Zap size={20} /> },
+    { name: "Fleet Shifts & Floor Pay", path: "/admin/shifts", icon: <CalendarClock size={20} /> },
     { name: "Dispute & Refunds", path: "/admin/refunds", icon: <Wallet size={20} /> },
     { name: "Fraud Risk Matrix", path: "/admin/fraud", icon: <ShieldAlert size={20} /> },
     { name: "Vendor Approvals", path: "/admin/kyc/vendors", icon: <Store size={20} /> },
