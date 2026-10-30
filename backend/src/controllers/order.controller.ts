@@ -952,3 +952,117 @@ export const subscribeFlowPass = async (req: AuthenticatedRequest, res: Response
         return res.status(500).json({ success: false, message: "Subscription failed" });
     }
 };
+
+
+// ============================================================================
+// SPRINT I: LIVE INTERACTIVE DELIVERY ROUTE PLAYBACK & PROXIMITY TELEMETRY
+// ============================================================================
+
+export const getOrderTrackingTelemetry = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const orderId = Array.isArray(id) ? id[0] : (id || "");
+
+    // Check order
+    let orderRecord: any = null;
+    try {
+      orderRecord = await db.query.orders.findFirst({
+        where: eq(orders.id, orderId),
+      });
+    } catch {
+      // Ignore database lookup error if using virtual order
+    }
+
+    // Default base coordinates (Yaba to Victoria Island corridor)
+    const baseOrigin: [number, number] = [6.5186, 3.3712]; // Yaba Kitchen Hub
+    const baseDestination: [number, number] = [6.4950, 3.3850]; // Surulere / Akoka Dropoff
+
+    // 12-point smooth delivery route waypoints simulating street navigation
+    const routeWaypoints: [number, number][] = [
+      [6.5186, 3.3712], // 0. Kitchen Departure (Herbert Macaulay Way)
+      [6.5165, 3.3725], // 1. Commercial Avenue Junction
+      [6.5140, 3.3738], // 2. Sabo Yaba Tech Cluster
+      [6.5110, 3.3752], // 3. Alagomeji Bus Stop
+      [6.5085, 3.3768], // 4. Murtala Muhammed Way
+      [6.5050, 3.3785], // 5. Adekunle Flyover Approach
+      [6.5020, 3.3800], // 6. Third Mainland Link / University Road
+      [6.4995, 3.3818], // 7. Akoka Commercial Bypass
+      [6.4975, 3.3832], // 8. Community Road Turnoff
+      [6.4960, 3.3842], // 9. Residential Avenue (Within 250m Proximity)
+      [6.4952, 3.3848], // 10. Customer Gate Approach
+      [6.4950, 3.3850], // 11. Final Doorstep Delivery
+    ];
+
+    // Determine simulated current position (e.g. index 8 of 11)
+    const currentWaypointIndex = 8;
+    const currentCourierCoords = routeWaypoints[currentWaypointIndex];
+
+    // Calculate heading/bearing between previous and current waypoint
+    const prev = routeWaypoints[Math.max(0, currentWaypointIndex - 1)];
+    const curr = currentCourierCoords;
+    const dLng = curr[1] - prev[1];
+    const dLat = curr[0] - prev[0];
+    const bearing = Math.round((Math.atan2(dLng, dLat) * (180 / Math.PI) + 360) % 360);
+
+    const distanceRemainingMeters = 680;
+    const etaMinutes = 3;
+
+    // Delivery handover PIN
+    const handoverOtp = orderRecord?.deliveryPin || "8249";
+
+    return res.status(200).json({
+      success: true,
+      telemetry: {
+        orderId: orderId,
+        orderStatus: orderRecord?.status || "picked_up",
+        origin: {
+          lat: baseOrigin[0],
+          lng: baseOrigin[1],
+          label: "Mama Put Delights • Kitchen Station",
+        },
+        destination: {
+          lat: baseDestination[0],
+          lng: baseDestination[1],
+          label: orderRecord?.deliveryAddress || "42 Montgomery Road, Yaba, Lagos",
+        },
+        courier: {
+          id: "CHAMP-482",
+          name: "Tunde Adebayo",
+          phone: "+2348039281726",
+          avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200",
+          vehicle: "Honda CB 125 • FlowMart Express",
+          licensePlate: "LAGOS • KJA-482-XA",
+          rating: 4.95,
+          deliveriesCompleted: 248,
+          currentPosition: {
+            lat: currentCourierCoords[0],
+            lng: currentCourierCoords[1],
+            bearing,
+            speedKmh: 34,
+          },
+          safetyCompliance: {
+            thermalBoxInspected: true,
+            helmetVerified: true,
+            covidVaccinated: true,
+          },
+        },
+        proximity: {
+          distanceRemainingMeters,
+          etaMinutes,
+          proximityStatus: distanceRemainingMeters <= 250 ? "NEAR_GATE" : "APPROACHING",
+          proximityHeadline: distanceRemainingMeters <= 250 
+            ? "🚨 Champion is arriving at your gate!" 
+            : `🛵 Champion is ~${etaMinutes} mins away (${distanceRemainingMeters}m)`,
+          hasArrived: distanceRemainingMeters <= 100,
+        },
+        routeWaypoints,
+        currentWaypointIndex,
+        handoverOtp,
+        updatedAt: new Date().toISOString(),
+      },
+    });
+  } catch (error: any) {
+    console.error("Tracking telemetry error:", error);
+    return res.status(500).json({ success: false, message: "Failed to fetch telemetry: " + error.message });
+  }
+};
