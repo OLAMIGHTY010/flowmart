@@ -2,6 +2,7 @@
 import { globalSettings, deliveryZones, pricingRules, orderDelivery, postcodeZoneMap } from '../../db/schema';
 import { eq, and, asc } from 'drizzle-orm';
 import { extractPostcodePrefix } from '../utils/postcode.util';
+import { dynamicSurgeService } from './logistics/dynamic-surge.service';
 
 export class PricingService {
   /**
@@ -127,14 +128,13 @@ export class PricingService {
       }
     }
 
-    const finalDeliveryFee = currentTotal;
+    const subtotalBeforeSurge = currentTotal;
 
-    // 5. Calculate splits
-    const riderSharePct = zoneRecord.riderCommissionPct;
-    const platformSharePct = zoneRecord.platformCommissionPct;
-
-    const riderShare = finalDeliveryFee * (riderSharePct / 100);
-    const platformShare = finalDeliveryFee * (platformSharePct / 100);
+    // 5. Dynamic Zone Surge & Weather Engine (Chowdeck-Grade)
+    const surgeData = dynamicSurgeService.resolveSurgeForOrder(zoneRecord.zoneName, subtotalBeforeSurge);
+    const finalDeliveryFee = surgeData.finalDeliveryFeeNgn;
+    const riderShare = surgeData.riderPayoutNgn;
+    const platformShare = surgeData.platformCommissionNgn;
 
     return {
       resolvedZone: zoneRecord.zoneName, // The clean zone name (e.g. 'Lagos Central', 'Default')
@@ -143,6 +143,13 @@ export class PricingService {
       baseFee,
       distanceFee,
       ruleAdjustments: appliedAdjustments,
+      // Chowdeck-Grade Dynamic Surge & Weather Breakdown
+      isSurgeActive: surgeData.isSurgeActive,
+      surgeMultiplier: surgeData.surgeMultiplier,
+      surgeFee: surgeData.surgeSurchargeNgn,
+      weatherFee: surgeData.weatherFeeNgn,
+      weatherCondition: surgeData.weatherCondition,
+      surgeReason: surgeData.surgeReason,
       riderShare,
       platformShare,
       finalDeliveryFee,

@@ -12,7 +12,11 @@ import {
   issueInstantRefund,
   issueCompensationVoucher,
   getFraudMatrix,
-  toggleBlockFraudAccount
+  toggleBlockFraudAccount,
+  getSurgeZones,
+  updateSurgeZone,
+  toggleWeatherBroadcast,
+  simulateSurgePricing
 } from '../controllers/admin.controller';
 
 import {
@@ -73,6 +77,12 @@ router.post('/refunds/issue', issueInstantRefund);
 router.post('/refunds/issue-voucher', issueCompensationVoucher);
 router.get('/fraud/matrix', getFraudMatrix);
 router.post('/fraud/block/:id', toggleBlockFraudAccount);
+
+// Sprint H: Dynamic Zone Surge & Inclement Weather Dispatch Multipliers
+router.get('/surge/zones', getSurgeZones);
+router.put('/surge/zones/:id', updateSurgeZone);
+router.post('/surge/weather-broadcast', toggleWeatherBroadcast);
+router.post('/surge/simulate', simulateSurgePricing);
 
 // Vendor Approval routes
 router.get('/vendors/stats', getVendorApprovalStats);

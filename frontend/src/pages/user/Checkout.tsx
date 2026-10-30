@@ -175,6 +175,7 @@ const Checkout = () => {
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deliveryFee, setDeliveryFee] = useState(0);
+  const [deliveryDetails, setDeliveryDetails] = useState<any>(null);
   const [isCalculatingDelivery, setIsCalculatingDelivery] = useState(false);
   const [deliveryError, setDeliveryError] = useState<string | null>(null);
 
@@ -465,6 +466,7 @@ const Checkout = () => {
 
         if (res.deliveryCalc && res.deliveryCalc.finalDeliveryFee !== undefined) {
           setDeliveryFee(res.deliveryCalc.finalDeliveryFee);
+          setDeliveryDetails(res.deliveryCalc);
           if (res.deliveryCalc.resolvedZone) {
             setResolvedZone(res.deliveryCalc.resolvedZone);
           }
@@ -472,6 +474,7 @@ const Checkout = () => {
       } catch (err: any) {
         console.error("Failed to calculate delivery fee", err);
         setDeliveryFee(0);
+        setDeliveryDetails(null);
         setResolvedZone(null);
         setDeliveryError(
           err.response?.data?.message || "Delivery pricing is not configured for this zone."
@@ -2016,6 +2019,30 @@ return (
                       ₦{deliveryFee.toLocaleString()}
                     </span>
                   </div>
+
+                  {/* Chowdeck-Grade Surge & Rain Breakdown */}
+                  {deliveryDetails?.isSurgeActive && (
+                    <div style={{ marginTop: 4, marginBottom: 8, display: "flex", flexDirection: "column", gap: 3 }}>
+                      {deliveryDetails.surgeFee > 0 && (
+                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.813rem", color: "#b45309" }}>
+                          <span>⚡ High Demand Surge ({deliveryDetails.surgeMultiplier}x):</span>
+                          <span style={{ fontWeight: 600 }}>+₦{deliveryDetails.surgeFee.toLocaleString()}</span>
+                        </div>
+                      )}
+                      {deliveryDetails.weatherFee > 0 && (
+                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.813rem", color: "#2563eb" }}>
+                          <span>🌧️ Rain Delivery Safety Bonus:</span>
+                          <span style={{ fontWeight: 600 }}>+₦{deliveryDetails.weatherFee.toLocaleString()}</span>
+                        </div>
+                      )}
+                      {deliveryDetails.weatherFee > 0 && (
+                        <div style={{ padding: "6px 10px", borderRadius: 8, backgroundColor: "#eff6ff", border: "1px solid #bfdbfe", fontSize: "0.75rem", color: "#1e40af", display: "flex", alignItems: "flex-start", gap: 6, marginTop: 2 }}>
+                          <span>🌧️</span>
+                          <span><strong>Rain Mode:</strong> 100% of this fee goes directly to your courier champion for safe transit.</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {deliveryFee > 0 && (
                     <div

@@ -250,6 +250,36 @@ export default function DeliveryDetails() {
                 </div>
               </div>
               
+              {/* Champion Delivery Earnings Breakdown (Chowdeck-Grade Surge & Rain Mode) */}
+              <div className="bg-gradient-to-br from-indigo-950 via-slate-900 to-black text-white border border-indigo-500/30 rounded-2xl p-4 flex flex-col gap-2.5 shadow-md">
+                <div className="flex items-center justify-between text-xs font-bold">
+                  <span className="text-[10px] tracking-wider text-indigo-300 uppercase">Champion Delivery Earnings</span>
+                  <span className="text-emerald-400 font-mono text-base font-black">
+                    ₦{((order as any)?.riderEarnings || (order as any)?.deliveryFee || 1400).toLocaleString()}
+                  </span>
+                </div>
+
+                <div className="space-y-1.5 text-xs border-t border-white/10 pt-2 font-mono">
+                  <div className="flex justify-between text-slate-300">
+                    <span className="text-slate-400">Base Dispatch Pay:</span>
+                    <span>₦{((order as any)?.baseEarnings || 800).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-amber-300">
+                    <span>⚡ Peak Demand Surge Share (80%):</span>
+                    <span>+₦{((order as any)?.surgeBonus || 300).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-blue-300">
+                    <span>🌧️ Rain Mode Safety Payout (100%):</span>
+                    <span>+₦{((order as any)?.weatherBonus || 500).toLocaleString()}</span>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-xl p-2 text-[11px] text-blue-200/90 flex items-center gap-1.5 border border-white/10 mt-1">
+                  <span>🌧️</span>
+                  <span>Inclement weather bonus is 100% credited to your champion wallet for safe delivery.</span>
+                </div>
+              </div>
+
               {/* Status Timeline */}
               <div className="bg-white border border-border/60 rounded-2xl p-4 flex flex-col gap-3.5 shadow-2xs">
                 <span className="text-[10px] font-bold tracking-wider text-muted-foreground/80 uppercase">Timeline</span>

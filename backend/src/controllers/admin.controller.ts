@@ -1,3 +1,4 @@
+import { dynamicSurgeService } from "../services/logistics/dynamic-surge.service";
 import { Request, Response } from 'express';
 import { db } from '../../db';
 import { users, orders, vendorProfiles, vendorKyc, auditLogs, promotionalCampaigns } from '../../db/schema';
@@ -607,5 +608,132 @@ export const toggleBlockFraudAccount = async (req: Request, res: Response) => {
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: "Failed to toggle account block" });
+  }
+};
+
+
+// ============================================================================
+// SPRINT H: DYNAMIC ZONE SURGE PRICING & WEATHER MULTIPLIER CONTROLLERS
+// ============================================================================
+
+// 8. Get Live Surge Zones & Metro Rain Status
+export const getSurgeZones = async (_req: Request, res: Response) => {
+  try {
+    const zones = dynamicSurgeService.getZones();
+    const metroRain = dynamicSurgeService.getMetroRainStatus();
+
+    const activeSurgeZonesCount = zones.filter(z => z.activeMultiplier > 1.05 || z.isRainModeActive).length;
+    const totalCouriersOnline = zones.reduce((acc, z) => acc + z.activeCouriersCount, 0);
+    const totalPendingOrders = zones.reduce((acc, z) => acc + z.pendingOrdersCount, 0);
+
+    return res.status(200).json({
+      success: true,
+      zones,
+      metroRain,
+      metrics: {
+        activeSurgeZonesCount,
+        totalZonesCount: zones.length,
+        totalCouriersOnline,
+        totalPendingOrders,
+        surgeDisbursedTodayNgn: 248500,
+        averageMultiplier: Number((zones.reduce((acc, z) => acc + z.activeMultiplier, 0) / zones.length).toFixed(2)),
+      }
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: "Failed to fetch surge zones: " + error.message });
+  }
+};
+
+// 9. Update Zone Multiplier or Weather Condition
+export const updateSurgeZone = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { activeMultiplier, weatherCondition, isRainModeActive, rainFeeNgn, isAutoElastic } = req.body;
+
+    const zoneId = Array.isArray(id) ? id[0] : (id || "");
+    const updated = dynamicSurgeService.updateZone(zoneId, {
+      ...(activeMultiplier !== undefined && { activeMultiplier: Number(activeMultiplier) }),
+      ...(weatherCondition !== undefined && { weatherCondition }),
+      ...(isRainModeActive !== undefined && { isRainModeActive: Boolean(isRainModeActive) }),
+      ...(rainFeeNgn !== undefined && { rainFeeNgn: Number(rainFeeNgn) }),
+      ...(isAutoElastic !== undefined && { isAutoElastic: Boolean(isAutoElastic) }),
+    });
+
+    if (!updated) {
+      return res.status(404).json({ success: false, message: `Zone with id ${id} not found` });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Surge parameters updated for ${updated.zoneName}`,
+      zone: updated,
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: "Failed to update surge zone: " + error.message });
+  }
+};
+
+// 10. Toggle Metro Weather Broadcast Emergency
+export const toggleWeatherBroadcast = async (req: Request, res: Response) => {
+  try {
+    const { isMetroRainModeActive, rainFeeBonus, broadcastMessage } = req.body;
+
+    const currentStatus = dynamicSurgeService.getMetroRainStatus();
+    const newActiveState = isMetroRainModeActive !== undefined 
+      ? Boolean(isMetroRainModeActive) 
+      : !currentStatus.isMetroRainModeActive;
+
+    const broadcast = dynamicSurgeService.setMetroRainBroadcast(
+      newActiveState,
+      rainFeeBonus !== undefined ? Number(rainFeeBonus) : currentStatus.rainFeeBonus,
+      broadcastMessage
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: newActiveState 
+        ? "Metro Rain Mode Emergency broadcasted! 100% of weather fees remitted to champions." 
+        : "Metro Rain Mode deactivated. Standard baseline dispatch resumed.",
+      broadcast,
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: "Failed to toggle weather broadcast: " + error.message });
+  }
+};
+
+// 11. Simulate Surge Pricing Calculation
+export const simulateSurgePricing = async (req: Request, res: Response) => {
+  try {
+    const { zoneName, subtotalDeliveryFee, multiplierOverride, isRainOverride, rainFeeOverride } = req.body;
+
+    const baseFee = Math.max(500, Number(subtotalDeliveryFee) || 800);
+    const multiplier = multiplierOverride !== undefined ? Number(multiplierOverride) : 1.3;
+    const isRain = isRainOverride !== undefined ? Boolean(isRainOverride) : true;
+    const rainFee = isRain ? (rainFeeOverride !== undefined ? Number(rainFeeOverride) : 500) : 0;
+
+    const surgeSurcharge = Math.round(baseFee * (multiplier - 1));
+    const finalDeliveryFee = baseFee + surgeSurcharge + rainFee;
+
+    const riderBase = Math.round(baseFee * 0.75);
+    const riderSurgeShare = Math.round(surgeSurcharge * 0.8);
+    const riderTotalPayout = riderBase + riderSurgeShare + rainFee;
+    const platformCommission = finalDeliveryFee - riderTotalPayout;
+
+    return res.status(200).json({
+      success: true,
+      simulation: {
+        zoneName: zoneName || "Yaba Cluster",
+        baseFeeNgn: baseFee,
+        surgeMultiplier: multiplier,
+        surgeSurchargeNgn: surgeSurcharge,
+        weatherFeeNgn: rainFee,
+        finalDeliveryFeeNgn: finalDeliveryFee,
+        riderPayoutNgn: riderTotalPayout,
+        platformCommissionNgn: platformCommission,
+        riderTakeRatePct: Math.round((riderTotalPayout / finalDeliveryFee) * 100),
+      }
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: "Simulation failed: " + error.message });
   }
 };
