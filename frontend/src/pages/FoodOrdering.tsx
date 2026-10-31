@@ -1,3 +1,4 @@
+import VoiceOrderConciergeModal from "@/components/voice/VoiceOrderConciergeModal";
 import { useState, useMemo, useRef, useEffect } from "react";
 import {
   Crown,
@@ -14,7 +15,7 @@ import {
   Flame,
   ArrowLeft,
   ChevronDown,
-} from "lucide-react";
+  Mic} from "lucide-react";
 
 // ─── Types ──────────────────────────────────────────────────
 interface MenuItem {
@@ -200,6 +201,7 @@ export default function FoodOrdering() {
   const isFlowPass = typeof window !== "undefined" && localStorage.getItem("flowmart_flowpass_active") === "true";
   // State
   const [searchQuery, setSearchQuery] = useState("");
+  const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState("all");
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -364,6 +366,15 @@ export default function FoodOrdering() {
                   <X className="h-4 w-4" />
                 </button>
               )}
+              <button
+                type="button"
+                onClick={() => setIsVoiceModalOpen(true)}
+                className="mr-3 px-2.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border border-indigo-200/60 transition-colors flex items-center gap-1.5 text-xs font-bold shadow-sm"
+                title="Order by FlowMart AI Voice Concierge"
+              >
+                <Mic size={15} />
+                <span className="hidden sm:inline">Voice Order</span>
+              </button>
             </div>
           </div>
         </div>
@@ -773,6 +784,11 @@ export default function FoodOrdering() {
           </div>
         </div>
       )}
+
+      <VoiceOrderConciergeModal
+        isOpen={isVoiceModalOpen}
+        onClose={() => setIsVoiceModalOpen(false)}
+      />
 
       {/* Slide-up animation */}
       <style>{`

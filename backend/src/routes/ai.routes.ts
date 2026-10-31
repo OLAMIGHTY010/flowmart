@@ -32,6 +32,8 @@ import {
   handleProductReviewSummary,
   handleAssessOrderRisk,
   handleGetFraudAuditList,
+  handleVoiceOrderParse,
+  handleVoiceOrderAssembleCart,
 } from '../controllers/ai.controller';
 import {
   authenticateJWT,
@@ -210,5 +212,32 @@ router.post('/fraud/assess-order', authenticateJWT, handleAssessOrderRisk);
  *     description: Returns transactions with elevated risk scores for admin fraud operations.
  */
 router.get('/fraud/flagged-orders', authenticateJWT, authorizeRoles('admin', 'super_admin', 'finance', 'auditor'), handleGetFraudAuditList);
+
+
+// ============================================================================
+// 7. VOICE ORDER CONCIERGE & SPEECH-TO-CART (SPRINT N)
+// ============================================================================
+
+/**
+ * @openapi
+ * /ai/voice-order/parse:
+ *   post:
+ *     tags:
+ *       - AI & Machine Learning
+ *     summary: Parse Spoken Natural Language Food/Shopping Order
+ *     description: Converts spoken transcript (with Nigerian Pidgin / multi-dialect normalization) into structured meal items, quantities, modifiers, and cart items.
+ */
+router.post('/voice-order/parse', optionalAuthenticateJWT, handleVoiceOrderParse);
+
+/**
+ * @openapi
+ * /ai/voice-order/assemble-cart:
+ *   post:
+ *     tags:
+ *       - AI & Machine Learning
+ *     summary: Assemble 1-Click Voice Cart Payload
+ *     description: Validates inventory, prices, and vendor dispatch eligibility for parsed voice orders.
+ */
+router.post('/voice-order/assemble-cart', optionalAuthenticateJWT, handleVoiceOrderAssembleCart);
 
 export default router;

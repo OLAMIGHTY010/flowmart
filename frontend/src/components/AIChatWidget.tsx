@@ -1,3 +1,4 @@
+import VoiceOrderConciergeModal from "@/components/voice/VoiceOrderConciergeModal";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { MessageSquare, X, Send, Bot, Sparkles, Mic, MicOff } from "lucide-react";
@@ -25,6 +26,7 @@ const AIChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
+  const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
 
   const handleActionClick = (action: string, recommendations: any[] = []) => {
     if (action === 'Checkout') {
@@ -247,6 +249,28 @@ const AIChatWidget = () => {
 
   return (
     <>
+      {/* ── FlowMart AI Voice Order Concierge Modal & Floating Trigger ── */}
+      <VoiceOrderConciergeModal
+        isOpen={isVoiceModalOpen}
+        onClose={() => setIsVoiceModalOpen(false)}
+      />
+
+      <button
+        type="button"
+        onClick={() => setIsVoiceModalOpen(true)}
+        aria-label="Open Voice Order Concierge"
+        className="fixed bottom-[145px] lg:bottom-[78px] right-4 lg:right-6 z-40 px-3.5 py-2 rounded-full bg-gradient-to-r from-indigo-600 via-indigo-700 to-violet-600 text-white text-xs font-bold shadow-lg shadow-indigo-600/30 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 border border-indigo-400/40 backdrop-blur-md"
+      >
+        <div className="relative">
+          <span className="absolute -inset-1 rounded-full bg-indigo-300 animate-ping opacity-60" />
+          <Mic size={15} className="relative z-10" />
+        </div>
+        <span className="tracking-wide">Voice Order</span>
+        <span className="hidden sm:inline text-[9px] px-1.5 py-0.5 rounded-full bg-white/20 text-white font-medium">
+          AI 2026
+        </span>
+      </button>
+
       {/* ── Floating Trigger Button ── */}
       <button
         onClick={() => setIsOpen(true)}

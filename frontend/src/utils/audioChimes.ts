@@ -77,6 +77,24 @@ class SoundSynth {
     ]);
   }
 
+  // 5. Voice Concierge Mic Activated: Crisp high-tech sonar beep (880Hz -> 1320Hz)
+  voiceListeningStarted() {
+    this.playNotes([
+      { freq: 880.0, start: 0, duration: 0.08, type: 'sine', gain: 0.12 },
+      { freq: 1320.0, start: 0.06, duration: 0.15, type: 'sine', gain: 0.15 },
+    ]);
+  }
+
+  // 6. Voice Order Parsed & Assembled: Sparkling confirmation melody (D5 -> F#5 -> A5 -> D6)
+  voiceOrderSuccess() {
+    this.playNotes([
+      { freq: 587.33, start: 0, duration: 0.12, type: 'sine', gain: 0.14 },
+      { freq: 739.99, start: 0.08, duration: 0.14, type: 'sine', gain: 0.16 },
+      { freq: 880.0, start: 0.16, duration: 0.16, type: 'sine', gain: 0.18 },
+      { freq: 1174.66, start: 0.24, duration: 0.45, type: 'triangle', gain: 0.22 },
+    ]);
+  }
+
   // 4. Delivered / Success: Celebratory harmonic fanfare
   orderDelivered() {
     this.playNotes([

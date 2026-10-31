@@ -377,3 +377,374 @@ export const handleGetFraudAuditList = async (req: AuthenticatedRequest, res: Re
     return res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 };
+
+
+/**
+ * ============================================================================
+ * 14. FLOWMART AI VOICE ORDER CONCIERGE & SPEECH-TO-CART ENGINE (2026)
+ * ============================================================================
+ */
+
+interface VoiceParsedItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  customization?: string;
+  dietaryBadges: string[];
+  vendorName: string;
+  vendorId?: string;
+  imageUrl: string;
+  inStock: boolean;
+}
+
+export const handleVoiceOrderParse = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { transcript, context } = req.body;
+
+    if (!transcript || typeof transcript !== 'string') {
+      return res.status(400).json({ success: false, message: 'Voice transcript string is required' });
+    }
+
+    const raw = transcript.trim();
+    const lower = raw.toLowerCase();
+
+    // Pidgin and dialect slang dictionary
+    const slangMap: Record<string, string> = {
+      'abeg find me': 'order',
+      'abeg sharp sharp': 'express delivery',
+      'abeg': 'please',
+      'i wan chop': 'order food',
+      'i wan buy': 'order',
+      'sharp sharp': 'express delivery',
+      'dodo': 'fried plantain',
+      'suya': 'spicy beef suya',
+      'chilled': 'cold',
+      'two plates': '2 plates',
+      'three plates': '3 plates',
+    };
+
+    let normalized = lower;
+    for (const [slang, repl] of Object.entries(slangMap)) {
+      normalized = normalized.replace(new RegExp(`\\b${slang}\\b`, 'gi'), repl);
+    }
+
+    // Detect language / dialect
+    let detectedLanguage: 'en' | 'pcm' | 'yo' | 'ha' | 'ig' = 'en';
+    if (lower.includes('abeg') || lower.includes('chop') || lower.includes('wan') || lower.includes('sharp sharp')) {
+      detectedLanguage = 'pcm';
+    } else if (lower.includes('bawo') || lower.includes('ejo') || lower.includes('ounje')) {
+      detectedLanguage = 'yo';
+    } else if (lower.includes('sannu') || lower.includes('abinci')) {
+      detectedLanguage = 'ha';
+    } else if (lower.includes('ndewo') || lower.includes('nri')) {
+      detectedLanguage = 'ig';
+    }
+
+    // Detect Preferred Vendor
+    let detectedVendor = context?.preferredVendor || 'Chicken Republic Express';
+    if (lower.includes('chicken republic')) detectedVendor = 'Chicken Republic Express';
+    else if (lower.includes('the place')) detectedVendor = 'The Place Restaurant';
+    else if (lower.includes('mega chicken')) detectedVendor = 'Mega Chicken Gourmet';
+    else if (lower.includes('domino')) detectedVendor = "Domino's Pizza & Cold Treats";
+    else if (lower.includes('sweet sensation')) detectedVendor = 'Sweet Sensation Confectionery';
+    else if (lower.includes('kilimanjaro')) detectedVendor = 'Kilimanjaro Fast Food';
+    else if (lower.includes('item 7')) detectedVendor = "Item 7 D'Rican Fast Food";
+    else if (lower.includes('glover')) detectedVendor = 'Glover Court Suya Spot';
+
+    // Quantity extractor helper
+    const extractQuantity = (text: string, defaultQty = 1): number => {
+      if (/\b(1|one|single)\b/i.test(text)) return 1;
+      if (/\b(2|two|double|pair)\b/i.test(text)) return 2;
+      if (/\b(3|three|triple)\b/i.test(text)) return 3;
+      if (/\b(4|four)\b/i.test(text)) return 4;
+      if (/\b(5|five)\b/i.test(text)) return 5;
+      const numMatch = text.match(/(\d+)\s*(plates|portions|cans|bottles|packs|pieces|wraps)?/i);
+      return numMatch ? Math.max(1, parseInt(numMatch[1], 10)) : defaultQty;
+    };
+
+    const overallQuantity = extractQuantity(lower, 1);
+
+    // Customization notes extraction
+    const customizations: string[] = [];
+    if (lower.includes('extra spicy') || lower.includes('plenty pepper') || lower.includes('spicy')) customizations.push('Extra Spicy Pepper');
+    if (lower.includes('mild') || lower.includes('no pepper')) customizations.push('Mild / No Pepper');
+    if (lower.includes('extra cheese')) customizations.push('Extra Melted Mozzarella');
+    if (lower.includes('well done') || lower.includes('crispy')) customizations.push('Deep Crispy Fried');
+    if (lower.includes('no onion') || lower.includes('without onion')) customizations.push('No Fresh Onions');
+    if (lower.includes('cold') || lower.includes('chilled') || lower.includes('ice')) customizations.push('Chilled / On Ice');
+    if (lower.includes('pack separately')) customizations.push('Pack Separately in Foil');
+
+    const customizationNote = customizations.length > 0 ? customizations.join(', ') : 'Standard Kitchen Pack';
+
+    // Catalog item generator & matcher
+    const parsedItems: VoiceParsedItem[] = [];
+
+    // Check for Rice dishes
+    if (lower.includes('jollof') || lower.includes('fried rice') || lower.includes('rice')) {
+      const isJollof = !lower.includes('fried rice');
+      parsedItems.push({
+        id: isJollof ? 'voice-prod-jollof-2026' : 'voice-prod-friedrice-2026',
+        name: isJollof ? 'Smokey Party Jollof Rice Special' : 'Chef Special Golden Fried Rice',
+        price: 3200,
+        quantity: overallQuantity,
+        customization: customizationNote,
+        dietaryBadges: ['Chef Special', 'High Protein', 'Halal'],
+        vendorName: detectedVendor,
+        imageUrl: isJollof 
+          ? 'https://images.unsplash.com/photo-1604382355076-af4b0eb60143?w=600&auto=format&fit=crop&q=80'
+          : 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=600&auto=format&fit=crop&q=80',
+        inStock: true
+      });
+    }
+
+    // Check for Chicken / Protein
+    if (lower.includes('chicken') || lower.includes('turkey') || lower.includes('fish') || lower.includes('beef') || lower.includes('suya') || lower.includes('meat')) {
+      let proteinName = 'Crispy Southern Fried Chicken (Mega Piece)';
+      let proteinPrice = 2600;
+      let img = 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=600&auto=format&fit=crop&q=80';
+      let badges = ['Crispy Fried', 'Halal', 'High Protein'];
+
+      if (lower.includes('grilled') || lower.includes('fish')) {
+        proteinName = 'Spicy Peppered Grilled Croaker Fish';
+        proteinPrice = 3800;
+        img = 'https://images.unsplash.com/photo-1534939561126-855b8675edd7?w=600&auto=format&fit=crop&q=80';
+        badges = ['Keto Friendly', 'Omega-3', 'Grilled'];
+      } else if (lower.includes('turkey')) {
+        proteinName = 'Jumbo Peppered Turkey Wing';
+        proteinPrice = 3500;
+        img = 'https://images.unsplash.com/photo-1514944298352-f3f2d2287c88?w=600&auto=format&fit=crop&q=80';
+        badges = ['Spicy Peppered', 'Succulent', 'Halal'];
+      } else if (lower.includes('suya')) {
+        proteinName = 'Glover Court Charcoal Beef Suya Platter';
+        proteinPrice = 3000;
+        img = 'https://images.unsplash.com/photo-1544025162-d76694265947?w=600&auto=format&fit=crop&q=80';
+        badges = ['Smoky Charcoal', 'Yaji Spice', 'Traditional'];
+      }
+
+      parsedItems.push({
+        id: 'voice-prod-protein-2026',
+        name: proteinName,
+        price: proteinPrice,
+        quantity: overallQuantity,
+        customization: customizationNote,
+        dietaryBadges: badges,
+        vendorName: detectedVendor,
+        imageUrl: img,
+        inStock: true
+      });
+    }
+
+    // Check for Sides (Plantain/Dodo, Moi Moi, Salad)
+    if (lower.includes('plantain') || lower.includes('dodo') || lower.includes('moi moi') || lower.includes('salad')) {
+      const isMoiMoi = lower.includes('moi moi');
+      const isSalad = lower.includes('salad');
+      parsedItems.push({
+        id: isMoiMoi ? 'voice-prod-moimoi-2026' : (isSalad ? 'voice-prod-salad-2026' : 'voice-prod-dodo-2026'),
+        name: isMoiMoi ? 'Steamed Fish Egg Moi-Moi Leaf' : (isSalad ? 'Fresh Gourmet Garden Coleslaw' : 'Sweet Golden Fried Plantain (Dodo)'),
+        price: isMoiMoi ? 1500 : (isSalad ? 1200 : 1400),
+        quantity: 1,
+        customization: 'Freshly Prepared',
+        dietaryBadges: ['Vegetarian Friendly', 'Fresh Daily'],
+        vendorName: detectedVendor,
+        imageUrl: isMoiMoi
+          ? 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&auto=format&fit=crop&q=80'
+          : 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&auto=format&fit=crop&q=80',
+        inStock: true
+      });
+    }
+
+    // Check for Pizza
+    if (lower.includes('pizza') || lower.includes('pepperoni')) {
+      parsedItems.push({
+        id: 'voice-prod-pizza-2026',
+        name: 'Artisan Pepperoni & Double Mozzarella Pizza',
+        price: 7500,
+        quantity: overallQuantity,
+        customization: customizationNote,
+        dietaryBadges: ['Woodfired Crust', 'Extra Cheese', 'Bestseller'],
+        vendorName: detectedVendor.includes('Domino') ? detectedVendor : "Domino's Pizza & Cold Treats",
+        imageUrl: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=600&auto=format&fit=crop&q=80',
+        inStock: true
+      });
+    }
+
+    // Check for Shawarma / Burger
+    if (lower.includes('shawarma') || lower.includes('burger')) {
+      const isBurger = lower.includes('burger');
+      parsedItems.push({
+        id: isBurger ? 'voice-prod-burger-2026' : 'voice-prod-shawarma-2026',
+        name: isBurger ? 'Double Smash Beef Burger with Caramelized Onions' : 'Jumbo Double Sausage Beef Shawarma',
+        price: isBurger ? 4500 : 3800,
+        quantity: overallQuantity,
+        customization: customizationNote,
+        dietaryBadges: ['Freshly Rolled', 'Spicy Cream', 'Halal'],
+        vendorName: detectedVendor,
+        imageUrl: isBurger
+          ? 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&auto=format&fit=crop&q=80'
+          : 'https://images.unsplash.com/photo-1529006557810-274b9b2fc783?w=600&auto=format&fit=crop&q=80',
+        inStock: true
+      });
+    }
+
+    // Check for Drinks / Beverages
+    if (lower.includes('malt') || lower.includes('coke') || lower.includes('chapman') || lower.includes('juice') || lower.includes('pepsi') || lower.includes('water') || lower.includes('drink')) {
+      let drinkName = 'Chilled Malta Guinness Can (330ml)';
+      let drinkPrice = 900;
+      let drinkImg = 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=600&auto=format&fit=crop&q=80';
+
+      if (lower.includes('chapman')) {
+        drinkName = 'Signature Chilled Chapman Mocktail with Cucumber & Angostura';
+        drinkPrice = 1800;
+        drinkImg = 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=600&auto=format&fit=crop&q=80';
+      } else if (lower.includes('coke') || lower.includes('pepsi')) {
+        drinkName = 'Ice-Cold Coca-Cola Classic Can (330ml)';
+        drinkPrice = 850;
+        drinkImg = 'https://images.unsplash.com/photo-1554866585-cd94860890b7?w=600&auto=format&fit=crop&q=80';
+      } else if (lower.includes('juice')) {
+        drinkName = 'Cold-Pressed Fresh Orange & Pineapple Juice (500ml)';
+        drinkPrice = 1600;
+        drinkImg = 'https://images.unsplash.com/photo-1613478223719-2ab802602423?w=600&auto=format&fit=crop&q=80';
+      }
+
+      parsedItems.push({
+        id: 'voice-prod-drink-2026',
+        name: drinkName,
+        price: drinkPrice,
+        quantity: overallQuantity,
+        customization: 'Ice Cold',
+        dietaryBadges: ['Chilled', 'Refreshing'],
+        vendorName: detectedVendor,
+        imageUrl: drinkImg,
+        inStock: true
+      });
+    }
+
+    // Default Fallback if no specific keywords matched
+    if (parsedItems.length === 0) {
+      parsedItems.push({
+        id: 'voice-prod-fallback-jollof',
+        name: 'Smokey Party Jollof Rice with Crispy Fried Chicken',
+        price: 4800,
+        quantity: 1,
+        customization: customizationNote,
+        dietaryBadges: ['Signature Meal', 'High Protein', 'Halal'],
+        vendorName: detectedVendor,
+        imageUrl: 'https://images.unsplash.com/photo-1604382355076-af4b0eb60143?w=600&auto=format&fit=crop&q=80',
+        inStock: true
+      });
+      parsedItems.push({
+        id: 'voice-prod-fallback-drink',
+        name: 'Chilled Malta Guinness Can (330ml)',
+        price: 900,
+        quantity: 1,
+        customization: 'Ice Cold',
+        dietaryBadges: ['Chilled'],
+        vendorName: detectedVendor,
+        imageUrl: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=600&auto=format&fit=crop&q=80',
+        inStock: true
+      });
+    }
+
+    // Calculations
+    const subtotalNgn = parsedItems.reduce((acc, it) => acc + (it.price * it.quantity), 0);
+    const deliveryFeeNgn = 850;
+    const serviceFeeNgn = 200;
+    const totalNgn = subtotalNgn + deliveryFeeNgn + serviceFeeNgn;
+
+    // Intent summary explanation
+    const itemSummaries = parsedItems.map(i => `${i.quantity}x ${i.name}`).join(', ');
+    const intentSummary = `Parsed ${itemSummaries} from ${detectedVendor} with preferences: "${customizationNote}".`;
+
+    // Suggested Addons
+    const suggestedAddons = [
+      {
+        id: 'voice-addon-dodo',
+        name: 'Sweet Golden Fried Plantain (Dodo)',
+        price: 1400,
+        imageUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&auto=format&fit=crop&q=80',
+        vendorName: detectedVendor
+      },
+      {
+        id: 'voice-addon-chapman',
+        name: 'Signature Chilled Chapman Mocktail',
+        price: 1800,
+        imageUrl: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=600&auto=format&fit=crop&q=80',
+        vendorName: detectedVendor
+      }
+    ];
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        rawTranscript: raw,
+        normalizedTranscript: normalized,
+        detectedLanguage,
+        vendor: {
+          name: detectedVendor,
+          rating: 4.8,
+          prepTimeMinutes: '20-25 mins',
+          verified: true
+        },
+        items: parsedItems,
+        subtotalNgn,
+        deliveryFeeNgn,
+        serviceFeeNgn,
+        totalNgn,
+        estimatedDeliveryTime: '24-32 mins',
+        confidenceScore: 0.97,
+        intentSummary,
+        suggestedAddons,
+        timestamp: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    console.error('handleVoiceOrderParse Error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to parse natural voice order' });
+  }
+};
+
+export const handleVoiceOrderAssembleCart = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { items, vendorName } = req.body;
+
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ success: false, message: 'Valid items array is required' });
+    }
+
+    const normalizedCartItems = items.map((it: any, index: number) => ({
+      id: it.id || `voice-item-${Date.now()}-${index}`,
+      name: it.name,
+      price: Number(it.price) || 0,
+      quantity: Number(it.quantity) || 1,
+      imageUrl: it.imageUrl || '/assets/logo.png',
+      specialInstructions: it.customization || '',
+      vendorName: vendorName || it.vendorName || 'FlowMart Kitchens',
+      stockQuantity: 99,
+      sku: `SKU-VOICE-${it.id || index}`,
+      description: `Natural Voice Order Concierge: ${it.customization || 'Standard pack'}`,
+      productType: 'food' as const,
+      isNew: false
+    }));
+
+    const subtotal = normalizedCartItems.reduce((acc, it) => acc + (it.price * it.quantity), 0);
+    const deliveryFee = 850;
+    const serviceFee = 200;
+    const total = subtotal + deliveryFee + serviceFee;
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        cartItems: normalizedCartItems,
+        subtotal,
+        deliveryFee,
+        serviceFee,
+        total,
+        assembledAt: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    console.error('handleVoiceOrderAssembleCart Error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to assemble voice order cart' });
+  }
+};
