@@ -1,11 +1,12 @@
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { Bike, Package, Wallet, Settings, LogOut, Bell, CalendarClock } from "lucide-react";
+import { Bike, Package, Wallet, Settings, LogOut, Bell, CalendarClock, Trophy } from "lucide-react";
 
 const navItems = [
   { path: "/rider/dashboard", label: "Dashboard", icon: Bike },
   { path: "/rider/deliveries", label: "Deliveries", icon: Package },
   { path: "/rider/shifts", label: "Shifts & Floor Pay", icon: CalendarClock },
+  { path: "/rider/tier", label: "Champion Tier & Quests", icon: Trophy },
   { path: "/rider/earnings", label: "Earnings", icon: Wallet },
   { path: "/rider/profile", label: "Profile", icon: Settings },
 ];
@@ -26,6 +27,9 @@ const RiderLayout = () => {
   if (path.includes("/rider/shifts")) {
     title = "Shifts & Floor Pay";
     subtitle = "Book peak meal rush slots & track hourly floor pay guarantee.";
+  } else if (path.includes("/rider/tier")) {
+    title = "Champion Tier & VIP Quests";
+    subtitle = "Advance your courier level, claim bounties & unlock fuel rebates.";
   } else if (path.includes("/rider/deliveries")) {
     title = "Deliveries";
     subtitle = "Manage your active and completed delivery jobs.";

@@ -84,6 +84,7 @@ const RiderLayout = lazy(() => import("@/components/rider/RiderLayout"));
 const RiderDashboard = lazy(() => import("@/pages/rider/RiderDashboard"));
 const RiderDeliveries = lazy(() => import("@/pages/rider/RiderDeliveries"));
 const RiderShifts = lazy(() => import("@/pages/rider/RiderShifts"));
+const RiderChampionTier = lazy(() => import("@/pages/rider/RiderChampionTier"));
 const RiderEarnings = lazy(() => import("@/pages/rider/RiderEarnings"));
 const RiderProfile = lazy(() => import("@/pages/rider/RiderProfile"));
 const RiderProfileSetup = lazy(() => import("@/pages/rider/RiderProfileSetup"));
@@ -221,6 +222,7 @@ function App() {
               <Route path="dashboard" element={<RiderDashboard />} />
               <Route path="deliveries" element={<RiderDeliveries />} />
               <Route path="shifts" element={<RiderShifts />} />
+              <Route path="tier" element={<RiderChampionTier />} />
               <Route path="deliveries/new" element={<RiderNewDelivery />} />
               <Route path="deliveries/:id" element={<RiderDeliveryDetails />} />
               <Route path="deliveries/:id/shortage" element={<RiderShortageReport />} />

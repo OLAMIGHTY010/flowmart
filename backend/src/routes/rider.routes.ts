@@ -1,5 +1,10 @@
 import { Router } from 'express';
-import { getOrders, getOrderById, updateOrderStatus, getAvailableDeliveries, acceptDelivery, confirmDelivery, confirmDeliveryViaQR, submitKYC, getKYCStatus, updateLocation, getRiderEarningsAnalytics, getCashOnDeliveryLedger, remitCashFloat, getDemandHotspots, getActiveStackedBatch, acceptStackedBatch, verifyHandoverOTP, uploadProofOfDelivery, getAvailableShifts, bookShiftSlot, getActiveShiftStatus, checkInShift, checkOutShift, getShiftHistory } from '../controllers/rider.controller';
+import { getOrders, getOrderById, updateOrderStatus, getAvailableDeliveries, acceptDelivery, confirmDelivery, confirmDeliveryViaQR, submitKYC, getKYCStatus, updateLocation, getRiderEarningsAnalytics, getCashOnDeliveryLedger, remitCashFloat, getDemandHotspots, getActiveStackedBatch, acceptStackedBatch, verifyHandoverOTP, uploadProofOfDelivery, getAvailableShifts, bookShiftSlot, getActiveShiftStatus, checkInShift, checkOutShift, getShiftHistory,
+  getChampionTierStatus,
+  getChampionQuests,
+  claimChampionQuestBounty,
+  getChampionTierBenefitsMatrix
+} from '../controllers/rider.controller';
 import { authenticateJWT, authorizeRoles } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -38,5 +43,12 @@ router.post('/:id/confirm', confirmDelivery);
 router.post('/qr-confirm', confirmDeliveryViaQR); // Added QR Route
 router.post('/kyc/submit', submitKYC);
 router.get('/kyc/status', getKYCStatus);
+
+
+// Sprint O: Courier Champion Tier Progression & VIP Quest Badges (2026)
+router.get('/champion-tier', getChampionTierStatus);
+router.get('/champion-quests', getChampionQuests);
+router.post('/champion-quests/:id/claim', claimChampionQuestBounty);
+router.get('/tier-benefits', getChampionTierBenefitsMatrix);
 
 export default router;

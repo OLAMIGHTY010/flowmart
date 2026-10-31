@@ -1321,3 +1321,293 @@ export const getShiftHistory = async (req: Request, res: Response) => {
     return res.status(500).json({ success: false, message: "Failed to fetch shift history: " + error.message });
   }
 };
+
+
+/**
+ * ============================================================================
+ * SPRINT O: COURIER CHAMPION TIER PROGRESSION & VIP QUEST BOUNTIES (2026)
+ * ============================================================================
+ */
+
+interface ChampionQuest {
+  id: string;
+  title: string;
+  description: string;
+  category: 'DAILY' | 'WEEKLY' | 'WEATHER_SURGE' | 'EFFICIENCY' | 'NIGHT';
+  targetCount: number;
+  currentCount: number;
+  progressPct: number;
+  rewardNgn: number;
+  rewardXp: number;
+  status: 'IN_PROGRESS' | 'COMPLETED_UNCLAIMED' | 'CLAIMED';
+  expiresInHours: number;
+  badgeIcon: string;
+}
+
+// In-memory state for quest claims per rider
+const claimedQuestsCache = new Set<string>();
+
+export const getChampionTierStatus = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user?.id || 'rider-demo-user';
+
+    const currentXp = 3450;
+    const nextTierXp = 5000;
+    const progressPct = Math.round((currentXp / nextTierXp) * 100);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        riderId: userId,
+        tier: 'GOLD',
+        level: 3,
+        title: 'Gold Courier Champion',
+        currentXp,
+        nextTierXp,
+        progressPct,
+        xpToNextTier: nextTierXp - currentXp,
+        floorPayMultiplier: 1.25,
+        floorPayGuaranteeNgnPerHour: 3500,
+        fuelStipendWeeklyNgn: 6000,
+        fuelStipendPartner: 'TotalEnergies & Oando Express Fleet Card',
+        instantCashoutFeeNgn: 0,
+        priorityDispatchRanking: 'TOP_10_PERCENTILE',
+        priorityDispatchBoostPct: 35,
+        completedQuestsCount: 14,
+        totalBonusEarnedNgn: 42500,
+        currentStreakDays: 6,
+        onTimeRatePct: 99.2,
+        customerSatisfactionScore: 4.96,
+        thermalBoxInspectionVerified: true,
+        activeInsuranceCover: 'FlowMart Comprehensive Health & Courier Accident Shield (2026)',
+        perksList: [
+          '+25% Guaranteed Hourly Floor Pay Boost',
+          '₦6,000 Weekly Fuel Rebate at 120+ Partner Stations',
+          'Zero-Fee Instant Earnings Cashouts (Any Bank / OPay / PalmPay)',
+          'High-Priority Stacked Batch Dispatch Routing',
+          'VIP Direct Support Dispatcher Hot-line'
+        ]
+      }
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Failed to fetch champion tier status: ' + error.message });
+  }
+};
+
+export const getChampionQuests = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user?.id || 'rider-demo-user';
+
+    const baseQuests: ChampionQuest[] = [
+      {
+        id: 'quest-lunch-rush-01',
+        title: 'Lunch Rush Speed Demon',
+        description: 'Complete 5 on-time dropoffs during the 12:00 PM – 2:30 PM peak meal rush.',
+        category: 'DAILY',
+        targetCount: 5,
+        currentCount: 4,
+        progressPct: 80,
+        rewardNgn: 3500,
+        rewardXp: 350,
+        status: claimedQuestsCache.has(`${userId}:quest-lunch-rush-01`) ? 'CLAIMED' : 'IN_PROGRESS',
+        expiresInHours: 3.5,
+        badgeIcon: 'Zap'
+      },
+      {
+        id: 'quest-spillage-free-02',
+        title: 'Zero-Spillage Perfectionist',
+        description: 'Achieve 10 consecutive dropoffs with verified thermal box inspection and 5-star customer rating.',
+        category: 'WEEKLY',
+        targetCount: 10,
+        currentCount: 10,
+        progressPct: 100,
+        rewardNgn: 5000,
+        rewardXp: 500,
+        status: claimedQuestsCache.has(`${userId}:quest-spillage-free-02`) ? 'CLAIMED' : 'COMPLETED_UNCLAIMED',
+        expiresInHours: 38,
+        badgeIcon: 'ShieldCheck'
+      },
+      {
+        id: 'quest-monsoon-vanguard-03',
+        title: 'Monsoon Rain Vanguard',
+        description: 'Deliver 3 orders during dynamic rain surge mode when precipitation rate exceeds 10mm/hr.',
+        category: 'WEATHER_SURGE',
+        targetCount: 3,
+        currentCount: 2,
+        progressPct: 67,
+        rewardNgn: 4500,
+        rewardXp: 600,
+        status: claimedQuestsCache.has(`${userId}:quest-monsoon-vanguard-03`) ? 'CLAIMED' : 'IN_PROGRESS',
+        expiresInHours: 11,
+        badgeIcon: 'CloudRain'
+      },
+      {
+        id: 'quest-stacked-master-04',
+        title: 'Multi-Batch Dominator',
+        description: 'Accept and complete 4 double or triple stacked multi-drop orders within logistics SLA.',
+        category: 'EFFICIENCY',
+        targetCount: 4,
+        currentCount: 4,
+        progressPct: 100,
+        rewardNgn: 4000,
+        rewardXp: 400,
+        status: claimedQuestsCache.has(`${userId}:quest-stacked-master-04`) ? 'CLAIMED' : 'COMPLETED_UNCLAIMED',
+        expiresInHours: 19,
+        badgeIcon: 'Package'
+      },
+      {
+        id: 'quest-night-owl-05',
+        title: 'Late Night Sentinel',
+        description: 'Complete 3 orders between 9:00 PM – 1:00 AM midnight feast surge.',
+        category: 'NIGHT',
+        targetCount: 3,
+        currentCount: 1,
+        progressPct: 33,
+        rewardNgn: 3000,
+        rewardXp: 300,
+        status: claimedQuestsCache.has(`${userId}:quest-night-owl-05`) ? 'CLAIMED' : 'IN_PROGRESS',
+        expiresInHours: 7,
+        badgeIcon: 'Moon'
+      }
+    ];
+
+    const unclaimedBountiesCount = baseQuests.filter(q => q.status === 'COMPLETED_UNCLAIMED').length;
+    const totalPotentialBonusNgn = baseQuests.reduce((sum, q) => sum + q.rewardNgn, 0);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        quests: baseQuests,
+        unclaimedBountiesCount,
+        totalPotentialBonusNgn,
+        timestamp: new Date().toISOString()
+      }
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Failed to fetch champion quests: ' + error.message });
+  }
+};
+
+export const claimChampionQuestBounty = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const rawId = req.params.id;
+    const id = Array.isArray(rawId) ? rawId[0] : (rawId || "");
+    const userId = req.user?.id || 'rider-demo-user';
+
+    if (!id) {
+      return res.status(400).json({ success: false, message: 'Quest id is required' });
+    }
+
+    const questRewardMap: Record<string, { ngn: number; xp: number; title: string }> = {
+      'quest-lunch-rush-01': { ngn: 3500, xp: 350, title: 'Lunch Rush Speed Demon' },
+      'quest-spillage-free-02': { ngn: 5000, xp: 500, title: 'Zero-Spillage Perfectionist' },
+      'quest-monsoon-vanguard-03': { ngn: 4500, xp: 600, title: 'Monsoon Rain Vanguard' },
+      'quest-stacked-master-04': { ngn: 4000, xp: 400, title: 'Multi-Batch Dominator' },
+      'quest-night-owl-05': { ngn: 3000, xp: 300, title: 'Late Night Sentinel' }
+    };
+
+    const targetQuest = questRewardMap[id];
+    if (!targetQuest) {
+      return res.status(404).json({ success: false, message: 'Quest not found' });
+    }
+
+    const cacheKey = `${userId}:${id}`;
+    if (claimedQuestsCache.has(cacheKey)) {
+      return res.status(400).json({ success: false, message: 'This quest bounty has already been claimed.' });
+    }
+
+    // Mark as claimed
+    claimedQuestsCache.add(cacheKey);
+
+    return res.status(200).json({
+      success: true,
+      message: `Successfully claimed ₦${targetQuest.ngn.toLocaleString()} bounty & +${targetQuest.xp} XP for ${targetQuest.title}!`,
+      data: {
+        questId: id,
+        questTitle: targetQuest.title,
+        claimedRewardNgn: targetQuest.ngn,
+        awardedXp: targetQuest.xp,
+        newCurrentXp: 3450 + targetQuest.xp,
+        creditedWalletBalanceNgn: 68400 + targetQuest.ngn,
+        claimedAt: new Date().toISOString()
+      }
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Failed to claim quest bounty: ' + error.message });
+  }
+};
+
+export const getChampionTierBenefitsMatrix = async (_req: AuthenticatedRequest, res: Response) => {
+  try {
+    const tierMatrix = [
+      {
+        tier: 'BRONZE',
+        level: 1,
+        name: 'Bronze Champion',
+        requiredXpRange: '0 – 999 XP',
+        floorPayMultiplier: '1.0x (Standard)',
+        floorPayPerHour: '₦2,800/hr',
+        fuelStipend: 'None',
+        instantCashoutFee: '₦100 flat',
+        priorityBatchDispatch: 'Standard Queue',
+        healthInsurance: 'Basic On-Duty Cover',
+        colorTheme: '#cd7f32',
+        badgeTitle: 'Rising Courier'
+      },
+      {
+        tier: 'SILVER',
+        level: 2,
+        name: 'Silver Champion',
+        requiredXpRange: '1,000 – 2,499 XP',
+        floorPayMultiplier: '1.10x (+10% Boost)',
+        floorPayPerHour: '₦3,080/hr',
+        fuelStipend: '₦2,500 / week Rebate',
+        instantCashoutFee: '₦50 flat',
+        priorityBatchDispatch: '+15% Earlier Dispatch Access',
+        healthInsurance: 'Comprehensive On-Duty Cover',
+        colorTheme: '#94a3b8',
+        badgeTitle: 'Verified Champion'
+      },
+      {
+        tier: 'GOLD',
+        level: 3,
+        name: 'Gold Champion',
+        requiredXpRange: '2,500 – 4,999 XP',
+        floorPayMultiplier: '1.25x (+25% Boost)',
+        floorPayPerHour: '₦3,500/hr',
+        fuelStipend: '₦6,000 / week Rebate + Free Bike Servicing Kit',
+        instantCashoutFee: 'FREE (₦0 Fees)',
+        priorityBatchDispatch: 'High Priority (Top 10% Batching)',
+        healthInsurance: 'Comprehensive Health & Rider Family Shield',
+        colorTheme: '#f59e0b',
+        badgeTitle: 'Master Courier',
+        isCurrentRiderTier: true
+      },
+      {
+        tier: 'APEX_ELITE',
+        level: 4,
+        name: 'Apex Elite Champion',
+        requiredXpRange: '5,000+ XP',
+        floorPayMultiplier: '1.40x (+40% Boost)',
+        floorPayPerHour: '₦3,920/hr',
+        fuelStipend: '₦12,000 / week Rebate + Annual Bike Allowance',
+        instantCashoutFee: 'FREE (₦0 Fees) + Instant Bank Wire',
+        priorityBatchDispatch: 'VIP Autonomous First-Pick Routing',
+        healthInsurance: 'Full 360° Life, Health & Equipment Protection',
+        colorTheme: '#8b5cf6',
+        badgeTitle: 'Apex Fleet Legend'
+      }
+    ];
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        tiers: tierMatrix,
+        currentTier: 'GOLD',
+        updatedYear: 2026
+      }
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Failed to fetch tier matrix: ' + error.message });
+  }
+};
