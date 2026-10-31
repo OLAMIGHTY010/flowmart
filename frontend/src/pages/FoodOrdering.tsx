@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import VoiceOrderConciergeModal from "@/components/voice/VoiceOrderConciergeModal";
 import { useState, useMemo, useRef, useEffect } from "react";
 import {
@@ -15,7 +16,8 @@ import {
   Flame,
   ArrowLeft,
   ChevronDown,
-  Mic} from "lucide-react";
+  Mic,
+  Users} from "lucide-react";
 
 // ─── Types ──────────────────────────────────────────────────
 interface MenuItem {
@@ -198,6 +200,7 @@ const FOOD_CATEGORIES = [
 
 // ─── Component ──────────────────────────────────────────────
 export default function FoodOrdering() {
+  const navigate = useNavigate();
   const isFlowPass = typeof window !== "undefined" && localStorage.getItem("flowmart_flowpass_active") === "true";
   // State
   const [searchQuery, setSearchQuery] = useState("");
@@ -366,6 +369,15 @@ export default function FoodOrdering() {
                   <X className="h-4 w-4" />
                 </button>
               )}
+              <button
+                type="button"
+                onClick={() => navigate("/group-order/FLOW-2026")}
+                className="mr-3 px-2.5 py-1.5 rounded-xl bg-violet-50 hover:bg-violet-100 text-violet-600 border border-violet-200/60 transition-colors flex items-center gap-1.5 text-xs font-bold shadow-sm"
+                title="Start or Join Live Group Order Room with Friends"
+              >
+                <Users size={15} />
+                <span className="hidden sm:inline">Group Room</span>
+              </button>
               <button
                 type="button"
                 onClick={() => setIsVoiceModalOpen(true)}
