@@ -103,6 +103,7 @@ const RiderOrders = lazy(() => import("@/pages/rider/RiderOrders"));
 const RiderDeliveryDetails = lazy(() => import("@/pages/rider/RiderDeliveryDetails"));
 const RiderNewDelivery = lazy(() => import("@/pages/rider/RiderNewDelivery"));
 const RiderShortageReport = lazy(() => import("@/pages/rider/RiderShortageReport"));
+const RiderEmergencySOS = lazy(() => import("@/pages/rider/RiderEmergencySOS"));
 
 // Corporate & Fleet Pages
 const CorporateDashboard = lazy(() => import("@/pages/corporate/CorporateDashboard"));
@@ -248,6 +249,7 @@ function App() {
               <Route path="orders" element={<RiderOrders />} />
               <Route path="earnings" element={<RiderEarnings />} />
               <Route path="profile" element={<RiderProfile />} />
+              <Route path="sos" element={<RiderEmergencySOS />} />
             </Route>
 
             <Route path="/rider/profile-setup" element={<RiderProfileSetup />} />

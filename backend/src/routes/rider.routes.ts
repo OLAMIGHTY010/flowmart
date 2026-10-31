@@ -3,7 +3,14 @@ import { getOrders, getOrderById, updateOrderStatus, getAvailableDeliveries, acc
   getChampionTierStatus,
   getChampionQuests,
   claimChampionQuestBounty,
-  getChampionTierBenefitsMatrix
+  getChampionTierBenefitsMatrix,
+  getActiveSOSIncident,
+  triggerEmergencySOS,
+  requestCargoHandoff,
+  confirmCargoHandoff,
+  claimEmergencyRepairAllowance,
+  confirmSafetyCheckIn,
+  resolveEmergencySOS
 } from '../controllers/rider.controller';
 import { authenticateJWT, authorizeRoles } from '../middleware/auth.middleware';
 
@@ -50,5 +57,15 @@ router.get('/champion-tier', getChampionTierStatus);
 router.get('/champion-quests', getChampionQuests);
 router.post('/champion-quests/:id/claim', claimChampionQuestBounty);
 router.get('/tier-benefits', getChampionTierBenefitsMatrix);
+
+
+// Sprint Y: Courier Champion Emergency SOS & Roadside Assistance Beacon (2026)
+router.get('/sos/active', getActiveSOSIncident);
+router.post('/sos/trigger', triggerEmergencySOS);
+router.post('/sos/handoff/request', requestCargoHandoff);
+router.post('/sos/handoff/confirm', confirmCargoHandoff);
+router.post('/sos/allowance/claim', claimEmergencyRepairAllowance);
+router.post('/sos/safety-checkin', confirmSafetyCheckIn);
+router.post('/sos/resolve', resolveEmergencySOS);
 
 export default router;

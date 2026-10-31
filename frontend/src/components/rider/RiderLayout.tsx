@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { Bike, Package, Wallet, Settings, LogOut, Bell, CalendarClock, Trophy } from "lucide-react";
+import { Bike, Package, Wallet, Settings, LogOut, Bell, CalendarClock, Trophy, AlertTriangle } from "lucide-react";
 
 const navItems = [
   { path: "/rider/dashboard", label: "Dashboard", icon: Bike },
@@ -9,6 +9,7 @@ const navItems = [
   { path: "/rider/tier", label: "Champion Tier & Quests", icon: Trophy },
   { path: "/rider/earnings", label: "Earnings", icon: Wallet },
   { path: "/rider/profile", label: "Profile", icon: Settings },
+  { path: "/rider/sos", label: "Emergency SOS", icon: AlertTriangle },
 ];
 
 const RiderLayout = () => {

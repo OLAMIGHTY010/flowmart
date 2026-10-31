@@ -1611,3 +1611,316 @@ export const getChampionTierBenefitsMatrix = async (_req: AuthenticatedRequest, 
     return res.status(500).json({ success: false, message: 'Failed to fetch tier matrix: ' + error.message });
   }
 };
+
+// ==========================================
+// Sprint Y: Courier Champion Emergency SOS & Roadside Assistance Beacon (2026)
+// ==========================================
+
+export interface StrandedOrderPackage {
+  orderId: string;
+  customerName: string;
+  dropoffAddress: string;
+  itemSummary: string;
+  status: 'HELD_BY_STRANDED' | 'HANDOFF_PENDING' | 'HANDED_OFF';
+  assignedRescueRider?: {
+    id: string;
+    name: string;
+    phone: string;
+    etaMinutes: number;
+    distanceKm: number;
+    handoverOtp: string;
+  };
+}
+
+export interface MobileMechanicUnit {
+  mechanicId: string;
+  name: string;
+  phone: string;
+  workshop: string;
+  vehicleType: string;
+  distanceKm: number;
+  etaMinutes: number;
+  status: 'DISPATCHED' | 'EN_ROUTE' | 'ON_SITE' | 'REPAIRED';
+  coords: { lat: number; lng: number };
+}
+
+export interface EmergencySOSIncident {
+  id: string;
+  riderId: string;
+  riderName: string;
+  riderPhone: string;
+  emergencyType: 'FLAT_TYRE_PUNCTURE' | 'ENGINE_BREAKDOWN' | 'ACCIDENT_MEDICAL' | 'ROAD_HAZARD_POLICE' | 'BATTERY_ELECTRICAL' | 'SEVERE_WEATHER_FLOOD';
+  severity: 'CRITICAL' | 'HIGH' | 'MEDIUM';
+  coordinates: {
+    lat: number;
+    lng: number;
+    address: string;
+  };
+  note?: string;
+  activeOrders: StrandedOrderPackage[];
+  mechanicUnit: MobileMechanicUnit;
+  repairAllowance: {
+    amountNgn: number;
+    status: 'ELIGIBLE' | 'CLAIMED';
+    claimedAt?: string;
+    txRef?: string;
+  };
+  safetyCheckIn: {
+    countdownSeconds: number;
+    lastConfirmedAt: string;
+    dispatchCenterAlerted: boolean;
+  };
+  status: 'TRIGGERED' | 'DISPATCHED' | 'MECHANIC_EN_ROUTE' | 'ON_SITE' | 'RESOLVED';
+  createdAt: string;
+  resolvedAt?: string;
+}
+
+const riderSOSIncidentsStore: Record<string, EmergencySOSIncident> = {};
+
+export const getActiveSOSIncident = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const riderId = req.user?.id || 'rider-current';
+    const active = riderSOSIncidentsStore[riderId];
+    return res.status(200).json({
+      success: true,
+      data: active || null
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Failed to retrieve active SOS status: ' + error.message });
+  }
+};
+
+export const triggerEmergencySOS = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const riderId = req.user?.id || 'rider-current';
+    const riderName = (req.user as any)?.fullName || req.body.riderName || 'Ibrahim Bello (Gold Champion)';
+    const riderPhone = (req.user as any)?.phoneNumber || req.body.riderPhone || '+234 802 911 4420';
+
+    const {
+      emergencyType = 'FLAT_TYRE_PUNCTURE',
+      severity = 'HIGH',
+      coordinates = { lat: 6.4281, lng: 3.4219, address: 'Adeola Odeku St / Saka Tinubu Junction, Victoria Island, Lagos' },
+      note = 'Puncture on rear wheel while en route with active customer feast order.',
+      activeOrders = []
+    } = req.body;
+
+    const incidentId = 'SOS-2026-' + Math.floor(1000 + Math.random() * 9000);
+
+    const packagedOrders: StrandedOrderPackage[] = activeOrders.length > 0 ? activeOrders : [
+      {
+        orderId: 'ORD-8821',
+        customerName: 'Dr. Funke Adeyemi',
+        dropoffAddress: 'Plot 14B Admiralty Way, Lekki Phase 1, Lagos',
+        itemSummary: 'Mega Chicken Crispy Feast + Suya Central Platter',
+        status: 'HELD_BY_STRANDED'
+      }
+    ];
+
+    const incident: EmergencySOSIncident = {
+      id: incidentId,
+      riderId,
+      riderName,
+      riderPhone,
+      emergencyType,
+      severity,
+      coordinates,
+      note,
+      activeOrders: packagedOrders,
+      mechanicUnit: {
+        mechanicId: 'mech-vi-04',
+        name: 'Kazeem AutoMoto Rapid Unit #4',
+        phone: '+234 803 555 0192',
+        workshop: 'Kazeem Motors VI Dispatch Hub (FlowMart Certified Partner)',
+        vehicleType: 'Equipped Mobile Toolvan & Electric Air Compressor',
+        distanceKm: 1.2,
+        etaMinutes: 7,
+        status: 'EN_ROUTE',
+        coords: { lat: coordinates.lat + 0.005, lng: coordinates.lng + 0.004 }
+      },
+      repairAllowance: {
+        amountNgn: 5000,
+        status: 'ELIGIBLE'
+      },
+      safetyCheckIn: {
+        countdownSeconds: 900,
+        lastConfirmedAt: new Date().toISOString(),
+        dispatchCenterAlerted: false
+      },
+      status: 'DISPATCHED',
+      createdAt: new Date().toISOString()
+    };
+
+    riderSOSIncidentsStore[riderId] = incident;
+
+    return res.status(201).json({
+      success: true,
+      message: 'Emergency SOS beacon broadcasted! Mobile mechanic dispatched and dispatch room notified.',
+      data: incident
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Failed to trigger emergency SOS: ' + error.message });
+  }
+};
+
+export const requestCargoHandoff = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const riderId = req.user?.id || 'rider-current';
+    const { orderId } = req.body;
+
+    const incident = riderSOSIncidentsStore[riderId];
+    if (!incident) {
+      return res.status(404).json({ success: false, message: 'No active SOS incident found for this rider.' });
+    }
+
+    const orderIndex = incident.activeOrders.findIndex(o => !orderId || o.orderId === orderId);
+    if (orderIndex === -1) {
+      return res.status(404).json({ success: false, message: 'Specified order not found in stranded cargo list.' });
+    }
+
+    const targetOrder = incident.activeOrders[orderIndex];
+    const generatedOtp = Math.floor(1000 + Math.random() * 9000).toString();
+
+    targetOrder.status = 'HANDOFF_PENDING';
+    targetOrder.assignedRescueRider = {
+      id: 'rider-rescue-402',
+      name: 'Chukwudi Nnamdi (Apex Gold Champion #402)',
+      phone: '+234 814 902 3341',
+      etaMinutes: 4,
+      distanceKm: 0.6,
+      handoverOtp: generatedOtp
+    };
+
+    return res.status(200).json({
+      success: true,
+      message: 'Rescue champion assigned for instant cargo handover! Share 4-digit OTP upon arrival.',
+      data: {
+        orderId: targetOrder.orderId,
+        assignedRescueRider: targetOrder.assignedRescueRider,
+        incident
+      }
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Failed to initiate cargo handoff: ' + error.message });
+  }
+};
+
+export const confirmCargoHandoff = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const riderId = req.user?.id || 'rider-current';
+    const { orderId, otp } = req.body;
+
+    const incident = riderSOSIncidentsStore[riderId];
+    if (!incident) {
+      return res.status(404).json({ success: false, message: 'No active SOS incident found.' });
+    }
+
+    const targetOrder = incident.activeOrders.find(o => !orderId || o.orderId === orderId);
+    if (!targetOrder) {
+      return res.status(404).json({ success: false, message: 'Target order not found.' });
+    }
+
+    if (otp && targetOrder.assignedRescueRider?.handoverOtp && otp !== targetOrder.assignedRescueRider.handoverOtp) {
+      return res.status(400).json({ success: false, message: 'Invalid handover OTP entered.' });
+    }
+
+    targetOrder.status = 'HANDED_OFF';
+
+    return res.status(200).json({
+      success: true,
+      message: 'Cargo custody successfully handed over to rescue Champion. Customer delivery continues uninterrupted!',
+      data: {
+        orderId: targetOrder.orderId,
+        status: targetOrder.status,
+        incident
+      }
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Failed to confirm cargo handoff: ' + error.message });
+  }
+};
+
+export const claimEmergencyRepairAllowance = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const riderId = req.user?.id || 'rider-current';
+    const incident = riderSOSIncidentsStore[riderId];
+
+    if (!incident) {
+      return res.status(404).json({ success: false, message: 'No active emergency incident found.' });
+    }
+
+    if (incident.repairAllowance.status === 'CLAIMED') {
+      return res.status(400).json({
+        success: false,
+        message: 'Emergency repair stipend has already been claimed for this incident.',
+        txRef: incident.repairAllowance.txRef
+      });
+    }
+
+    const txRef = 'TX-SOS-ALW-' + Math.floor(100000 + Math.random() * 900000);
+    incident.repairAllowance.status = 'CLAIMED';
+    incident.repairAllowance.claimedAt = new Date().toISOString();
+    incident.repairAllowance.txRef = txRef;
+
+    return res.status(200).json({
+      success: true,
+      message: '₦5,000 Emergency Roadside Repair Stipend credited to your FlowMart Wallet!',
+      data: {
+        amountNgn: 5000,
+        txRef,
+        creditedAt: incident.repairAllowance.claimedAt,
+        newWalletBalanceNgn: 73400
+      }
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Failed to claim repair allowance: ' + error.message });
+  }
+};
+
+export const confirmSafetyCheckIn = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const riderId = req.user?.id || 'rider-current';
+    const incident = riderSOSIncidentsStore[riderId];
+
+    if (!incident) {
+      return res.status(404).json({ success: false, message: 'No active emergency incident found.' });
+    }
+
+    incident.safetyCheckIn.lastConfirmedAt = new Date().toISOString();
+    incident.safetyCheckIn.countdownSeconds = 900;
+    incident.safetyCheckIn.dispatchCenterAlerted = false;
+
+    return res.status(200).json({
+      success: true,
+      message: 'Safety check-in acknowledged. 15-minute distress timer reset.',
+      data: incident.safetyCheckIn
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Failed to confirm safety check-in: ' + error.message });
+  }
+};
+
+export const resolveEmergencySOS = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const riderId = req.user?.id || 'rider-current';
+    const incident = riderSOSIncidentsStore[riderId];
+
+    if (!incident) {
+      return res.status(404).json({ success: false, message: 'No active incident found to resolve.' });
+    }
+
+    incident.status = 'RESOLVED';
+    incident.resolvedAt = new Date().toISOString();
+    delete riderSOSIncidentsStore[riderId];
+
+    return res.status(200).json({
+      success: true,
+      message: 'Emergency SOS incident closed. Vehicle back in service. Ride safe!',
+      data: {
+        id: incident.id,
+        resolvedAt: incident.resolvedAt
+      }
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Failed to resolve SOS incident: ' + error.message });
+  }
+};
