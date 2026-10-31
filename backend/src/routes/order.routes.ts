@@ -2,7 +2,10 @@ import {
 Router } from 'express';
 import { placeOrder, getOrders, getOrderById, getOrderTrackingTelemetry, updateOrderStatus, confirmOrderReceived, getVendorBankDetails, paystackWebhook, calculateDelivery, getPayForMeOrder, initializePayForMePayment, getOrderMessages, sendOrderMessage, rateOrder, getFlowPassStatus, subscribeFlowPass, createSplitBillSession, getSplitBillSession, contributeToSplitBill, coverRemainingSplitBill, getActiveOrderTelemetry,
   getPostDeliveryAppreciationData,
-  submitCourierTipAndReview
+  submitCourierTipAndReview,
+  getMultiStopRouteSuggestions,
+  createMultiStopFeastOrder,
+  getMultiStopRouteTelemetry
 } from '../controllers/order.controller';
 import { authenticateJWT, authorizeRoles } from '../middleware/auth.middleware';
 import { validateRequest } from '../middleware/validate.middleware';
@@ -47,5 +50,13 @@ router.post('/webhook/paystack', paystackWebhook);
 // ══════════════════════════════════════════════════════════════════════════
 router.get('/:id/appreciation', getPostDeliveryAppreciationData);
 router.post('/:id/appreciation', submitCourierTipAndReview);
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// SPRINT X: MULTI-STOP GROUP FEAST ROUTING (2026)
+// ══════════════════════════════════════════════════════════════════════════
+router.get('/multi-stop/suggestions', getMultiStopRouteSuggestions);
+router.post('/multi-stop', createMultiStopFeastOrder);
+router.get('/multi-stop/:id/telemetry', getMultiStopRouteTelemetry);
 
 export default router;

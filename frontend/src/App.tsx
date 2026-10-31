@@ -44,6 +44,7 @@ const Checkout = lazy(() => import("@/pages/user/Checkout"));
 const PayForMe = lazy(() => import("./pages/user/PayForMe"));
 const SplitBill = lazy(() => import("./pages/user/SplitBill"));
 const PostDeliveryAppreciation = lazy(() => import("@/pages/user/PostDeliveryAppreciation"));
+const MultiStopFeastOrder = lazy(() => import("@/pages/user/MultiStopFeastOrder"));
 const GroupOrderRoom = lazy(() => import("./pages/user/GroupOrderRoom"));
 const FoodieWrapped = lazy(() => import("./pages/user/FoodieWrapped"));
 const ReferralMilestones = lazy(() => import("./pages/user/ReferralMilestones"));
@@ -156,6 +157,8 @@ function App() {
             <Route path="/split/:code" element={<SplitBill />} />
             <Route path="/orders/:id/appreciation" element={<PostDeliveryAppreciation />} />
             <Route path="/appreciation" element={<PostDeliveryAppreciation />} />
+            <Route path="/feast-builder" element={<MultiStopFeastOrder />} />
+            <Route path="/feast/:id" element={<MultiStopFeastOrder />} />
             <Route path="/group-order/:code" element={<GroupOrderRoom />} />
             <Route path="/group-order" element={<GroupOrderRoom />} />
 

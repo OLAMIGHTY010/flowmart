@@ -1522,3 +1522,329 @@ export const submitCourierTipAndReview = async (req: Request, res: Response) => 
     return res.status(500).json({ success: false, message: "Failed to submit appreciation: " + error.message });
   }
 };
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// SPRINT X: CUSTOMER CX — MULTI-STOP GROUP FEAST COURIER ROUTING (2026)
+// ══════════════════════════════════════════════════════════════════════════
+
+export interface MultiStopMerchantSuggestion {
+  merchantId: string;
+  name: string;
+  category: string;
+  distanceFromPrimaryKm: number;
+  prepTimeMins: number;
+  bundledDeliveryFeeNgn: number;
+  bundleSavingsNgn: number;
+  rating: number;
+  heroImage: string;
+  featuredItems: {
+    id: string;
+    name: string;
+    priceNgn: number;
+    description: string;
+  }[];
+}
+
+export interface RouteWaypoint {
+  stopNumber: number;
+  type: 'PICKUP_PRIMARY' | 'PICKUP_SECONDARY' | 'CUSTOMER_DELIVERY';
+  title: string;
+  address: string;
+  status: 'COMPLETED' | 'IN_PROGRESS' | 'PENDING';
+  estimatedArrival: string;
+  thermalInstruction: string;
+}
+
+export interface MultiStopFeastOrder {
+  id: string;
+  createdAt: string;
+  status: 'EN_ROUTE_PICKUP_2' | 'EN_ROUTE_DELIVERY' | 'COMPLETED';
+  primaryMerchant: {
+    id: string;
+    name: string;
+    itemsSummary: string;
+    subtotalNgn: number;
+  };
+  secondaryMerchant: {
+    id: string;
+    name: string;
+    itemsSummary: string;
+    subtotalNgn: number;
+  };
+  deliverySummary: {
+    customerAddress: string;
+    gateOtp: string;
+    baseDeliveryFeeNgn: number;
+    bundledDiscountNgn: number;
+    finalDeliveryFeeNgn: number;
+    totalAmountNgn: number;
+  };
+  courier: {
+    id: string;
+    name: string;
+    phone: string;
+    vehicle: string;
+    championTier: string;
+    rating: number;
+    hotBagVerified: boolean;
+    coldBoxVerified: boolean;
+    currentSpeedKmH: number;
+  };
+  waypoints: RouteWaypoint[];
+  estimatedDeliveryMins: number;
+}
+
+const mockSecondarySuggestions: MultiStopMerchantSuggestion[] = [
+  {
+    merchantId: 'MCH-02',
+    name: 'Hans & Rene Gelateria Lekki',
+    category: 'Artisanal Gelato & Desserts',
+    distanceFromPrimaryKm: 0.8,
+    prepTimeMins: 6,
+    bundledDeliveryFeeNgn: 600,
+    bundleSavingsNgn: 1400,
+    rating: 4.96,
+    heroImage: 'https://images.unsplash.com/photo-1557142046-c704a3adf364?auto=format&fit=crop&w=400&q=80',
+    featuredItems: [
+      { id: 'ITM-HR-01', name: 'Pistachio & Salted Caramel Gelato Tub (500ml)', priceNgn: 4500, description: 'Chilled in sub-zero thermo box' },
+      { id: 'ITM-HR-02', name: 'Belgian Dark Chocolate Cake Slice', priceNgn: 3200, description: 'Handcrafted luxury dessert' },
+      { id: 'ITM-HR-03', name: 'Fresh Strawberry Milkshake & Waffle Bite', priceNgn: 2800, description: 'Whipped cream topping' }
+    ]
+  },
+  {
+    merchantId: 'MCH-03',
+    name: 'Suya Central Lekki Phase 1',
+    category: 'Gourmet Night Grills',
+    distanceFromPrimaryKm: 1.1,
+    prepTimeMins: 10,
+    bundledDeliveryFeeNgn: 700,
+    bundleSavingsNgn: 1300,
+    rating: 4.89,
+    heroImage: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=400&q=80',
+    featuredItems: [
+      { id: 'ITM-SC-01', name: 'Smoky Beef Suya Skewers (5 sticks)', priceNgn: 3500, description: 'Topped with fresh red onions & Yaji pepper' },
+      { id: 'ITM-SC-02', name: 'Grilled Ram Kidney Special', priceNgn: 3000, description: 'Slow-charred with chili dust' }
+    ]
+  },
+  {
+    merchantId: 'MCH-04',
+    name: 'The Chilled Chapman & Cocktail Co.',
+    category: 'Craft Cocktails & Mocktails',
+    distanceFromPrimaryKm: 0.6,
+    prepTimeMins: 5,
+    bundledDeliveryFeeNgn: 500,
+    bundleSavingsNgn: 1500,
+    rating: 4.92,
+    heroImage: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&w=400&q=80',
+    featuredItems: [
+      { id: 'ITM-CC-01', name: 'Lagos Signature Chapman Decanter (1L)', priceNgn: 3800, description: 'Angostura bitters, cucumber & citrus' },
+      { id: 'ITM-CC-02', name: 'Spiced Zobo Hibiscus Punch', priceNgn: 2200, description: 'Infused with cloves and ginger' }
+    ]
+  }
+];
+
+let multiStopOrdersStore: Record<string, MultiStopFeastOrder> = {
+  'FEAST-2026-1092': {
+    id: 'FEAST-2026-1092',
+    createdAt: '2026-10-31T14:15:00Z',
+    status: 'EN_ROUTE_PICKUP_2',
+    primaryMerchant: {
+      id: 'MCH-01',
+      name: 'Mega Chicken Victoria Island',
+      itemsSummary: '2x Asun Jollof Combo, 4x Peppered Chicken',
+      subtotalNgn: 16500
+    },
+    secondaryMerchant: {
+      id: 'MCH-02',
+      name: 'Hans & Rene Gelateria Lekki',
+      itemsSummary: '2x Pistachio Gelato Tubs, 1x Chilled Chapman Decanter',
+      subtotalNgn: 12800
+    },
+    deliverySummary: {
+      customerAddress: 'Apt 4B, Admiralty Way, Lekki Phase 1, Lagos',
+      gateOtp: '8492',
+      baseDeliveryFeeNgn: 2400,
+      bundledDiscountNgn: 1400,
+      finalDeliveryFeeNgn: 1000,
+      totalAmountNgn: 30300
+    },
+    courier: {
+      id: 'RDR-419',
+      name: 'Ibrahim Musa',
+      phone: '+234 803 762 9011',
+      vehicle: 'Honda Ace 125 [KTU-209-XQ]',
+      championTier: 'Apex Elite',
+      rating: 4.98,
+      hotBagVerified: true,
+      coldBoxVerified: true,
+      currentSpeedKmH: 34
+    },
+    waypoints: [
+      {
+        stopNumber: 1,
+        type: 'PICKUP_PRIMARY',
+        title: 'Stop 1: Mega Chicken VI',
+        address: 'Ozumba Mbadiwe Ave, Victoria Island',
+        status: 'COMPLETED',
+        estimatedArrival: 'Picked up (14:28 PM)',
+        thermalInstruction: 'Stored in Insulated Hot Bag (68°C)'
+      },
+      {
+        stopNumber: 2,
+        type: 'PICKUP_SECONDARY',
+        title: 'Stop 2: Hans & Rene Gelateria',
+        address: 'Admiralty Way, Lekki Phase 1',
+        status: 'IN_PROGRESS',
+        estimatedArrival: 'in 4 mins (14:38 PM)',
+        thermalInstruction: 'Cold-Chain Compartment with Gel Pack (-3°C)'
+      },
+      {
+        stopNumber: 3,
+        type: 'CUSTOMER_DELIVERY',
+        title: 'Stop 3: Final Feast Handover',
+        address: 'Apt 4B, Admiralty Way, Lekki Phase 1',
+        status: 'PENDING',
+        estimatedArrival: 'in 14 mins (14:48 PM)',
+        thermalInstruction: 'Combined Dual-Bag Delivery Handover'
+      }
+    ],
+    estimatedDeliveryMins: 14
+  }
+};
+
+export const getMultiStopRouteSuggestions = async (_req: Request, res: Response) => {
+  try {
+    return res.status(200).json({
+      success: true,
+      primaryMerchant: {
+        id: 'MCH-01',
+        name: 'Mega Chicken Victoria Island',
+        cuisine: 'African Jollof & Grill Feast',
+        address: 'Ozumba Mbadiwe Ave, VI'
+      },
+      suggestions: mockSecondarySuggestions,
+      bundleBenefit: {
+        discountText: 'Save up to ₦1,500 on delivery fee',
+        estimatedCombinedDeliveryTimeMins: 28,
+        thermalProtectionGuarantee: 'Food stays piping hot, ice cream stays frozen solid.'
+      }
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Failed to fetch multi-stop suggestions: ' + error.message });
+  }
+};
+
+export const createMultiStopFeastOrder = async (req: Request, res: Response) => {
+  try {
+    const { primaryItems, secondaryMerchantId, secondaryItems, deliveryAddress } = req.body;
+
+    const secondary = mockSecondarySuggestions.find(s => s.merchantId === secondaryMerchantId) || mockSecondarySuggestions[0];
+    const orderId = 'FEAST-2026-' + Math.floor(1000 + Math.random() * 9000);
+
+    const primarySubtotal = 16500;
+    const secondarySubtotal = 12800;
+    const bundledDiscount = secondary.bundleSavingsNgn;
+    const finalDeliveryFee = secondary.bundledDeliveryFeeNgn;
+    const totalAmount = primarySubtotal + secondarySubtotal + finalDeliveryFee;
+
+    const newOrder: MultiStopFeastOrder = {
+      id: orderId,
+      createdAt: new Date().toISOString(),
+      status: 'EN_ROUTE_PICKUP_2',
+      primaryMerchant: {
+        id: 'MCH-01',
+        name: 'Mega Chicken Victoria Island',
+        itemsSummary: primaryItems || '2x Asun Jollof Combo, 4x Peppered Chicken',
+        subtotalNgn: primarySubtotal
+      },
+      secondaryMerchant: {
+        id: secondary.merchantId,
+        name: secondary.name,
+        itemsSummary: secondaryItems || '2x Artisanal Gelato Pints & Fresh Shakes',
+        subtotalNgn: secondarySubtotal
+      },
+      deliverySummary: {
+        customerAddress: deliveryAddress || 'Admiralty Way, Lekki Phase 1, Lagos',
+        gateOtp: String(Math.floor(1000 + Math.random() * 9000)),
+        baseDeliveryFeeNgn: 2400,
+        bundledDiscountNgn: bundledDiscount,
+        finalDeliveryFeeNgn: finalDeliveryFee,
+        totalAmountNgn: totalAmount
+      },
+      courier: {
+        id: 'RDR-419',
+        name: 'Ibrahim Musa',
+        phone: '+234 803 762 9011',
+        vehicle: 'Honda Ace 125 [KTU-209-XQ]',
+        championTier: 'Apex Elite',
+        rating: 4.98,
+        hotBagVerified: true,
+        coldBoxVerified: true,
+        currentSpeedKmH: 34
+      },
+      waypoints: [
+        {
+          stopNumber: 1,
+          type: 'PICKUP_PRIMARY',
+          title: 'Stop 1: Mega Chicken VI',
+          address: 'Ozumba Mbadiwe Ave, Victoria Island',
+          status: 'COMPLETED',
+          estimatedArrival: 'Picked up (Just now)',
+          thermalInstruction: 'Stored in Insulated Hot Bag (68°C)'
+        },
+        {
+          stopNumber: 2,
+          type: 'PICKUP_SECONDARY',
+          title: 'Stop 2: ' + secondary.name,
+          address: 'Nearby Pickup Point (0.8 km away)',
+          status: 'IN_PROGRESS',
+          estimatedArrival: 'in 4 mins',
+          thermalInstruction: 'Sub-zero Cold Box with Gel Ice Pack'
+        },
+        {
+          stopNumber: 3,
+          type: 'CUSTOMER_DELIVERY',
+          title: 'Stop 3: Combined Delivery Handover',
+          address: deliveryAddress || 'Admiralty Way, Lekki Phase 1',
+          status: 'PENDING',
+          estimatedArrival: 'in 14 mins',
+          thermalInstruction: 'Combined Dual-Bag Handover at Customer Gate'
+        }
+      ],
+      estimatedDeliveryMins: 14
+    };
+
+    multiStopOrdersStore[orderId] = newOrder;
+
+    return res.status(201).json({
+      success: true,
+      message: `Multi-Stop Feast Order ${orderId} created! Courier Ibrahim Musa assigned with optimized route.`,
+      order: newOrder
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Failed to create feast order: ' + error.message });
+  }
+};
+
+export const getMultiStopRouteTelemetry = async (req: Request, res: Response) => {
+  try {
+    const rawId = req.params.id;
+    const orderId = Array.isArray(rawId) ? rawId[0] : (rawId || 'FEAST-2026-1092');
+    const order = multiStopOrdersStore[orderId] || multiStopOrdersStore['FEAST-2026-1092'];
+
+    return res.status(200).json({
+      success: true,
+      order,
+      telemetry: {
+        distanceToNextStopMeters: 420,
+        currentSpeedKmH: 34,
+        hotCompartmentTempCelsius: 64.5,
+        coldCompartmentTempCelsius: -2.8,
+        etaMinutes: order.estimatedDeliveryMins
+      }
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Failed to fetch telemetry: ' + error.message });
+  }
+};
