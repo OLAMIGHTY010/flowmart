@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { placeOrder, getOrders, getOrderById, getOrderTrackingTelemetry, updateOrderStatus, confirmOrderReceived, getVendorBankDetails, paystackWebhook, calculateDelivery, getPayForMeOrder, initializePayForMePayment, getOrderMessages, sendOrderMessage, rateOrder, getFlowPassStatus, subscribeFlowPass, createSplitBillSession, getSplitBillSession, contributeToSplitBill, coverRemainingSplitBill } from '../controllers/order.controller';
+import { placeOrder, getOrders, getOrderById, getOrderTrackingTelemetry, updateOrderStatus, confirmOrderReceived, getVendorBankDetails, paystackWebhook, calculateDelivery, getPayForMeOrder, initializePayForMePayment, getOrderMessages, sendOrderMessage, rateOrder, getFlowPassStatus, subscribeFlowPass, createSplitBillSession, getSplitBillSession, contributeToSplitBill, coverRemainingSplitBill, getActiveOrderTelemetry } from '../controllers/order.controller';
 import { authenticateJWT, authorizeRoles } from '../middleware/auth.middleware';
 import { validateRequest } from '../middleware/validate.middleware';
 import { checkoutLimiter } from '../middleware/rateLimiter.middleware';
@@ -15,6 +15,10 @@ router.post('/split-bill/:code/contribute', contributeToSplitBill);
 router.post('/split-bill/:code/cover-remaining', coverRemainingSplitBill);
 
 router.get('/', authenticateJWT, getOrders);
+
+// Sprint R: Active Order Status Dynamic Island Telemetry (2026)
+router.get('/active-telemetry', getActiveOrderTelemetry);
+
 router.get('/:id', authenticateJWT, getOrderById);
 router.get('/:id/tracking-telemetry', authenticateJWT, getOrderTrackingTelemetry);
 router.get('/:id/pay-for-me', getPayForMeOrder);

@@ -21,6 +21,7 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import AppLayout from "@/components/AppLayout";
 import ProtectedRoute from "@/routes/vendor/ProtectedRoute";
 import AIChatWidget from "@/components/AIChatWidget";
+import DynamicIslandWidget from "@/components/orders/DynamicIslandWidget";
 import LogoLoader from "@/components/ui/LogoLoader";
 
 import { lazy, Suspense } from "react";
@@ -140,6 +141,7 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <AIChatWidget />
+          <DynamicIslandWidget />
           <Suspense fallback={<LogoLoader />}>
             <Routes>
               {/* ═══ PUBLIC AUTH ROUTES ═══ */}

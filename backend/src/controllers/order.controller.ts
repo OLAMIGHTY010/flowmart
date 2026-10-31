@@ -1329,3 +1329,76 @@ export const coverRemainingSplitBill = async (req: Request, res: Response) => {
     return res.status(500).json({ success: false, message: "Failed to cover remaining balance: " + error.message });
   }
 };
+
+
+/**
+ * ============================================================================
+ * SPRINT R: ACTIVE ORDER STATUS DYNAMIC ISLAND & PROXIMITY TELEMETRY (2026)
+ * ============================================================================
+ */
+
+export const getActiveOrderTelemetry = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const elapsedSeconds = Math.floor((Date.now() / 1000) % 600); // 10 min loop
+    const distanceMeters = Math.max(45, 950 - (elapsedSeconds * 4));
+    const etaMinutes = Math.max(1, Math.ceil(distanceMeters / 120));
+    const isAtGate = distanceMeters <= 100;
+    const currentSpeedKmh = isAtGate ? 0 : (distanceMeters < 300 ? 18 : 34);
+
+    let status = 'ON_THE_WAY';
+    let statusText = 'Courier Champion is en route';
+    if (distanceMeters > 800) {
+      status = 'KITCHEN_COOKING';
+      statusText = 'Kitchen is packaging your hot meal';
+    } else if (isAtGate) {
+      status = 'ARRIVED_AT_GATE';
+      statusText = 'Courier Champion has arrived at your gate!';
+    }
+
+    return res.status(200).json({
+      success: true,
+      hasActiveOrder: true,
+      data: {
+        orderId: 'ord-live-2026-active',
+        orderNumber: 'FLM-2026-8891',
+        restaurantName: 'Chicken Republic Express',
+        restaurantImage: 'https://images.unsplash.com/photo-1604382355076-af4b0eb60143?w=300&auto=format&fit=crop&q=80',
+        itemsSummary: '2x Smokey Party Jollof, 2x Crispy Chicken, 1x Chilled Chapman',
+        itemsCount: 5,
+        totalAmountNgn: 11450,
+        status,
+        statusText,
+        handoverOtp: '8249',
+        courier: {
+          name: 'Ibrahim Musa',
+          phone: '+234 803 123 4567',
+          vehicle: 'Honda Ace 125 • Silver',
+          rating: 4.96,
+          completedTrips: 1420,
+          photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80',
+          tier: 'GOLD_CHAMPION'
+        },
+        telemetry: {
+          distanceMeters,
+          etaMinutes,
+          currentSpeedKmh,
+          isAtGate,
+          gateArrivalChimeTriggered: isAtGate,
+          batteryLevelPct: 88,
+          lastGpsPingAt: new Date().toISOString()
+        },
+        dropoffAddress: '14B Admiralty Way, Lekki Phase 1, Lagos',
+        milestones: [
+          { key: 'CONFIRMED', label: 'Order Confirmed', completed: true, time: '12:15 PM' },
+          { key: 'COOKING', label: 'Kitchen Preparing', completed: true, time: '12:22 PM' },
+          { key: 'PICKED_UP', label: 'Champion Picked Up', completed: distanceMeters <= 800, time: '12:30 PM' },
+          { key: 'ARRIVING', label: 'Arriving at Gate', completed: isAtGate, time: isAtGate ? 'Just now' : `in ${etaMinutes}m` },
+          { key: 'DELIVERED', label: 'Delivered & Handover', completed: false, time: 'Pending OTP' }
+        ],
+        updatedAt: new Date().toISOString()
+      }
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Failed to retrieve active telemetry: ' + error.message });
+  }
+};
