@@ -27,7 +27,11 @@ import {
   getDispatchIncidents,
   reassignDispatchOrder,
   triggerAutonomousReroute,
-  toggleAutonomousRerouteConfig
+  toggleAutonomousRerouteConfig,
+  getColdChainDeliveries,
+  auditColdChainOrder,
+  processInsuranceClaim,
+  updateInsurancePolicyConfig
 } from '../controllers/admin.controller';
 
 import {
@@ -155,5 +159,14 @@ router.get('/dispatch/incidents', authenticateJWT, authorizeRoles('admin', 'disp
 router.post('/dispatch/reassign', authenticateJWT, authorizeRoles('admin', 'dispatcher', 'superadmin'), reassignDispatchOrder);
 router.post('/dispatch/auto-reroute', authenticateJWT, authorizeRoles('admin', 'dispatcher', 'superadmin'), triggerAutonomousReroute);
 router.post('/dispatch/auto-reroute/config', authenticateJWT, authorizeRoles('admin', 'dispatcher', 'superadmin'), toggleAutonomousRerouteConfig);
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// SPRINT V: COLD-CHAIN & FRAGILE SAFEGUARDS (2026)
+// ══════════════════════════════════════════════════════════════════════════
+router.get('/cold-chain', authenticateJWT, authorizeRoles('admin', 'dispatcher', 'superadmin'), getColdChainDeliveries);
+router.post('/cold-chain/audit', authenticateJWT, authorizeRoles('admin', 'dispatcher', 'superadmin'), auditColdChainOrder);
+router.post('/cold-chain/claims', authenticateJWT, authorizeRoles('admin', 'dispatcher', 'superadmin'), processInsuranceClaim);
+router.post('/cold-chain/config', authenticateJWT, authorizeRoles('admin', 'dispatcher', 'superadmin'), updateInsurancePolicyConfig);
 
 export default router;

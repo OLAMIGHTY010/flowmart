@@ -10,6 +10,7 @@ import {
   AlertTriangle,
   Radio,
   RefreshCw,
+  ThermometerSnowflake,
   Wallet,
   ShieldAlert,
   Zap,

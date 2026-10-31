@@ -1510,3 +1510,281 @@ export const toggleAutonomousRerouteConfig = async (req: Request, res: Response)
     return res.status(500).json({ success: false, message: 'Failed to update config: ' + error.message });
   }
 };
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// SPRINT V: OPERATIONS & BACKOFFICE — AUTOMATED COLD-CHAIN & FRAGILE SAFEGUARDS (2026)
+// ══════════════════════════════════════════════════════════════════════════
+
+export interface ColdChainDelivery {
+  id: string;
+  orderId: string;
+  category: 'ARTISAN_GELATO_ICE_CREAM' | 'TIERED_CELEBRATION_CAKE' | 'PIPING_HOT_PEPPER_SOUP' | 'PHARMACY_BIOLOGICS';
+  itemsSummary: string;
+  merchantName: string;
+  courierName: string;
+  courierPhone: string;
+  vehicle: string;
+  currentTempCelsius: number;
+  targetTempRange: string;
+  tempStatus: 'OPTIMAL' | 'ACCEPTABLE' | 'BREACH_WARNING';
+  icePackCount: number;
+  thermoBoxVerified: boolean;
+  speedLimitKmH: number;
+  currentSpeedKmH: number;
+  fragileTiltDeg: number;
+  insuranceCoverNgn: number;
+  status: 'IN_TRANSIT' | 'DELIVERED_SAFE' | 'CLAIM_FILED';
+  elapsedMins: number;
+  etaMins: number;
+  lastTelemetryPing: string;
+}
+
+export interface ColdChainInsuranceClaim {
+  id: string;
+  deliveryId: string;
+  orderId: string;
+  claimType: 'MELTED_ICE_CREAM' | 'TOPPLED_CAKE' | 'SPILLED_SOUP' | 'CONTAINER_CRUSHED';
+  customerName: string;
+  customerRefundNgn: number;
+  faultAttribution: 'MERCHANT_PACKAGING' | 'COURIER_HANDLING' | 'FLOWMART_INSURANCE_POOL';
+  status: 'APPROVED_PAID' | 'UNDER_REVIEW' | 'REJECTED';
+  incidentSummary: string;
+  settledAt: string;
+}
+
+let coldChainDeliveriesStore: ColdChainDelivery[] = [
+  {
+    id: 'CC-2026-801',
+    orderId: 'ORD-2026-9820',
+    category: 'ARTISAN_GELATO_ICE_CREAM',
+    itemsSummary: '3x Pints Hans & Rene Gelato (Pistachio, Salted Caramel & Stracciatella)',
+    merchantName: 'Hans & Rene Gelateria Lekki',
+    courierName: 'Ibrahim Musa',
+    courierPhone: '+234 803 762 9011',
+    vehicle: 'Honda Ace 125 [KTU-209-XQ]',
+    currentTempCelsius: -3.2,
+    targetTempRange: '< 0°C',
+    tempStatus: 'OPTIMAL',
+    icePackCount: 3,
+    thermoBoxVerified: true,
+    speedLimitKmH: 45,
+    currentSpeedKmH: 32,
+    fragileTiltDeg: 3.8,
+    insuranceCoverNgn: 24000,
+    status: 'IN_TRANSIT',
+    elapsedMins: 12,
+    etaMins: 6,
+    lastTelemetryPing: 'Just now'
+  },
+  {
+    id: 'CC-2026-802',
+    orderId: 'ORD-2026-9824',
+    category: 'TIERED_CELEBRATION_CAKE',
+    itemsSummary: '2-Tier 10-Inch Custom Fondant Birthday Cake (Red Velvet & Chantilly)',
+    merchantName: 'Diva Cakes & Confectionery VI',
+    courierName: 'Kehinde Balogun',
+    courierPhone: '+234 802 331 7789',
+    vehicle: 'Yamaha Crux [EKY-491-YZ]',
+    currentTempCelsius: 17.5,
+    targetTempRange: '15°C - 20°C',
+    tempStatus: 'OPTIMAL',
+    icePackCount: 1,
+    thermoBoxVerified: true,
+    speedLimitKmH: 30,
+    currentSpeedKmH: 26,
+    fragileTiltDeg: 4.1,
+    insuranceCoverNgn: 65000,
+    status: 'IN_TRANSIT',
+    elapsedMins: 18,
+    etaMins: 9,
+    lastTelemetryPing: 'Just now'
+  },
+  {
+    id: 'CC-2026-803',
+    orderId: 'ORD-2026-9828',
+    category: 'PIPING_HOT_PEPPER_SOUP',
+    itemsSummary: 'Family Caldron Goat Meat Pepper Soup & Fresh Catfish Pot (Glass Sealed)',
+    merchantName: 'Yellow Chilli Ikeja GRA',
+    courierName: 'Sunday Peters',
+    courierPhone: '+234 812 345 6789',
+    vehicle: 'TVS HLX 125 [BDG-492-QA]',
+    currentTempCelsius: 64.2,
+    targetTempRange: '> 55°C',
+    tempStatus: 'OPTIMAL',
+    icePackCount: 0,
+    thermoBoxVerified: true,
+    speedLimitKmH: 40,
+    currentSpeedKmH: 28,
+    fragileTiltDeg: 5.4,
+    insuranceCoverNgn: 32000,
+    status: 'IN_TRANSIT',
+    elapsedMins: 14,
+    etaMins: 11,
+    lastTelemetryPing: '1m ago'
+  },
+  {
+    id: 'CC-2026-804',
+    orderId: 'ORD-2026-9831',
+    category: 'PHARMACY_BIOLOGICS',
+    itemsSummary: '2x Lantus Solostar Insulin Pens & Chilled Glucose Monitors',
+    merchantName: 'HealthPlus Pharmacy Victoria Island',
+    courierName: 'Oluwaseun Adeyemi',
+    courierPhone: '+234 810 551 2299',
+    vehicle: 'Honda Ace 125 [KRD-772-LM]',
+    currentTempCelsius: 5.1,
+    targetTempRange: '2°C - 8°C',
+    tempStatus: 'ACCEPTABLE',
+    icePackCount: 2,
+    thermoBoxVerified: true,
+    speedLimitKmH: 45,
+    currentSpeedKmH: 34,
+    fragileTiltDeg: 2.9,
+    insuranceCoverNgn: 45000,
+    status: 'IN_TRANSIT',
+    elapsedMins: 8,
+    etaMins: 14,
+    lastTelemetryPing: 'Just now'
+  }
+];
+
+let insuranceClaimsStore: ColdChainInsuranceClaim[] = [
+  {
+    id: 'CLM-2026-401',
+    deliveryId: 'CC-2026-788',
+    orderId: 'ORD-2026-9760',
+    claimType: 'MELTED_ICE_CREAM',
+    customerName: 'Chiamaka Adeleke',
+    customerRefundNgn: 14500,
+    faultAttribution: 'FLOWMART_INSURANCE_POOL',
+    status: 'APPROVED_PAID',
+    incidentSummary: 'Severe road gridlock on Falomo bridge caused thermal gel pack depletion after 55 mins',
+    settledAt: '2026-10-31T11:20:00Z'
+  },
+  {
+    id: 'CLM-2026-402',
+    deliveryId: 'CC-2026-791',
+    orderId: 'ORD-2026-9774',
+    claimType: 'SPILLED_SOUP',
+    customerName: 'Babatunde Fashola',
+    customerRefundNgn: 18000,
+    faultAttribution: 'MERCHANT_PACKAGING',
+    status: 'APPROVED_PAID',
+    incidentSummary: 'Merchant container lid was not heat-sealed; courier rode below speed cap with 0 banking shocks',
+    settledAt: '2026-10-31T11:55:00Z'
+  }
+];
+
+let coldChainConfig = {
+  iceCreamMaxTempCelsius: 0,
+  biologicsMaxTempCelsius: 8,
+  fragileCakeMaxSpeedKmH: 30,
+  maxBankingTiltDeg: 12,
+  autoDisburseClaimCapNgn: 25000,
+  zeroSpillInsuranceGuaranteeActive: true,
+  lastAuditAt: '2026-10-31T13:00:00Z'
+};
+
+export const getColdChainDeliveries = async (_req: Request, res: Response) => {
+  try {
+    const activeCount = coldChainDeliveriesStore.filter(d => d.status === 'IN_TRANSIT').length;
+    const claimsCount = insuranceClaimsStore.length;
+    const totalCoverNgn = coldChainDeliveriesStore.reduce((acc, d) => acc + d.insuranceCoverNgn, 0);
+
+    return res.status(200).json({
+      success: true,
+      stats: {
+        activeColdChainDeliveriesCount: activeCount,
+        zeroSpillComplianceRatePct: 99.4,
+        totalInsuranceProtectedNgn: totalCoverNgn,
+        settledClaimsCount: claimsCount,
+        autoDisburseClaimCapNgn: coldChainConfig.autoDisburseClaimCapNgn,
+        fragileSpeedCapKmH: coldChainConfig.fragileCakeMaxSpeedKmH,
+        zeroSpillGuaranteeActive: coldChainConfig.zeroSpillInsuranceGuaranteeActive
+      },
+      deliveries: coldChainDeliveriesStore,
+      claims: insuranceClaimsStore,
+      config: coldChainConfig
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Failed to fetch cold-chain deliveries: ' + error.message });
+  }
+};
+
+export const auditColdChainOrder = async (req: Request, res: Response) => {
+  try {
+    const { deliveryId, thermoBoxVerified, icePackCount, tempCelsius } = req.body;
+    const delivery = coldChainDeliveriesStore.find(d => d.id === deliveryId);
+
+    if (!delivery) {
+      return res.status(404).json({ success: false, message: 'Cold-chain shipment not found' });
+    }
+
+    if (thermoBoxVerified !== undefined) delivery.thermoBoxVerified = Boolean(thermoBoxVerified);
+    if (icePackCount !== undefined) delivery.icePackCount = Number(icePackCount);
+    if (tempCelsius !== undefined) {
+      delivery.currentTempCelsius = Number(tempCelsius);
+      if (delivery.category === 'ARTISAN_GELATO_ICE_CREAM') {
+        delivery.tempStatus = delivery.currentTempCelsius <= 0 ? 'OPTIMAL' : 'BREACH_WARNING';
+      }
+    }
+
+    delivery.lastTelemetryPing = 'Just now';
+
+    return res.status(200).json({
+      success: true,
+      message: `Cold-chain shipment ${delivery.id} audit verified successfully.`,
+      delivery
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Cold-chain audit failed: ' + error.message });
+  }
+};
+
+export const processInsuranceClaim = async (req: Request, res: Response) => {
+  try {
+    const { orderId, claimType, customerRefundNgn, faultAttribution, incidentSummary } = req.body;
+
+    const newClaim: ColdChainInsuranceClaim = {
+      id: 'CLM-2026-' + Math.floor(100 + Math.random() * 900),
+      deliveryId: 'CC-2026-' + Math.floor(800 + Math.random() * 100),
+      orderId: orderId || 'ORD-2026-9835',
+      claimType: claimType || 'MELTED_ICE_CREAM',
+      customerName: 'Verified FlowMart Customer',
+      customerRefundNgn: Number(customerRefundNgn) || 15000,
+      faultAttribution: faultAttribution || 'FLOWMART_INSURANCE_POOL',
+      status: 'APPROVED_PAID',
+      incidentSummary: incidentSummary || 'Zero-Spill & Thermal Safeguard Guarantee instant customer reimbursement',
+      settledAt: new Date().toISOString()
+    };
+
+    insuranceClaimsStore.unshift(newClaim);
+
+    return res.status(200).json({
+      success: true,
+      message: `Insurance claim ${newClaim.id} approved! ₦${newClaim.customerRefundNgn.toLocaleString()} instantly refunded to customer.`,
+      claim: newClaim
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Insurance claim processing failed: ' + error.message });
+  }
+};
+
+export const updateInsurancePolicyConfig = async (req: Request, res: Response) => {
+  try {
+    const { fragileCakeMaxSpeedKmH, autoDisburseClaimCapNgn, zeroSpillInsuranceGuaranteeActive } = req.body;
+
+    if (fragileCakeMaxSpeedKmH !== undefined) coldChainConfig.fragileCakeMaxSpeedKmH = Number(fragileCakeMaxSpeedKmH);
+    if (autoDisburseClaimCapNgn !== undefined) coldChainConfig.autoDisburseClaimCapNgn = Number(autoDisburseClaimCapNgn);
+    if (zeroSpillInsuranceGuaranteeActive !== undefined) coldChainConfig.zeroSpillInsuranceGuaranteeActive = Boolean(zeroSpillInsuranceGuaranteeActive);
+    coldChainConfig.lastAuditAt = new Date().toISOString();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Cold-Chain and Fragile Insurance Policy configuration updated.',
+      config: coldChainConfig
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Failed to update policy: ' + error.message });
+  }
+};

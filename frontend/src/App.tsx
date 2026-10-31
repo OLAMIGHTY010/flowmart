@@ -117,6 +117,7 @@ const AdminSurgePricing = lazy(() => import("./pages/admin/AdminSurgePricing"));
 const AdminFleetShifts = lazy(() => import("./pages/admin/AdminFleetShifts"));
 const AdminDisputeAudit = lazy(() => import("./pages/admin/AdminDisputeAudit"));
 const AdminDispatchReassignment = lazy(() => import("./pages/admin/AdminDispatchReassignment"));
+const AdminColdChain = lazy(() => import("./pages/admin/AdminColdChain"));
 
 const ProfileLayout = lazy(() => import("./components/user/ProfileLayout"));
 
@@ -269,6 +270,7 @@ function App() {
               <Route path="dashboard" element={<Navigate to="/admin/dispatch" replace />} />
               <Route path="dispatch" element={<AdminDispatchMap />} />
               <Route path="dispatch-reassignment" element={<AdminDispatchReassignment />} />
+              <Route path="cold-chain" element={<AdminColdChain />} />
               <Route path="surge" element={<AdminSurgePricing />} />
               <Route path="shifts" element={<AdminFleetShifts />} />
               <Route path="disputes" element={<AdminDisputeAudit />} />
