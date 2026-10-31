@@ -1,4 +1,5 @@
-import { Router } from "express";
+import {
+Router } from "express";
 import { 
   updateProfile, 
   submitKYC, 
@@ -20,7 +21,12 @@ import {
   toggleKitchenItem86,
   updateKitchenItemPortions,
   bulkKitchen86Action,
-  getKitchenAutoSubstitutions
+  getKitchenAutoSubstitutions,
+  getRecipeModifiers,
+  createModifierGroup,
+  updateModifierGroup,
+  toggleModifierOptionStock,
+  deleteModifierGroup
 } from "../controllers/vendor.controller";
 import { authenticateJWT, authorizeRoles } from "../middleware/auth.middleware";
 
@@ -60,5 +66,15 @@ router.post("/inventory/items/:id/toggle-86", toggleKitchenItem86);
 router.post("/inventory/items/:id/update-portions", updateKitchenItemPortions);
 router.post("/inventory/bulk-86", bulkKitchen86Action);
 router.get("/inventory/substitutions/:itemId", getKitchenAutoSubstitutions);
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// SPRINT T: SMART RECIPE MODIFIER CONFIGURATOR (2026)
+// ══════════════════════════════════════════════════════════════════════════
+router.get("/modifiers", getRecipeModifiers);
+router.post("/modifiers", createModifierGroup);
+router.put("/modifiers/:id", updateModifierGroup);
+router.post("/modifiers/:groupId/options/:optionId/toggle-stock", toggleModifierOptionStock);
+router.delete("/modifiers/:id", deleteModifierGroup);
 
 export default router;

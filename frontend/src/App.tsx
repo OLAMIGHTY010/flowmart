@@ -74,6 +74,7 @@ const VendorProductNew = lazy(() => import("@/pages/vendor/VendorProductNew"));
 const VendorOrders = lazy(() => import("@/pages/vendor/VendorOrders"));
 const KitchenDisplaySystem = lazy(() => import("@/pages/vendor/KitchenDisplaySystem"));
 const Vendor86Inventory = lazy(() => import("@/pages/vendor/Vendor86Inventory"));
+const VendorRecipeModifiers = lazy(() => import("@/pages/vendor/VendorRecipeModifiers"));
 const VendorStatements = lazy(() => import("@/pages/vendor/VendorStatements"));
 
 const VendorProfileSetup = lazy(() => import("@/pages/vendor/VendorProfileSetUp"));
@@ -218,6 +219,7 @@ function App() {
               <Route path="orders" element={<VendorOrders />} />
               <Route path="kds" element={<KitchenDisplaySystem />} />
               <Route path="inventory-86" element={<Vendor86Inventory />} />
+              <Route path="recipe-modifiers" element={<VendorRecipeModifiers />} />
               <Route path="statements" element={<VendorStatements />} />
             </Route>
 

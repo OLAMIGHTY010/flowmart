@@ -1461,3 +1461,380 @@ export const getKitchenAutoSubstitutions = async (req: AuthenticatedRequest, res
     return res.status(500).json({ success: false, message: 'Failed to fetch substitutions: ' + error.message });
   }
 };
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// SPRINT T: MERCHANT KITCHEN — SMART RECIPE MODIFIER CONFIGURATOR (2026)
+// ══════════════════════════════════════════════════════════════════════════
+
+export interface ModifierOption {
+  id: string;
+  name: string;
+  priceDeltaNgn: number;
+  isDefault: boolean;
+  inStock: boolean;
+  calories: number;
+  prepTimeDeltaMins: number;
+}
+
+export interface ModifierGroup {
+  id: string;
+  name: string;
+  description: string;
+  minSelections: number;
+  maxSelections: number;
+  isRequired: boolean;
+  linkedItemIds: string[];
+  options: ModifierOption[];
+  kitchenDisplayCode: string;
+  updatedAt: string;
+}
+
+let modifierGroupsStore: ModifierGroup[] = [
+  {
+    id: "MOD-GRP-01",
+    name: "Choice of Signature Protein",
+    description: "Every Jollof Box requires 1 primary protein selection",
+    minSelections: 1,
+    maxSelections: 1,
+    isRequired: true,
+    linkedItemIds: ["prod-101", "prod-102"],
+    kitchenDisplayCode: "MOD-PROT",
+    updatedAt: "2026-10-31T12:00:00Z",
+    options: [
+      {
+        id: "OPT-01",
+        name: "Peppered Fried Chicken",
+        priceDeltaNgn: 0,
+        isDefault: true,
+        inStock: true,
+        calories: 320,
+        prepTimeDeltaMins: 0
+      },
+      {
+        id: "OPT-02",
+        name: "Spicy Grilled Goat Meat (Asun)",
+        priceDeltaNgn: 1500,
+        isDefault: false,
+        inStock: true,
+        calories: 410,
+        prepTimeDeltaMins: 3
+      },
+      {
+        id: "OPT-03",
+        name: "Crispy Croaker Fish",
+        priceDeltaNgn: 2200,
+        isDefault: false,
+        inStock: true,
+        calories: 290,
+        prepTimeDeltaMins: 4
+      },
+      {
+        id: "OPT-04",
+        name: "Barbecue Turkey Wing",
+        priceDeltaNgn: 1800,
+        isDefault: false,
+        inStock: true,
+        calories: 480,
+        prepTimeDeltaMins: 2
+      },
+      {
+        id: "OPT-05",
+        name: "Jumbo Snail in Atarodo",
+        priceDeltaNgn: 3500,
+        isDefault: false,
+        inStock: false,
+        calories: 220,
+        prepTimeDeltaMins: 5
+      }
+    ]
+  },
+  {
+    id: "MOD-GRP-02",
+    name: "Spice Heat Level Intensity",
+    description: "Select pepper intensity for kitchen broth seasoning",
+    minSelections: 1,
+    maxSelections: 1,
+    isRequired: true,
+    linkedItemIds: ["prod-101", "prod-102", "prod-103"],
+    kitchenDisplayCode: "MOD-SPICE",
+    updatedAt: "2026-10-31T12:00:00Z",
+    options: [
+      {
+        id: "OPT-06",
+        name: "Mild Flavor (No Extra Pepper)",
+        priceDeltaNgn: 0,
+        isDefault: false,
+        inStock: true,
+        calories: 0,
+        prepTimeDeltaMins: 0
+      },
+      {
+        id: "OPT-07",
+        name: "Nigerian Standard (Medium Heat)",
+        priceDeltaNgn: 0,
+        isDefault: true,
+        inStock: true,
+        calories: 10,
+        prepTimeDeltaMins: 0
+      },
+      {
+        id: "OPT-08",
+        name: "Lagos Volcano Heat (Extra Atarodo + Bonga)",
+        priceDeltaNgn: 300,
+        isDefault: false,
+        inStock: true,
+        calories: 25,
+        prepTimeDeltaMins: 1
+      }
+    ]
+  },
+  {
+    id: "MOD-GRP-03",
+    name: "Extra Sides & Add-ons",
+    description: "Optional sides to accompany the meal (choose up to 3)",
+    minSelections: 0,
+    maxSelections: 3,
+    isRequired: false,
+    linkedItemIds: ["prod-101", "prod-104"],
+    kitchenDisplayCode: "MOD-SIDES",
+    updatedAt: "2026-10-31T12:00:00Z",
+    options: [
+      {
+        id: "OPT-09",
+        name: "Golden Fried Dodo (Plantain)",
+        priceDeltaNgn: 900,
+        isDefault: false,
+        inStock: true,
+        calories: 180,
+        prepTimeDeltaMins: 2
+      },
+      {
+        id: "OPT-10",
+        name: "Steamed Moi-Moi Elewe",
+        priceDeltaNgn: 1000,
+        isDefault: false,
+        inStock: true,
+        calories: 210,
+        prepTimeDeltaMins: 1
+      },
+      {
+        id: "OPT-11",
+        name: "Crispy Fried Egg",
+        priceDeltaNgn: 400,
+        isDefault: false,
+        inStock: true,
+        calories: 90,
+        prepTimeDeltaMins: 2
+      },
+      {
+        id: "OPT-12",
+        name: "Creamy Nigerian Coleslaw",
+        priceDeltaNgn: 750,
+        isDefault: false,
+        inStock: true,
+        calories: 130,
+        prepTimeDeltaMins: 0
+      },
+      {
+        id: "OPT-13",
+        name: "Extra Jollof Rice Portion",
+        priceDeltaNgn: 1400,
+        isDefault: false,
+        inStock: true,
+        calories: 350,
+        prepTimeDeltaMins: 1
+      }
+    ]
+  },
+  {
+    id: "MOD-GRP-04",
+    name: "Drink Pairing Refreshment",
+    description: "Pair with an ice-cold beverage",
+    minSelections: 0,
+    maxSelections: 1,
+    isRequired: false,
+    linkedItemIds: ["prod-101", "prod-102"],
+    kitchenDisplayCode: "MOD-DRINK",
+    updatedAt: "2026-10-31T12:00:00Z",
+    options: [
+      {
+        id: "OPT-14",
+        name: "Chilled Chapman with Angostura Bitter",
+        priceDeltaNgn: 1500,
+        isDefault: false,
+        inStock: true,
+        calories: 160,
+        prepTimeDeltaMins: 1
+      },
+      {
+        id: "OPT-15",
+        name: "Fresh Hibiscus Zobo Punch (Chilled)",
+        priceDeltaNgn: 1200,
+        isDefault: false,
+        inStock: true,
+        calories: 95,
+        prepTimeDeltaMins: 1
+      },
+      {
+        id: "OPT-16",
+        name: "Pet Coke 50cl",
+        priceDeltaNgn: 600,
+        isDefault: false,
+        inStock: true,
+        calories: 140,
+        prepTimeDeltaMins: 0
+      }
+    ]
+  }
+];
+
+const sampleMenuItems = [
+  { id: "prod-101", name: "Mega Smoky Jollof & Protein Bowl", basePriceNgn: 4500, category: "Chef Specials" },
+  { id: "prod-102", name: "Asun Fried Rice & Peppered Feast", basePriceNgn: 5200, category: "Chef Specials" },
+  { id: "prod-103", name: "Slow-Braised Pepper Soup Pot", basePriceNgn: 6800, category: "Traditional Soups" },
+  { id: "prod-104", name: "Crispy Yam Fries & Spicy Sauce", basePriceNgn: 2500, category: "Sides & Bites" }
+];
+
+export const getRecipeModifiers = async (_req: Request, res: Response) => {
+  try {
+    const totalOptions = modifierGroupsStore.reduce((acc, g) => acc + g.options.length, 0);
+    const inStockOptions = modifierGroupsStore.reduce(
+      (acc, g) => acc + g.options.filter(o => o.inStock).length,
+      0
+    );
+
+    return res.status(200).json({
+      success: true,
+      stats: {
+        totalGroupsCount: modifierGroupsStore.length,
+        totalOptionsCount: totalOptions,
+        inStockOptionsCount: inStockOptions,
+        attachedItemsCount: sampleMenuItems.length,
+        lastConfiguredAt: "2026-10-31T12:00:00Z"
+      },
+      modifierGroups: modifierGroupsStore,
+      menuItems: sampleMenuItems
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: "Failed to fetch recipe modifiers: " + error.message });
+  }
+};
+
+export const createModifierGroup = async (req: Request, res: Response) => {
+  try {
+    const { name, description, minSelections = 0, maxSelections = 1, isRequired = false, options = [], linkedItemIds = [] } = req.body;
+
+    if (!name || name.trim() === '') {
+      return res.status(400).json({ success: false, message: "Modifier group name is required" });
+    }
+
+    const newGroup: ModifierGroup = {
+      id: "MOD-GRP-" + String(modifierGroupsStore.length + 1).padStart(2, "0"),
+      name: name.trim(),
+      description: description || "Custom kitchen modifier group",
+      minSelections: Number(minSelections) || 0,
+      maxSelections: Number(maxSelections) || 1,
+      isRequired: Boolean(isRequired) || Number(minSelections) > 0,
+      linkedItemIds: Array.isArray(linkedItemIds) ? linkedItemIds : ["prod-101"],
+      kitchenDisplayCode: "MOD-" + name.trim().slice(0, 5).toUpperCase(),
+      updatedAt: new Date().toISOString(),
+      options: options.map((opt: any, idx: number) => ({
+        id: "OPT-" + Math.floor(100 + Math.random() * 900),
+        name: opt.name || ("Option " + (idx + 1)),
+        priceDeltaNgn: Number(opt.priceDeltaNgn) || 0,
+        isDefault: Boolean(opt.isDefault),
+        inStock: opt.inStock !== false,
+        calories: Number(opt.calories) || 0,
+        prepTimeDeltaMins: Number(opt.prepTimeDeltaMins) || 0
+      }))
+    };
+
+    modifierGroupsStore.push(newGroup);
+
+    return res.status(201).json({
+      success: true,
+      message: `Modifier group "${newGroup.name}" created successfully`,
+      group: newGroup
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: "Failed to create modifier group: " + error.message });
+  }
+};
+
+export const updateModifierGroup = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const group = modifierGroupsStore.find(g => g.id === id);
+
+    if (!group) {
+      return res.status(404).json({ success: false, message: "Modifier group not found" });
+    }
+
+    const { name, description, minSelections, maxSelections, isRequired, options, linkedItemIds } = req.body;
+
+    if (name) group.name = name;
+    if (description !== undefined) group.description = description;
+    if (minSelections !== undefined) group.minSelections = Number(minSelections);
+    if (maxSelections !== undefined) group.maxSelections = Number(maxSelections);
+    if (isRequired !== undefined) group.isRequired = Boolean(isRequired);
+    if (Array.isArray(linkedItemIds)) group.linkedItemIds = linkedItemIds;
+    if (Array.isArray(options)) group.options = options;
+    group.updatedAt = new Date().toISOString();
+
+    return res.status(200).json({
+      success: true,
+      message: `Modifier group "${group.name}" updated successfully`,
+      group
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: "Failed to update modifier group: " + error.message });
+  }
+};
+
+export const toggleModifierOptionStock = async (req: Request, res: Response) => {
+  try {
+    const { groupId, optionId } = req.params;
+    const group = modifierGroupsStore.find(g => g.id === groupId);
+
+    if (!group) {
+      return res.status(404).json({ success: false, message: "Modifier group not found" });
+    }
+
+    const option = group.options.find(o => o.id === optionId);
+    if (!option) {
+      return res.status(404).json({ success: false, message: "Modifier option not found" });
+    }
+
+    option.inStock = !option.inStock;
+    group.updatedAt = new Date().toISOString();
+
+    return res.status(200).json({
+      success: true,
+      message: `Option "${option.name}" is now ${option.inStock ? "IN STOCK" : "86'D (OUT OF STOCK)"}`,
+      option,
+      group
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: "Failed to toggle option stock: " + error.message });
+  }
+};
+
+export const deleteModifierGroup = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const initialLength = modifierGroupsStore.length;
+    modifierGroupsStore = modifierGroupsStore.filter(g => g.id !== id);
+
+    if (modifierGroupsStore.length === initialLength) {
+      return res.status(404).json({ success: false, message: "Modifier group not found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Modifier group deleted successfully"
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: "Failed to delete modifier group: " + error.message });
+  }
+};
