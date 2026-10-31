@@ -26,7 +26,11 @@ import {
   createModifierGroup,
   updateModifierGroup,
   toggleModifierOptionStock,
-  deleteModifierGroup
+  deleteModifierGroup,
+  getKitchenPrepStreams,
+  updateStationStreamStatus,
+  logStationSanitizationAudit,
+  toggleCustomerStreamAccess
 } from "../controllers/vendor.controller";
 import { authenticateJWT, authorizeRoles } from "../middleware/auth.middleware";
 
@@ -76,5 +80,14 @@ router.post("/modifiers", createModifierGroup);
 router.put("/modifiers/:id", updateModifierGroup);
 router.post("/modifiers/:groupId/options/:optionId/toggle-stock", toggleModifierOptionStock);
 router.delete("/modifiers/:id", deleteModifierGroup);
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// SPRINT W: KITCHEN PREP STREAM & HYGIENE CONFIDENCE (2026)
+// ══════════════════════════════════════════════════════════════════════════
+router.get("/kitchen-streams", getKitchenPrepStreams);
+router.post("/kitchen-streams/:stationId/status", updateStationStreamStatus);
+router.post("/kitchen-streams/:stationId/sanitize", logStationSanitizationAudit);
+router.post("/kitchen-streams/toggle-public", toggleCustomerStreamAccess);
 
 export default router;

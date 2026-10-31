@@ -1838,3 +1838,218 @@ export const deleteModifierGroup = async (req: Request, res: Response) => {
     return res.status(500).json({ success: false, message: "Failed to delete modifier group: " + error.message });
   }
 };
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// SPRINT W: MERCHANT KITCHEN — LIVE CAMERA & STATION PREP STREAM (2026)
+// ══════════════════════════════════════════════════════════════════════════
+
+export interface KitchenStationStream {
+  id: string;
+  name: string;
+  activeChef: string;
+  streamUrl: string;
+  thumbnailUrl: string;
+  status: 'LIVE' | 'PRIVACY_PAUSED' | 'OFFLINE';
+  activeAngle: 'OVERHEAD_PREP' | 'SIDE_PROFILE' | 'PLATING_MACRO';
+  resolution: string;
+  bitrateKbps: number;
+  latencySecs: number;
+  activeOrderTicket: string;
+  dishBeingPlated: string;
+  hygieneScorePct: number;
+  hairnetCompliant: boolean;
+  glovesCompliant: boolean;
+  lastSanitizedMinsAgo: number;
+  nextSanitizationInMins: number;
+}
+
+export interface KitchenStreamConfig {
+  customerLivePeekingEnabled: boolean;
+  privacyFaceBlurEnabled: boolean;
+  streamOverlayTicketWatermark: boolean;
+  aiHygieneAuditEngine: 'ACTIVE_MONITORING' | 'PAUSED';
+  overallKitchenHygieneGrade: string;
+  lastInspectionCycle: string;
+}
+
+let kitchenStationsStore: KitchenStationStream[] = [
+  {
+    id: 'STN-01',
+    name: 'Main Charcoal Grill & Asun Station',
+    activeChef: 'Chef Tunde Olawale',
+    streamUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=400&q=80',
+    status: 'LIVE',
+    activeAngle: 'OVERHEAD_PREP',
+    resolution: '1080p 60fps',
+    bitrateKbps: 4200,
+    latencySecs: 1.2,
+    activeOrderTicket: 'ORD-2026-9812',
+    dishBeingPlated: 'Spicy Grilled Asun & Peppered Chicken',
+    hygieneScorePct: 99.8,
+    hairnetCompliant: true,
+    glovesCompliant: true,
+    lastSanitizedMinsAgo: 6,
+    nextSanitizationInMins: 24
+  },
+  {
+    id: 'STN-02',
+    name: 'Smoky Jollof & Caldron Hearth',
+    activeChef: 'Chef Amaka Nwosu',
+    streamUrl: 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?auto=format&fit=crop&w=800&q=80',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?auto=format&fit=crop&w=400&q=80',
+    status: 'LIVE',
+    activeAngle: 'PLATING_MACRO',
+    resolution: '1080p 60fps',
+    bitrateKbps: 4150,
+    latencySecs: 1.1,
+    activeOrderTicket: 'ORD-2026-9815',
+    dishBeingPlated: 'Party Smoky Jollof Box w/ Golden Dodo',
+    hygieneScorePct: 99.6,
+    hairnetCompliant: true,
+    glovesCompliant: true,
+    lastSanitizedMinsAgo: 11,
+    nextSanitizationInMins: 19
+  },
+  {
+    id: 'STN-03',
+    name: 'Gourmet Salad & Cold Packaging Bay',
+    activeChef: 'Chef Emeka Danjuma',
+    streamUrl: 'https://images.unsplash.com/photo-1600565193348-f74bd3c7ccdf?auto=format&fit=crop&w=800&q=80',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1600565193348-f74bd3c7ccdf?auto=format&fit=crop&w=400&q=80',
+    status: 'LIVE',
+    activeAngle: 'SIDE_PROFILE',
+    resolution: '1080p 60fps',
+    bitrateKbps: 3980,
+    latencySecs: 1.4,
+    activeOrderTicket: 'ORD-2026-9819',
+    dishBeingPlated: 'Creamy Coleslaw & Chapman Drink Decanting',
+    hygieneScorePct: 100.0,
+    hairnetCompliant: true,
+    glovesCompliant: true,
+    lastSanitizedMinsAgo: 4,
+    nextSanitizationInMins: 26
+  },
+  {
+    id: 'STN-04',
+    name: 'Final Thermal Sealing & Dispatch Pass',
+    activeChef: 'Quality Inspector Fatima Bello',
+    streamUrl: 'https://images.unsplash.com/photo-1581299894007-aaa50297cf16?auto=format&fit=crop&w=800&q=80',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1581299894007-aaa50297cf16?auto=format&fit=crop&w=400&q=80',
+    status: 'LIVE',
+    activeAngle: 'OVERHEAD_PREP',
+    resolution: '1080p 60fps',
+    bitrateKbps: 4350,
+    latencySecs: 0.9,
+    activeOrderTicket: 'ORD-2026-9820',
+    dishBeingPlated: 'Tamper-Evident Foil Seal & Receipt Staple',
+    hygieneScorePct: 99.9,
+    hairnetCompliant: true,
+    glovesCompliant: true,
+    lastSanitizedMinsAgo: 8,
+    nextSanitizationInMins: 22
+  }
+];
+
+let kitchenStreamConfig: KitchenStreamConfig = {
+  customerLivePeekingEnabled: true,
+  privacyFaceBlurEnabled: true,
+  streamOverlayTicketWatermark: true,
+  aiHygieneAuditEngine: 'ACTIVE_MONITORING',
+  overallKitchenHygieneGrade: 'GRADE A+ (99.8%)',
+  lastInspectionCycle: '2026-10-31T13:30:00Z'
+};
+
+export const getKitchenPrepStreams = async (_req: Request, res: Response) => {
+  try {
+    const liveCount = kitchenStationsStore.filter(s => s.status === 'LIVE').length;
+    const avgScore = kitchenStationsStore.reduce((acc, s) => acc + s.hygieneScorePct, 0) / kitchenStationsStore.length;
+
+    return res.status(200).json({
+      success: true,
+      stats: {
+        totalStationsCount: kitchenStationsStore.length,
+        liveStreamsCount: liveCount,
+        averageHygieneScorePct: Number(avgScore.toFixed(1)),
+        activeChefsCount: kitchenStationsStore.length,
+        customerPeekingActive: kitchenStreamConfig.customerLivePeekingEnabled,
+        faceBlurActive: kitchenStreamConfig.privacyFaceBlurEnabled
+      },
+      stations: kitchenStationsStore,
+      config: kitchenStreamConfig
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Failed to fetch kitchen streams: ' + error.message });
+  }
+};
+
+export const updateStationStreamStatus = async (req: Request, res: Response) => {
+  try {
+    const { stationId } = req.params;
+    const { status, activeAngle } = req.body;
+    const station = kitchenStationsStore.find(s => s.id === stationId);
+
+    if (!station) {
+      return res.status(404).json({ success: false, message: 'Kitchen station not found' });
+    }
+
+    if (status) station.status = status;
+    if (activeAngle) station.activeAngle = activeAngle;
+
+    return res.status(200).json({
+      success: true,
+      message: `Station ${station.name} stream status updated to ${station.status}.`,
+      station
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Failed to update stream: ' + error.message });
+  }
+};
+
+export const logStationSanitizationAudit = async (req: Request, res: Response) => {
+  try {
+    const { stationId } = req.params;
+    const station = kitchenStationsStore.find(s => s.id === stationId);
+
+    if (!station) {
+      return res.status(404).json({ success: false, message: 'Kitchen station not found' });
+    }
+
+    station.lastSanitizedMinsAgo = 0;
+    station.nextSanitizationInMins = 30;
+    station.hygieneScorePct = 100.0;
+
+    return res.status(200).json({
+      success: true,
+      message: `Station ${station.name} sanitization cycle verified. Timer reset to 30 mins.`,
+      station
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Failed to log sanitization: ' + error.message });
+  }
+};
+
+export const toggleCustomerStreamAccess = async (req: Request, res: Response) => {
+  try {
+    const { customerLivePeekingEnabled, privacyFaceBlurEnabled, streamOverlayTicketWatermark } = req.body;
+
+    if (customerLivePeekingEnabled !== undefined) {
+      kitchenStreamConfig.customerLivePeekingEnabled = Boolean(customerLivePeekingEnabled);
+    }
+    if (privacyFaceBlurEnabled !== undefined) {
+      kitchenStreamConfig.privacyFaceBlurEnabled = Boolean(privacyFaceBlurEnabled);
+    }
+    if (streamOverlayTicketWatermark !== undefined) {
+      kitchenStreamConfig.streamOverlayTicketWatermark = Boolean(streamOverlayTicketWatermark);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Kitchen Stream privacy & customer access rules updated.',
+      config: kitchenStreamConfig
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Failed to update config: ' + error.message });
+  }
+};
