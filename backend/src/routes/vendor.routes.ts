@@ -15,7 +15,12 @@ import {
   getMerchantFinancialStatements,
   getMerchantPayoutSchedule,
   requestInstantPayout,
-  updateMerchantBankSettings
+  updateMerchantBankSettings,
+  getKitchen86InventoryStatus,
+  toggleKitchenItem86,
+  updateKitchenItemPortions,
+  bulkKitchen86Action,
+  getKitchenAutoSubstitutions
 } from "../controllers/vendor.controller";
 import { authenticateJWT, authorizeRoles } from "../middleware/auth.middleware";
 
@@ -47,5 +52,13 @@ router.get("/financials/statements", getMerchantFinancialStatements);
 router.get("/financials/payout-schedule", getMerchantPayoutSchedule);
 router.post("/financials/request-instant-payout", requestInstantPayout);
 router.post("/financials/bank-settings", updateMerchantBankSettings);
+
+
+// Sprint P: Live Ingredient Stock Depletion & 86'd Quick Toggles (2026)
+router.get("/inventory/86-status", getKitchen86InventoryStatus);
+router.post("/inventory/items/:id/toggle-86", toggleKitchenItem86);
+router.post("/inventory/items/:id/update-portions", updateKitchenItemPortions);
+router.post("/inventory/bulk-86", bulkKitchen86Action);
+router.get("/inventory/substitutions/:itemId", getKitchenAutoSubstitutions);
 
 export default router;

@@ -1145,3 +1145,319 @@ export const updateMerchantBankSettings = async (req: AuthenticatedRequest, res:
     return res.status(500).json({ success: false, message: "Failed to update bank settings" });
   }
 };
+
+
+/**
+ * ============================================================================
+ * SPRINT P: KITCHEN INGREDIENT STOCK DEPLETION & 86'D QUICK TOGGLES (2026)
+ * ============================================================================
+ */
+
+export interface Kitchen86Item {
+  id: string;
+  name: string;
+  category: 'MAINS' | 'PROTEINS' | 'SIDES' | 'BEVERAGES' | 'DESSERTS';
+  price: number;
+  is86ed: boolean;
+  remainingPortions: number; // 0 means 86'd
+  eightySixDuration?: 'UNTIL_END_OF_DAY' | 'TWO_HOURS' | 'INDEFINITE' | null;
+  eightySixReason?: string;
+  autoSubstitute?: {
+    id: string;
+    name: string;
+    price: number;
+    differenceNgn: number;
+  };
+  imageUrl: string;
+  connectedDishCount?: number;
+  lastToggledAt?: string;
+}
+
+// In-memory 86'd state cache per kitchen/vendor
+let kitchenInventoryCache: Kitchen86Item[] = [
+  {
+    id: 'kds-item-jollof',
+    name: 'Smokey Party Jollof Rice Special',
+    category: 'MAINS',
+    price: 3200,
+    is86ed: false,
+    remainingPortions: 18,
+    imageUrl: 'https://images.unsplash.com/photo-1604382355076-af4b0eb60143?w=500&auto=format&fit=crop&q=80',
+    autoSubstitute: {
+      id: 'kds-item-friedrice',
+      name: 'Golden Basmati Fried Rice',
+      price: 3400,
+      differenceNgn: 200
+    },
+    connectedDishCount: 4
+  },
+  {
+    id: 'kds-item-chicken',
+    name: 'Crispy Southern Fried Chicken (Mega)',
+    category: 'PROTEINS',
+    price: 2600,
+    is86ed: false,
+    remainingPortions: 8,
+    imageUrl: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=500&auto=format&fit=crop&q=80',
+    autoSubstitute: {
+      id: 'kds-item-turkey',
+      name: 'Jumbo Peppered Turkey Wing',
+      price: 3500,
+      differenceNgn: 900
+    },
+    connectedDishCount: 6
+  },
+  {
+    id: 'kds-item-dodo',
+    name: 'Sweet Golden Fried Plantain (Dodo)',
+    category: 'SIDES',
+    price: 1400,
+    is86ed: true,
+    remainingPortions: 0,
+    eightySixDuration: 'UNTIL_END_OF_DAY',
+    eightySixReason: 'Kitchen supplier delivery delayed; ripe plantains depleted.',
+    imageUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=500&auto=format&fit=crop&q=80',
+    autoSubstitute: {
+      id: 'kds-item-moimoi',
+      name: 'Steamed Fish Egg Moi-Moi',
+      price: 1500,
+      differenceNgn: 100
+    },
+    connectedDishCount: 5,
+    lastToggledAt: new Date(Date.now() - 3600000).toISOString()
+  },
+  {
+    id: 'kds-item-croaker',
+    name: 'Spicy Peppered Grilled Croaker Fish',
+    category: 'PROTEINS',
+    price: 3800,
+    is86ed: false,
+    remainingPortions: 3,
+    imageUrl: 'https://images.unsplash.com/photo-1534939561126-855b8675edd7?w=500&auto=format&fit=crop&q=80',
+    autoSubstitute: {
+      id: 'kds-item-turkey',
+      name: 'Jumbo Peppered Turkey Wing',
+      price: 3500,
+      differenceNgn: -300
+    },
+    connectedDishCount: 2
+  },
+  {
+    id: 'kds-item-chapman',
+    name: 'Signature Chilled Chapman Mocktail',
+    category: 'BEVERAGES',
+    price: 1800,
+    is86ed: false,
+    remainingPortions: 24,
+    imageUrl: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=500&auto=format&fit=crop&q=80',
+    autoSubstitute: {
+      id: 'kds-item-zobo',
+      name: 'Chilled Hibiscus Zobo Splash',
+      price: 1200,
+      differenceNgn: -600
+    },
+    connectedDishCount: 0
+  },
+  {
+    id: 'kds-item-coleslaw',
+    name: 'Fresh Gourmet Garden Coleslaw',
+    category: 'SIDES',
+    price: 1200,
+    is86ed: false,
+    remainingPortions: 4,
+    imageUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=500&auto=format&fit=crop&q=80',
+    autoSubstitute: {
+      id: 'kds-item-moimoi',
+      name: 'Steamed Fish Egg Moi-Moi',
+      price: 1500,
+      differenceNgn: 300
+    },
+    connectedDishCount: 3
+  },
+  {
+    id: 'kds-item-pizza-pepperoni',
+    name: 'Artisan Double Pepperoni Pizza',
+    category: 'MAINS',
+    price: 7500,
+    is86ed: false,
+    remainingPortions: 12,
+    imageUrl: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=500&auto=format&fit=crop&q=80',
+    autoSubstitute: {
+      id: 'kds-item-burger',
+      name: 'Double Smash Beef Burger',
+      price: 4500,
+      differenceNgn: -3000
+    },
+    connectedDishCount: 1
+  }
+];
+
+export const getKitchen86InventoryStatus = async (_req: AuthenticatedRequest, res: Response) => {
+  try {
+    const totalItems = kitchenInventoryCache.length;
+    const eightySixedCount = kitchenInventoryCache.filter(i => i.is86ed).length;
+    const lowStockCount = kitchenInventoryCache.filter(i => !i.is86ed && i.remainingPortions <= 5).length;
+    const inStockCount = kitchenInventoryCache.filter(i => !i.is86ed && i.remainingPortions > 5).length;
+
+    return res.status(200).json({
+      success: true,
+      summary: {
+        totalItems,
+        eightySixedCount,
+        lowStockCount,
+        inStockCount,
+        kitchenOperationalStatus: eightySixedCount > 4 ? 'HIGH_DEPLETION_ALERT' : 'OPTIMAL_CAPACITY'
+      },
+      items: kitchenInventoryCache
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Failed to fetch 86 inventory status: ' + error.message });
+  }
+};
+
+export const toggleKitchenItem86 = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const rawId = req.params.id;
+    const itemId = Array.isArray(rawId) ? rawId[0] : (rawId || '');
+    const { is86ed, duration, reason } = req.body;
+
+    const item = kitchenInventoryCache.find(i => i.id === itemId);
+    if (!item) {
+      return res.status(404).json({ success: false, message: 'Kitchen item not found' });
+    }
+
+    const next86 = typeof is86ed === 'boolean' ? is86ed : !item.is86ed;
+    item.is86ed = next86;
+    item.remainingPortions = next86 ? 0 : (item.remainingPortions > 0 ? item.remainingPortions : 10);
+    item.eightySixDuration = next86 ? (duration || 'UNTIL_END_OF_DAY') : null;
+    item.eightySixReason = next86 ? (reason || 'Kitchen stock depleted') : undefined;
+    item.lastToggledAt = new Date().toISOString();
+
+    return res.status(200).json({
+      success: true,
+      message: next86
+        ? `"${item.name}" is now 86'd (Sold Out). Auto-substitute suggestions are active for customer carts.`
+        : `"${item.name}" restored to active stock (${item.remainingPortions} portions).`,
+      item
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Failed to toggle 86 status: ' + error.message });
+  }
+};
+
+export const updateKitchenItemPortions = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const rawId = req.params.id;
+    const itemId = Array.isArray(rawId) ? rawId[0] : (rawId || '');
+    const { remainingPortions } = req.body;
+
+    if (typeof remainingPortions !== 'number' || remainingPortions < 0) {
+      return res.status(400).json({ success: false, message: 'Valid non-negative remainingPortions number is required' });
+    }
+
+    const item = kitchenInventoryCache.find(i => i.id === itemId);
+    if (!item) {
+      return res.status(404).json({ success: false, message: 'Kitchen item not found' });
+    }
+
+    item.remainingPortions = remainingPortions;
+    if (remainingPortions === 0) {
+      item.is86ed = true;
+      item.eightySixDuration = 'UNTIL_END_OF_DAY';
+      item.eightySixReason = 'Portions depleted to 0';
+    } else if (item.is86ed) {
+      item.is86ed = false;
+      item.eightySixDuration = null;
+      item.eightySixReason = undefined;
+    }
+    item.lastToggledAt = new Date().toISOString();
+
+    return res.status(200).json({
+      success: true,
+      message: `Updated ${item.name} stock to ${remainingPortions} portions.`,
+      item
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Failed to update portions: ' + error.message });
+  }
+};
+
+export const bulkKitchen86Action = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { action, category } = req.body;
+
+    if (action === 'RESTORE_ALL') {
+      kitchenInventoryCache.forEach(i => {
+        i.is86ed = false;
+        if (i.remainingPortions === 0) i.remainingPortions = 15;
+        i.eightySixDuration = null;
+        i.eightySixReason = undefined;
+      });
+      return res.status(200).json({
+        success: true,
+        message: 'All kitchen menu items have been restored to active stock.',
+        items: kitchenInventoryCache
+      });
+    }
+
+    if (action === '86_CATEGORY' && category) {
+      kitchenInventoryCache.forEach(i => {
+        if (i.category === category) {
+          i.is86ed = true;
+          i.remainingPortions = 0;
+          i.eightySixDuration = 'UNTIL_END_OF_DAY';
+          i.eightySixReason = `Bulk emergency 86 for ${category}`;
+        }
+      });
+      return res.status(200).json({
+        success: true,
+        message: `All ${category} items have been 86'd.`,
+        items: kitchenInventoryCache
+      });
+    }
+
+    return res.status(400).json({ success: false, message: 'Invalid bulk action' });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Bulk action failed: ' + error.message });
+  }
+};
+
+export const getKitchenAutoSubstitutions = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const rawId = req.params.itemId;
+    const itemId = Array.isArray(rawId) ? rawId[0] : (rawId || '');
+
+    const item = kitchenInventoryCache.find(i => i.id === itemId);
+    if (!item) {
+      return res.status(404).json({ success: false, message: 'Item not found' });
+    }
+
+    // Return suggested substitute if available or candidates in same category
+    const candidates = kitchenInventoryCache
+      .filter(i => i.id !== itemId && !i.is86ed && (i.category === item.category || i.category === 'SIDES'))
+      .map(c => ({
+        id: c.id,
+        name: c.name,
+        price: c.price,
+        differenceNgn: c.price - item.price,
+        imageUrl: c.imageUrl
+      }));
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        originalItem: {
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          is86ed: item.is86ed,
+          reason: item.eightySixReason
+        },
+        primarySubstitute: item.autoSubstitute || candidates[0] || null,
+        alternativeSubstitutes: candidates
+      }
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Failed to fetch substitutions: ' + error.message });
+  }
+};
