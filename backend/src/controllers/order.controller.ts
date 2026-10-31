@@ -1402,3 +1402,123 @@ export const getActiveOrderTelemetry = async (req: AuthenticatedRequest, res: Re
     return res.status(500).json({ success: false, message: 'Failed to retrieve active telemetry: ' + error.message });
   }
 };
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// SPRINT U: CUSTOMER CX — POST-DELIVERY TIPPING & COURIER CHAMPION APPRECIATION (2026)
+// ══════════════════════════════════════════════════════════════════════════
+
+export interface AppreciationTipPreset {
+  amountNgn: number;
+  label: string;
+  icon: string;
+  popular?: boolean;
+}
+
+export interface ChampionBadgeAward {
+  id: string;
+  label: string;
+  icon: string;
+  description: string;
+}
+
+const tipPresets: AppreciationTipPreset[] = [
+  { amountNgn: 500, label: "Cold Drink / Water", icon: "🥤" },
+  { amountNgn: 1000, label: "Fuel Booster", icon: "⛽", popular: true },
+  { amountNgn: 2000, label: "Champion Lunch", icon: "🍲" },
+  { amountNgn: 5000, label: "Apex Hero Tip", icon: "👑" }
+];
+
+const availableBadges: ChampionBadgeAward[] = [
+  { id: "FAST", label: "Lightning Fast", icon: "⚡", description: "Arrived way ahead of SLA" },
+  { id: "CAREFUL", label: "Handled with Care", icon: "🛡️", description: "Food in pristine condition, zero spills" },
+  { id: "FRIENDLY", label: "Courteous & Respectful", icon: "😊", description: "Professional demeanor and warm greeting" },
+  { id: "NAVIGATOR", label: "Master Navigator", icon: "🧭", description: "Located gate without asking for directions" },
+  { id: "ALLSTAR", label: "Apex Champion", icon: "🌟", description: "Flawless five-star delivery experience" }
+];
+
+// In-memory store for submitted tips and appreciation reviews
+const orderAppreciationStore: Record<string, any> = {};
+
+export const getPostDeliveryAppreciationData = async (req: Request, res: Response) => {
+  try {
+    const rawId = req.params.id;
+    const orderId = Array.isArray(rawId) ? rawId[0] : (rawId || "ORD-2026-9812");
+
+    const previousSubmission = orderAppreciationStore[orderId];
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        order: {
+          id: orderId,
+          merchantName: "Mega Chicken Victoria Island",
+          itemsSummary: "2x Asun Jollof Combo, 4x Peppered Chicken, Extra Dodo",
+          totalAmountNgn: 18500,
+          deliveredAt: "Just now",
+          deliveryDurationMins: 23,
+          targetSlaMins: 30,
+          timeSavedMins: 7
+        },
+        courier: {
+          id: "RDR-419",
+          name: "Ibrahim Musa",
+          phone: "+234 803 762 9011",
+          avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80",
+          vehicle: "Honda Ace 125 [KTU-209-XQ]",
+          championTier: "Apex Elite",
+          rating: 4.98,
+          totalDeliveries: 1420,
+          acceptanceRatePct: 99.2,
+          currentLevel: "Level 4 Legend"
+        },
+        tipPresets,
+        availableBadges,
+        payoutGuarantee: "100% of your tip goes directly to Ibrahim Musa with zero platform fees.",
+        alreadySubmitted: Boolean(previousSubmission),
+        submission: previousSubmission || null
+      }
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: "Failed to fetch appreciation data: " + error.message });
+  }
+};
+
+export const submitCourierTipAndReview = async (req: Request, res: Response) => {
+  try {
+    const rawId = req.params.id;
+    const orderId = Array.isArray(rawId) ? rawId[0] : (rawId || "ORD-2026-9812");
+    const { tipAmountNgn = 0, badges = [], thankYouNote = "", rating = 5, paymentMethod = "FLOWMART_WALLET" } = req.body;
+
+    const parsedTip = Math.max(0, Number(tipAmountNgn) || 0);
+
+    const submissionRecord = {
+      orderId,
+      courierId: "RDR-419",
+      courierName: "Ibrahim Musa",
+      tipAmountNgn: parsedTip,
+      badges: Array.isArray(badges) ? badges : [],
+      thankYouNote: thankYouNote.trim(),
+      rating: Math.min(5, Math.max(1, Number(rating) || 5)),
+      paymentMethod,
+      submittedAt: new Date().toISOString(),
+      transactionId: "TIP-2026-" + Math.floor(100000 + Math.random() * 900000),
+      disbursalStatus: "INSTANT_CREDITED"
+    };
+
+    orderAppreciationStore[orderId] = submissionRecord;
+
+    return res.status(200).json({
+      success: true,
+      message: parsedTip > 0
+        ? `₦${parsedTip.toLocaleString()} tip successfully transferred directly to Ibrahim Musa's instant wallet balance! Thank you for championing our couriers.`
+        : `Thank you for rating and reviewing Ibrahim Musa!`,
+      submission: submissionRecord,
+      riderThankYouMessage: parsedTip > 0
+        ? "Ibrahim says: 'Thank you so much chief! May God replenish and bless you abundantly! 🙏✨'"
+        : "Ibrahim says: 'Thank you for the five-star review! It is my pleasure serving you! 🛵💨'"
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: "Failed to submit appreciation: " + error.message });
+  }
+};

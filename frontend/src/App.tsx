@@ -43,6 +43,7 @@ const Cart = lazy(() => import("@/pages/user/Cart"));
 const Checkout = lazy(() => import("@/pages/user/Checkout"));
 const PayForMe = lazy(() => import("./pages/user/PayForMe"));
 const SplitBill = lazy(() => import("./pages/user/SplitBill"));
+const PostDeliveryAppreciation = lazy(() => import("@/pages/user/PostDeliveryAppreciation"));
 const GroupOrderRoom = lazy(() => import("./pages/user/GroupOrderRoom"));
 const FoodieWrapped = lazy(() => import("./pages/user/FoodieWrapped"));
 const ReferralMilestones = lazy(() => import("./pages/user/ReferralMilestones"));
@@ -151,6 +152,8 @@ function App() {
             <Route path="/login" element={<Login />} />
               <Route path="/pay-for-me/:id" element={<PayForMe />} />
             <Route path="/split/:code" element={<SplitBill />} />
+            <Route path="/orders/:id/appreciation" element={<PostDeliveryAppreciation />} />
+            <Route path="/appreciation" element={<PostDeliveryAppreciation />} />
             <Route path="/group-order/:code" element={<GroupOrderRoom />} />
             <Route path="/group-order" element={<GroupOrderRoom />} />
 

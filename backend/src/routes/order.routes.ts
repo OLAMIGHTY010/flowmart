@@ -1,5 +1,9 @@
-import { Router } from 'express';
-import { placeOrder, getOrders, getOrderById, getOrderTrackingTelemetry, updateOrderStatus, confirmOrderReceived, getVendorBankDetails, paystackWebhook, calculateDelivery, getPayForMeOrder, initializePayForMePayment, getOrderMessages, sendOrderMessage, rateOrder, getFlowPassStatus, subscribeFlowPass, createSplitBillSession, getSplitBillSession, contributeToSplitBill, coverRemainingSplitBill, getActiveOrderTelemetry } from '../controllers/order.controller';
+import {
+Router } from 'express';
+import { placeOrder, getOrders, getOrderById, getOrderTrackingTelemetry, updateOrderStatus, confirmOrderReceived, getVendorBankDetails, paystackWebhook, calculateDelivery, getPayForMeOrder, initializePayForMePayment, getOrderMessages, sendOrderMessage, rateOrder, getFlowPassStatus, subscribeFlowPass, createSplitBillSession, getSplitBillSession, contributeToSplitBill, coverRemainingSplitBill, getActiveOrderTelemetry,
+  getPostDeliveryAppreciationData,
+  submitCourierTipAndReview
+} from '../controllers/order.controller';
 import { authenticateJWT, authorizeRoles } from '../middleware/auth.middleware';
 import { validateRequest } from '../middleware/validate.middleware';
 import { checkoutLimiter } from '../middleware/rateLimiter.middleware';
@@ -36,5 +40,12 @@ router.get('/vendor/:vendorId/bank-details', authenticateJWT, getVendorBankDetai
 
 // External Payment Processor Webhooks
 router.post('/webhook/paystack', paystackWebhook); 
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// SPRINT U: POST-DELIVERY TIPPING & COURIER APPRECIATION (2026)
+// ══════════════════════════════════════════════════════════════════════════
+router.get('/:id/appreciation', getPostDeliveryAppreciationData);
+router.post('/:id/appreciation', submitCourierTipAndReview);
 
 export default router;
