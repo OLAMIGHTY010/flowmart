@@ -1,4 +1,5 @@
-import { Router } from 'express';
+import {
+Router } from 'express';
 import { authenticateJWT, authorizeRoles } from '../middleware/auth.middleware';
 import {
   getDashboardStats,
@@ -22,7 +23,11 @@ import {
   getDisputeAuditQueue,
   getDisputeEvidenceDetails,
   resolveDisputeAudit,
-  evaluateDisputeWithAI
+  evaluateDisputeWithAI,
+  getDispatchIncidents,
+  reassignDispatchOrder,
+  triggerAutonomousReroute,
+  toggleAutonomousRerouteConfig
 } from '../controllers/admin.controller';
 
 import {
@@ -141,5 +146,14 @@ router.get('/coordinator-analytics/promotional-inventory', getPromotionalInvento
 router.get('/coordinator-analytics/live-zone-grid', getLiveZoneGrid);
 router.get('/coordinator-analytics/live-activity-feed', getLiveActivityFeed);
 router.get('/coordinator-analytics/shortage-alerts', getShortageAlerts);
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// SPRINT S: DISPATCH INCIDENTS & AUTONOMOUS REASSIGNMENT MATRIX
+// ══════════════════════════════════════════════════════════════════════════
+router.get('/dispatch/incidents', authenticateJWT, authorizeRoles('admin', 'dispatcher', 'superadmin'), getDispatchIncidents);
+router.post('/dispatch/reassign', authenticateJWT, authorizeRoles('admin', 'dispatcher', 'superadmin'), reassignDispatchOrder);
+router.post('/dispatch/auto-reroute', authenticateJWT, authorizeRoles('admin', 'dispatcher', 'superadmin'), triggerAutonomousReroute);
+router.post('/dispatch/auto-reroute/config', authenticateJWT, authorizeRoles('admin', 'dispatcher', 'superadmin'), toggleAutonomousRerouteConfig);
 
 export default router;

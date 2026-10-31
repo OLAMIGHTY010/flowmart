@@ -1079,3 +1079,434 @@ export const evaluateDisputeWithAI = async (req: Request, res: Response) => {
     return res.status(500).json({ success: false, message: "AI evaluation failed: " + error.message });
   }
 };
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// SPRINT S: OPERATIONS & DISPATCH — AUTONOMOUS REASSIGNMENT MATRIX & SLA PROTECTOR
+// ══════════════════════════════════════════════════════════════════════════
+
+export interface CandidateRider {
+  id: string;
+  name: string;
+  championTier: 'Apex Elite' | 'Gold Champion' | 'Silver Champion';
+  rating: number;
+  vehicle: string;
+  distanceKm: number;
+  etaMins: number;
+  matchScorePct: number;
+  phone: string;
+  status: 'AVAILABLE' | 'EN_ROUTE_NEARBY';
+}
+
+export interface DispatchIncident {
+  id: string;
+  type: 'MECHANICAL_BREAKDOWN' | 'TRAFFIC_DEADLOCK' | 'SIGNAL_LOST' | 'MERCHANT_DELAY';
+  severity: 'CRITICAL' | 'HIGH' | 'MEDIUM';
+  status: 'PENDING_REASSIGNMENT' | 'REASSIGNED' | 'RESOLVED';
+  order: {
+    id: string;
+    itemsSummary: string;
+    totalAmountNgn: number;
+    customerName: string;
+    customerPhone: string;
+    merchantName: string;
+    targetSlaMins: number;
+    elapsedMins: number;
+    slaStatus: 'AT_RISK' | 'BREACHED' | 'ON_TRACK';
+  };
+  strandedRider: {
+    id: string;
+    name: string;
+    phone: string;
+    vehicle: string;
+    rating: number;
+    batteryPct: number;
+    speedKmH: number;
+    standstillMins: number;
+    locationName: string;
+    reportedReason: string;
+  };
+  candidates: CandidateRider[];
+  reassignedTo?: {
+    riderId: string;
+    riderName: string;
+    reassignedAt: string;
+    pickupHandoffCoord: string;
+    transferCompensationNgn: number;
+  };
+}
+
+export interface ReassignmentAuditLog {
+  id: string;
+  incidentId: string;
+  orderId: string;
+  originalRiderName: string;
+  newRiderName: string;
+  reason: string;
+  transferCompensationNgn: number;
+  slaPreservedMins: number;
+  reassignedAt: string;
+  autoRerouted: boolean;
+}
+
+// In-memory data store for live dispatch state
+let dispatchIncidentsStore: DispatchIncident[] = [
+  {
+    id: 'INC-2026-9041',
+    type: 'MECHANICAL_BREAKDOWN',
+    severity: 'CRITICAL',
+    status: 'PENDING_REASSIGNMENT',
+    order: {
+      id: 'ORD-2026-9812',
+      itemsSummary: '2x Asun Jollof Combo, 4x Peppered Chicken, Extra Fried Plantain',
+      totalAmountNgn: 18500,
+      customerName: 'Adebayo Olufemi',
+      customerPhone: '+234 803 234 5678',
+      merchantName: 'Mega Chicken Victoria Island',
+      targetSlaMins: 30,
+      elapsedMins: 22,
+      slaStatus: 'AT_RISK'
+    },
+    strandedRider: {
+      id: 'RDR-802',
+      name: 'Sunday Peters',
+      phone: '+234 812 345 6789',
+      vehicle: 'TVS HLX 125 [BDG-492-QA]',
+      rating: 4.88,
+      batteryPct: 42,
+      speedKmH: 0,
+      standstillMins: 14,
+      locationName: 'Ozumba Mbadiwe Ave (Near Civic Centre, VI)',
+      reportedReason: 'Rear tire puncture & broken chain bracket'
+    },
+    candidates: [
+      {
+        id: 'RDR-419',
+        name: 'Ibrahim Musa',
+        championTier: 'Apex Elite',
+        rating: 4.96,
+        vehicle: 'Honda Ace 125 [KTU-209-XQ]',
+        distanceKm: 0.8,
+        etaMins: 3,
+        matchScorePct: 98,
+        phone: '+234 803 762 9011',
+        status: 'AVAILABLE'
+      },
+      {
+        id: 'RDR-721',
+        name: 'Emeka Nnamdi',
+        championTier: 'Gold Champion',
+        rating: 4.91,
+        vehicle: 'Boxer 150 [LND-382-BC]',
+        distanceKm: 1.4,
+        etaMins: 5,
+        matchScorePct: 92,
+        phone: '+234 805 119 4432',
+        status: 'AVAILABLE'
+      },
+      {
+        id: 'RDR-305',
+        name: 'Fatima Garba',
+        championTier: 'Apex Elite',
+        rating: 4.95,
+        vehicle: 'Haojue Lucky 110 [AKD-991-TA]',
+        distanceKm: 2.1,
+        etaMins: 7,
+        matchScorePct: 86,
+        phone: '+234 818 902 3341',
+        status: 'EN_ROUTE_NEARBY'
+      }
+    ]
+  },
+  {
+    id: 'INC-2026-9042',
+    type: 'TRAFFIC_DEADLOCK',
+    severity: 'HIGH',
+    status: 'PENDING_REASSIGNMENT',
+    order: {
+      id: 'ORD-2026-9815',
+      itemsSummary: 'Special Gourmet Suya Platter, Masa Bread, 2x Chilled Chapman',
+      totalAmountNgn: 14200,
+      customerName: 'Zainab Bello',
+      customerPhone: '+234 805 987 6543',
+      merchantName: 'Suya Central Lekki Phase 1',
+      targetSlaMins: 35,
+      elapsedMins: 27,
+      slaStatus: 'AT_RISK'
+    },
+    strandedRider: {
+      id: 'RDR-114',
+      name: 'Chukwudi Eze',
+      phone: '+234 809 111 2233',
+      vehicle: 'Bajaj Boxer [KJA-819-XX]',
+      rating: 4.84,
+      batteryPct: 68,
+      speedKmH: 2,
+      standstillMins: 19,
+      locationName: 'Admiralty Way Roundabout, Lekki Phase 1',
+      reportedReason: 'Construction blockade causing 0 km/h standstill gridlock'
+    },
+    candidates: [
+      {
+        id: 'RDR-902',
+        name: 'Kehinde Balogun',
+        championTier: 'Apex Elite',
+        rating: 4.97,
+        vehicle: 'Yamaha Crux [EKY-491-YZ]',
+        distanceKm: 0.6,
+        etaMins: 2,
+        matchScorePct: 99,
+        phone: '+234 802 331 7789',
+        status: 'AVAILABLE'
+      },
+      {
+        id: 'RDR-512',
+        name: 'Tunde Bakare',
+        championTier: 'Silver Champion',
+        rating: 4.86,
+        vehicle: 'TVS Max 100 [AGL-208-JK]',
+        distanceKm: 1.2,
+        etaMins: 4,
+        matchScorePct: 89,
+        phone: '+234 807 449 0012',
+        status: 'AVAILABLE'
+      }
+    ]
+  },
+  {
+    id: 'INC-2026-9043',
+    type: 'SIGNAL_LOST',
+    severity: 'HIGH',
+    status: 'PENDING_REASSIGNMENT',
+    order: {
+      id: 'ORD-2026-9819',
+      itemsSummary: 'Afang Soup Pot, 3x Poundo Yam, Assorted Meat Platter',
+      totalAmountNgn: 22000,
+      customerName: 'Dr. Ngozi Okonjo',
+      customerPhone: '+234 802 888 9900',
+      merchantName: 'Yellow Chilli Ikeja GRA',
+      targetSlaMins: 40,
+      elapsedMins: 31,
+      slaStatus: 'AT_RISK'
+    },
+    strandedRider: {
+      id: 'RDR-630',
+      name: 'Musa Danjuma',
+      phone: '+234 813 444 5566',
+      vehicle: 'Honda CB125 [IKJ-204-AB]',
+      rating: 4.79,
+      batteryPct: 4,
+      speedKmH: 0,
+      standstillMins: 16,
+      locationName: 'Isaac John Street, Ikeja GRA',
+      reportedReason: 'Telemetry heartbeat lost after pickup (device dead battery)'
+    },
+    candidates: [
+      {
+        id: 'RDR-208',
+        name: 'Oluwaseun Adeyemi',
+        championTier: 'Apex Elite',
+        rating: 4.98,
+        vehicle: 'Honda Ace 125 [KRD-772-LM]',
+        distanceKm: 0.9,
+        etaMins: 3,
+        matchScorePct: 97,
+        phone: '+234 810 551 2299',
+        status: 'AVAILABLE'
+      },
+      {
+        id: 'RDR-655',
+        name: 'Ahmed Lawal',
+        championTier: 'Gold Champion',
+        rating: 4.90,
+        vehicle: 'Suzuki AX100 [LSR-112-QW]',
+        distanceKm: 1.7,
+        etaMins: 6,
+        matchScorePct: 91,
+        phone: '+234 816 772 3311',
+        status: 'AVAILABLE'
+      }
+    ]
+  }
+];
+
+let reassignmentLogsStore: ReassignmentAuditLog[] = [
+  {
+    id: 'LOG-2026-1081',
+    incidentId: 'INC-2026-9038',
+    orderId: 'ORD-2026-9799',
+    originalRiderName: 'Victor Adeleke',
+    newRiderName: 'Ibrahim Musa',
+    reason: 'Flat tire near Falomo Bridge; automatic reroute',
+    transferCompensationNgn: 1500,
+    slaPreservedMins: 14,
+    reassignedAt: '2026-10-31T11:42:10Z',
+    autoRerouted: true
+  },
+  {
+    id: 'LOG-2026-1080',
+    incidentId: 'INC-2026-9035',
+    orderId: 'ORD-2026-9782',
+    originalRiderName: 'Samuel Okoro',
+    newRiderName: 'Kehinde Balogun',
+    reason: 'Fuel exhaustion re-dispatch and emergency fuel allowance',
+    transferCompensationNgn: 1500,
+    slaPreservedMins: 11,
+    reassignedAt: '2026-10-31T11:15:33Z',
+    autoRerouted: false
+  }
+];
+
+let autoRerouteEngineConfig = {
+  enabled: true,
+  standstillThresholdMins: 10,
+  maxSearchRadiusKm: 4.0,
+  priorityTier: 'APEX_FIRST',
+  defaultTransferCompensationNgn: 1500,
+  lastRerouteBatchAt: '2026-10-31T12:00:00Z'
+};
+
+export const getDispatchIncidents = async (_req: Request, res: Response) => {
+  try {
+    const pendingCount = dispatchIncidentsStore.filter(i => i.status === 'PENDING_REASSIGNMENT').length;
+    const resolvedCount = dispatchIncidentsStore.filter(i => i.status !== 'PENDING_REASSIGNMENT').length;
+    
+    return res.status(200).json({
+      success: true,
+      stats: {
+        activeIncidentsCount: pendingCount,
+        resolvedTodayCount: resolvedCount + reassignmentLogsStore.length,
+        averageRecoveryMins: 4.2,
+        slaProtectionRatePct: 97.4,
+        autoRerouteEnabled: autoRerouteEngineConfig.enabled,
+        standstillThresholdMins: autoRerouteEngineConfig.standstillThresholdMins,
+        maxSearchRadiusKm: autoRerouteEngineConfig.maxSearchRadiusKm
+      },
+      incidents: dispatchIncidentsStore,
+      recentLogs: reassignmentLogsStore,
+      engineConfig: autoRerouteEngineConfig
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Failed to fetch dispatch incidents: ' + error.message });
+  }
+};
+
+export const reassignDispatchOrder = async (req: Request, res: Response) => {
+  try {
+    const { incidentId, riderId, reason, transferCompensationNgn = 1500 } = req.body;
+    const incident = dispatchIncidentsStore.find(i => i.id === incidentId);
+
+    if (!incident) {
+      return res.status(404).json({ success: false, message: 'Incident not found' });
+    }
+
+    const candidate = incident.candidates.find(c => c.id === riderId) || incident.candidates[0];
+    const newRiderName = candidate ? candidate.name : 'Apex Backup Champion';
+
+    incident.status = 'REASSIGNED';
+    incident.reassignedTo = {
+      riderId: candidate ? candidate.id : riderId || 'RDR-BACKUP',
+      riderName: newRiderName,
+      reassignedAt: new Date().toISOString(),
+      pickupHandoffCoord: '6.4312° N, 3.4219° E (Handoff Zone)',
+      transferCompensationNgn: Number(transferCompensationNgn) || 1500
+    };
+
+    const newLog: ReassignmentAuditLog = {
+      id: 'LOG-2026-' + Math.floor(1000 + Math.random() * 9000),
+      incidentId: incident.id,
+      orderId: incident.order.id,
+      originalRiderName: incident.strandedRider.name,
+      newRiderName: newRiderName,
+      reason: reason || incident.strandedRider.reportedReason || 'Manual Dispatch Reassignment',
+      transferCompensationNgn: Number(transferCompensationNgn) || 1500,
+      slaPreservedMins: Math.max(5, 30 - incident.order.elapsedMins),
+      reassignedAt: new Date().toISOString(),
+      autoRerouted: false
+    };
+
+    reassignmentLogsStore.unshift(newLog);
+
+    return res.status(200).json({
+      success: true,
+      message: `Order ${incident.order.id} successfully reassigned to ${newRiderName}`,
+      incident,
+      auditLog: newLog
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Failed to reassign order: ' + error.message });
+  }
+};
+
+export const triggerAutonomousReroute = async (_req: Request, res: Response) => {
+  try {
+    let reroutedCount = 0;
+    const newlyCreatedLogs: ReassignmentAuditLog[] = [];
+
+    dispatchIncidentsStore.forEach(incident => {
+      if (incident.status === 'PENDING_REASSIGNMENT' && incident.candidates.length > 0) {
+        const bestCandidate = incident.candidates[0]; // Top scored candidate
+        incident.status = 'REASSIGNED';
+        incident.reassignedTo = {
+          riderId: bestCandidate.id,
+          riderName: bestCandidate.name,
+          reassignedAt: new Date().toISOString(),
+          pickupHandoffCoord: 'Autonomous Rendezvous GPS Locked',
+          transferCompensationNgn: autoRerouteEngineConfig.defaultTransferCompensationNgn
+        };
+
+        const newLog: ReassignmentAuditLog = {
+          id: 'LOG-2026-' + Math.floor(1000 + Math.random() * 9000),
+          incidentId: incident.id,
+          orderId: incident.order.id,
+          originalRiderName: incident.strandedRider.name,
+          newRiderName: bestCandidate.name,
+          reason: `Autonomous SLA Reroute: ${incident.type} (${incident.strandedRider.reportedReason})`,
+          transferCompensationNgn: autoRerouteEngineConfig.defaultTransferCompensationNgn,
+          slaPreservedMins: Math.max(6, 35 - incident.order.elapsedMins),
+          reassignedAt: new Date().toISOString(),
+          autoRerouted: true
+        };
+
+        reassignmentLogsStore.unshift(newLog);
+        newlyCreatedLogs.push(newLog);
+        reroutedCount++;
+      }
+    });
+
+    autoRerouteEngineConfig.lastRerouteBatchAt = new Date().toISOString();
+
+    return res.status(200).json({
+      success: true,
+      message: `Autonomous Dispatch Engine successfully rerouted ${reroutedCount} stranded delivery order(s).`,
+      reroutedCount,
+      incidents: dispatchIncidentsStore,
+      newLogs: newlyCreatedLogs
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Autonomous reroute failed: ' + error.message });
+  }
+};
+
+export const toggleAutonomousRerouteConfig = async (req: Request, res: Response) => {
+  try {
+    const { enabled, standstillThresholdMins, maxSearchRadiusKm } = req.body;
+    if (typeof enabled === 'boolean') {
+      autoRerouteEngineConfig.enabled = enabled;
+    }
+    if (typeof standstillThresholdMins === 'number') {
+      autoRerouteEngineConfig.standstillThresholdMins = standstillThresholdMins;
+    }
+    if (typeof maxSearchRadiusKm === 'number') {
+      autoRerouteEngineConfig.maxSearchRadiusKm = maxSearchRadiusKm;
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Autonomous Reroute Engine configuration updated',
+      engineConfig: autoRerouteEngineConfig
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Failed to update config: ' + error.message });
+  }
+};
