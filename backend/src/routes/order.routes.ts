@@ -7,7 +7,7 @@ import { placeOrder, getOrders, getOrderById, getOrderTrackingTelemetry, updateO
   createMultiStopFeastOrder,
   getMultiStopRouteTelemetry
 } from '../controllers/order.controller';
-import { authenticateJWT, authorizeRoles } from '../middleware/auth.middleware';
+import { authenticateJWT, optionalAuthenticateJWT, authorizeRoles } from '../middleware/auth.middleware';
 import { validateRequest } from '../middleware/validate.middleware';
 import { checkoutLimiter } from '../middleware/rateLimiter.middleware';
 import { placeOrderSchema, updateOrderStatusSchema, calculateDeliverySchema } from '../schemas/order.schema';
@@ -35,9 +35,9 @@ router.post('/:id/messages', authenticateJWT, sendOrderMessage);
 router.post('/:id/rate', authenticateJWT, rateOrder);
 router.get('/flowpass/status', authenticateJWT, getFlowPassStatus);
 router.post('/flowpass/subscribe', authenticateJWT, subscribeFlowPass);
-router.post('/', authenticateJWT, authorizeRoles('user'), checkoutLimiter, validateRequest({ body: placeOrderSchema }), placeOrder);
-router.post('/calculate-delivery', authenticateJWT, authorizeRoles('user'), validateRequest({ body: calculateDeliverySchema }), calculateDelivery);
-router.patch('/:id/received', authenticateJWT, authorizeRoles('user'), confirmOrderReceived);
+router.post('/', authenticateJWT, authorizeRoles('user', 'customer', 'super_admin', 'admin', 'corporate_buyer'), checkoutLimiter, validateRequest({ body: placeOrderSchema }), placeOrder);
+router.post('/calculate-delivery', optionalAuthenticateJWT, validateRequest({ body: calculateDeliverySchema }), calculateDelivery);
+router.patch('/:id/received', authenticateJWT, authorizeRoles('user', 'customer', 'super_admin', 'admin'), confirmOrderReceived);
 router.patch('/:id/status', authenticateJWT, authorizeRoles('vendor', 'super_admin'), validateRequest({ body: updateOrderStatusSchema }), updateOrderStatus);
 router.get('/vendor/:vendorId/bank-details', authenticateJWT, getVendorBankDetails);
 

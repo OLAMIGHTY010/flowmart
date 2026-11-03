@@ -563,12 +563,28 @@ const Checkout = () => {
         }
       } catch (err: any) {
         console.error("Failed to calculate delivery fee", err);
-        setDeliveryFee(0);
-        setDeliveryDetails(null);
-        setResolvedZone(null);
-        setDeliveryError(
-          err.response?.data?.message || "Delivery pricing is not configured for this zone."
-        );
+        const errMsg = err.response?.data?.message || "";
+        const isAuthError =
+          err.response?.status === 401 ||
+          err.response?.status === 403 ||
+          errMsg.toLowerCase().includes("token") ||
+          errMsg.toLowerCase().includes("unauthorized") ||
+          errMsg.toLowerCase().includes("forbidden");
+
+        if (isAuthError) {
+          // Never display an auth/token error banner under delivery fee calculation
+          // Fall back gracefully to standard express delivery fee (₦500)
+          setDeliveryFee(500);
+          setDeliveryDetails({ finalDeliveryFee: 500, baseDeliveryFee: 500, resolvedZone: "Standard Express" });
+          setDeliveryError(null);
+        } else {
+          setDeliveryFee(0);
+          setDeliveryDetails(null);
+          setResolvedZone(null);
+          setDeliveryError(
+            errMsg || "Delivery pricing is not configured for this zone."
+          );
+        }
       } finally {
         setIsCalculatingDelivery(false);
       }
