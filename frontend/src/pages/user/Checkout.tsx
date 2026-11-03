@@ -187,13 +187,22 @@ const Checkout = () => {
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Clean full name helper: strip role tags like (Super Admin), Admin, etc.
+  const cleanFullName = (raw: string) => {
+    if (!raw) return "";
+    return raw
+      .replace(/\s*\([^)]*\)/g, "") // removes anything inside parentheses
+      .replace(/\b(super\s*admin|administrator|admin|manager|user)\b/gi, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  };
+
   // Pre-fill user profile and load saved address for tag
   useEffect(() => {
     if (user) {
       // 1. Sanitize user name: strip "(Super Admin)", "(Admin)", etc.
-      const rawName = user.fullName || "";
-      const cleanedName = rawName.replace(/\s*\([^)]*\)/g, "").trim();
-      setFullName(cleanedName || rawName);
+      const cleanedName = cleanFullName(user.fullName || "");
+      setFullName(cleanedName || user.fullName || "");
 
       // 2. Pre-fill phone number from profile/user/localStorage
       const storedPhone = localStorage.getItem("flowmart_user_phone");
@@ -263,7 +272,12 @@ const Checkout = () => {
       const stored = localStorage.getItem("flowmart_active_address");
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (parsed.street && parsed.street !== "Current Location") {
+        if (
+          parsed.street &&
+          parsed.street !== "Current Location" &&
+          parsed.street !== "20" &&
+          parsed.street !== "sterling tower"
+        ) {
           setStreetAddress(parsed.street);
           setAddress(parsed.street + (parsed.zone ? `, ${parsed.zone}` : ""));
           setResolvedZone(parsed.zone || parsed.street);
@@ -281,7 +295,7 @@ const Checkout = () => {
     handleAutoDetectGPS();
   }, []);
 
-  // Load saved address from localStorage when tag changes
+  // Load saved address notes & preferences from localStorage when tag changes
   useEffect(() => {
     try {
       const raw = localStorage.getItem("flowmart_saved_addresses");
@@ -289,20 +303,24 @@ const Checkout = () => {
         const parsed: Record<string, SavedAddressProfile> = JSON.parse(raw);
         if (parsed[addressTag]) {
           const profile = parsed[addressTag];
-          setStreetAddress(profile.street || "");
-          setUnitApartment(profile.unit || "");
-          if (profile.postcode) {
-            setPostcodeQuery(profile.postcode);
-            verifyPostcodeCode(profile.postcode);
-          }
           if (profile.notes) setDeliveryNotes(profile.notes);
           if (profile.dropoff) setDropoffOption(profile.dropoff as any);
+
+          // ONLY update street/postcode if user manually switched to postcode or manual mode
+          if (deliveryMode === "postcode" && profile.postcode) {
+            setPostcodeQuery(profile.postcode);
+            verifyPostcodeCode(profile.postcode);
+            if (profile.street && profile.street !== "20") setStreetAddress(profile.street);
+            if (profile.unit && profile.unit !== "sterling tower") setUnitApartment(profile.unit);
+          } else if (deliveryMode === "manual" && profile.street && profile.street !== "20") {
+            setStreetAddress(profile.street);
+          }
         }
       }
     } catch {
       // Ignore parse errors
     }
-  }, [addressTag]);
+  }, [addressTag, deliveryMode]);
 
   // Close suggestions dropdown on click outside
   useEffect(() => {
