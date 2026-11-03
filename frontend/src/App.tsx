@@ -121,6 +121,7 @@ const AdminFleetShifts = lazy(() => import("./pages/admin/AdminFleetShifts"));
 const AdminDisputeAudit = lazy(() => import("./pages/admin/AdminDisputeAudit"));
 const AdminDispatchReassignment = lazy(() => import("./pages/admin/AdminDispatchReassignment"));
 const AdminColdChain = lazy(() => import("./pages/admin/AdminColdChain"));
+const AdminZenithMissionControl = lazy(() => import("./pages/admin/AdminZenithMissionControl"));
 
 const ProfileLayout = lazy(() => import("./components/user/ProfileLayout"));
 
@@ -273,8 +274,9 @@ function App() {
                 <AdminLayout />
               </ProtectedRoute>
             }>
-              <Route index element={<Navigate to="/admin/dispatch" replace />} />
-              <Route path="dashboard" element={<Navigate to="/admin/dispatch" replace />} />
+              <Route index element={<Navigate to="/admin/zenith" replace />} />
+              <Route path="dashboard" element={<Navigate to="/admin/zenith" replace />} />
+              <Route path="zenith" element={<AdminZenithMissionControl />} />
               <Route path="dispatch" element={<AdminDispatchMap />} />
               <Route path="dispatch-reassignment" element={<AdminDispatchReassignment />} />
               <Route path="cold-chain" element={<AdminColdChain />} />

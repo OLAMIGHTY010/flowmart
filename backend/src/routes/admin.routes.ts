@@ -31,7 +31,12 @@ import {
   getColdChainDeliveries,
   auditColdChainOrder,
   processInsuranceClaim,
-  updateInsurancePolicyConfig
+  updateInsurancePolicyConfig,
+  getZenithHealthTelemetry,
+  toggleServiceKillSwitch,
+  triggerZenithSelfHealing,
+  getZenithAuditEvents,
+  setZenithMaintenanceMode
 } from '../controllers/admin.controller';
 
 import {
@@ -168,5 +173,14 @@ router.get('/cold-chain', authenticateJWT, authorizeRoles('admin', 'dispatcher',
 router.post('/cold-chain/audit', authenticateJWT, authorizeRoles('admin', 'dispatcher', 'superadmin'), auditColdChainOrder);
 router.post('/cold-chain/claims', authenticateJWT, authorizeRoles('admin', 'dispatcher', 'superadmin'), processInsuranceClaim);
 router.post('/cold-chain/config', authenticateJWT, authorizeRoles('admin', 'dispatcher', 'superadmin'), updateInsurancePolicyConfig);
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SPRINT Z: ZENITH MISSION CONTROL — ZERO-DOWNTIME ECOSYSTEM PULSE & KILL-SWITCH GUARDRAILS
+// ══════════════════════════════════════════════════════════════════════════════
+router.get('/zenith/telemetry', authenticateJWT, authorizeRoles('admin', 'dispatcher', 'superadmin', 'super_admin'), getZenithHealthTelemetry);
+router.post('/zenith/killswitch/toggle', authenticateJWT, authorizeRoles('admin', 'superadmin', 'super_admin'), toggleServiceKillSwitch);
+router.post('/zenith/self-heal', authenticateJWT, authorizeRoles('admin', 'dispatcher', 'superadmin', 'super_admin'), triggerZenithSelfHealing);
+router.get('/zenith/audit-events', authenticateJWT, authorizeRoles('admin', 'dispatcher', 'superadmin', 'super_admin'), getZenithAuditEvents);
+router.post('/zenith/maintenance', authenticateJWT, authorizeRoles('superadmin', 'super_admin'), setZenithMaintenanceMode);
 
 export default router;

@@ -15,7 +15,8 @@ import {
   ShieldAlert,
   Zap,
   CalendarClock,
-  Scale
+  Scale,
+  Activity
 } from "lucide-react";
 
 export default function AdminLayout() {
@@ -28,7 +29,10 @@ export default function AdminLayout() {
   };
 
   const navItems = [
+    { name: "Zenith Mission Control", path: "/admin/zenith", icon: <Activity size={20} /> },
     { name: "Live Dispatch Map", path: "/admin/dispatch", icon: <Radio size={20} /> },
+    { name: "Autonomous Reassignment", path: "/admin/dispatch-reassignment", icon: <RefreshCw size={20} /> },
+    { name: "Cold-Chain & Fragile", path: "/admin/cold-chain", icon: <ThermometerSnowflake size={20} /> },
     { name: "Dynamic Surge & Weather", path: "/admin/surge", icon: <Zap size={20} /> },
     { name: "Fleet Shifts & Floor Pay", path: "/admin/shifts", icon: <CalendarClock size={20} /> },
     { name: "AI Dispute & POD Audit", path: "/admin/disputes", icon: <Scale size={20} /> },
