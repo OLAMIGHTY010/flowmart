@@ -64,3 +64,4 @@ Please consult the **[Henceforth Protocol](docs/PROJECT_DOCUMENTATION_AND_CHANGE
 
 ---
 *FlowMart Super App • Copyright © 2026 FlowMart Inc. All Rights Reserved.*
+

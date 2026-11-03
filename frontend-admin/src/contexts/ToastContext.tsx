@@ -1,7 +1,16 @@
-import { createContext, useState } from "react";
+import { createContext, useContext, useState } from "react";
 import type { ToastContextType, ToastState, ToastType } from "@/types/api";
 
 export const ToastContext = createContext<ToastContextType | null>(null);
+
+export const useToast = () => {
+  const context = useContext(ToastContext);
+  return context || {
+    showToast: (message: string, type: ToastType = "success") => console.log(message, type),
+    clearToast: () => {},
+    toast: null,
+  };
+};
 
 export const ToastProvider = ({
   children,

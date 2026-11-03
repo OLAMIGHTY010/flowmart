@@ -109,19 +109,7 @@ const RiderEmergencySOS = lazy(() => import("@/pages/rider/RiderEmergencySOS"));
 const CorporateDashboard = lazy(() => import("@/pages/corporate/CorporateDashboard"));
 const FleetDashboard = lazy(() => import("@/pages/fleet/FleetDashboard"));
 
-// Admin Pages
-const AdminLayout = lazy(() => import("./components/admin/AdminLayout"));
-const AdminVendorKYC = lazy(() => import("./pages/admin/AdminVendorKYC"));
-const AdminRiderKYC = lazy(() => import("./pages/admin/AdminRiderKYC"));
-const AdminDispatchMap = lazy(() => import("./pages/admin/AdminDispatchMap"));
-const AdminRefundsLedger = lazy(() => import("./pages/admin/AdminRefundsLedger"));
-const AdminFraudMatrix = lazy(() => import("./pages/admin/AdminFraudMatrix"));
-const AdminSurgePricing = lazy(() => import("./pages/admin/AdminSurgePricing"));
-const AdminFleetShifts = lazy(() => import("./pages/admin/AdminFleetShifts"));
-const AdminDisputeAudit = lazy(() => import("./pages/admin/AdminDisputeAudit"));
-const AdminDispatchReassignment = lazy(() => import("./pages/admin/AdminDispatchReassignment"));
-const AdminColdChain = lazy(() => import("./pages/admin/AdminColdChain"));
-const AdminZenithMissionControl = lazy(() => import("./pages/admin/AdminZenithMissionControl"));
+// Super Admin isolated in dedicated frontend-admin portal
 
 const ProfileLayout = lazy(() => import("./components/user/ProfileLayout"));
 
@@ -268,26 +256,9 @@ function App() {
               <Route path="/fleet/dashboard" element={<FleetDashboard />} />
             </Route>
 
-            {/*  ? ? ? ADMIN ROUTES  ? ? ? */}
-            <Route path="/admin" element={
-              <ProtectedRoute allowedRoles={["super_admin", "admin"]}>
-                <AdminLayout />
-              </ProtectedRoute>
-            }>
-              <Route index element={<Navigate to="/admin/zenith" replace />} />
-              <Route path="dashboard" element={<Navigate to="/admin/zenith" replace />} />
-              <Route path="zenith" element={<AdminZenithMissionControl />} />
-              <Route path="dispatch" element={<AdminDispatchMap />} />
-              <Route path="dispatch-reassignment" element={<AdminDispatchReassignment />} />
-              <Route path="cold-chain" element={<AdminColdChain />} />
-              <Route path="surge" element={<AdminSurgePricing />} />
-              <Route path="shifts" element={<AdminFleetShifts />} />
-              <Route path="disputes" element={<AdminDisputeAudit />} />
-              <Route path="refunds" element={<AdminRefundsLedger />} />
-              <Route path="fraud" element={<AdminFraudMatrix />} />
-              <Route path="kyc/vendors" element={<AdminVendorKYC />} />
-              <Route path="kyc/riders" element={<AdminRiderKYC />} />
-            </Route>
+            {/* Super Admin isolated in dedicated portal (frontend-admin) */}
+            <Route path="/admin/*" element={<Navigate to="/" replace />} />
+            <Route path="/admin" element={<Navigate to="/" replace />} />
 
             {/* Catch-all */}
             <Route path="*" element={<Navigate to="/" replace />} />

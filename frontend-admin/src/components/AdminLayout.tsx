@@ -18,7 +18,14 @@ import {
   Banknote,
   Wallet,
   MessageSquare,
-  ShieldAlert
+  ShieldAlert,
+  Activity,
+  Radio,
+  RefreshCw,
+  ThermometerSnowflake,
+  Zap,
+  CalendarClock,
+  Scale
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import logo from '@/assets/flowmart-logo.png';
@@ -55,7 +62,16 @@ export default function AdminLayout() {
     
     if (role === 'super_admin' || role === 'admin') {
       return [
-        { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { path: '/zenith', label: 'Zenith Mission Control', icon: Activity },
+        { path: '/dispatch', label: 'Live Dispatch Map', icon: Radio },
+        { path: '/dispatch-reassignment', label: 'Auto Reassignment', icon: RefreshCw },
+        { path: '/cold-chain', label: 'Cold-Chain & Fragile', icon: ThermometerSnowflake },
+        { path: '/surge', label: 'Surge & Weather Engine', icon: Zap },
+        { path: '/shifts', label: 'Fleet Shifts & Floor Pay', icon: CalendarClock },
+        { path: '/disputes-audit', label: 'AI POD Dispute Audit', icon: Scale },
+        { path: '/refunds', label: 'Refunds Ledger', icon: Wallet },
+        { path: '/fraud', label: 'Fraud Risk Matrix', icon: ShieldAlert },
+        { path: '/dashboard', label: 'Operations Dashboard', icon: LayoutDashboard },
         { path: '/users', label: 'User Management', icon: Users },
         { path: '/vendors', label: 'Vendor Approvals', icon: UserCheck },
         { path: '/rider-approvals', label: 'Rider Approvals', icon: UserCheck },
@@ -71,11 +87,16 @@ export default function AdminLayout() {
     } else if (role === 'finance') {
       return [
         { path: '/finance', label: 'Finance Dashboard', icon: Wallet },
+        { path: '/refunds', label: 'Refunds Ledger', icon: Wallet },
         { path: '/logistics-pricing', label: 'Pricing Engine', icon: Banknote },
         { path: '/settings', label: 'Settings', icon: Settings }
       ];
     } else if (role === 'regional_manager' || role === 'logistics_manager') {
       const items = [
+        { path: '/dispatch', label: 'Live Dispatch Map', icon: Radio },
+        { path: '/dispatch-reassignment', label: 'Auto Reassignment', icon: RefreshCw },
+        { path: '/cold-chain', label: 'Cold-Chain Telemetry', icon: ThermometerSnowflake },
+        { path: '/shifts', label: 'Fleet Shifts', icon: CalendarClock },
         { path: '/coordinator-dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { path: '/events/create', label: 'Create Event', icon: PlusCircle },
         { path: '/tracker', label: 'Live Tracker', icon: Truck },
@@ -93,11 +114,15 @@ export default function AdminLayout() {
     } else if (role === 'auditor') {
       const items = [
         { path: '/audit-logs', label: 'System Audit Logs', icon: FileText },
+        { path: '/disputes-audit', label: 'AI Dispute Audit', icon: Scale },
+        { path: '/fraud', label: 'Fraud Risk Matrix', icon: ShieldAlert },
       ];
       return [...items, { path: '/settings', label: 'Settings', icon: Settings }];
     } else if (role === 'customer_service') {
       const items = [
-        { path: '/support', label: 'Support Dashboard', icon: MessageSquare }
+        { path: '/support', label: 'Support Dashboard', icon: MessageSquare },
+        { path: '/disputes-audit', label: 'Disputes Audit', icon: Scale },
+        { path: '/refunds', label: 'Refunds Ledger', icon: Wallet }
       ];
       return [...items, { path: '/settings', label: 'Settings', icon: Settings }];
     }

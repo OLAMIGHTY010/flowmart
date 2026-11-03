@@ -28,6 +28,18 @@ import OtpVerification from "@/pages/OtpVerification";
 import ProfileSetup from "@/pages/ProfileSetup";
 import Settings from "@/pages/Settings";
 import Disputes from "@/pages/Disputes";
+
+// Sprint Advanced Admin Modules (2026)
+import ZenithMissionControl from "@/pages/ZenithMissionControl";
+import DispatchMap from "@/pages/DispatchMap";
+import DispatchReassignment from "@/pages/DispatchReassignment";
+import ColdChain from "@/pages/ColdChain";
+import SurgePricing from "@/pages/SurgePricing";
+import FleetShifts from "@/pages/FleetShifts";
+import DisputeAudit from "@/pages/DisputeAudit";
+import RefundsLedger from "@/pages/RefundsLedger";
+import FraudMatrix from "@/pages/FraudMatrix";
+
 import { createProtectedRoute } from "@/routes/guards/ProtectedRoute";
 
 const queryClient = new QueryClient({
@@ -62,6 +74,16 @@ function App() {
             <Route path="/force-password-change" element={<ForcePasswordChange />} />
             
             <Route element={<AdminLayout />}>
+              <Route path="/zenith" element={<ZenithMissionControl />} />
+              <Route path="/dispatch" element={<DispatchMap />} />
+              <Route path="/dispatch-reassignment" element={<DispatchReassignment />} />
+              <Route path="/cold-chain" element={<ColdChain />} />
+              <Route path="/surge" element={<SurgePricing />} />
+              <Route path="/shifts" element={<FleetShifts />} />
+              <Route path="/disputes-audit" element={<DisputeAudit />} />
+              <Route path="/refunds" element={<RefundsLedger />} />
+              <Route path="/fraud" element={<FraudMatrix />} />
+
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/users" element={<UserManagement />} />
               <Route path="/vendors" element={<VendorApprovals />} />
@@ -78,7 +100,6 @@ function App() {
               <Route path="/support" element={<SupportDashboard />} />
               <Route path="/disputes" element={<Disputes />} />
               <Route path="/settings" element={<Settings />} />
-              {/* Other admin routes will go here later */}
             </Route>
           </Route>
 
