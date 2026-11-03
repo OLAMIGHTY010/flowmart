@@ -35,6 +35,7 @@ import { useToast } from "@/contexts/ToastContext";
 import { apiClient } from "@/services/api";
 import { FlowPassModal } from "@/components/loyalty/FlowPassModal";
 import { SplitBillModal } from "@/components/cart/SplitBillModal";
+import { DeliveryAddressModal } from "@/components/navigation/DeliveryAddressModal";
 import { useAuth } from "@/hooks/useAuth";
 import { getUserCoordinates, reverseGeocode } from "@/utils/geolocation";
 import { PhoneInput } from "@/components/ui/PhoneInput";
@@ -110,13 +111,18 @@ const Checkout = () => {
   const { showToast } = useToast();
   const { user } = useAuth();
 
-  // Mode: Digital Postcode (Primary) vs Manual Map/GPS (Fallback)
-  const [deliveryMode, setDeliveryMode] = useState<"postcode" | "manual">("postcode");
+  // Mode: Auto GPS Location (Instant & Default) vs Digital Postcode vs Manual Map
+  const [deliveryMode, setDeliveryMode] = useState<"gps" | "postcode" | "manual">("gps");
   const [deliveryTiming, setDeliveryTiming] = useState<"express" | "scheduled">("express");
   const [scheduledSlot, setScheduledSlot] = useState<string>("today-lunch");
 
   // Address Tag (Chowdeck feature: Home / Work / Other)
   const [addressTag, setAddressTag] = useState<"home" | "work" | "other">("home");
+
+  // Auto GPS & Saved Address State
+  const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+  const [isDetectingGps, setIsDetectingGps] = useState(false);
+  const [gpsError, setGpsError] = useState<string | null>(null);
 
   // Postcode Integration State
   const [postcodeQuery, setPostcodeQuery] = useState("");
@@ -184,10 +190,96 @@ const Checkout = () => {
   // Pre-fill user profile and load saved address for tag
   useEffect(() => {
     if (user) {
-      setFullName(user.fullName || "");
-      if (user.phone) setPhone(user.phone);
+      // 1. Sanitize user name: strip "(Super Admin)", "(Admin)", etc.
+      const rawName = user.fullName || "";
+      const cleanedName = rawName.replace(/\s*\([^)]*\)/g, "").trim();
+      setFullName(cleanedName || rawName);
+
+      // 2. Pre-fill phone number from profile/user/localStorage
+      const storedPhone = localStorage.getItem("flowmart_user_phone");
+      const phoneCandidate = user.phone || (user as any).phoneNumber || storedPhone || "";
+      if (phoneCandidate) {
+        setPhone(phoneCandidate);
+      } else {
+        apiClient
+          .get<any>("/users/profile")
+          .then((res) => {
+            const apiPhone = res.data?.user?.phone || res.data?.phone;
+            if (apiPhone) {
+              setPhone(apiPhone);
+              try {
+                localStorage.setItem("flowmart_user_phone", apiPhone);
+              } catch {}
+            }
+          })
+          .catch(() => {});
+      }
     }
   }, [user]);
+
+  // Real-time GPS coordinate capture and dual-tier reverse geocoding
+  const handleAutoDetectGPS = async () => {
+    setIsDetectingGps(true);
+    setGpsError(null);
+    try {
+      const coords = await getUserCoordinates(9000);
+      setMapPosition([coords.lat, coords.lng]);
+
+      const geocoded = await reverseGeocode(coords.lat, coords.lng);
+      const street = geocoded.street || "Current Location";
+      const zone = geocoded.zone || "Default Zone";
+      const full = geocoded.fullAddress || `${street}, ${zone}`;
+
+      setStreetAddress(street);
+      setAddress(full);
+      setResolvedZone(zone);
+
+      // Store in localStorage for instant retrieval across pages
+      const activeAddr = {
+        id: `gps-${Date.now()}`,
+        tag: "Current Location",
+        street,
+        zone,
+        icon: "other",
+        coordinates: { lat: coords.lat, lng: coords.lng },
+      };
+      try {
+        localStorage.setItem("flowmart_active_address", JSON.stringify(activeAddr));
+        window.dispatchEvent(new CustomEvent("flowmart:addressChanged", { detail: activeAddr }));
+      } catch {}
+
+      showToast(`Location detected: ${street}`, "success");
+    } catch (err: any) {
+      console.warn("GPS detection failed:", err);
+      setGpsError(err?.message || "Could not detect GPS location. Please check browser permissions.");
+    } finally {
+      setIsDetectingGps(false);
+    }
+  };
+
+  // Auto-detect GPS on component mount without requiring manual entry
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("flowmart_active_address");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.street && parsed.street !== "Current Location") {
+          setStreetAddress(parsed.street);
+          setAddress(parsed.street + (parsed.zone ? `, ${parsed.zone}` : ""));
+          setResolvedZone(parsed.zone || parsed.street);
+          if (parsed.coordinates?.lat && parsed.coordinates?.lng) {
+            setMapPosition([parsed.coordinates.lat, parsed.coordinates.lng]);
+          }
+          return;
+        }
+      }
+    } catch {
+      // ignore
+    }
+
+    // Auto-detect device location via GPS automatically
+    handleAutoDetectGPS();
+  }, []);
 
   // Load saved address from localStorage when tag changes
   useEffect(() => {
@@ -418,10 +510,11 @@ const Checkout = () => {
 
   // Delivery Fee Calculation Effect
   useEffect(() => {
+    const isGpsActive = deliveryMode === "gps" && !!(streetAddress.trim() || address.trim());
     const isPostcodeActive = deliveryMode === "postcode" && !!verifiedPostcode;
     const isManualActive = deliveryMode === "manual" && !!address.trim();
 
-    if (!isPostcodeActive && !isManualActive) {
+    if (!isGpsActive && !isPostcodeActive && !isManualActive) {
       setDeliveryFee(0);
       setResolvedZone(null);
       return;
@@ -435,7 +528,7 @@ const Checkout = () => {
         if (isPostcodeActive) {
           payload.postcode = verifiedPostcode;
         } else {
-          payload.zone = address;
+          payload.zone = resolvedZone || streetAddress || address;
         }
 
         const res = await apiClient.post<{ success: boolean; deliveryCalc?: any }>(
@@ -468,7 +561,7 @@ const Checkout = () => {
     }, 600);
 
     return () => clearTimeout(timer);
-  }, [deliveryMode, verifiedPostcode, address]);
+  }, [deliveryMode, verifiedPostcode, address, streetAddress, resolvedZone]);
 
   const cart = useCartStore((s) => s.cart);
   const clearCart = useCartStore((s) => s.clearCart);
@@ -481,7 +574,9 @@ const Checkout = () => {
   const totalAmount = subtotal + effectiveDeliveryFee + tipAmount;
 
   const isAddressComplete =
-    deliveryMode === "postcode"
+    deliveryMode === "gps"
+      ? !!(streetAddress.trim() || address.trim())
+      : deliveryMode === "postcode"
       ? !!verifiedPostcode && !!streetAddress.trim()
       : !!address.trim();
 
@@ -497,6 +592,8 @@ const Checkout = () => {
       return showToast(
         deliveryMode === "postcode"
           ? "Please verify your postcode and enter your street address"
+          : deliveryMode === "gps"
+          ? "Please wait for GPS location to be detected or choose a saved address"
           : "Please enter your delivery address",
         "error"
       );
@@ -507,21 +604,25 @@ const Checkout = () => {
       const isPostcodeMode = deliveryMode === "postcode" && !!verifiedPostcode;
       
       // Synthesize clean address text with unit/apartment details
-      let formattedStreet = streetAddress.trim();
+      let formattedStreet = (streetAddress || address).trim();
       if (unitApartment.trim()) {
         formattedStreet = `${unitApartment.trim()}, ${formattedStreet}`;
       }
 
       const finalAddressSnapshot = isPostcodeMode
         ? `${formattedStreet}, ${verifiedPostcode}`
-        : address.trim();
+        : formattedStreet || address.trim();
+
+      const targetZone = isPostcodeMode
+        ? (resolvedZone || "Default")
+        : (resolvedZone || streetAddress || address.trim() || "Default");
 
       // Save address profile locally for next time
       try {
         const raw = localStorage.getItem("flowmart_saved_addresses");
         const existing: Record<string, SavedAddressProfile> = raw ? JSON.parse(raw) : {};
         existing[addressTag] = {
-          street: streetAddress.trim(),
+          street: (streetAddress || address).trim(),
           unit: unitApartment.trim(),
           postcode: verifiedPostcode || undefined,
           notes: deliveryNotes.trim() || undefined,
@@ -540,7 +641,7 @@ const Checkout = () => {
         payment_method: paymentMethod === "card" ? "paystack" : paymentMethod,
         deliveryPostcode: isPostcodeMode ? verifiedPostcode : null,
         deliveryAddress: finalAddressSnapshot,
-        zone: isPostcodeMode ? (resolvedZone || "Default") : address.trim(),
+        zone: targetZone,
         phone: phone,
         tipAmount: tipAmount > 0 ? tipAmount : undefined,
         dropoffOption,
@@ -583,6 +684,8 @@ const Checkout = () => {
       return showToast(
         deliveryMode === "postcode"
           ? "Please verify your postcode and enter your street address"
+          : deliveryMode === "gps"
+          ? "Please wait for GPS location to be detected or choose a saved address"
           : "Please enter your delivery address",
         "error"
       );
@@ -591,14 +694,18 @@ const Checkout = () => {
     setIsSubmitting(true);
     try {
       const isPostcodeMode = deliveryMode === "postcode" && !!verifiedPostcode;
-      let formattedStreet = streetAddress.trim();
+      let formattedStreet = (streetAddress || address).trim();
       if (unitApartment.trim()) {
         formattedStreet = `${unitApartment.trim()}, ${formattedStreet}`;
       }
 
       const finalAddressSnapshot = isPostcodeMode
         ? `${formattedStreet}, ${verifiedPostcode}`
-        : address.trim();
+        : formattedStreet || address.trim();
+
+      const targetZone = isPostcodeMode
+        ? (resolvedZone || "Default")
+        : (resolvedZone || streetAddress || address.trim() || "Default");
 
       const payload = {
         items: cart.map((item) => ({
@@ -608,7 +715,7 @@ const Checkout = () => {
         payment_method: "paystack",
         deliveryPostcode: isPostcodeMode ? verifiedPostcode : null,
         deliveryAddress: finalAddressSnapshot,
-        zone: isPostcodeMode ? (resolvedZone || "Default") : address.trim(),
+        zone: targetZone,
         phone: phone,
         tipAmount: tipAmount > 0 ? tipAmount : undefined,
         dropoffOption,
@@ -756,8 +863,48 @@ return (
                   padding: 4,
                   borderRadius: "var(--radius-lg, 8px)",
                   gap: 4,
+                  flexWrap: "wrap",
                 }}
               >
+                <button
+                  type="button"
+                  onClick={() => setDeliveryMode("gps")}
+                  style={{
+                    padding: "6px 14px",
+                    borderRadius: "var(--radius-md, 6px)",
+                    fontSize: "0.813rem",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    border: "none",
+                    transition: "all var(--transition-fast, 0.2s)",
+                    backgroundColor:
+                      deliveryMode === "gps" ? "var(--color-bg-primary, #ffffff)" : "transparent",
+                    color:
+                      deliveryMode === "gps"
+                        ? "var(--color-primary)"
+                        : "var(--color-text-muted)",
+                    boxShadow:
+                      deliveryMode === "gps" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  <MapPin size={14} />
+                  Auto GPS Location
+                  <span
+                    style={{
+                      fontSize: "0.65rem",
+                      padding: "1px 6px",
+                      borderRadius: 9999,
+                      backgroundColor: "#ecfdf5",
+                      color: "#059669",
+                      fontWeight: 800,
+                    }}
+                  >
+                    LIVE
+                  </span>
+                </button>
                 <button
                   type="button"
                   onClick={() => setDeliveryMode("postcode")}
@@ -872,7 +1019,7 @@ return (
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16 }}>
-              {/* Recipient Full Name */}
+              {/* Recipient Full Name & Phone Number */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 <div>
                   <label
@@ -883,21 +1030,261 @@ return (
                       marginBottom: 6,
                     }}
                   >
-                    Full Name
+                    Recipient Full Name *
                   </label>
                   <input
                     required
                     type="text"
                     className="input-field"
+                    placeholder="e.g. Samuel Adeleke"
                     value={fullName}
-                    readOnly
-                    style={{ backgroundColor: "var(--color-bg-secondary)", opacity: 0.85 }}
+                    onChange={(e) => setFullName(e.target.value)}
+                    style={{ backgroundColor: "var(--color-bg-primary)" }}
                   />
                 </div>
                 <div>
-                  <PhoneInput label="Phone Number" value={phone} onChange={setPhone} required />
+                  <PhoneInput
+                    label="Phone Number"
+                    value={phone}
+                    onChange={(val) => {
+                      setPhone(val);
+                      if (val && val.length > 5) {
+                        try {
+                          localStorage.setItem("flowmart_user_phone", val);
+                        } catch {}
+                      }
+                    }}
+                    required
+                  />
                 </div>
               </div>
+
+              {/* -------------------- TAB 0: AUTO GPS LOCATION (NO MANUAL FILLING) -------------------- */}
+              {deliveryMode === "gps" && (
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 14,
+                    padding: 16,
+                    borderRadius: 14,
+                    backgroundColor: "var(--color-bg-secondary, #f9fafb)",
+                    border: "1.5px solid var(--color-border, #e5e7eb)",
+                  }}
+                >
+                  {isDetectingGps ? (
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 14,
+                        padding: "20px 16px",
+                        backgroundColor: "var(--color-bg-primary, #ffffff)",
+                        borderRadius: 12,
+                        border: "1px dashed var(--color-primary)",
+                      }}
+                    >
+                      <RefreshCw size={24} className="animate-spin" style={{ color: "var(--color-primary)", flexShrink: 0 }} />
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: "0.938rem", color: "var(--color-text-primary)" }}>
+                          Detecting your current location via GPS...
+                        </div>
+                        <div style={{ fontSize: "0.813rem", color: "var(--color-text-muted)", marginTop: 2 }}>
+                          Reverse-geocoding real street name and delivery zone automatically. Zero manual filling required.
+                        </div>
+                      </div>
+                    </div>
+                  ) : streetAddress || address ? (
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 12,
+                      }}
+                    >
+                      {/* Main Detected Address Card */}
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "flex-start",
+                          justifyContent: "space-between",
+                          padding: 16,
+                          borderRadius: 12,
+                          backgroundColor: "var(--color-bg-primary, #ffffff)",
+                          border: "1.5px solid rgba(16, 185, 129, 0.4)",
+                          boxShadow: "0 2px 8px rgba(16, 185, 129, 0.08)",
+                          gap: 12,
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "flex-start", gap: 12, flex: 1, minWidth: 260 }}>
+                          <div
+                            style={{
+                              width: 40,
+                              height: 40,
+                              borderRadius: 10,
+                              backgroundColor: "#ecfdf5",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              flexShrink: 0,
+                              color: "#10b981",
+                            }}
+                          >
+                            <MapPin size={22} />
+                          </div>
+                          <div>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
+                              <span
+                                style={{
+                                  fontSize: "0.7rem",
+                                  fontWeight: 800,
+                                  letterSpacing: "0.5px",
+                                  padding: "2px 8px",
+                                  borderRadius: 9999,
+                                  backgroundColor: "#d1fae5",
+                                  color: "#065f46",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 5,
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    width: 6,
+                                    height: 6,
+                                    borderRadius: "50%",
+                                    backgroundColor: "#10b981",
+                                    display: "inline-block",
+                                  }}
+                                />
+                                REAL-TIME GPS VERIFIED
+                              </span>
+                              <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
+                                Auto-detected from device
+                              </span>
+                            </div>
+                            <div
+                              style={{
+                                fontSize: "1rem",
+                                fontWeight: 700,
+                                color: "var(--color-text-primary)",
+                                lineHeight: 1.35,
+                              }}
+                            >
+                              {streetAddress || address}
+                            </div>
+                            {resolvedZone && (
+                              <div style={{ fontSize: "0.813rem", color: "var(--color-text-muted)", marginTop: 2 }}>
+                                Delivery Zone: <strong style={{ color: "var(--color-text-secondary)" }}>{resolvedZone}</strong>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Action buttons */}
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, alignSelf: "center" }}>
+                          <button
+                            type="button"
+                            onClick={handleAutoDetectGPS}
+                            disabled={isDetectingGps}
+                            className="btn-secondary"
+                            style={{
+                              fontSize: "0.813rem",
+                              padding: "8px 14px",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 6,
+                              fontWeight: 600,
+                              borderRadius: 8,
+                            }}
+                          >
+                            <RefreshCw size={13} className={isDetectingGps ? "animate-spin" : ""} />
+                            Re-detect GPS
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setIsAddressModalOpen(true)}
+                            className="btn-secondary"
+                            style={{
+                              fontSize: "0.813rem",
+                              padding: "8px 14px",
+                              fontWeight: 600,
+                              borderRadius: 8,
+                            }}
+                          >
+                            Choose Saved
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Optional Apartment / Unit / Landmark */}
+                      <div>
+                        <label
+                          style={{
+                            display: "block",
+                            fontSize: "0.813rem",
+                            fontWeight: 600,
+                            color: "var(--color-text-muted)",
+                            marginBottom: 6,
+                          }}
+                        >
+                          Apartment, Suite, Unit, or Landmark (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          className="input-field"
+                          placeholder="e.g. Flat 3B, Emerald Block, Gate 2"
+                          value={unitApartment}
+                          onChange={(e) => setUnitApartment(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        padding: 16,
+                        borderRadius: 12,
+                        backgroundColor: "#fffbeb",
+                        border: "1px solid #fde68a",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 10,
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <AlertCircle size={20} style={{ color: "#d97706", flexShrink: 0 }} />
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: "0.875rem", color: "#92400e" }}>
+                            {gpsError || "GPS Location not detected"}
+                          </div>
+                          <div style={{ fontSize: "0.813rem", color: "#b45309" }}>
+                            Please allow location permissions or select an address below.
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+                        <button
+                          type="button"
+                          onClick={handleAutoDetectGPS}
+                          className="btn-primary"
+                          style={{ fontSize: "0.813rem", padding: "6px 14px", height: "auto" }}
+                        >
+                          Try GPS Again
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setIsAddressModalOpen(true)}
+                          className="btn-secondary"
+                          style={{ fontSize: "0.813rem", padding: "6px 14px", height: "auto" }}
+                        >
+                          Choose Saved Address
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* -------------------- TAB 1: DIGITAL POSTCODE -------------------- */}
               {deliveryMode === "postcode" && (
@@ -2260,6 +2647,18 @@ return (
         isOpen={isFlowPassModalOpen}
         onClose={() => setIsFlowPassModalOpen(false)}
         onSubscribed={() => setIsFlowPassActive(true)}
+      />
+
+      {/* Saved Delivery Address Selector Modal */}
+      <DeliveryAddressModal
+        isOpen={isAddressModalOpen}
+        onClose={() => setIsAddressModalOpen(false)}
+        onAddressSelect={(selected) => {
+          setStreetAddress(selected.street);
+          setAddress(`${selected.street}, ${selected.zone}`);
+          setResolvedZone(selected.zone);
+          setDeliveryMode("gps");
+        }}
       />
 
       {/* Chowdeck-Grade "Pay For Me" Social Checkout Modal */}
