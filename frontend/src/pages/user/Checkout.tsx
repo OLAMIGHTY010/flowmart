@@ -36,6 +36,7 @@ import { apiClient } from "@/services/api";
 import { FlowPassModal } from "@/components/loyalty/FlowPassModal";
 import { SplitBillModal } from "@/components/cart/SplitBillModal";
 import { useAuth } from "@/hooks/useAuth";
+import { getUserCoordinates, reverseGeocode } from "@/utils/geolocation";
 import { PhoneInput } from "@/components/ui/PhoneInput";
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -69,15 +70,8 @@ const LocationPicker = ({ position, setPosition, setAddress, setIsManualInput }:
       setAddress("Fetching location details...");
 
       try {
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
-        );
-        const data = await res.json();
-        if (data && data.display_name) {
-          setAddress(data.display_name);
-        } else {
-          setAddress(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
-        }
+        const geo = await reverseGeocode(lat, lng);
+        setAddress(geo.fullAddress || geo.street);
       } catch (err) {
         setAddress(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
       }
@@ -370,44 +364,26 @@ const Checkout = () => {
   };
 
   // Manual Geolocation Handler
-  const handleGetLocation = () => {
-    if (!navigator.geolocation) {
-      showToast("Geolocation is not supported by your browser", "error");
-      return;
-    }
+  const handleGetLocation = async () => {
     setIsManualInput(false);
     setIsLoadingLocation(true);
     setAddress("Fetching your current location...");
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-        setMapPosition([lat, lng]);
 
-        try {
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
-          );
-          const data = await res.json();
-          if (data && data.display_name) {
-            setAddress(data.display_name);
-          } else {
-            setAddress(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
-          }
-        } catch (err) {
-          setAddress(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
-        }
+    try {
+      const coords = await getUserCoordinates();
+      setMapPosition([coords.lat, coords.lng]);
 
-        setIsLoadingLocation(false);
-        showToast("Location captured successfully", "success");
-      },
-      () => {
-        setIsLoadingLocation(false);
-        showToast("Unable to retrieve your location", "error");
-        setAddress("");
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
+      const geo = await reverseGeocode(coords.lat, coords.lng);
+      setAddress(geo.fullAddress || geo.street);
+      setStreetAddress(geo.street);
+
+      setIsLoadingLocation(false);
+      showToast("Location detected: " + geo.street, "success");
+    } catch (err: any) {
+      setIsLoadingLocation(false);
+      showToast(err?.message || "Unable to retrieve your location", "error");
+      setAddress("");
+    }
   };
 
   // Address Geocoding Effect (for manual typing)

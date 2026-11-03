@@ -45,6 +45,37 @@ const Navbar = () => {
       }
     };
     window.addEventListener("flowmart:addressChanged", handleAddressChange);
+
+    // Auto-detect real location on first visit if permission is granted
+    const raw = localStorage.getItem("flowmart_active_address");
+    if (!raw && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          try {
+            const { reverseGeocode } = await import("@/utils/geolocation");
+            const geo = await reverseGeocode(pos.coords.latitude, pos.coords.longitude);
+            if (geo?.street) {
+              const autoAddr = {
+                id: `loc-${Date.now()}`,
+                tag: "Current Location",
+                street: geo.street,
+                zone: geo.zone,
+                icon: "other",
+                coordinates: { lat: pos.coords.latitude, lng: pos.coords.longitude },
+              };
+              localStorage.setItem("flowmart_active_address", JSON.stringify(autoAddr));
+              setCurrentAddress(geo.street);
+              window.dispatchEvent(new CustomEvent("flowmart:addressChanged", { detail: autoAddr }));
+            }
+          } catch {
+            // Keep default safely
+          }
+        },
+        () => {},
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 300000 }
+      );
+    }
+
     return () => window.removeEventListener("flowmart:addressChanged", handleAddressChange);
   }, []);
 

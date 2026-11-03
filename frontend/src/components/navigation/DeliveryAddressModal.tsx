@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { 
   MapPin, 
   Navigation, 
@@ -7,16 +7,24 @@ import {
   Check, 
   X, 
   Search, 
-  Plus, 
-  Sparkles 
+  Sparkles,
+  Loader2,
+  AlertCircle
 } from "lucide-react";
+import { 
+  getUserCoordinates, 
+  reverseGeocode, 
+  searchLocationSuggestions, 
+  type AddressSuggestion 
+} from "@/utils/geolocation";
 
-interface SavedAddress {
+export interface SavedAddress {
   id: string;
   tag: string;
   street: string;
   zone: string;
   icon: "home" | "office" | "other";
+  coordinates?: { lat: number; lng: number };
 }
 
 const DEFAULT_SAVED_ADDRESSES: SavedAddress[] = [
@@ -24,21 +32,21 @@ const DEFAULT_SAVED_ADDRESSES: SavedAddress[] = [
     id: "addr-1",
     tag: "Home",
     street: "14 Admiralty Way, Lekki Phase 1",
-    zone: "Lekki / Victoria Island",
+    zone: "Lekki Phase 1, Lagos",
     icon: "home",
   },
   {
     id: "addr-2",
     tag: "Office",
     street: "Plot 8, Karimu Kotun, Victoria Island",
-    zone: "Victoria Island / Ikoyi",
+    zone: "Victoria Island, Lagos",
     icon: "office",
   },
   {
     id: "addr-3",
     tag: "Studio",
     street: "24 Isaac John Street, Ikeja GRA",
-    zone: "Ikeja / Mainland",
+    zone: "Ikeja GRA, Lagos",
     icon: "other",
   },
 ];
@@ -57,6 +65,13 @@ export const DeliveryAddressModal: React.FC<DeliveryAddressModalProps> = ({
   const [activeId, setActiveId] = useState("addr-1");
   const [customInput, setCustomInput] = useState("");
   const [isLocating, setIsLocating] = useState(false);
+  const [locatingStatus, setLocatingStatus] = useState("");
+  const [locationError, setLocationError] = useState<string | null>(null);
+
+  // Suggestions state
+  const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     try {
@@ -69,6 +84,33 @@ export const DeliveryAddressModal: React.FC<DeliveryAddressModalProps> = ({
       // ignore
     }
   }, [isOpen]);
+
+  // Live autocomplete search effect
+  useEffect(() => {
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+
+    if (customInput.trim().length < 3) {
+      setSuggestions([]);
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        const results = await searchLocationSuggestions(customInput.trim());
+        setSuggestions(results);
+      } catch {
+        setSuggestions([]);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 350);
+
+    return () => {
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    };
+  }, [customInput]);
 
   if (!isOpen) return null;
 
@@ -84,31 +126,45 @@ export const DeliveryAddressModal: React.FC<DeliveryAddressModalProps> = ({
     onClose();
   };
 
-  const handleUseCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser");
-      return;
-    }
-
+  const handleUseCurrentLocation = async () => {
     setIsLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setIsLocating(false);
-        const autoAddr: SavedAddress = {
-          id: `loc-${Date.now()}`,
-          tag: "Current Location",
-          street: "Detected GPS Location (Lekki, Lagos)",
-          zone: "Lekki Phase 1",
-          icon: "other",
-        };
-        handleSelect(autoAddr);
-      },
-      (err) => {
-        setIsLocating(false);
-        alert("Unable to retrieve location. Please select or search manually.");
-      },
-      { timeout: 8000 }
-    );
+    setLocationError(null);
+    setLocatingStatus("Requesting device GPS coordinates...");
+
+    try {
+      const coords = await getUserCoordinates();
+      setLocatingStatus("Resolving real street address...");
+
+      const geocoded = await reverseGeocode(coords.lat, coords.lng);
+
+      const autoAddr: SavedAddress = {
+        id: `loc-${Date.now()}`,
+        tag: "Current Location",
+        street: geocoded.street,
+        zone: geocoded.zone,
+        icon: "other",
+        coordinates: { lat: coords.lat, lng: coords.lng },
+      };
+
+      handleSelect(autoAddr);
+    } catch (err: any) {
+      setLocationError(err?.message || "Failed to detect location. Please check browser permissions.");
+    } finally {
+      setIsLocating(false);
+      setLocatingStatus("");
+    }
+  };
+
+  const handleSuggestionClick = (sug: AddressSuggestion) => {
+    const newAddr: SavedAddress = {
+      id: `addr-${Date.now()}`,
+      tag: sug.street.split(",")[0] || "Saved Location",
+      street: sug.street,
+      zone: sug.zone,
+      icon: "other",
+      coordinates: { lat: sug.latitude, lng: sug.longitude },
+    };
+    handleSelect(newAddr);
   };
 
   const handleCustomSubmit = (e: React.FormEvent) => {
@@ -119,7 +175,7 @@ export const DeliveryAddressModal: React.FC<DeliveryAddressModalProps> = ({
       id: `addr-${Date.now()}`,
       tag: "Custom Address",
       street: customInput.trim(),
-      zone: "Lagos Central",
+      zone: "Lagos, Nigeria",
       icon: "other",
     };
     handleSelect(newAddr);
@@ -205,6 +261,27 @@ export const DeliveryAddressModal: React.FC<DeliveryAddressModalProps> = ({
 
         {/* Search bar & GPS Action */}
         <div style={{ padding: "20px 24px 12px 24px" }}>
+          {/* Error Banner */}
+          {locationError && (
+            <div
+              style={{
+                marginBottom: 12,
+                padding: "10px 14px",
+                borderRadius: 12,
+                backgroundColor: "#fef2f2",
+                border: "1px solid #fecaca",
+                color: "#991b1b",
+                fontSize: "0.75rem",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+              }}
+            >
+              <AlertCircle size={16} className="shrink-0" />
+              <span>{locationError}</span>
+            </div>
+          )}
+
           {/* Geolocation Button */}
           <button
             type="button"
@@ -215,7 +292,7 @@ export const DeliveryAddressModal: React.FC<DeliveryAddressModalProps> = ({
               padding: "12px 16px",
               borderRadius: 14,
               border: "1.5px solid #4f46e5",
-              backgroundColor: "#eef2ff",
+              backgroundColor: isLocating ? "#f5f3ff" : "#eef2ff",
               color: "#4f46e5",
               fontSize: "0.875rem",
               fontWeight: 700,
@@ -228,8 +305,12 @@ export const DeliveryAddressModal: React.FC<DeliveryAddressModalProps> = ({
               transition: "all 0.15s ease",
             }}
           >
-            <Navigation size={16} />
-            <span>{isLocating ? "Detecting GPS Position..." : "Use Current GPS Location"}</span>
+            {isLocating ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Navigation size={16} />
+            )}
+            <span>{isLocating ? locatingStatus || "Detecting GPS Location..." : "Use Current GPS Location"}</span>
           </button>
 
           {/* Manual Address Input */}
@@ -260,7 +341,20 @@ export const DeliveryAddressModal: React.FC<DeliveryAddressModalProps> = ({
                 color: "#0f172a",
               }}
             />
-            {customInput.trim() && (
+            {isSearching && (
+              <div
+                style={{
+                  position: "absolute",
+                  right: 12,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  color: "#94a3b8",
+                }}
+              >
+                <Loader2 size={16} className="animate-spin" />
+              </div>
+            )}
+            {customInput.trim() && !isSearching && (
               <button
                 type="submit"
                 style={{
@@ -282,6 +376,48 @@ export const DeliveryAddressModal: React.FC<DeliveryAddressModalProps> = ({
               </button>
             )}
           </form>
+
+          {/* Autocomplete Dropdown */}
+          {suggestions.length > 0 && (
+            <div
+              style={{
+                marginTop: 8,
+                borderRadius: 14,
+                border: "1px solid #e2e8f0",
+                backgroundColor: "#ffffff",
+                boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+                maxHeight: 180,
+                overflowY: "auto",
+              }}
+            >
+              {suggestions.map((sug, i) => (
+                <div
+                  key={i}
+                  onClick={() => handleSuggestionClick(sug)}
+                  style={{
+                    padding: "10px 14px",
+                    borderBottom: i === suggestions.length - 1 ? "none" : "1px solid #f1f5f9",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 10,
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f8fafc")}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#ffffff")}
+                >
+                  <MapPin size={16} color="#4f46e5" style={{ marginTop: 2, flexShrink: 0 }} />
+                  <div>
+                    <p style={{ margin: 0, fontSize: "0.813rem", fontWeight: 700, color: "#0f172a" }}>
+                      {sug.street}
+                    </p>
+                    <p style={{ margin: "2px 0 0 0", fontSize: "0.688rem", color: "#64748b" }}>
+                      {sug.displayName}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Saved Addresses List */}
