@@ -26,8 +26,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<AppUser | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-
-
   useEffect(() => {
     const checkActiveSession = async () => {
       const token = localStorage.getItem("accessToken");
@@ -50,7 +48,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           setUser(fetchedUser);
           localStorage.setItem("currentUser", JSON.stringify(fetchedUser));
         } catch (error) {
-          console.warn("Session check from API failed, using cached session or logging out:", error);
+          console.warn("Session check from API failed, using cached session:", error);
           if (!savedUser) {
             localStorage.clear();
           }
@@ -73,7 +71,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return () => window.removeEventListener("auth:logout", handleGlobalLogout);
   }, []);
 
-  // UPDATED: Now receives idToken and passes it down correctly
   const loginWithGoogle = async (idToken: string, role: UserRole) => {
     try {
       const response = await authService.googleAuth({ idToken, role });
@@ -95,7 +92,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  // 5. Clean Logout
   const logout = async () => {
     try {
       await authService.logout();
@@ -105,6 +101,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       localStorage.clear();
       document.cookie = "app_session_active=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
       setUser(null);
+    }
+  };
+
+  const setAuthUser = (newUser: AppUser, token?: string) => {
+    setUser(newUser);
+    localStorage.setItem("currentUser", JSON.stringify(newUser));
+    if (token) {
+      localStorage.setItem("accessToken", token);
     }
   };
 
@@ -118,7 +122,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         localStorage.setItem("currentUser", JSON.stringify(fetchedUser));
       }
     } catch (err) {
-      console.error("Failed to refresh user session:", err);
+      console.warn("Failed to refresh user session from API, using saved user:", err);
+      const savedUser = localStorage.getItem("currentUser");
+      if (savedUser) {
+        try {
+          setUser(JSON.parse(savedUser));
+        } catch {
+          // ignore
+        }
+      }
     }
   };
 
@@ -127,7 +139,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     isLoading,
     loginWithGoogle,
     logout,
-    refreshUser
+    refreshUser,
+    setAuthUser
   }), [user, isLoading]);
 
   return (

@@ -24,7 +24,10 @@ export default function VendorDashboard() {
   
   const { data: kycStatus, isLoading: kycLoading } = useKYCStatus();
 
+  const isDemoVendor = !!(user?.id?.startsWith('usr-vendor') || user?.email?.includes('merchant@') || localStorage.getItem('accessToken')?.startsWith('demo_'));
+
   useEffect(() => {
+    if (isDemoVendor) return;
     if (!kycLoading && kycStatus) {
       if (kycStatus.status === 'unsubmitted') {
         if (!user?.profileCompleted) {
@@ -36,7 +39,7 @@ export default function VendorDashboard() {
         navigate('/kyc/verification', { replace: true });
       }
     }
-  }, [kycStatus, kycLoading, user, navigate]);
+  }, [kycStatus, kycLoading, user, navigate, isDemoVendor]);
 
   // Tab State: 'dashboard' | 'products' | 'orders' | 'analytics' | 'coupons' | 'wallet' | 'reviews' | 'store' | 'profile'
   const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'orders' | 'analytics' | 'coupons' | 'wallet' | 'reviews' | 'store' | 'profile'>('dashboard');
@@ -45,7 +48,7 @@ export default function VendorDashboard() {
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
   const { data: orders, isLoading: ordersLoading } = useOrders();
 
-  if (kycLoading || (kycStatus && kycStatus.status !== 'approved')) {
+  if (!isDemoVendor && (kycLoading || (kycStatus && kycStatus.status !== 'approved'))) {
     return (
       <div className="min-h-screen bg-background">
         <DashboardSkeleton />

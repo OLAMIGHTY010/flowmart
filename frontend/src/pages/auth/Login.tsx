@@ -16,7 +16,7 @@ import type { UserRole, AppUser } from "@/types/api";
 import { authService } from "@/services/AuthServices";
 
 const Login = () => {
-  const { loginWithGoogle, refreshUser } = useAuth();
+  const { loginWithGoogle, refreshUser, setAuthUser } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
 
@@ -110,14 +110,8 @@ const Login = () => {
     const targetUser = demoUsers[role] || demoUsers.user!;
     const fakeToken = "demo_jwt_token_" + btoa(JSON.stringify(targetUser));
 
-    localStorage.setItem("accessToken", fakeToken);
-    localStorage.setItem("currentUser", JSON.stringify(targetUser));
-
-    try {
-      await refreshUser();
-    } catch {
-      // ignore
-    }
+    // Immediately update AuthContext and LocalStorage
+    setAuthUser(targetUser, fakeToken);
 
     showToast(`Signed in as ${targetUser.fullName}!`, "success");
     setIsLoading(false);

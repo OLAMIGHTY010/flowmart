@@ -38,6 +38,12 @@ class ApiClient {
         const status = error.response?.status;
 
         if (status === 401) {
+          const token = localStorage.getItem('accessToken');
+          if (token && token.startsWith('demo_')) {
+            console.warn('Demo session 401 response from backend, preserving local session.');
+            return Promise.reject(error);
+          }
+
           console.warn('Unauthorized: Token expired or invalid.');
 
           localStorage.clear();
