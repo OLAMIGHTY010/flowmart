@@ -7,34 +7,24 @@ import {
   ShieldCheck,
   ArrowLeft,
   CheckCircle2,
-  Mail,
-  Lock,
   Sparkles,
   Store,
   Bike,
-  User,
-  Zap,
-  Radio
+  User
 } from "lucide-react";
 import type { UserRole, AppUser } from "@/types/api";
 import { authService } from "@/services/AuthServices";
-import { apiClient } from "@/services/api";
 
 const Login = () => {
   const { loginWithGoogle, refreshUser } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
 
-  const [authMode, setAuthMode] = useState<"google" | "staff">("google");
   const [isLoading, setIsLoading] = useState(false);
   const [showOtp, setShowOtp] = useState(false);
   const [otpValue, setOtpValue] = useState("");
   const [unverifiedEmail, setUnverifiedEmail] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
-
-  // Staff Credentials Form
-  const [staffEmail, setStaffEmail] = useState("superadmin@flowmart.com");
-  const [staffPassword, setStaffPassword] = useState("Admin@123456");
 
   const selectedRole = (localStorage.getItem("selectedRole") as UserRole) || "user";
 
@@ -43,7 +33,8 @@ const Login = () => {
       case "super_admin":
       case "admin":
       case "logistics_manager":
-        navigate("/admin/dispatch");
+        // Redirect operations staff/admins to their dedicated standalone Super Admin portal
+        window.location.href = "https://flowmart-iota.vercel.app";
         break;
       case "vendor":
         if (!u.profileCompleted) navigate("/profile-setup");
@@ -85,47 +76,22 @@ const Login = () => {
     setIsLoading(false);
   };
 
-  // Staff Email/Password Login
-  const handleStaffLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    try {
-      const res = await apiClient.post("/auth/login", { email: staffEmail, password: staffPassword });
-      const data = (res as any).data || res;
-      if (data.token && data.user) {
-        localStorage.setItem("accessToken", data.token);
-        localStorage.setItem("currentUser", JSON.stringify(data.user));
-        await refreshUser();
-        showToast("Logged in as Operations Staff!", "success");
-        routeUser(data.user);
-      } else {
-        // Fallback for dev / offline demo staff authentication
-        handleDemoLogin("super_admin");
-      }
-    } catch (err: any) {
-      // In local dev without remote db connection, gracefully log in as Super Admin
-      handleDemoLogin("super_admin");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // 1-Tap Fast Switcher for Operations & Dev Testing
+  // 1-Tap Fast Switcher for Users Portal (Customer, Merchant, Rider)
   const handleDemoLogin = async (role: UserRole) => {
     setIsLoading(true);
 
     const demoUsers: Partial<Record<UserRole, AppUser>> = {
-      super_admin: {
-        id: "usr-admin-01",
-        fullName: "Samuel Adeleke (Super Admin)",
-        email: "superadmin@flowmart.com",
-        role: "super_admin",
+      user: {
+        id: "usr-customer-01",
+        fullName: "Folake Adebayo",
+        email: "customer@flowmart.com",
+        role: "user",
         isVerified: true,
         profileCompleted: true
       },
       vendor: {
         id: "usr-vendor-01",
-        fullName: "Mama Put Delights (Kitchen Merchant)",
+        fullName: "Mama Put Delights",
         email: "merchant@mamaput.ng",
         role: "vendor",
         isVerified: true,
@@ -133,56 +99,15 @@ const Login = () => {
       },
       dispatch_rider: {
         id: "usr-rider-01",
-        fullName: "Tunde Adebayo (Champion Courier)",
+        fullName: "Tunde Adebayo",
         email: "tunde.rider@flowmart.com",
         role: "dispatch_rider",
-        isVerified: true,
-        profileCompleted: true
-      },
-      user: {
-        id: "usr-customer-01",
-        fullName: "Folake Adebayo (Customer VIP)",
-        email: "folake.adebayo@gmail.com",
-        role: "user",
-        isVerified: true,
-        profileCompleted: true
-      },
-      admin: {
-        id: "usr-admin-02",
-        fullName: "Operations Admin",
-        email: "ops@flowmart.com",
-        role: "admin",
-        isVerified: true,
-        profileCompleted: true
-      },
-      logistics_manager: {
-        id: "usr-logistics-01",
-        fullName: "Logistics Controller",
-        email: "logistics@flowmart.com",
-        role: "logistics_manager",
-        isVerified: true,
-        profileCompleted: true
-      },
-      regional_manager: {
-        id: "usr-regional-01",
-        fullName: "Regional Lead",
-        email: "regional@flowmart.com",
-        role: "regional_manager",
-        isVerified: true,
-        profileCompleted: true
-      },
-      
-      fleet_manager: {
-        id: "usr-fleet-01",
-        fullName: "Fleet Commander",
-        email: "fleet@flowmart.com",
-        role: "fleet_manager",
         isVerified: true,
         profileCompleted: true
       }
     };
 
-    const targetUser = demoUsers[role] || demoUsers.super_admin;
+    const targetUser = demoUsers[role] || demoUsers.user!;
     const fakeToken = "demo_jwt_token_" + btoa(JSON.stringify(targetUser));
 
     localStorage.setItem("accessToken", fakeToken);
@@ -398,61 +323,8 @@ const Login = () => {
             >
               {showOtp
                 ? "Enter the 6-digit code sent to your email."
-                : "Sign in to your FlowMart multi-platform account"}
+                : "Sign in to your FlowMart account"}
             </p>
-
-            {/* Mode Switcher Tabs */}
-            {!showOtp && (
-              <div
-                style={{
-                  display: "flex",
-                  backgroundColor: "var(--color-bg-secondary, #f1f5f9)",
-                  padding: 4,
-                  borderRadius: 12,
-                  marginBottom: 24,
-                  border: "1px solid var(--color-border, #e2e8f0)"
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={() => setAuthMode("google")}
-                  style={{
-                    flex: 1,
-                    padding: "8px 12px",
-                    borderRadius: 8,
-                    fontSize: "0.813rem",
-                    fontWeight: 700,
-                    border: "none",
-                    cursor: "pointer",
-                    transition: "all 0.2s",
-                    backgroundColor: authMode === "google" ? "#ffffff" : "transparent",
-                    color: authMode === "google" ? "#4f46e5" : "var(--color-text-secondary, #64748b)",
-                    boxShadow: authMode === "google" ? "0 2px 4px rgba(0,0,0,0.06)" : "none"
-                  }}
-                >
-                  Google OAuth
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setAuthMode("staff")}
-                  style={{
-                    flex: 1,
-                    padding: "8px 12px",
-                    borderRadius: 8,
-                    fontSize: "0.813rem",
-                    fontWeight: 700,
-                    border: "none",
-                    cursor: "pointer",
-                    transition: "all 0.2s",
-                    backgroundColor: authMode === "staff" ? "#ffffff" : "transparent",
-                    color: authMode === "staff" ? "#4f46e5" : "var(--color-text-secondary, #64748b)",
-                    boxShadow: authMode === "staff" ? "0 2px 4px rgba(0,0,0,0.06)" : "none"
-                  }}
-                >
-                  Operations Staff / Admin
-                </button>
-              </div>
-            )}
 
             {showOtp ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 32 }}>
@@ -503,76 +375,6 @@ const Login = () => {
                   Resend Code
                 </button>
               </div>
-            ) : authMode === "staff" ? (
-              /* Staff Email / Password Login Form */
-              <form onSubmit={handleStaffLogin} style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 24 }}>
-                <div>
-                  <label style={{ display: "block", fontSize: "0.813rem", fontWeight: 600, marginBottom: 6 }}>
-                    Staff Email:
-                  </label>
-                  <div style={{ position: "relative" }}>
-                    <Mail size={16} style={{ position: "absolute", left: 12, top: 14, color: "#94a3b8" }} />
-                    <input
-                      type="email"
-                      value={staffEmail}
-                      onChange={(e) => setStaffEmail(e.target.value)}
-                      placeholder="superadmin@flowmart.com"
-                      required
-                      style={{
-                        width: "100%",
-                        padding: "12px 14px 12px 38px",
-                        borderRadius: 10,
-                        border: "1px solid var(--color-border, #e2e8f0)",
-                        fontSize: "0.875rem",
-                        outline: "none"
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label style={{ display: "block", fontSize: "0.813rem", fontWeight: 600, marginBottom: 6 }}>
-                    Password:
-                  </label>
-                  <div style={{ position: "relative" }}>
-                    <Lock size={16} style={{ position: "absolute", left: 12, top: 14, color: "#94a3b8" }} />
-                    <input
-                      type="password"
-                      value={staffPassword}
-                      onChange={(e) => setStaffPassword(e.target.value)}
-                      placeholder="••••••••••••"
-                      required
-                      style={{
-                        width: "100%",
-                        padding: "12px 14px 12px 38px",
-                        borderRadius: 10,
-                        border: "1px solid var(--color-border, #e2e8f0)",
-                        fontSize: "0.875rem",
-                        outline: "none"
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  style={{
-                    padding: "14px",
-                    borderRadius: 10,
-                    backgroundColor: "#4f46e5",
-                    color: "white",
-                    fontWeight: 700,
-                    border: "none",
-                    cursor: "pointer",
-                    fontSize: "0.938rem",
-                    transition: "background-color 0.2s",
-                    boxShadow: "0 4px 12px rgba(79, 70, 229, 0.25)"
-                  }}
-                >
-                  {isLoading ? "Signing in..." : "Sign In to Operations Portal"}
-                </button>
-              </form>
             ) : (
               /* Google OAuth Button */
               <div style={{ marginBottom: 24 }}>
@@ -625,7 +427,7 @@ const Login = () => {
               </div>
             )}
 
-            {/* ═══ 1-TAP FAST DEMO ACCESS (Chowdeck-Grade 4 Platforms) ═══ */}
+            {/* ═══ 1-TAP FAST ACCESS (Users Portal: Customer, Merchant, Rider) ═══ */}
             <div
               style={{
                 marginTop: 20,
@@ -655,128 +457,15 @@ const Login = () => {
                     gap: 5
                   }}
                 >
-                  <Sparkles size={14} /> 1-Tap Platform Fast Switcher
+                  <Sparkles size={14} /> 1-Tap Users Portal Access
                 </span>
                 <span style={{ fontSize: "0.688rem", color: "#64748b", fontWeight: 600 }}>
-                  Live Demo Access
+                  Instant Access
                 </span>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                <button
-                  type="button"
-                  onClick={() => handleDemoLogin("super_admin")}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    padding: "10px 12px",
-                    borderRadius: 10,
-                    border: "1px solid rgba(79, 70, 229, 0.2)",
-                    backgroundColor: "#ffffff",
-                    cursor: "pointer",
-                    textAlign: "left",
-                    transition: "all 0.15s"
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 28,
-                      height: 28,
-                      borderRadius: 8,
-                      backgroundColor: "rgba(79, 70, 229, 0.1)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "#4f46e5"
-                    }}
-                  >
-                    <Radio size={15} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#1e1b4b" }}>
-                      Super Admin
-                    </div>
-                    <div style={{ fontSize: "0.688rem", color: "#6366f1" }}>Ops Command</div>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleDemoLogin("vendor")}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    padding: "10px 12px",
-                    borderRadius: 10,
-                    border: "1px solid rgba(245, 158, 11, 0.2)",
-                    backgroundColor: "#ffffff",
-                    cursor: "pointer",
-                    textAlign: "left",
-                    transition: "all 0.15s"
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 28,
-                      height: 28,
-                      borderRadius: 8,
-                      backgroundColor: "rgba(245, 158, 11, 0.1)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "#d97706"
-                    }}
-                  >
-                    <Store size={15} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#78350f" }}>
-                      Merchant
-                    </div>
-                    <div style={{ fontSize: "0.688rem", color: "#d97706" }}>Kitchen POS</div>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleDemoLogin("dispatch_rider")}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    padding: "10px 12px",
-                    borderRadius: 10,
-                    border: "1px solid rgba(16, 185, 129, 0.2)",
-                    backgroundColor: "#ffffff",
-                    cursor: "pointer",
-                    textAlign: "left",
-                    transition: "all 0.15s"
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 28,
-                      height: 28,
-                      borderRadius: 8,
-                      backgroundColor: "rgba(16, 185, 129, 0.1)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "#059669"
-                    }}
-                  >
-                    <Bike size={15} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#064e3b" }}>
-                      Champion
-                    </div>
-                    <div style={{ fontSize: "0.688rem", color: "#059669" }}>Courier Radar</div>
-                  </div>
-                </button>
-
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 8 }}>
+                {/* 1. Customer */}
                 <button
                   type="button"
                   onClick={() => handleDemoLogin("user")}
@@ -786,7 +475,7 @@ const Login = () => {
                     gap: 8,
                     padding: "10px 12px",
                     borderRadius: 10,
-                    border: "1px solid rgba(99, 102, 241, 0.2)",
+                    border: "1px solid rgba(99, 102, 241, 0.25)",
                     backgroundColor: "#ffffff",
                     cursor: "pointer",
                     textAlign: "left",
@@ -802,7 +491,8 @@ const Login = () => {
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      color: "#4f46e5"
+                      color: "#4f46e5",
+                      flexShrink: 0
                     }}
                   >
                     <User size={15} />
@@ -812,6 +502,86 @@ const Login = () => {
                       Customer
                     </div>
                     <div style={{ fontSize: "0.688rem", color: "#6366f1" }}>Food Storefront</div>
+                  </div>
+                </button>
+
+                {/* 2. Merchant / Vendor */}
+                <button
+                  type="button"
+                  onClick={() => handleDemoLogin("vendor")}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "10px 12px",
+                    borderRadius: 10,
+                    border: "1px solid rgba(245, 158, 11, 0.25)",
+                    backgroundColor: "#ffffff",
+                    cursor: "pointer",
+                    textAlign: "left",
+                    transition: "all 0.15s"
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: 8,
+                      backgroundColor: "rgba(245, 158, 11, 0.1)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "#d97706",
+                      flexShrink: 0
+                    }}
+                  >
+                    <Store size={15} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#78350f" }}>
+                      Merchant
+                    </div>
+                    <div style={{ fontSize: "0.688rem", color: "#d97706" }}>Kitchen POS</div>
+                  </div>
+                </button>
+
+                {/* 3. Rider */}
+                <button
+                  type="button"
+                  onClick={() => handleDemoLogin("dispatch_rider")}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "10px 12px",
+                    borderRadius: 10,
+                    border: "1px solid rgba(16, 185, 129, 0.25)",
+                    backgroundColor: "#ffffff",
+                    cursor: "pointer",
+                    textAlign: "left",
+                    transition: "all 0.15s"
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: 8,
+                      backgroundColor: "rgba(16, 185, 129, 0.1)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "#059669",
+                      flexShrink: 0
+                    }}
+                  >
+                    <Bike size={15} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#064e3b" }}>
+                      Rider
+                    </div>
+                    <div style={{ fontSize: "0.688rem", color: "#059669" }}>Courier Radar</div>
                   </div>
                 </button>
               </div>
