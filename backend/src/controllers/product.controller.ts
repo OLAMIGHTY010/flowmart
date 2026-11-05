@@ -87,11 +87,11 @@ export const getProducts = async (req: AuthenticatedRequest, res: Response) => {
 	try {
         // Implement Standard Pagination 
         const page = parseInt(req.query.page as string) || 1;
-        const limit = parseInt(req.query.limit as string) || 20;
+        const limit = Math.min(100, parseInt(req.query.limit as string) || 60);
         const offset = (page - 1) * limit;
 
 		if (req.user?.role === 'vendor') {
-			const vendorProductsRaw = await db
+			let vendorProductsRaw = await db
 				.select({
 					product: products,
 					categoryName: categories.name,
@@ -102,6 +102,19 @@ export const getProducts = async (req: AuthenticatedRequest, res: Response) => {
 				.orderBy(sql`${products.isSponsored} DESC`, sql`${products.createdAt} DESC`)
                 .limit(limit)
                 .offset(offset);
+
+			if (vendorProductsRaw.length === 0) {
+				vendorProductsRaw = await db
+					.select({
+						product: products,
+						categoryName: categories.name,
+					})
+					.from(products)
+					.leftJoin(categories, eq(products.categoryId, categories.id))
+					.orderBy(sql`${products.isSponsored} DESC`, sql`${products.createdAt} DESC`)
+					.limit(limit)
+					.offset(offset);
+			}
 			
 			const vendorProducts = vendorProductsRaw.map(r => ({
 				...r.product,

@@ -90,9 +90,9 @@ const Login = () => {
         profileCompleted: true
       },
       vendor: {
-        id: "usr-vendor-01",
-        fullName: "Mama Put Delights",
-        email: "merchant@mamaput.ng",
+        id: "242dbfa1-19f7-426e-a8a9-0336113dd745",
+        fullName: "Mama Put Delights (FlowMart Food & Staples)",
+        email: "rphillipse@gmail.com",
         role: "vendor",
         isVerified: true,
         profileCompleted: true
