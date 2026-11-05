@@ -45,7 +45,7 @@ export const authenticateJWT = async (req: AuthenticatedRequest, res: Response, 
     req.user = decoded;
     next();
   } catch (error) {
-    return res.status(401).json({ success: false, message: 'Invalid or expired token' });
+    return res.status(403).json({ success: false, message: 'Invalid or expired token' });
   }
 };
 

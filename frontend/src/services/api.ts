@@ -37,7 +37,8 @@ class ApiClient {
       async (error: AxiosError) => {
         const status = error.response?.status;
 
-        if (status === 401) {
+        const isExpiredToken = status === 401 || (status === 403 && (error.response?.data as any)?.message?.toLowerCase().includes('token'));
+        if (isExpiredToken) {
           const token = localStorage.getItem('accessToken');
           if (token && token.startsWith('demo_')) {
             console.warn('Demo session 401 response from backend, preserving local session.');
