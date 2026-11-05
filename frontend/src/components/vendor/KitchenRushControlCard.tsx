@@ -167,7 +167,7 @@ export const KitchenRushControlCard: React.FC = () => {
               </span>
             </div>
             <p className="text-xs text-gray-500 font-medium">
-              Chowdeck merchant buffer controls: adjust order prep timers or temporarily pause incoming tickets during rushes
+              FlowMart merchant buffer controls: adjust order prep timers or temporarily pause incoming tickets during rushes
             </p>
           </div>
         </div>

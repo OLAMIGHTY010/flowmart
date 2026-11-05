@@ -1873,7 +1873,7 @@ export const getZenithHealthTelemetry = async (req: Request, res: Response) => {
     const microservices: ZenithMicroservice[] = [
       {
         id: 'dispatch-engine',
-        name: 'Chowdeck Autonomous Dispatch & Proximity Radar',
+        name: 'FlowMart Autonomous Dispatch & Proximity Radar',
         status: zenithKillSwitches.autonomousDispatchAutopilot ? 'HEALTHY' : 'STANDBY',
         latencyMs: 16 + Math.floor(Math.random() * 6),
         uptime: 99.99,
@@ -2045,7 +2045,7 @@ export const triggerZenithSelfHealing = async (req: Request, res: Response) => {
       case 'TRIGGER_CANARY_PROBE':
         subsystemName = 'CANARY_WATCHDOG';
         zenithLastCanaryRun = new Date().toISOString();
-        responseMessage = 'Synthetic Canary Order dispatched: Store cart assembly, Chowdeck proximity match, and simulated mock POD succeeded in 19ms.';
+        responseMessage = 'Synthetic Canary Order dispatched: Store cart assembly, FlowMart proximity match, and simulated mock POD succeeded in 19ms.';
         break;
 
       default:

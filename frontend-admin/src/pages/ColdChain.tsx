@@ -168,7 +168,7 @@ export default function AdminColdChain() {
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/20 border border-cyan-400/30 text-cyan-300 text-xs font-semibold tracking-wide uppercase">
               <ThermometerSnowflake className="w-3.5 h-3.5 text-cyan-400" />
-              Chowdeck-Grade Quality Assurance • FlowMart Operations 2026
+              FlowMart Certified Quality Assurance • FlowMart Operations 2026
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
               Automated Cold-Chain & Fragile Handling Safeguards
@@ -566,7 +566,7 @@ export default function AdminColdChain() {
 
       {/* ═══ FOOTER BRANDING ═══ */}
       <div className="text-center py-4 border-t border-slate-800/60 text-xs text-slate-500">
-        FlowMart Cold-Chain & Fragile Quality Assurance • Chowdeck-Grade Architecture © 2026 FlowMart Inc.
+        FlowMart Cold-Chain & Fragile Quality Assurance • FlowMart Certified Architecture © 2026 FlowMart Inc.
       </div>
     </div>
   );

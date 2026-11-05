@@ -41,7 +41,7 @@ export default function ItemCustomizerDrawer({
 }: Props) {
   const isFood = product.productType === "food" || !product.productType;
 
-  // Build modifier groups (use product.modifiers if available, otherwise generate smart Chowdeck-style defaults for food)
+  // Build modifier groups (use product.modifiers if available, otherwise generate smart FlowMart-style defaults for food)
   const groups: ModifierGroup[] = useMemo(() => {
     if (product.modifiers && Array.isArray(product.modifiers) && product.modifiers.length > 0) {
       return product.modifiers;

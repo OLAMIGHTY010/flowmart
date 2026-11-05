@@ -78,13 +78,13 @@ export default function ProductCard({ product }: Props) {
           <ShoppingBag size={32} className="text-slate-300" />
         )}
 
-        {/* Chowdeck Social Proof Pill */}
+        {/* FlowMart Social Proof Pill */}
         <div className="absolute top-2.5 left-2.5 flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-900/85 backdrop-blur-md text-[11px] font-bold text-white shadow-md">
           <Flame size={12} className="text-amber-400 fill-amber-400" />
           <span>{orderCount}+ ordered</span>
         </div>
 
-        {/* Chowdeck Real-Time Item 86 / Sold Out Overlay */}
+        {/* FlowMart Real-Time Item 86 / Sold Out Overlay */}
         {isSoldOut && (
           <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-[1px] flex items-center justify-center z-10">
             <span className="px-3 py-1 rounded-full bg-red-600 text-white text-[11px] font-black uppercase tracking-wider shadow-lg">
@@ -111,7 +111,7 @@ export default function ProductCard({ product }: Props) {
           {product.name}
         </h3>
 
-        {/* Chowdeck Feed Logistics Pill: Dynamic ETA & Delivery Fee */}
+        {/* FlowMart Feed Logistics Pill: Dynamic ETA & Delivery Fee */}
         <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-medium mb-3">
           <Clock size={12} className="text-slate-400 shrink-0" />
           <span>{etaMinutes}-{etaMinutes + 10} mins</span>

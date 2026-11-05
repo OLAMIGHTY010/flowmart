@@ -206,7 +206,7 @@ export default function Vendor86Inventory() {
                 Live 86'd & Ingredient Depletion Portal
               </h2>
               <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
-                Chowdeck-Grade 2026
+                FlowMart Enterprise 2026
               </span>
             </div>
             <p className="text-sm text-slate-300 max-w-xl">

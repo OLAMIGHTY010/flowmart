@@ -866,7 +866,7 @@ export default function VoiceOrderConciergeModal({
               </button>
             )}
             <span className="text-[11px] text-slate-400 hidden sm:inline">
-              FlowMart AI © 2026 • Chowdeck-Grade Engine
+              FlowMart AI © 2026 • High-Velocity Logistics Engine
             </span>
           </div>
 

@@ -130,7 +130,7 @@ export class PricingService {
 
     const subtotalBeforeSurge = currentTotal;
 
-    // 5. Dynamic Zone Surge & Weather Engine (Chowdeck-Grade)
+    // 5. Dynamic Zone Surge & Weather Engine (FlowMart Dynamic)
     const surgeData = dynamicSurgeService.resolveSurgeForOrder(zoneRecord.zoneName, subtotalBeforeSurge);
     const finalDeliveryFee = surgeData.finalDeliveryFeeNgn;
     const riderShare = surgeData.riderPayoutNgn;
@@ -143,7 +143,7 @@ export class PricingService {
       baseFee,
       distanceFee,
       ruleAdjustments: appliedAdjustments,
-      // Chowdeck-Grade Dynamic Surge & Weather Breakdown
+      // FlowMart Dynamic Dynamic Surge & Weather Breakdown
       isSurgeActive: surgeData.isSurgeActive,
       surgeMultiplier: surgeData.surgeMultiplier,
       surgeFee: surgeData.surgeSurchargeNgn,

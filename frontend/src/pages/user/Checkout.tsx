@@ -116,7 +116,7 @@ const Checkout = () => {
   const [deliveryTiming, setDeliveryTiming] = useState<"express" | "scheduled">("express");
   const [scheduledSlot, setScheduledSlot] = useState<string>("today-lunch");
 
-  // Address Tag (Chowdeck feature: Home / Work / Other)
+  // Address Tag (FlowMart feature: Home / Work / Other)
   const [addressTag, setAddressTag] = useState<"home" | "work" | "other">("home");
 
   // Auto GPS & Saved Address State
@@ -140,7 +140,7 @@ const Checkout = () => {
   const [postcodeSuggestion, setPostcodeSuggestion] = useState<string | null>(null);
   const [resolvedZone, setResolvedZone] = useState<string | null>(null);
 
-  // Drop-off Preference (Chowdeck signature: Hand it to me / Door / Security)
+  // Drop-off Preference (FlowMart signature: Hand it to me / Door / Security)
   const [dropoffOption, setDropoffOption] = useState<"hand_to_me" | "leave_at_door" | "leave_with_security">(
     "hand_to_me"
   );
@@ -148,7 +148,7 @@ const Checkout = () => {
   // Delivery Notes & Quick Chips
   const [deliveryNotes, setDeliveryNotes] = useState("");
 
-  // Rider Tipping (Chowdeck signature: 0, 200, 500, 1000, custom)
+  // Rider Tipping (FlowMart signature: 0, 200, 500, 1000, custom)
   const [tipPreset, setTipPreset] = useState<number | "custom">(500);
   const [customTip, setCustomTip] = useState<string>("");
 
@@ -821,7 +821,7 @@ return (
           ← Back to Cart
         </Link>
 
-        {/* Chowdeck-Style Express Dispatch Banner */}
+        {/* FlowMart-Style Express Dispatch Banner */}
         <div
           style={{
             display: "inline-flex",
@@ -996,7 +996,7 @@ return (
               </div>
             </div>
 
-            {/* Chowdeck Feature: Saved Address Profile Chips */}
+            {/* FlowMart Feature: Saved Address Profile Chips */}
             <div style={{ marginBottom: 20 }}>
               <label
                 style={{
@@ -1691,7 +1691,7 @@ return (
                     </div>
                   )}
 
-                  {/* Street & Apartment Inputs (Chowdeck Experience) */}
+                  {/* Street & Apartment Inputs (FlowMart Experience) */}
                   <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
                     <div>
                       <label
@@ -1802,7 +1802,7 @@ return (
                 </div>
               )}
 
-              {/* Chowdeck Feature: Drop-off Delivery Preference Cards */}
+              {/* FlowMart Feature: Drop-off Delivery Preference Cards */}
               <div style={{ marginTop: 8 }}>
                 <label
                   style={{
@@ -1879,7 +1879,7 @@ return (
                 </div>
               </div>
 
-              {/* Chowdeck Feature: Courier Delivery Notes & Fast Presets */}
+              {/* FlowMart Feature: Courier Delivery Notes & Fast Presets */}
               <div>
                 <label
                   style={{
@@ -1929,7 +1929,7 @@ return (
           </div>
 
           
-          {/* Chowdeck Signature Feature: Delivery Timing & Scheduled Slots */}
+          {/* FlowMart Signature Feature: Delivery Timing & Scheduled Slots */}
           <div className="card" style={{ padding: 24, borderRadius: 16 }}>
             <div
               style={{
@@ -2108,7 +2108,7 @@ return (
             )}
           </div>
 
-          {/* Chowdeck Signature Feature: Rider Tipping Card */}
+          {/* FlowMart Signature Feature: Rider Tipping Card */}
           <div className="card" style={{ padding: 24, borderRadius: 16 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
               <div
@@ -2426,7 +2426,7 @@ return (
                     </span>
                   </div>
 
-                  {/* Chowdeck-Grade Surge & Rain Breakdown */}
+                  {/* FlowMart-Grade Surge & Rain Breakdown */}
                   {deliveryDetails?.isSurgeActive && (
                     <div style={{ marginTop: 4, marginBottom: 8, display: "flex", flexDirection: "column", gap: 3 }}>
                       {deliveryDetails.surgeFee > 0 && (
@@ -2651,7 +2651,7 @@ return (
         deliveryAddress={address}
       />
 
-      {/* Chowdeck Mobile Floating Bottom Dock */}
+      {/* FlowMart Mobile Floating Bottom Dock */}
       <div className="mobile-checkout-dock">
         <div style={{ display: "flex", flexDirection: "column" }}>
           <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>Total to Pay</span>
@@ -2695,7 +2695,7 @@ return (
         }}
       />
 
-      {/* Chowdeck-Grade "Pay For Me" Social Checkout Modal */}
+      {/* FlowMart-Grade "Pay For Me" Social Checkout Modal */}
       {showPayForMeModal && payForMeOrder && (
         <div
           style={{

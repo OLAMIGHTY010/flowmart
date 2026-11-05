@@ -250,7 +250,7 @@ export default function DeliveryDetails() {
                 </div>
               </div>
               
-              {/* Champion Delivery Earnings Breakdown (Chowdeck-Grade Surge & Rain Mode) */}
+              {/* Champion Delivery Earnings Breakdown (FlowMart Dynamic Surge & Rain Mode) */}
               <div className="bg-gradient-to-br from-indigo-950 via-slate-900 to-black text-white border border-indigo-500/30 rounded-2xl p-4 flex flex-col gap-2.5 shadow-md">
                 <div className="flex items-center justify-between text-xs font-bold">
                   <span className="text-[10px] tracking-wider text-indigo-300 uppercase">Champion Delivery Earnings</span>

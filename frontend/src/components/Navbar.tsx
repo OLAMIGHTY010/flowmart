@@ -102,7 +102,7 @@ const Navbar = () => {
             </span>
           </Link>
 
-          {/* Chowdeck-Style Delivery Location Switcher Pill */}
+          {/* FlowMart Delivery Location Switcher Pill */}
           <button
             type="button"
             onClick={() => setIsLocationModalOpen(true)}

@@ -116,7 +116,7 @@ export default function PurchaseCard({
 
         {/* Action Buttons in FlowMart Indigo Branding */}
         <div className="space-y-3">
-          {/* Chowdeck-Style Customize Button */}
+          {/* FlowMart Customize Button */}
           {isFood && !isOutOfStock && (
             <button
               onClick={() => setIsCustomizerOpen(true)}
@@ -231,7 +231,7 @@ export default function PurchaseCard({
         </div>
       </div>
 
-      {/* Chowdeck-Style Customizer Bottom Sheet Drawer */}
+      {/* FlowMart Customizer Bottom Sheet Drawer */}
       <ItemCustomizerDrawer
         product={product}
         isOpen={isCustomizerOpen}

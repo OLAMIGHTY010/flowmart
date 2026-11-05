@@ -84,7 +84,7 @@ const Orders = () => {
                       </p>
                     </div>
 
-                    {/* Chowdeck 1-Tap Quick Reorder */}
+                    {/* FlowMart 1-Tap Quick Reorder */}
                     <button
                       type="button"
                       onClick={() => handleReorder(order)}

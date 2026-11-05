@@ -187,7 +187,7 @@ export default function MultiStopFeastOrder() {
             <div className="space-y-2">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-xs font-semibold tracking-wide uppercase">
                 <Compass className="w-3.5 h-3.5 text-indigo-400 animate-pulse" />
-                Chowdeck-Grade Multi-Stop Feast Router • FlowMart 2026
+                FlowMart Multi-Stop Feast Router • FlowMart 2026
               </div>
               <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
                 Multi-Stop Feast Courier Routing (Double-Drop)
@@ -561,7 +561,7 @@ export default function MultiStopFeastOrder() {
 
         {/* Footer */}
         <div className="text-center py-4 border-t border-slate-800/60 text-xs text-slate-500">
-          FlowMart Multi-Stop Feast Courier Routing • Chowdeck-Grade Architecture © 2026 FlowMart Inc.
+          FlowMart Multi-Stop Feast Courier Routing • Enterprise Logistics Architecture © 2026 FlowMart Inc.
         </div>
       </div>
     </div>

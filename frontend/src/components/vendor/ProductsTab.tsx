@@ -284,7 +284,7 @@ export default function ProductsTab() {
                 {/* Actions and Stock */}
                 <div className="flex flex-col items-end gap-2.5">
                   <div className="flex items-center gap-2">
-                  {/* Chowdeck Real-Time Item 86 / Out of Stock Fast-Toggle */}
+                  {/* FlowMart Real-Time Item 86 / Out of Stock Fast-Toggle */}
                   <button
                     type="button"
                     disabled={togglingId === p.id}

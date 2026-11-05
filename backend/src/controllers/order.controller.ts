@@ -6,7 +6,7 @@
 import { Request, Response } from "express";
 import { db } from "../../db";
 import { products, orders, orderItems, users, vendorProfiles, vendorKyc, wallets, walletTransactions, reviews } from "../../db/schema";
-import { eq, and, desc, sql, or } from "drizzle-orm";
+import { eq, and, desc, sql, or, inArray } from "drizzle-orm";
 import { AuthenticatedRequest } from "../middleware/auth.middleware";
 import { sendInAppNotification, broadcastNewDelivery, emitOrderStatusUpdate, emitEscrowStatusUpdate, emitOrderChatMessage } from "../services/websocket";
 import { emailService } from "../services/email.service";
@@ -752,7 +752,7 @@ export const initializePayForMePayment = async (req: Request, res: Response) => 
 };
 
 
-// 8. Order-Linked Live Courier & Customer Chat (Chowdeck In-App Courier Chat)
+// 8. Order-Linked Live Courier & Customer Chat (FlowMart Courier Chat)
 interface OrderChatMessage {
     id: string;
     orderId: string;
@@ -1339,17 +1339,41 @@ export const coverRemainingSplitBill = async (req: Request, res: Response) => {
 
 export const getActiveOrderTelemetry = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const elapsedSeconds = Math.floor((Date.now() / 1000) % 600); // 10 min loop
-    const distanceMeters = Math.max(45, 950 - (elapsedSeconds * 4));
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(200).json({ success: true, hasActiveOrder: false, data: null });
+    }
+
+    const [activeOrder] = await db
+      .select()
+      .from(orders)
+      .where(
+        and(
+          eq(orders.userId, userId),
+          inArray(orders.status, ['confirmed', 'processing', 'in_transit'])
+        )
+      )
+      .orderBy(desc(orders.createdAt))
+      .limit(1);
+
+    if (!activeOrder) {
+      return res.status(200).json({ success: true, hasActiveOrder: false, data: null });
+    }
+
+    const elapsedSeconds = Math.floor((Date.now() - new Date(activeOrder.createdAt).getTime()) / 1000);
+    const distanceMeters = Math.max(45, 1200 - Math.min(1150, elapsedSeconds * 2));
     const etaMinutes = Math.max(1, Math.ceil(distanceMeters / 120));
     const isAtGate = distanceMeters <= 100;
     const currentSpeedKmh = isAtGate ? 0 : (distanceMeters < 300 ? 18 : 34);
 
-    let status = 'ON_THE_WAY';
+    let status: 'CONFIRMED' | 'KITCHEN_COOKING' | 'ON_THE_WAY' | 'ARRIVED_AT_GATE' | 'DELIVERED' = 'ON_THE_WAY';
     let statusText = 'Courier Champion is en route';
-    if (distanceMeters > 800) {
+    if (activeOrder.status === 'confirmed') {
+      status = 'CONFIRMED';
+      statusText = 'Order Confirmed by Store';
+    } else if (activeOrder.status === 'processing') {
       status = 'KITCHEN_COOKING';
-      statusText = 'Kitchen is packaging your hot meal';
+      statusText = 'Kitchen is packaging your items';
     } else if (isAtGate) {
       status = 'ARRIVED_AT_GATE';
       statusText = 'Courier Champion has arrived at your gate!';
@@ -1359,22 +1383,22 @@ export const getActiveOrderTelemetry = async (req: AuthenticatedRequest, res: Re
       success: true,
       hasActiveOrder: true,
       data: {
-        orderId: 'ord-live-2026-active',
-        orderNumber: 'FLM-2026-8891',
-        restaurantName: 'Chicken Republic Express',
+        orderId: activeOrder.id,
+        orderNumber: activeOrder.orderNumber || `FLM-${activeOrder.id.slice(0, 8).toUpperCase()}`,
+        restaurantName: 'FlowMart Kitchen Express',
         restaurantImage: 'https://images.unsplash.com/photo-1604382355076-af4b0eb60143?w=300&auto=format&fit=crop&q=80',
-        itemsSummary: '2x Smokey Party Jollof, 2x Crispy Chicken, 1x Chilled Chapman',
-        itemsCount: 5,
-        totalAmountNgn: 11450,
+        itemsSummary: activeOrder.notes || 'Order items in delivery',
+        itemsCount: 1,
+        totalAmountNgn: Number(activeOrder.totalAmount),
         status,
         statusText,
-        handoverOtp: '8249',
+        handoverOtp: activeOrder.otp || '----',
         courier: {
-          name: 'Ibrahim Musa',
-          phone: '+234 803 123 4567',
-          vehicle: 'Honda Ace 125 • Silver',
-          rating: 4.96,
-          completedTrips: 1420,
+          name: 'FlowMart Champion',
+          phone: '+234 800 3569 6278',
+          vehicle: 'Delivery Motorcycle',
+          rating: 4.95,
+          completedTrips: 120,
           photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80',
           tier: 'GOLD_CHAMPION'
         },
@@ -1387,13 +1411,13 @@ export const getActiveOrderTelemetry = async (req: AuthenticatedRequest, res: Re
           batteryLevelPct: 88,
           lastGpsPingAt: new Date().toISOString()
         },
-        dropoffAddress: '14B Admiralty Way, Lekki Phase 1, Lagos',
+        dropoffAddress: activeOrder.shippingAddress || 'Lagos, Nigeria',
         milestones: [
-          { key: 'CONFIRMED', label: 'Order Confirmed', completed: true, time: '12:15 PM' },
-          { key: 'COOKING', label: 'Kitchen Preparing', completed: true, time: '12:22 PM' },
-          { key: 'PICKED_UP', label: 'Champion Picked Up', completed: distanceMeters <= 800, time: '12:30 PM' },
+          { key: 'CONFIRMED', label: 'Order Confirmed', completed: true, time: 'Confirmed' },
+          { key: 'COOKING', label: 'Preparing', completed: activeOrder.status !== 'confirmed', time: 'In prep' },
+          { key: 'PICKED_UP', label: 'Champion Picked Up', completed: activeOrder.status === 'in_transit', time: 'Dispatched' },
           { key: 'ARRIVING', label: 'Arriving at Gate', completed: isAtGate, time: isAtGate ? 'Just now' : `in ${etaMinutes}m` },
-          { key: 'DELIVERED', label: 'Delivered & Handover', completed: false, time: 'Pending OTP' }
+          { key: 'DELIVERED', label: 'Delivered', completed: activeOrder.status === 'delivered', time: 'Pending OTP' }
         ],
         updatedAt: new Date().toISOString()
       }

@@ -86,8 +86,15 @@ export default function DynamicIslandWidget() {
 
   // Don't show if user is already on the dedicated full-screen order tracking page
   const isTrackingPage = location.pathname.includes("/track") || location.pathname.includes("/orders/");
+  const isExcludedPortal = 
+    location.pathname.startsWith("/rider") || 
+    location.pathname.startsWith("/vendor") || 
+    location.pathname.startsWith("/admin") || 
+    location.pathname.startsWith("/login") ||
+    location.pathname.startsWith("/get-started");
 
   useEffect(() => {
+    if (isExcludedPortal) return;
     fetchActiveTelemetry();
     const interval = setInterval(fetchActiveTelemetry, 4000);
     return () => clearInterval(interval);
@@ -127,7 +134,7 @@ export default function DynamicIslandWidget() {
   };
 
   // If no active order, or dismissed, or currently on full tracking view, don't show
-  if (!order || isDismissed || isTrackingPage) {
+  if (!order || isDismissed || isTrackingPage || isExcludedPortal) {
     return null;
   }
 

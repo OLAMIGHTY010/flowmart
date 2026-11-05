@@ -94,9 +94,9 @@ export default function RiderEarnings() {
 
   const deliveredOrders = orders?.filter(o => o.status === 'delivered') || [];
   
-  const balance = stats?.totalRevenue || '₦38,400.00';
-  const totalTrips = stats?.deliveriesCount ?? deliveredOrders.length ?? 24;
-  const thisWeekEarnings = stats?.revenueToday || '₦18,400';
+  const balance = stats?.totalRevenue || '₦0.00';
+  const totalTrips = stats?.deliveriesCount ?? deliveredOrders.length;
+  const thisWeekEarnings = stats?.revenueToday || '₦0';
 
   const dailyGoalTarget = analytics?.dailyGoalTarget || 25000;
   const revenueTodayNumber = typeof thisWeekEarnings === 'string'
@@ -113,7 +113,7 @@ export default function RiderEarnings() {
     bonusAmount: 3000,
   };
 
-  const currentFloat = codLedger?.currentFloat ?? 14500;
+  const currentFloat = codLedger?.currentFloat ?? 0;
   const maxFloatLimit = codLedger?.maxFloatLimit ?? 30000;
   const floatRatio = Math.min(100, Math.round((currentFloat / maxFloatLimit) * 100));
 
@@ -176,7 +176,7 @@ export default function RiderEarnings() {
         </button>
       </div>
 
-      {/* ================= 1. CHOWDECK-STYLE DAILY GOAL TRACKER ================= */}
+      {/* ================= 1. FLOWMART DAILY GOAL TRACKER ================= */}
       <div className="bg-gradient-to-r from-indigo-900 via-indigo-950 to-slate-900 rounded-3xl p-6 sm:p-7 text-white shadow-xl relative overflow-hidden">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
@@ -229,7 +229,7 @@ export default function RiderEarnings() {
               <div className="flex items-center gap-2">
                 <Layers size={18} className="text-indigo-600" />
                 <h2 className="text-base font-black text-gray-900">
-                  Chowdeck Fare Breakdown
+                  FlowMart Fare Breakdown
                 </h2>
               </div>
               <span className="text-[11px] font-bold text-gray-400">Today's Accumulated</span>
@@ -356,15 +356,16 @@ export default function RiderEarnings() {
                 <span className="text-[11px] font-black uppercase text-gray-400 tracking-wider block">
                   Recent Cash Orders Collected
                 </span>
-                {(codLedger?.recentCollections || [
-                  { id: "cod-1", customerName: "Amina Yusuf", amount: 5400, collectedAt: "45m ago" },
-                  { id: "cod-2", customerName: "Babajide Cole", amount: 9100, collectedAt: "2h ago" },
-                ]).map((c: any) => (
-                  <div key={c.id} className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50 text-xs">
-                    <span className="font-bold text-gray-800">{c.customerName}</span>
-                    <span className="font-black text-gray-900">₦{Number(c.amount).toLocaleString()}</span>
-                  </div>
-                ))}
+                {codLedger?.recentCollections && codLedger.recentCollections.length > 0 ? (
+                  codLedger.recentCollections.map((c: any) => (
+                    <div key={c.id} className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50 text-xs">
+                      <span className="font-bold text-gray-800">{c.customerName}</span>
+                      <span className="font-black text-gray-900">₦{Number(c.amount).toLocaleString()}</span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-xs text-gray-400 font-medium py-1.5">No pending cash collections on record.</p>
+                )}
               </div>
             </div>
           </div>

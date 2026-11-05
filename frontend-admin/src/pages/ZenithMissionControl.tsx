@@ -131,7 +131,7 @@ export default function AdminZenithMissionControl() {
         microservices: [
           {
             id: "dispatch-engine",
-            name: "Chowdeck Autonomous Dispatch & Proximity Radar",
+            name: "FlowMart Autonomous Dispatch & Proximity Radar",
             status: "HEALTHY",
             latencyMs: 18,
             uptime: 99.99,

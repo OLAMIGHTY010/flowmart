@@ -77,7 +77,7 @@ export const clearCart = async (req: AuthenticatedRequest, res: Response) => {
 };
 
 
-// ─── Chowdeck-Style Group Orders Engine ("Order with Friends") ─────────────
+// ─── FlowMart Group Orders Engine ("Order with Friends") ─────────────
 export interface GroupCartMember {
   id: string;
   name: string;

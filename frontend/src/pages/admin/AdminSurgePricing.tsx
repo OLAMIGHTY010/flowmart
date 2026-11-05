@@ -299,7 +299,7 @@ export default function AdminSurgePricing() {
               <h1 className="text-2xl font-black tracking-tight text-white flex items-center gap-2">
                 Dynamic Surge & Weather Operations
                 <span className="text-[10px] bg-indigo-500/20 text-indigo-300 px-2.5 py-0.5 rounded-full font-bold border border-indigo-500/30">
-                  CHOWDECK-GRADE V2
+                  FLOWMART DYNAMIC V2
                 </span>
               </h1>
               <p className="text-xs text-slate-400">

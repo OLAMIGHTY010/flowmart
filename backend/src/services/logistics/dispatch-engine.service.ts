@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * CHOWDECK-GRADE DISPATCH & SPATIAL MATCHING ENGINE
+ * FLOWMART-GRADE DISPATCH & SPATIAL MATCHING ENGINE
  * ============================================================================
  *
  * Implements:
@@ -44,7 +44,7 @@ class DispatchEngineService {
   private activeOffers: Map<string, ActiveDispatchOffer> = new Map();
   private timers: Map<string, NodeJS.Timeout> = new Map();
 
-  // Multi-tier expansion policy matching Chowdeck on-demand dispatch
+  // Multi-tier expansion policy for FlowMart on-demand dispatch
   private readonly dispatchStages: DispatchStageConfig[] = [
     { stage: 1, radiusKm: 3.0, timeoutMs: 45_000 },  // 3km initial radius, 45s window
     { stage: 2, radiusKm: 6.0, timeoutMs: 45_000 },  // 6km expansion

@@ -215,7 +215,7 @@ export const GroupOrderModal: React.FC<GroupOrderModalProps> = ({
               <h2 className="text-lg font-black text-gray-900 flex items-center gap-2">
                 Order with Friends
                 <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700">
-                  Chowdeck Live
+                  FlowMart Live
                 </span>
               </h2>
               <p className="text-xs text-gray-500 font-medium">

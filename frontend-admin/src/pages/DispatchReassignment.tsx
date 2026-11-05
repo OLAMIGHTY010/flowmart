@@ -208,7 +208,7 @@ export default function AdminDispatchReassignment() {
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-xs font-semibold tracking-wide uppercase">
               <Radio className="w-3.5 h-3.5 text-indigo-400 animate-pulse" />
-              Chowdeck-Grade Fleet Dispatch Matrix • FlowMart 2026
+              FlowMart Fleet Dispatch Matrix • FlowMart 2026
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
               Autonomous Dispatch Auto-Rerouting & SLA Protector
@@ -709,7 +709,7 @@ export default function AdminDispatchReassignment() {
 
       {/* ═══ FOOTER BRANDING ═══ */}
       <div className="text-center py-4 border-t border-slate-800/60 text-xs text-slate-500">
-        FlowMart Operations & Fleet Reassignment Matrix • Chowdeck-Grade Architecture © 2026 FlowMart Inc.
+        FlowMart Operations & Fleet Reassignment Matrix • FlowMart Architecture © 2026 FlowMart Inc.
       </div>
     </div>
   );

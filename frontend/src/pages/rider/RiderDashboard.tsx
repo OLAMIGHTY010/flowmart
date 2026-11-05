@@ -227,7 +227,7 @@ export default function RiderDashboard() {
         />
       </div>
 
-      {/* ================= 2. CHOWDECK-STYLE HIGH-DEMAND HOTSPOTS RADAR ================= */}
+      {/* ================= 2. FLOWMART HIGH-DEMAND HOTSPOTS RADAR ================= */}
       <div className="bg-surface border border-border rounded-3xl p-6 shadow-xs">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-border">
           <div className="flex items-center gap-2.5">
@@ -236,7 +236,7 @@ export default function RiderDashboard() {
             </div>
             <div>
               <h2 className="text-base font-black text-foreground flex items-center gap-2">
-                Chowdeck Demand Hotspots Radar
+                FlowMart Demand Hotspots Radar
                 <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-orange-100 text-orange-800">
                   Live Lagos Surge
                 </span>

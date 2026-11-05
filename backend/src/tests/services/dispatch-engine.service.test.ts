@@ -1,13 +1,13 @@
 /**
  * ============================================================================
- * UNIT TESTS: CHOWDECK-GRADE DISPATCH & SPATIAL MATCHING ENGINE
+ * UNIT TESTS: FLOWMART-GRADE DISPATCH & SPATIAL MATCHING ENGINE
  * ============================================================================
  */
 
 import { dispatchEngineService } from '../../services/logistics/dispatch-engine.service';
 import { redisCacheService } from '../../services/infrastructure/redis-cache.service';
 
-describe('DispatchEngineService (Chowdeck-Grade On-Demand Dispatch)', () => {
+describe('DispatchEngineService (FlowMart-Grade On-Demand Dispatch)', () => {
   beforeEach(async () => {
     // Clear locks and offers before each test
     await redisCacheService.releaseLock('order:accept:test-order-1');

@@ -56,7 +56,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-// Chowdeck-Style Custom Rider Marker (FlowMart Indigo Theme)
+// FlowMart-Style Custom Rider Marker (FlowMart Indigo Theme)
 const riderIcon = new L.DivIcon({
   html: `<div style="position:relative;display:flex;align-items:center;justify-content:center;">
     <div style="position:absolute;width:44px;height:44px;border-radius:50%;background:rgba(79,70,229,0.25);animation:ping 2s cubic-bezier(0,0,0.2,1) infinite;"></div>
@@ -132,7 +132,7 @@ const STATUS_PROGRESS_ORDER: OrderStatus[] = [
   "delivered",
 ];
 
-const CHOWDECK_MILESTONES = [
+const FLOWMART_MILESTONES = [
   { status: "pending", label: "Order Placed", desc: "Sent to vendor" },
   { status: "confirmed", label: "Preparing", desc: "Vendor accepted" },
   { status: "assigned", label: "Rider Assigned", desc: "Heading to store" },
@@ -279,7 +279,7 @@ export default function OrderTracking() {
   const currentStatusIdx = STATUS_PROGRESS_ORDER.indexOf(order.status);
   const itemCount = order.items?.reduce((sum, item) => sum + item.qty, 0) || 0;
 
-  // Chowdeck Dynamic Headline & ETA text
+  // FlowMart Dynamic Headline & ETA text
   const getStatusHeadline = () => {
     switch (order.status) {
       case "pending":
@@ -417,7 +417,7 @@ export default function OrderTracking() {
             <span className="hidden sm:inline">{soundEnabled ? "Audio Alerts On" : "Muted"}</span>
           </button>
 
-          {/* Chowdeck Live ETA Pill */}
+          {/* FlowMart Live ETA Pill */}
         <div
           style={{
             display: "inline-flex",
@@ -438,7 +438,7 @@ export default function OrderTracking() {
         </div>
       </div>
 
-      {/* Chowdeck Dynamic Status Headline Card */}
+      {/* FlowMart Dynamic Status Headline Card */}
       <div
         className="mb-6 p-5 sm:p-6 rounded-2xl border"
         style={{
@@ -472,7 +472,7 @@ export default function OrderTracking() {
             </p>
           </div>
 
-          {/* Delivery PIN Box (Chowdeck Essential Security Feature) */}
+          {/* Delivery PIN Box (FlowMart Essential Security Feature) */}
           {order.deliveryPin && order.status !== "delivered" && order.status !== "cancelled" && (
             <div
               style={{
@@ -507,10 +507,10 @@ export default function OrderTracking() {
           )}
         </div>
 
-        {/* Chowdeck 5-Step Progress Bar */}
+        {/* FlowMart 5-Step Progress Bar */}
         <div className="mt-8 pt-6 border-t border-gray-100">
           <div className="grid grid-cols-5 gap-2 sm:gap-4 relative">
-            {CHOWDECK_MILESTONES.map((step, idx) => {
+            {FLOWMART_MILESTONES.map((step, idx) => {
               const isDone = idx <= currentStatusIdx;
               const isCurrent = idx === currentStatusIdx;
 
@@ -748,7 +748,7 @@ export default function OrderTracking() {
             </div>
           </div>
 
-          {/* Chowdeck-Style Rider Profile Card */}
+          {/* FlowMart-Style Rider Profile Card */}
           {(order.status === "assigned" || order.status === "picked_up" || order.status === "delivered") && (
             <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
               <div className="flex items-center justify-between">
@@ -971,7 +971,7 @@ export default function OrderTracking() {
             </div>
           </div>
 
-          {/* Chowdeck Delivery Confirmation Button */}
+          {/* FlowMart Delivery Confirmation Button */}
           {order.status === "delivered" && (
             <button
               onClick={handleReceived}
@@ -1008,7 +1008,7 @@ export default function OrderTracking() {
             </button>
           )}
 
-          {/* Chowdeck Two-Tier Rating Prompt */}
+          {/* FlowMart Two-Tier Rating Prompt */}
           {order.status === "delivered" && (
             <button
               type="button"

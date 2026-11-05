@@ -1,7 +1,7 @@
 # FlowMart Super App & On-Demand Logistics Ecosystem
 
 [![Version](https://img.shields.io/badge/version-2.0.0-indigo.svg)](https://github.com/OLAMIGHTY010/flowmart)
-[![Architecture](https://img.shields.io/badge/architecture-Chowdeck--Grade-emerald.svg)](docs/PROJECT_DOCUMENTATION_AND_CHANGELOG.md)
+[![Architecture](https://img.shields.io/badge/architecture-FlowMart--Engine-emerald.svg)](docs/PROJECT_DOCUMENTATION_AND_CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Uptime SLA](https://img.shields.io/badge/SLA-99.98%25-cyan.svg)](docs/PROJECT_DOCUMENTATION_AND_CHANGELOG.md)
 

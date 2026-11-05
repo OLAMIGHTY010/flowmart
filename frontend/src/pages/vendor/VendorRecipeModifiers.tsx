@@ -295,7 +295,7 @@ export default function VendorRecipeModifiers() {
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-xs font-semibold tracking-wide uppercase">
               <Sliders className="w-3.5 h-3.5 text-indigo-400" />
-              Chowdeck-Grade Recipe Configurator • FlowMart Merchant Kitchen 2026
+              FlowMart Recipe Configurator • FlowMart Merchant Kitchen 2026
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
               Smart Recipe Modifier & Customizer Studio
@@ -862,7 +862,7 @@ export default function VendorRecipeModifiers() {
 
       {/* ═══ FOOTER BRANDING ═══ */}
       <div className="text-center py-4 border-t border-slate-800/60 text-xs text-slate-500">
-        FlowMart Merchant Recipe Studio • Chowdeck-Grade Kitchen Architecture © 2026 FlowMart Inc.
+        FlowMart Merchant Recipe Studio • Enterprise Kitchen Architecture © 2026 FlowMart Inc.
       </div>
     </div>
   );

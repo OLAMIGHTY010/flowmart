@@ -2,7 +2,7 @@
 
 **Platform Version:** 2.0.0 (Post-Sprint Z Zenith Release)  
 **Last Updated:** November 2026  
-**Architecture Grade:** Chowdeck-Grade High-Concurrency On-Demand Logistics & Super App  
+**Architecture Grade:** FlowMart Enterprise-Grade High-Concurrency On-Demand Logistics & Super App  
 
 ---
 
@@ -36,7 +36,7 @@ FlowMart is a multi-vertical, on-demand commerce and logistics ecosystem enginee
 ### **Foundational Architecture Phases (Phases 1 — 5)**
 * **Phase 1 (Tailored Vertical UIs):** Distinct checkout flows for Food Delivery, Pharmacy with prescription validation, and Artisan Services booking.
 * **Phase 2 (Escrow Mechanics & Wallet):** FlowMart Escrow holding state for user payments, safe-deposit releasing, and dispute management.
-* **Phase 3 (Chowdeck-Grade Dispatch):** Redis 3km proximity matching, 45-second courier acceptance countdowns, and Redlock concurrency.
+* **Phase 3 (FlowMart Enterprise-Grade Dispatch):** Redis 3km proximity matching, 45-second courier acceptance countdowns, and Redlock concurrency.
 * **Phase 4 (Security & Tenant Isolation):** Row-level tenant isolation, PII phone masking (proxy calling numbers), multi-tier rate limiting, and Edge CDN caching headers.
 * **Phase 5 (Automated CI/CD & Verification):** Automated workflow test suites covering dispatch mechanics, Nigerian postcode validations, and privacy enforcement.
 
@@ -66,7 +66,7 @@ FlowMart is a multi-vertical, on-demand commerce and logistics ecosystem enginee
 #### **Sprint D: Delivery Address Switcher & Social Proof**
 * **Commit:** `10399681`
 * **Features:**
-  * Chowdeck-style floating delivery address pill with instant location switching.
+  * FlowMart-style floating delivery address pill with instant location switching.
   * Dynamic merchant card ETAs calculated from real-time courier proximity.
   * Live social proof badges ("🔥 42 people ordered this hour").
 

@@ -87,7 +87,7 @@ export const useCartStore = create<CartStore>()(
           return { cart };
         }),
 
-      // Chowdeck-Grade Customized Add to Cart
+      // FlowMart Custom Customized Add to Cart
       addToCartCustomized: ({
         product,
         quantity = 1,

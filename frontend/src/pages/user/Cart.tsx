@@ -178,7 +178,7 @@ const Cart = () => {
                 </span>
               </div>
 
-              {/* Chowdeck-Style "Order with Friends" Button */}
+              {/* FlowMart "Order with Friends" Button */}
               <button
                 onClick={() => setIsGroupModalOpen(true)}
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 transition shadow-sm cursor-pointer"
@@ -229,7 +229,7 @@ const Cart = () => {
                           {item.name}
                         </h3>
 
-                        {/* Modifiers Chips (Chowdeck Style) */}
+                        {/* Modifiers Chips (FlowMart Style) */}
                         {item.selectedModifiers && item.selectedModifiers.length > 0 && (
                           <div className="flex flex-wrap gap-1.5 mt-2">
                             {item.selectedModifiers.map((mod, i) => (
@@ -308,7 +308,7 @@ const Cart = () => {
             </div>
           </div>
 
-          {/* ================= CHOWDECK-STYLE SMART IN-CART DRINKS & SIDES UPSELL TRAY ================= */}
+          {/* ================= FLOWMART SMART IN-CART DRINKS & SIDES UPSELL TRAY ================= */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200/80 p-5">
             <div className="flex items-center justify-between mb-3.5">
               <div className="flex items-center gap-2">
@@ -317,7 +317,7 @@ const Cart = () => {
                   <h3 className="text-sm font-extrabold text-gray-900 flex items-center gap-2">
                     Pair with Drinks & Refreshments
                     <span className="text-[10px] font-black uppercase tracking-wider text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">
-                      Chowdeck Pick
+                      FlowMart Pick
                     </span>
                   </h3>
                   <p className="text-xs text-gray-500 font-medium">
