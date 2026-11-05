@@ -509,7 +509,7 @@ async function seedCommodities() {
   console.log('Connecting to database to seed commodities...');
 
   // 1. Ensure Categories exist
-  const categoryMap = {};
+  const categoryMap: Record<string, string> = {};
   for (const cat of CATEGORIES_DATA) {
     const existing = await pool.query('SELECT id, slug FROM categories WHERE slug = $1', [cat.slug]);
     if (existing.rows.length > 0) {

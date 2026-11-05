@@ -1350,7 +1350,7 @@ export const getActiveOrderTelemetry = async (req: AuthenticatedRequest, res: Re
       .where(
         and(
           eq(orders.userId, userId),
-          inArray(orders.status, ['confirmed', 'processing', 'in_transit'])
+          inArray(orders.status, ['confirmed', 'assigned', 'picked_up'])
         )
       )
       .orderBy(desc(orders.createdAt))
@@ -1371,9 +1371,9 @@ export const getActiveOrderTelemetry = async (req: AuthenticatedRequest, res: Re
     if (activeOrder.status === 'confirmed') {
       status = 'CONFIRMED';
       statusText = 'Order Confirmed by Store';
-    } else if (activeOrder.status === 'processing') {
+    } else if (activeOrder.status === 'assigned') {
       status = 'KITCHEN_COOKING';
-      statusText = 'Kitchen is packaging your items';
+      statusText = 'Store is packaging your items';
     } else if (isAtGate) {
       status = 'ARRIVED_AT_GATE';
       statusText = 'Courier Champion has arrived at your gate!';
@@ -1384,15 +1384,15 @@ export const getActiveOrderTelemetry = async (req: AuthenticatedRequest, res: Re
       hasActiveOrder: true,
       data: {
         orderId: activeOrder.id,
-        orderNumber: activeOrder.orderNumber || `FLM-${activeOrder.id.slice(0, 8).toUpperCase()}`,
+        orderNumber: activeOrder.orderRef || `FLM-${activeOrder.id.slice(0, 8).toUpperCase()}`,
         restaurantName: 'FlowMart Kitchen Express',
         restaurantImage: 'https://images.unsplash.com/photo-1604382355076-af4b0eb60143?w=300&auto=format&fit=crop&q=80',
-        itemsSummary: activeOrder.notes || 'Order items in delivery',
+        itemsSummary: 'Order items in delivery',
         itemsCount: 1,
         totalAmountNgn: Number(activeOrder.totalAmount),
         status,
         statusText,
-        handoverOtp: activeOrder.otp || '----',
+        handoverOtp: activeOrder.deliveryPin || '----',
         courier: {
           name: 'FlowMart Champion',
           phone: '+234 800 3569 6278',
@@ -1411,11 +1411,11 @@ export const getActiveOrderTelemetry = async (req: AuthenticatedRequest, res: Re
           batteryLevelPct: 88,
           lastGpsPingAt: new Date().toISOString()
         },
-        dropoffAddress: activeOrder.shippingAddress || 'Lagos, Nigeria',
+        dropoffAddress: activeOrder.deliveryAddress || 'Lagos, Nigeria',
         milestones: [
           { key: 'CONFIRMED', label: 'Order Confirmed', completed: true, time: 'Confirmed' },
           { key: 'COOKING', label: 'Preparing', completed: activeOrder.status !== 'confirmed', time: 'In prep' },
-          { key: 'PICKED_UP', label: 'Champion Picked Up', completed: activeOrder.status === 'in_transit', time: 'Dispatched' },
+          { key: 'PICKED_UP', label: 'Champion Picked Up', completed: activeOrder.status === 'picked_up', time: 'Dispatched' },
           { key: 'ARRIVING', label: 'Arriving at Gate', completed: isAtGate, time: isAtGate ? 'Just now' : `in ${etaMinutes}m` },
           { key: 'DELIVERED', label: 'Delivered', completed: activeOrder.status === 'delivered', time: 'Pending OTP' }
         ],
