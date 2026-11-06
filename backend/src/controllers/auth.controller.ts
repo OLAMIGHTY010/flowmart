@@ -101,9 +101,9 @@ export const googleAuth = async (req: Request, res: Response) => {
         role: requestedRole,
         gender: gender || null,
         dateOfBirth: birthdate ? new Date(birthdate).toISOString().split('T')[0] : null,
-        isVerified: false,
-        otp: hashedOtp,
-        otpExpiry: expiresAt,
+        isVerified: true,
+        otp: null,
+        otpExpiry: null,
       }).returning();
       
       user = newUser;

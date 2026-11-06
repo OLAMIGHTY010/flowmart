@@ -129,7 +129,7 @@ const queryClient = new QueryClient({
   },
 });
 
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "88432175018-ln50eocd47a3emgc5kmu1gosl43ph47k.apps.googleusercontent.com";
 
 function App() {
   return (
