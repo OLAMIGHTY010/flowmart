@@ -27,20 +27,12 @@ app.use(observabilityMiddleware);
 
 app.use(cors({
   origin: function (origin, callback) {
-    if (
-      !origin || 
-      allowedOrigins.includes(origin) || 
-      origin.startsWith('http://localhost') || 
-      origin.startsWith('http://127.0.0.1') ||
-      origin.endsWith('.vercel.app')
-    ) {
-      callback(null, true);
-    } else {
-      console.warn(`Blocked by CORS: origin ${origin} is not allowed.`);
-      callback(null, false);
-    }
+    // Allow all origins (reflection) for seamless multi-device, local network, and cross-system access
+    callback(null, true);
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
 }));
 
 app.use(helmet({
