@@ -72,7 +72,9 @@ const Homepage = () => {
   const products = productsData?.products || [];
   const totalProducts = productsData?.meta?.total || 0;
   const hasMore = products.length >= LIMIT && (page * LIMIT) < totalProducts;
-  const categories = (categoriesData?.categories || []).filter((c: string) => c !== "All");
+  const categories: string[] = (categoriesData?.categories || [])
+    .map((c: any) => (typeof c === "string" ? c : (c?.name || c?.slug || "")))
+    .filter((name: string) => Boolean(name) && name.toLowerCase() !== "all");
 
   const handleCategoryClick = (cat: string) => {
     setActiveCategory(cat);
@@ -145,8 +147,9 @@ const Homepage = () => {
       <section className="bg-white border-b border-gray-200 sticky top-[64px] z-40 shadow-sm">
         <div className="container mx-auto px-6">
           <div className="flex overflow-x-auto scrollbar-hide">
-            {["All", ...(categories.length > 0 ? categories : ["Groceries", "Phones & Tablets", "Electronics", "Fashion", "Home, Furniture and Appliances", "Health", "Beauty"])].map((cat: string) => {
-              const key = cat.toLowerCase();
+            {["All", ...(categories.length > 0 ? categories : ["Groceries", "Phones & Tablets", "Electronics", "Fashion", "Home, Furniture and Appliances", "Health", "Beauty"])].map((rawCat: any) => {
+              const cat = typeof rawCat === "string" ? rawCat : (rawCat?.name || rawCat?.slug || String(rawCat));
+              const key = (cat || "").toLowerCase();
               const IconComp = key === "all" ? ShoppingBag : categoryIconMap[key] || ShoppingBag;
               
               const isActive = activeCategory === cat;
