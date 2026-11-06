@@ -30,6 +30,22 @@ const categoryColorMap: Record<string, string> = {
   "beauty": "text-amber-600 border-amber-600",
 };
 
+const getProductFirstImage = (product: any): string | null => {
+  if (product.imageUrl) return product.imageUrl;
+  if (!product.images) return null;
+  if (Array.isArray(product.images)) {
+    return product.images.length > 0 ? product.images[0] : null;
+  }
+  if (typeof product.images === "string") {
+    try {
+      const parsed = JSON.parse(product.images);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed[0];
+    } catch {}
+    return product.images.split(",")[0].replace(/[\[\]"]/g, "").trim();
+  }
+  return null;
+};
+
 const Homepage = () => {
   const { user } = useAuth();
   const [activeCategory, setActiveCategory] = useState<string>("All");
@@ -192,7 +208,7 @@ const Homepage = () => {
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
               {products.map((product: any) => {
-                const firstImage = product.imageUrl || (product.images ? product.images.split(",")[0] : null);
+                const firstImage = getProductFirstImage(product);
                 return (
                   <Link
                     key={product.id}
