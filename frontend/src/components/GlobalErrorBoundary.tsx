@@ -25,9 +25,24 @@ export class GlobalErrorBoundary extends React.Component<Props, State> {
     console.error("Global Error Boundary caught an error:", error, errorInfo);
   }
 
-  handleReset = () => {
-    // Basic reset strategy: reload the window
-    window.location.reload();
+  handleReset = async () => {
+    try {
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        for (const reg of regs) {
+          await reg.unregister();
+        }
+      }
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        for (const key of keys) {
+          await caches.delete(key);
+        }
+      }
+    } catch (e) {
+      console.warn('Cache purge failed:', e);
+    }
+    window.location.href = window.location.origin + '/?refresh=' + Date.now();
   };
 
   render() {
