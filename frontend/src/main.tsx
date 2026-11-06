@@ -5,14 +5,17 @@ import App from './App.tsx'
 import { AuthProvider } from './contexts/AuthProvider.tsx'
 import { ToastProvider } from './contexts/ToastContext.tsx'
 import { GlobalToast } from './components/GlobalToast.tsx'
+import { GlobalErrorBoundary } from './components/GlobalErrorBoundary'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <AuthProvider>
-      <ToastProvider>
-        <App />
-        <GlobalToast />
-      </ToastProvider>
-    </AuthProvider>
+    <GlobalErrorBoundary>
+      <AuthProvider>
+        <ToastProvider>
+          <App />
+          <GlobalToast />
+        </ToastProvider>
+      </AuthProvider>
+    </GlobalErrorBoundary>
   </StrictMode>,
 )
